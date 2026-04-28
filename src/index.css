@@ -1,0 +1,88 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 10%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 10%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 10%;
+
+    --primary: 342 56% 30%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 30 6% 96%;
+    --secondary-foreground: 0 0% 10%;
+
+    --muted: 30 6% 96%;
+    --muted-foreground: 0 0% 40%;
+
+    --accent: 39 44% 58%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 69% 47%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
+    --ring: 342 56% 30%;
+
+    --radius: 0.5rem;
+
+    /* Custom tokens */
+    --burgundy: 342 56% 30%;
+    --burgundy-deep: 342 68% 18%;
+    --gold: 39 44% 58%;
+    --gold-light: 39 52% 72%;
+    --rose-muted: 0 25% 58%;
+    --cream: 25 33% 93%;
+    --section-bg: 0 0% 97%;
+
+    /* Status */
+    --success: 125 46% 33%;
+    --warning: 45 95% 56%;
+    --error: 0 69% 47%;
+    --info: 213 80% 42%;
+
+    /* Sidebar - LIGHT theme */
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 0 0% 35%;
+    --sidebar-primary: 342 56% 30%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 342 20% 95%;
+    --sidebar-accent-foreground: 342 56% 30%;
+    --sidebar-border: 0 0% 90%;
+    --sidebar-ring: 39 44% 58%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Playfair Display', serif;
+  }
+}
+
+/* RTL Support */
+[dir="rtl"] {
+  text-align: right;
+}
+
+[dir="rtl"] .sidebar-nav {
+  border-left: none;
+  border-right: 2px solid;
+}
