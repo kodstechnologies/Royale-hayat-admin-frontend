@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import logo from "@/assets/rhh-logo.png";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { logout } from "@/api/auth";
 
 const navItems = [
   { to: "/", icon: LayoutDashboard, label: "Dashboard" },
@@ -32,9 +33,17 @@ const Sidebar = ({ collapsed }: SidebarProps) => {
   const navigate = useNavigate();
   const { t, isRTL } = useLanguage();
 
-  const handleLogout = () => {
-    localStorage.removeItem("rhh_admin_auth");
-    navigate("/login");
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (error) {
+      // Clear local auth state even if API call fails.
+    } finally {
+      localStorage.removeItem("rhh_admin_auth");
+      localStorage.removeItem("rhh_admin_access_token");
+      localStorage.removeItem("rhh_admin_user");
+      navigate("/login");
+    }
   };
 
   return (
@@ -73,10 +82,10 @@ const Sidebar = ({ collapsed }: SidebarProps) => {
           <Settings size={17} />
           {!collapsed && <span>{t("Settings")}</span>}
         </NavLink>
-        <div className="flex items-center gap-3 px-4 py-2 mx-2 rounded-md text-sm font-sans text-sidebar-foreground">
+        {/* <div className="flex items-center gap-3 px-4 py-2 mx-2 rounded-md text-sm font-sans text-sidebar-foreground">
           <User size={17} />
           {!collapsed && <span className="truncate">{t("Admin")}</span>}
-        </div>
+        </div> */}
         <button onClick={handleLogout} className="flex items-center gap-3 px-4 py-2 mx-2 rounded-md text-sm font-sans transition-colors text-error hover:bg-error/5 w-full text-left">
           <LogOut size={17} />
           {!collapsed && <span>{t("Secure Logout")}</span>}

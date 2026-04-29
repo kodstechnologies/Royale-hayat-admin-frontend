@@ -11,7 +11,7 @@ import MedicalRecordsRequests from "./pages/MedicalRecordsRequests";
 import InternationalPatients from "./pages/InternationalPatients";
 import AlSafwaEnrollments from "./pages/AlSafwaEnrollments";
 import ContactMessages from "./pages/ContactMessages";
-import JobApplications from "./pages/JobApplications";
+import JobApplications from "./pages/job/JobApplications";
 import FeedbackReviews from "./pages/FeedbackReviews";
 import Doctors from "./pages/Doctors";
 import DoctorProfile from "./pages/DoctorProfile";
