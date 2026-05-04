@@ -1,13 +1,20 @@
 import { useEffect, useState } from "react";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import { toast } from "sonner";
+import { fetchAllCatagories, type Catagory } from "@/api/catagory";
+import { fetchAllSubspecialities, type Subspeciality } from "@/api/subspeciality";
+import {
+  DepartmentRichFields,
+  type DepartmentRichContentValues,
+} from "./departmentFormShared";
 
-export type EditDepartmentFormData = {
+export type EditDepartmentFormData = DepartmentRichContentValues & {
   departmentId: string;
   name: string;
   description: string;
+  catagoryId: string;
+  subspecialityIds: string[];
   imageFile: File | null;
-  subSpecialties: string;
   isActive: boolean;
   order: number;
 };
@@ -21,22 +28,72 @@ type EditDepartmentModalProps = {
   onSubmit: (values: EditDepartmentFormData) => Promise<void>;
 };
 
-const EditDepartmentModal = ({ isOpen, saving, initialValues, currentImageUrl = "", onClose, onSubmit }: EditDepartmentModalProps) => {
+const toggleSubspeciality = (
+  id: string,
+  current: string[],
+  setFieldValue: (field: string, value: string[]) => void,
+) => {
+  const next = new Set(current);
+  if (next.has(id)) next.delete(id);
+  else next.add(id);
+  setFieldValue("subspecialityIds", [...next]);
+};
+
+const EditDepartmentModal = ({
+  isOpen,
+  saving,
+  initialValues,
+  currentImageUrl = "",
+  onClose,
+  onSubmit,
+}: EditDepartmentModalProps) => {
   const [previewUrl, setPreviewUrl] = useState("");
-  const [specialityInput, setSpecialityInput] = useState("");
+  const [categories, setCategories] = useState<Catagory[]>([]);
+  const [categoriesLoading, setCategoriesLoading] = useState(false);
+  const [subspecialities, setSubspecialities] = useState<Subspeciality[]>([]);
+  const [subspecialitiesLoading, setSubspecialitiesLoading] = useState(false);
 
   useEffect(() => {
     if (!isOpen) return;
     setPreviewUrl(currentImageUrl);
-    setSpecialityInput("");
   }, [isOpen, currentImageUrl]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    let cancelled = false;
+    (async () => {
+      setCategoriesLoading(true);
+      setSubspecialitiesLoading(true);
+      try {
+        const [cats, subs] = await Promise.all([fetchAllCatagories(), fetchAllSubspecialities()]);
+        if (!cancelled) {
+          setCategories(cats);
+          setSubspecialities(subs);
+        }
+      } catch {
+        if (!cancelled) {
+          setCategories([]);
+          setSubspecialities([]);
+          toast.error("Failed to load categories or subspecialities.", { position: "top-right" });
+        }
+      } finally {
+        if (!cancelled) {
+          setCategoriesLoading(false);
+          setSubspecialitiesLoading(false);
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
-      <div className="w-full max-w-lg max-h-[90vh] bg-card rounded-lg border border-border shadow-xl overflow-hidden">
-        <div className="flex items-center justify-between p-4 border-b border-border">
+      <div className="w-full max-w-2xl max-h-[90vh] bg-card rounded-lg border border-border shadow-xl overflow-hidden flex flex-col">
+        <div className="flex items-center justify-between p-4 border-b border-border shrink-0">
           <h3 className="text-base font-semibold">Edit Department</h3>
           <button type="button" onClick={onClose} className="text-muted-foreground hover:text-foreground transition-colors">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -57,11 +114,12 @@ const EditDepartmentModal = ({ isOpen, saving, initialValues, currentImageUrl = 
             } else if (values.description.trim().length < 10) {
               errors.description = "Description must be at least 10 characters";
             }
+            if (!values.catagoryId) errors.catagoryId = "Category is required";
             return errors;
           }}
           onSubmit={async (values) => {
-            if (!values.departmentId.trim() || !values.name.trim() || !values.description.trim()) {
-              toast.error("Department ID, Name, and Description are required.", { position: "top-right" });
+            if (!values.departmentId.trim() || !values.name.trim() || !values.description.trim() || !values.catagoryId) {
+              toast.error("Department ID, Name, Description, and Category are required.", { position: "top-right" });
               return;
             }
             await onSubmit(values);
@@ -108,6 +166,66 @@ const EditDepartmentModal = ({ isOpen, saving, initialValues, currentImageUrl = 
               </div>
 
               <div>
+                <label className="text-xs font-medium block mb-1">
+                  Category <span className="text-red-500">*</span>
+                </label>
+                <Field
+                  as="select"
+                  name="catagoryId"
+                  disabled={categoriesLoading || categories.length === 0}
+                  className="w-full px-3 py-2 rounded-lg border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-burgundy/20 focus:border-burgundy transition-all disabled:opacity-60"
+                >
+                  <option value="">{categoriesLoading ? "Loading categories…" : "Select a category"}</option>
+                  {categories.map((c) => (
+                    <option key={c._id} value={c._id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </Field>
+                <ErrorMessage name="catagoryId" component="p" className="text-xs text-red-500 mt-1" />
+                {!categoriesLoading && categories.length === 0 && (
+                  <p className="text-xs text-amber-600 mt-1">Add categories under Categories in the sidebar first.</p>
+                )}
+              </div>
+
+              <div>
+                <label className="text-xs font-medium block mb-2">
+                  Subspecialities <span className="text-muted-foreground font-normal">(optional, multi-select)</span>
+                </label>
+                <div className="max-h-40 overflow-y-auto rounded-lg border border-border bg-muted/20 p-2 space-y-1.5">
+                  {subspecialitiesLoading ? (
+                    <p className="text-xs text-muted-foreground px-1 py-2">Loading subspecialities…</p>
+                  ) : subspecialities.length === 0 ? (
+                    <p className="text-xs text-amber-600 px-1 py-2">
+                      Add subspecialities under Subspecialities in the sidebar first.
+                    </p>
+                  ) : (
+                    subspecialities.map((s) => (
+                      <label
+                        key={s._id}
+                        className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-background cursor-pointer text-sm"
+                      >
+                        <input
+                          type="checkbox"
+                          className="rounded border-border"
+                          checked={values.subspecialityIds.includes(s._id)}
+                          onChange={() => toggleSubspeciality(s._id, values.subspecialityIds, setFieldValue)}
+                        />
+                        <span>{s.name}</span>
+                      </label>
+                    ))
+                  )}
+                </div>
+                {values.subspecialityIds.length > 0 && (
+                  <p className="text-[10px] text-muted-foreground mt-1">
+                    {values.subspecialityIds.length} selected
+                  </p>
+                )}
+              </div>
+
+              <DepartmentRichFields values={values} setFieldValue={setFieldValue} />
+
+              <div>
                 <label className="text-xs font-medium block mb-2">Image (optional)</label>
                 <div className="relative rounded-lg border-2 border-dashed border-border bg-muted/30">
                   <input
@@ -137,83 +255,6 @@ const EditDepartmentModal = ({ isOpen, saving, initialValues, currentImageUrl = 
               </div>
 
               <div>
-                <label className="text-xs font-medium block mb-1">Subspecialties</label>
-                <div className="flex gap-2">
-                  <input
-                    value={specialityInput}
-                    onChange={(e) => setSpecialityInput(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key !== "Enter") return;
-                      e.preventDefault();
-                      const next = specialityInput.trim();
-                      if (!next) return;
-                      const existing = (values.subSpecialties || "")
-                        .split(",")
-                        .map((item) => item.trim())
-                        .filter(Boolean);
-                      if (existing.some((item) => item.toLowerCase() === next.toLowerCase())) {
-                        setSpecialityInput("");
-                        return;
-                      }
-                      setFieldValue("subSpecialties", [...existing, next].join(", "));
-                      setSpecialityInput("");
-                    }}
-                    placeholder="Type a subspecialty"
-                    className="flex-1 px-3 py-2 rounded-lg border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-burgundy/20 focus:border-burgundy transition-all"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const next = specialityInput.trim();
-                      if (!next) return;
-                      const existing = (values.subSpecialties || "")
-                        .split(",")
-                        .map((item) => item.trim())
-                        .filter(Boolean);
-                      if (existing.some((item) => item.toLowerCase() === next.toLowerCase())) {
-                        setSpecialityInput("");
-                        return;
-                      }
-                      setFieldValue("subSpecialties", [...existing, next].join(", "));
-                      setSpecialityInput("");
-                    }}
-                    className="px-4 py-2 rounded-md bg-burgundy text-primary-foreground text-xs font-medium"
-                  >
-                    Add
-                  </button>
-                </div>
-                {(values.subSpecialties || "")
-                  .split(",")
-                  .map((item) => item.trim())
-                  .filter(Boolean).length > 0 && (
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {(values.subSpecialties || "")
-                      .split(",")
-                      .map((item) => item.trim())
-                      .filter(Boolean)
-                      .map((item) => (
-                        <span key={item} className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs bg-burgundy/10 text-burgundy">
-                          {item}
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const updated = (values.subSpecialties || "")
-                                .split(",")
-                                .map((value) => value.trim())
-                                .filter(Boolean)
-                                .filter((value) => value !== item);
-                              setFieldValue("subSpecialties", updated.join(", "));
-                            }}
-                          >
-                            x
-                          </button>
-                        </span>
-                      ))}
-                  </div>
-                )}
-              </div>
-
-              <div>
                 <label className="text-xs font-medium block mb-1">Status</label>
                 <label className="inline-flex items-center gap-2 text-sm">
                   <Field type="checkbox" name="isActive" />
@@ -227,8 +268,8 @@ const EditDepartmentModal = ({ isOpen, saving, initialValues, currentImageUrl = 
                   disabled={saving}
                   onClick={() => {
                     if (
-                      (!values.departmentId.trim() || !values.name.trim() || !values.description.trim()) &&
-                      (touched.departmentId || touched.name || touched.description || Object.keys(errors).length > 0)
+                      (!values.departmentId.trim() || !values.name.trim() || !values.description.trim() || !values.catagoryId) &&
+                      (touched.departmentId || touched.name || touched.description || touched.catagoryId || Object.keys(errors).length > 0)
                     ) {
                       toast.error("Please fill all required fields.", { position: "top-right" });
                     }

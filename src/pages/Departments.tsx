@@ -12,6 +12,10 @@ import {
 import { Pencil, Trash2, Image as ImageIcon } from "lucide-react";
 import CreateDepartment, { type CreateDepartmentFormData } from "./department/createDepartment";
 import EditDepartmentModal, { type EditDepartmentFormData } from "./department/editDepartment";
+import {
+  appendDepartmentRichContentToFormData,
+  richContentFromApi,
+} from "./department/departmentFormShared";
 import AlertBox from "@/components/AlertBox";
 import Loader from "@/components/SkeletonLoader";
 
@@ -20,10 +24,36 @@ type Department = {
   departmentId: string;
   name: string;
   description: string;
+  catagory?: string | { _id: string; name?: string };
+  subspecialities?: (string | { _id: string; name?: string; description?: string })[];
+  /** Derived first subspeciality (if API includes it) */
+  subspeciality?: string | { _id: string; name?: string; description?: string };
   image?: string;
   subSpecialties?: string[];
+  customExplainantions?: { _id?: string; subHeading?: string; explaination?: string[] }[];
   isActive?: boolean;
   order?: number;
+};
+
+const getCatagoryIdFromDepartment = (dept: Department | null): string => {
+  if (!dept?.catagory) return "";
+  const c = dept.catagory;
+  if (typeof c === "string") return c;
+  if (typeof c === "object" && c && "_id" in c) return String(c._id);
+  return "";
+};
+
+const getSubspecialityIdsFromDepartment = (dept: Department | null): string[] => {
+  if (!dept?.subspecialities?.length) {
+    if (!dept?.subspeciality) return [];
+    const s = dept.subspeciality;
+    if (typeof s === "string") return [s];
+    if (typeof s === "object" && s && "_id" in s) return [String(s._id)];
+    return [];
+  }
+  return dept.subspecialities.map((item) =>
+    typeof item === "string" ? item : String(item._id),
+  );
 };
 
 const Departments = () => {
@@ -41,7 +71,6 @@ const Departments = () => {
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
   const [departmentToDelete, setDepartmentToDelete] = useState<Department | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-
   const showSuccessToast = (text: string) => {
     toast.success(text, {
       position: "top-right",
@@ -97,27 +126,25 @@ const Departments = () => {
         return;
       }
 
-      const payload = {
-        departmentId,
-        name: normalizedName,
-        description: normalizedDescription,
-        subSpecialties: formData.subSpecialties
-          .split(",")
-          .map((item) => item.trim())
-          .filter(Boolean),
-        isActive: formData.isActive,
-        order: Number(formData.order || 0),
-      };
+      if (!formData.catagoryId?.trim()) {
+        const validationMessage = "Please select a category.";
+        setMessage(validationMessage);
+        showErrorToast(validationMessage);
+        return;
+      }
 
       const formPayload = new FormData();
-      formPayload.append("departmentId", payload.departmentId);
-      formPayload.append("name", payload.name);
-      formPayload.append("description", payload.description);
-      payload.subSpecialties.forEach((specialty) => {
-        formPayload.append("subSpecialties", specialty);
+      formPayload.append("departmentId", departmentId);
+      formPayload.append("name", normalizedName);
+      formPayload.append("description", normalizedDescription);
+      formPayload.append("isActive", String(formData.isActive));
+      formPayload.append("order", String(Number(formData.order || 0)));
+      formPayload.append("catagory", formData.catagoryId.trim());
+      formPayload.append("subspecialities", JSON.stringify(formData.subspecialityIds));
+
+      appendDepartmentRichContentToFormData(formPayload, {
+        customExplainantions: formData.customExplainantions,
       });
-      formPayload.append("isActive", String(payload.isActive));
-      formPayload.append("order", String(payload.order));
 
       if (formData.imageFile) {
         formPayload.append("image", formData.imageFile);
@@ -168,17 +195,25 @@ const Departments = () => {
         return;
       }
 
+      if (!values.catagoryId?.trim()) {
+        const validationMessage = "Please select a category.";
+        setMessage(validationMessage);
+        showErrorToast(validationMessage);
+        return;
+      }
+
       const formPayload = new FormData();
       formPayload.append("departmentId", departmentId);
       formPayload.append("name", name);
       formPayload.append("description", description);
-      (values.subSpecialties || "")
-        .split(",")
-        .map((item) => item.trim())
-        .filter(Boolean)
-        .forEach((item) => formPayload.append("subSpecialties", item));
       formPayload.append("isActive", String(Boolean(values.isActive)));
       formPayload.append("order", String(values.order || 0));
+      formPayload.append("catagory", values.catagoryId.trim());
+      formPayload.append("subspecialities", JSON.stringify(values.subspecialityIds));
+
+      appendDepartmentRichContentToFormData(formPayload, {
+        customExplainantions: values.customExplainantions,
+      });
 
       if (values.imageFile) {
         formPayload.append("image", values.imageFile);
@@ -447,11 +482,13 @@ const Departments = () => {
         isOpen={Boolean(selectedDept)}
         saving={saving}
         initialValues={{
+          ...richContentFromApi(selectedDept as unknown as Record<string, unknown>),
           departmentId: selectedDept?.departmentId || "",
           name: selectedDept?.name || "",
           description: selectedDept?.description || "",
+          catagoryId: getCatagoryIdFromDepartment(selectedDept),
+          subspecialityIds: getSubspecialityIdsFromDepartment(selectedDept),
           imageFile: null,
-          subSpecialties: (selectedDept?.subSpecialties || []).join(", "),
           isActive: Boolean(selectedDept?.isActive),
           order: selectedDept?.order || 0,
         }}

@@ -2,8 +2,8 @@ import { useEffect, useState } from "react";
 import AdminLayout from "@/components/layout/AdminLayout";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Eye, Download, ChevronLeft } from "lucide-react";
-import CreateJobModal from "./createJob";
 import api from "@/api/axiosInstance";
+import { useNavigate } from "react-router-dom";
 
 const JobApplications = () => {
   const { t } = useLanguage();
@@ -11,7 +11,7 @@ const JobApplications = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [openCreateJobModal, setOpenCreateJobModal] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchApplications = async () => {
@@ -124,7 +124,7 @@ const JobApplications = () => {
 
       <div className="mb-4 flex justify-end">
         <button
-          onClick={() => setOpenCreateJobModal(true)}
+          onClick={() => navigate("/jobs/create")}
           className="px-4 py-2 text-xs rounded-md bg-burgundy text-white hover:bg-burgundy-deep"
         >
           {t("Create Job")}
@@ -169,7 +169,6 @@ const JobApplications = () => {
           </tbody>
         </table>
       </div>
-      <CreateJobModal open={openCreateJobModal} onClose={() => setOpenCreateJobModal(false)} />
     </AdminLayout>
   );
 };

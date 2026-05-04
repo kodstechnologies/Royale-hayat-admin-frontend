@@ -1,14 +1,17 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import AdminLayout from "@/components/layout/AdminLayout";
-import { CalendarPlus, Eye, EyeOff, Users, Clock, Search, Pencil, Trash2 } from "lucide-react";
-import { createDoctor, deleteDoctor, editDoctor, getDoctors } from "@/api/doctors";
-import CreateDoctor, { type CreateDoctorFormData } from "./doctor/createDoctor";
+import { Search, Pencil, Trash2, ExternalLink } from "lucide-react";
+import { deleteDoctor, getDoctors } from "@/api/doctors";
+import { getDepartments } from "@/api/department";
+import { useNavigate } from "react-router-dom";
+import Loader from "@/components/SkeletonLoader";
 
 type Doctor = {
   _id: string;
+  doctorId?: string;
   name: string;
   specialty: string;
-  department: string;
+  department: string | { _id?: string; name?: string };
   title: string;
   bio: string;
   qualifications: string[];
@@ -22,56 +25,37 @@ type Doctor = {
   isActive: boolean;
 };
 
-type DoctorForm = {
-  name: string;
-  specialty: string;
-  department: string;
-  title: string;
-  bio: string;
-  qualifications: string;
-  expertise: string;
-  languages: string;
-  initials: string;
-  image: string;
-  color: string;
-  symptoms: string;
-  availableOnline: boolean;
-  isActive: boolean;
-};
-
-const initialForm: DoctorForm = {
-  name: "",
-  specialty: "",
-  department: "",
-  title: "",
-  bio: "",
-  qualifications: "",
-  expertise: "",
-  languages: "",
-  initials: "",
-  image: "",
-  color: "#7f2346",
-  symptoms: "",
-  availableOnline: true,
-  isActive: true,
-};
-
 const Doctors = () => {
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [loading, setLoading] = useState(false);
-  const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [search, setSearch] = useState("");
-  const [filterDept, setFilterDept] = useState("All");
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingDoctor, setEditingDoctor] = useState<Doctor | null>(null);
-  const [form, setForm] = useState<DoctorForm>(initialForm);
+  const [selectedDepartmentId, setSelectedDepartmentId] = useState("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [limit] = useState(6);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalRecords, setTotalRecords] = useState(0);
+  const [departmentMap, setDepartmentMap] = useState<Record<string, string>>({});
+  const [departmentOptions, setDepartmentOptions] = useState<Array<{ _id: string; name: string }>>([]);
+  const navigate = useNavigate();
+
+  const getDepartmentName = (department: Doctor["department"]) => {
+    if (typeof department !== "string") return department?.name || "-";
+    return departmentMap[department] || department || "-";
+  };
 
   const fetchDoctors = async () => {
     setLoading(true);
     try {
-      const response = await getDoctors({ limit: 100 });
+      const response = await getDoctors({
+        page: currentPage,
+        limit,
+        ...(selectedDepartmentId === "all" ? {} : { department: selectedDepartmentId }),
+        ...(search.trim() ? { search: search.trim() } : {}),
+      });
       setDoctors(response?.data?.data || []);
+      setTotalPages(response?.data?.meta?.totalPages || 1);
+      setTotalRecords(response?.data?.meta?.totalRecords || 0);
     } catch (error: any) {
       setMessage(error?.response?.data?.message || "Failed to fetch doctors.");
     } finally {
@@ -81,128 +65,31 @@ const Doctors = () => {
 
   useEffect(() => {
     fetchDoctors();
+  }, [currentPage, limit, selectedDepartmentId, search]);
+
+  useEffect(() => {
+    const fetchDepartmentMap = async () => {
+      try {
+        const response = await getDepartments({ limit: 200 });
+        const departments = response?.data?.data || [];
+        const nextMap: Record<string, string> = {};
+        departments.forEach((dept: any) => {
+          if (dept?._id && dept?.name) {
+            nextMap[dept._id] = dept.name;
+          }
+        });
+        setDepartmentOptions(
+          departments
+            .filter((dept: any) => dept?._id && dept?.name)
+            .map((dept: any) => ({ _id: dept._id, name: dept.name }))
+        );
+        setDepartmentMap(nextMap);
+      } catch {
+        // Keep fallback to raw ID if lookup fails.
+      }
+    };
+    fetchDepartmentMap();
   }, []);
-
-  const departments = useMemo(
-    () => ["All", ...Array.from(new Set(doctors.map((d) => d.department))).filter(Boolean)],
-    [doctors]
-  );
-
-  const filtered = useMemo(
-    () =>
-      doctors.filter((d) => {
-        const query = search.toLowerCase().trim();
-        const matchSearch =
-          d.name.toLowerCase().includes(query) ||
-          d.department.toLowerCase().includes(query) ||
-          d.specialty.toLowerCase().includes(query);
-        const matchDept = filterDept === "All" || d.department === filterDept;
-        return matchSearch && matchDept;
-      }),
-    [doctors, filterDept, search]
-  );
-
-  const totalOnline = doctors.filter((d) => d.availableOnline).length;
-  const totalVisible = doctors.filter((d) => d.isActive).length;
-
-  const openEditModal = (doctor: Doctor) => {
-    setEditingDoctor(doctor);
-    setForm({
-      name: doctor.name || "",
-      specialty: doctor.specialty || "",
-      department: doctor.department || "",
-      title: doctor.title || "",
-      bio: doctor.bio || "",
-      qualifications: (doctor.qualifications || []).join(", "),
-      expertise: (doctor.expertise || []).join(", "),
-      languages: (doctor.languages || []).join(", "),
-      initials: doctor.initials || "",
-      image: doctor.image || "",
-      color: doctor.color || "#7f2346",
-      symptoms: (doctor.symptoms || []).join(", "),
-      availableOnline: Boolean(doctor.availableOnline),
-      isActive: Boolean(doctor.isActive),
-    });
-    setIsModalOpen(true);
-  };
-
-  const toArray = (value: string) =>
-    value
-      .split(",")
-      .map((item) => item.trim())
-      .filter(Boolean);
-
-  const handleCreateDoctorFromModal = async (values: CreateDoctorFormData) => {
-    setSaving(true);
-    setMessage("");
-    try {
-      const payload = new FormData();
-      payload.append("doctorId", values.doctorId.trim());
-      payload.append("department", values.department.trim());
-      payload.append("initials", values.initials.trim().toUpperCase());
-      payload.append("name", values.name.trim());
-      payload.append("specialty", values.specialty.trim());
-      payload.append("title", values.title.trim());
-      toArray(values.languages).forEach((item) => payload.append("languages", item));
-      toArray(values.expertise).forEach((item) => payload.append("expertise", item));
-      toArray(values.qualifications).forEach((item) => payload.append("qualifications", item));
-      if (values.imageFile) {
-        payload.append("image", values.imageFile);
-      }
-      await createDoctor(payload as any);
-      setMessage("Doctor created successfully.");
-      await fetchDoctors();
-    } catch (error: any) {
-      setMessage(error?.response?.data?.message || "Failed to create doctor.");
-      throw error;
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSaving(true);
-    setMessage("");
-    try {
-      const department = form.department.trim();
-      const image = form.image.trim();
-
-      const payload = {
-        name: form.name.trim(),
-        specialty: form.specialty.trim(),
-        title: form.title.trim(),
-        bio: form.bio.trim(),
-        qualifications: toArray(form.qualifications),
-        expertise: toArray(form.expertise),
-        languages: toArray(form.languages),
-        initials: form.initials.trim().toUpperCase(),
-        ...(department ? { department } : {}),
-        ...(image ? { image } : {}),
-        color: form.color.trim(),
-        symptoms: toArray(form.symptoms),
-        availableOnline: form.availableOnline,
-        isActive: form.isActive,
-      };
-
-      if (editingDoctor?._id) {
-        await editDoctor(editingDoctor._id, payload);
-        setMessage("Doctor updated successfully.");
-      } else {
-        await createDoctor(payload);
-        setMessage("Doctor created successfully.");
-      }
-
-      setIsModalOpen(false);
-      setEditingDoctor(null);
-      setForm(initialForm);
-      await fetchDoctors();
-    } catch (error: any) {
-      setMessage(error?.response?.data?.message || "Failed to save doctor.");
-    } finally {
-      setSaving(false);
-    }
-  };
 
   const handleDelete = async (doctor: Doctor) => {
     const ok = window.confirm(`Delete ${doctor.name}?`);
@@ -212,49 +99,89 @@ const Doctors = () => {
     try {
       await deleteDoctor(doctor._id);
       setMessage("Doctor deleted successfully.");
-      await fetchDoctors();
+      if (doctors.length === 1 && currentPage > 1) {
+        setCurrentPage((prev) => prev - 1);
+      } else {
+        await fetchDoctors();
+      }
     } catch (error: any) {
       setMessage(error?.response?.data?.message || "Failed to delete doctor.");
     }
+  };
+
+  const getPageNumbers = () => {
+    const pageNumbers: Array<number | string> = [];
+    const maxVisible = 5;
+    if (totalPages <= maxVisible) {
+      for (let i = 1; i <= totalPages; i++) pageNumbers.push(i);
+    } else if (currentPage <= 3) {
+      pageNumbers.push(1, 2, 3, 4, "...", totalPages);
+    } else if (currentPage >= totalPages - 2) {
+      pageNumbers.push(1, "...", totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
+    } else {
+      pageNumbers.push(1, "...", currentPage - 1, currentPage, currentPage + 1, "...", totalPages);
+    }
+    return pageNumbers;
   };
 
   return (
     <AdminLayout title="Doctors">
      
 
-      <div className="flex flex-wrap gap-3 mb-4">
-        <CreateDoctor saving={saving} onSubmit={handleCreateDoctorFromModal} />
-        <div className="relative flex-1 max-w-sm">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-          <input
-            type="text"
-            placeholder="Search doctors..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 rounded-lg bg-card border border-border text-sm font-sans focus:outline-none focus:ring-1 focus:ring-gold" />
+      <div className="flex flex-wrap items-end justify-between gap-3 mb-5">
+        <button
+          type="button"
+          onClick={() => navigate("/doctors/create")}
+          className="px-4 py-2 rounded-md bg-burgundy text-primary-foreground text-xs font-medium"
+        >
+          + Create Doctor
+        </button>
+        <div className="flex items-center gap-3">
+          <div className="relative w-full min-w-[220px]">
+            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <input
+              type="text"
+              placeholder="Search doctors..."
+              value={search}
+              onChange={(e) => {
+                setCurrentPage(1);
+                setSearch(e.target.value);
+              }}
+              className="w-full pl-9 pr-4 py-2 rounded-lg bg-card border border-border text-sm font-sans focus:outline-none focus:ring-1 focus:ring-gold"
+            />
+          </div>
+          <select
+            value={selectedDepartmentId}
+            onChange={(e) => {
+              setCurrentPage(1);
+              setSelectedDepartmentId(e.target.value);
+            }}
+            className="px-3 py-2 rounded-lg bg-card border border-border text-sm font-sans focus:outline-none focus:ring-1 focus:ring-gold"
+          >
+            <option value="all">All Departments</option>
+            {departmentOptions.map((department) => (
+              <option key={department._id} value={department._id}>
+                {department.name}
+              </option>
+            ))}
+          </select>
         </div>
-        <select
-          value={filterDept}
-          onChange={(e) => setFilterDept(e.target.value)}
-          className="px-3 py-2 rounded-lg bg-card border border-border text-sm font-sans focus:outline-none focus:ring-1 focus:ring-gold">
-          {departments.map((d) => (
-            <option key={d} value={d}>
-              {d}
-            </option>
-          ))}
-        </select>
       </div>
 
       {loading ? (
-        <p className="text-sm text-muted-foreground">Loading doctors...</p>
+        <Loader />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-          {filtered.map((doctor) => (
+          {doctors.map((doctor) => (
             <div key={doctor._id} className="bg-card rounded-lg shadow-sm border border-border p-5 hover:shadow-md transition-shadow">
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-burgundy/10 flex items-center justify-center">
-                    <span className="text-burgundy font-serif font-bold text-lg">{doctor.name.split(" ").pop()?.[0]}</span>
+                  <div className="w-12 h-12 rounded-full bg-burgundy/10 flex items-center justify-center overflow-hidden">
+                    {doctor.image ? (
+                      <img src={doctor.image} alt={doctor.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-burgundy font-serif font-bold text-lg">{doctor.name.split(" ").pop()?.[0]}</span>
+                    )}
                   </div>
                   <div>
                     <p className="text-sm font-sans font-semibold text-foreground">{doctor.name}</p>
@@ -273,7 +200,7 @@ const Doctors = () => {
               <div className="space-y-2 mb-4 text-xs font-sans">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Department</span>
-                  <span className="text-foreground">{doctor.department}</span>
+                  <span className="text-foreground">{getDepartmentName(doctor.department)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Title</span>
@@ -287,7 +214,14 @@ const Doctors = () => {
 
               <div className="flex items-center gap-2">
                 <button
-                  onClick={() => openEditModal(doctor)}
+                  onClick={() => navigate(`/doctors/view/${doctor._id}`)}
+                  className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md border border-border text-xs"
+                >
+                  <ExternalLink size={14} />
+                  View
+                </button>
+                <button
+                  onClick={() => navigate(`/doctors/edit/${doctor._id}`)}
                   className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md border border-border text-xs"
                 >
                   <Pencil size={14} />
@@ -305,50 +239,49 @@ const Doctors = () => {
           ))}
         </div>
       )}
-
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
-          <div className="w-full max-w-3xl bg-card rounded-lg border border-border p-5 max-h-[85vh] overflow-y-auto">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-serif font-semibold">{editingDoctor ? "Update Doctor" : "Create Doctor"}</h3>
-              <button type="button" onClick={() => setIsModalOpen(false)} className="text-xs text-muted-foreground">
-                Close
+      {totalPages > 1 && (
+        <div className="sticky bottom-0 z-20 mt-6 -mx-2 px-2 py-3 bg-background/95 backdrop-blur border-t border-border flex flex-wrap items-center justify-between gap-3">
+          <div className="text-xs text-muted-foreground">
+            Showing {(currentPage - 1) * limit + 1} to {Math.min(currentPage * limit, totalRecords)} of {totalRecords}
+          </div>
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+              disabled={currentPage === 1 || loading}
+              className="px-3 py-1.5 rounded-lg border border-border text-xs disabled:opacity-50 disabled:cursor-not-allowed hover:bg-muted transition-colors"
+            >
+              Previous
+            </button>
+            {getPageNumbers().map((page, index) => (
+              <button
+                key={index}
+                type="button"
+                onClick={() => typeof page === "number" && setCurrentPage(page)}
+                disabled={page === "..." || loading}
+                className={`min-w-[34px] px-2 py-1.5 rounded-lg border text-xs transition-all ${
+                  currentPage === page
+                    ? "bg-burgundy text-white border-burgundy shadow-sm"
+                    : page === "..."
+                    ? "border-transparent cursor-default"
+                    : "border-border hover:bg-muted"
+                }`}
+              >
+                {page}
               </button>
-            </div>
-
-            <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <input placeholder="Name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="px-3 py-2 rounded-lg border border-border text-sm" />
-              <input placeholder="Specialty" value={form.specialty} onChange={(e) => setForm({ ...form, specialty: e.target.value })} className="px-3 py-2 rounded-lg border border-border text-sm" />
-              <input placeholder="Department" value={form.department} onChange={(e) => setForm({ ...form, department: e.target.value })} className="px-3 py-2 rounded-lg border border-border text-sm" />
-              <input placeholder="Title" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} className="px-3 py-2 rounded-lg border border-border text-sm" />
-              <input placeholder="Initials (e.g. DR)" value={form.initials} onChange={(e) => setForm({ ...form, initials: e.target.value })} className="px-3 py-2 rounded-lg border border-border text-sm" />
-              <input placeholder="Image URL (optional)" value={form.image} onChange={(e) => setForm({ ...form, image: e.target.value })} className="px-3 py-2 rounded-lg border border-border text-sm" />
-              <input type="color" value={form.color} onChange={(e) => setForm({ ...form, color: e.target.value })} className="h-10 px-2 py-1 rounded-lg border border-border" />
-              <textarea placeholder="Bio" value={form.bio} onChange={(e) => setForm({ ...form, bio: e.target.value })} rows={3} className="md:col-span-2 px-3 py-2 rounded-lg border border-border text-sm" />
-              <input placeholder="Qualifications (comma separated)" value={form.qualifications} onChange={(e) => setForm({ ...form, qualifications: e.target.value })} className="px-3 py-2 rounded-lg border border-border text-sm" />
-              <input placeholder="Expertise (comma separated)" value={form.expertise} onChange={(e) => setForm({ ...form, expertise: e.target.value })} className="px-3 py-2 rounded-lg border border-border text-sm" />
-              <input placeholder="Languages (comma separated)" value={form.languages} onChange={(e) => setForm({ ...form, languages: e.target.value })} className="px-3 py-2 rounded-lg border border-border text-sm" />
-              <input placeholder="Symptoms (comma separated)" value={form.symptoms} onChange={(e) => setForm({ ...form, symptoms: e.target.value })} className="px-3 py-2 rounded-lg border border-border text-sm" />
-              <label className="text-xs flex items-center gap-2">
-                <input type="checkbox" checked={form.availableOnline} onChange={(e) => setForm({ ...form, availableOnline: e.target.checked })} />
-                Available Online
-              </label>
-              <label className="text-xs flex items-center gap-2">
-                <input type="checkbox" checked={form.isActive} onChange={(e) => setForm({ ...form, isActive: e.target.checked })} />
-                Active
-              </label>
-              <div className="md:col-span-2 flex items-center gap-2 mt-2">
-                <button type="submit" disabled={saving} className="px-4 py-2 rounded-md bg-burgundy text-primary-foreground text-xs font-medium disabled:opacity-50">
-                  {saving ? "Saving..." : editingDoctor ? "Update Doctor" : "Create Doctor"}
-                </button>
-                <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 rounded-md border border-border text-xs font-medium">
-                  Cancel
-                </button>
-              </div>
-            </form>
+            ))}
+            <button
+              type="button"
+              onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+              disabled={currentPage === totalPages || loading}
+              className="px-3 py-1.5 rounded-lg border border-border text-xs disabled:opacity-50 disabled:cursor-not-allowed hover:bg-muted transition-colors"
+            >
+              Next
+            </button>
           </div>
         </div>
       )}
+
       {message && <p className="text-xs text-muted-foreground mt-3">{message}</p>}
     </AdminLayout>
   );

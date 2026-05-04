@@ -4,6 +4,10 @@ export type DepartmentPayload = {
   departmentId: string;
   name: string;
   description: string;
+  /** Mongo ObjectId of category (required on create by API) */
+  catagory?: string;
+  /** Mongo ObjectIds of subspecialities (optional) */
+  subspecialities?: string[];
   image?: string;
   subSpecialties: string[];
   isActive?: boolean;
@@ -18,6 +22,7 @@ export const createDepartment = async (payload: DepartmentPayload | FormData) =>
 };
 
 export const getDepartments = async (params: Record<string, string | number | boolean> = {}) => {
+  console.log("params", params);
   return api.get("/api/v1/departments", { params });
 };
 

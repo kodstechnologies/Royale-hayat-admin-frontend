@@ -1,160 +1,327 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import AdminLayout from "@/components/layout/AdminLayout";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Search, Eye, Mail, Reply, CheckCircle, Clock, Send, X } from "lucide-react";
+import { Search, Eye, Mail, X, Phone, User, Calendar, MessageSquare } from "lucide-react";
+import { getAllEnquiries } from "@/api/enquiries";
+import TableSkeletonLoader from "@/components/TableSkeletonLoader";
 
-const deptOptions = ["Cardiology", "Obstetrics & Gynecology", "Pediatrics", "Dermatology", "Internal Medicine", "ENT", "General Surgery", "Orthopedics", "Dental Clinic", "International Dept", "Finance", "Administration"];
-
-const mockMessages = [
-  { id: "CM-001", name: "Sarah Johnson", email: "sarah.j@email.com", phone: "+1 555 234 5678", subject: "General Inquiry", message: "I would like to know more about your cardiology department and available procedures for international patients. My father needs a heart valve replacement.", date: "2026-04-12", status: "new", replied: false },
-  { id: "CM-002", name: "عبدالله المطيري", email: "abdullah.m@email.com", phone: "+965 9912 3456", subject: "Billing Question", message: "I have a question about my recent invoice for the dermatology consultation. The amount seems different from what was quoted.", date: "2026-04-11", status: "replied", replied: true },
-  { id: "CM-003", name: "Priya Sharma", email: "priya.s@email.com", phone: "+91 98765 43210", subject: "Medical Tourism", message: "Planning to visit Kuwait for medical treatment. Can you provide information about your international patient services and accommodation options?", date: "2026-04-10", status: "new", replied: false },
-  { id: "CM-004", name: "خالد البدر", email: "khaled.b@email.com", phone: "+965 6678 9012", subject: "Appointment Follow-up", message: "I submitted an appointment request last week but haven't received a confirmation. My reference number is APR-2026-0045.", date: "2026-04-09", status: "replied", replied: true },
-  { id: "CM-005", name: "Maria Garcia", email: "maria.g@email.com", phone: "+34 612 345 678", subject: "Partnership Inquiry", message: "Our hospital in Spain is interested in establishing a referral partnership with Royale Hayat Hospital. Could we schedule a meeting?", date: "2026-04-08", status: "new", replied: false },
-  { id: "CM-006", name: "فاطمة العنزي", email: "fatima.a@email.com", phone: "+965 5543 2109", subject: "Complaint", message: "I am not satisfied with the waiting time during my last visit. I waited over 2 hours past my appointment time in the ENT department.", date: "2026-04-07", status: "flagged", replied: false },
-  { id: "CM-007", name: "James Wilson", email: "james.w@email.com", phone: "+44 7700 900123", subject: "Al Safwa Program", message: "I'm a British expat in Kuwait. Can you tell me more about the Al Safwa Healthcare Program benefits and pricing for expatriates?", date: "2026-04-06", status: "replied", replied: true },
-  { id: "CM-008", name: "نورة السالم", email: "noura.s@email.com", phone: "+965 9987 6543", subject: "Feedback", message: "Excellent experience with Dr. Hasan in the obstetrics department. The entire team was professional and caring. Thank you!", date: "2026-04-05", status: "new", replied: false },
-];
+type ContactMessage = {
+  id: string;
+  enquiryId: string;
+  name: string;
+  email: string;
+  phone: string;
+  department: string;
+  message: string;
+  date: string;
+};
 
 const ContactMessages = () => {
   const { t } = useLanguage();
+  const [messages, setMessages] = useState<ContactMessage[]>([]);
+  const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState("all");
-  const [selected, setSelected] = useState<typeof mockMessages[0] | null>(null);
-  const [showReply, setShowReply] = useState(false);
-  const [replyText, setReplyText] = useState("");
-  const [replyDept, setReplyDept] = useState("");
-  const [replySent, setReplySent] = useState(false);
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [departmentFilter, setDepartmentFilter] = useState("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [limit] = useState(6);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalRecords, setTotalRecords] = useState(0);
+  const [departmentOptions, setDepartmentOptions] = useState<string[]>([]);
+  const [selected, setSelected] = useState<ContactMessage | null>(null);
 
-  const filtered = mockMessages.filter(m => {
-    const matchSearch = m.name.toLowerCase().includes(search.toLowerCase()) || m.subject.toLowerCase().includes(search.toLowerCase());
-    const matchFilter = filter === "all" || m.status === filter;
-    return matchSearch && matchFilter;
-  });
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search.trim());
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [search]);
 
-  const statusBadge = (s: string) => {
-    const colors: Record<string, string> = { new: "bg-info/10 text-info", replied: "bg-success/10 text-success", flagged: "bg-error/10 text-error" };
-    return <span className={`px-2 py-0.5 rounded-full text-[11px] font-medium ${colors[s]}`}>{t(s.charAt(0).toUpperCase() + s.slice(1))}</span>;
+  useEffect(() => {
+    const fetchEnquiries = async () => {
+      setLoading(true);
+      try {
+        const effectiveSearch = debouncedSearch.length >= 2 ? debouncedSearch : "";
+        const response = await getAllEnquiries({
+          page: currentPage,
+          limit,
+          sortBy: "createdAt",
+          sortOrder: "desc",
+          ...(effectiveSearch ? { search: effectiveSearch } : {}),
+          ...(departmentFilter !== "all" ? { department: departmentFilter } : {}),
+        });
+        const list = response?.data?.data || [];
+        const mapped: ContactMessage[] = (Array.isArray(list) ? list : []).map((item: any, index: number) => ({
+          id: item?._id || `ENQ-${index + 1}`,
+          enquiryId: item?.enquiryId || `ENQ${String(index + 1).padStart(3, "0")}`,
+          name: item?.name || "-",
+          email: item?.email || "-",
+          phone: item?.phone ? String(item.phone) : "-",
+          department: item?.department || "-",
+          message: item?.message || "-",
+          date: item?.createdAt ? new Date(item.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : "-",
+        }));
+        setMessages(mapped);
+        setTotalPages(response?.data?.meta?.totalPages || 1);
+        setTotalRecords(response?.data?.meta?.totalRecords || 0);
+        const uniqueDepartments = Array.from(new Set(mapped.map((item) => item.department).filter(Boolean)));
+        setDepartmentOptions((prev) => Array.from(new Set([...prev, ...uniqueDepartments])));
+      } catch {
+        setMessages([]);
+        setTotalPages(1);
+        setTotalRecords(0);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchEnquiries();
+  }, [currentPage, limit, debouncedSearch, departmentFilter]);
+
+  const getPageNumbers = () => {
+    const pageNumbers: Array<number | string> = [];
+    const maxVisible = 5;
+    if (totalPages <= maxVisible) {
+      for (let i = 1; i <= totalPages; i++) pageNumbers.push(i);
+    } else if (currentPage <= 3) {
+      pageNumbers.push(1, 2, 3, 4, "...", totalPages);
+    } else if (currentPage >= totalPages - 2) {
+      pageNumbers.push(1, "...", totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
+    } else {
+      pageNumbers.push(1, "...", currentPage - 1, currentPage, currentPage + 1, "...", totalPages);
+    }
+    return pageNumbers;
   };
 
-  const handleReply = () => {
-    setReplySent(true);
-    setTimeout(() => {
-      setReplySent(false);
-      setShowReply(false);
-      setReplyText("");
-      setReplyDept("");
-    }, 2000);
+  const getInitials = (name: string) => {
+    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   };
 
   return (
     <AdminLayout title="Contact Messages">
-      <p className="text-xs text-muted-foreground mb-4">{t("Messages received from the Contact Us form on the website.")}</p>
+      <div className="max-w-7xl mx-auto">
+        <p className="text-sm text-muted-foreground mb-5">
+          View and manage patient inquiries from the contact form
+        </p>
 
-      <div className="flex flex-wrap items-center gap-3 mb-4">
-        <div className="relative flex-1 min-w-[200px] max-w-sm">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-          <input value={search} onChange={e => setSearch(e.target.value)} placeholder={t("Search by name or subject...")}
-            className="w-full pl-9 pr-3 py-2 text-sm border border-border rounded-lg bg-card" />
+        <div className="bg-card rounded-xl border border-border p-4 mb-5">
+          <div className="flex flex-wrap items-end justify-between gap-3">
+          <div className="relative flex-1 min-w-[250px] max-w-md">
+            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <input 
+              value={search} 
+              onChange={e => {
+                setCurrentPage(1);
+                setSearch(e.target.value);
+              }} 
+              placeholder="Search by name, email or department..."
+              className="w-full pl-10 pr-4 py-2.5 text-sm border border-border rounded-xl bg-card focus:outline-none focus:ring-2 focus:ring-burgundy/20 focus:border-burgundy transition-all"
+            />
+          </div>
+
+          <div>
+            <select
+              value={departmentFilter}
+              onChange={(e) => {
+                setCurrentPage(1);
+                setDepartmentFilter(e.target.value);
+              }}
+              className="px-3 py-2 rounded-lg bg-card border border-border text-sm focus:outline-none focus:ring-2 focus:ring-burgundy/20"
+            >
+              <option value="all">All Departments</option>
+              {departmentOptions.map((department) => (
+                <option key={department} value={department}>
+                  {department}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
-        {["all", "new", "replied", "flagged"].map(f => (
-          <button key={f} onClick={() => setFilter(f)}
-            className={`px-3 py-1.5 text-xs rounded-full border transition-colors ${filter === f ? "bg-burgundy text-white border-burgundy" : "border-border text-muted-foreground hover:border-burgundy"}`}>
-            {t(f === "all" ? "All" : f.charAt(0).toUpperCase() + f.slice(1))}
-          </button>
-        ))}
-      </div>
+        </div>
 
-      <div className="bg-card rounded-lg border border-border overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-muted/30 text-muted-foreground text-[11px] uppercase">
-            <tr>
-              <th className="text-left px-4 py-2.5">{t("ID")}</th>
-              <th className="text-left px-4 py-2.5">{t("Sender")}</th>
-              <th className="text-left px-4 py-2.5">{t("Subject")}</th>
-              <th className="text-left px-4 py-2.5">{t("Date")}</th>
-              <th className="text-left px-4 py-2.5">{t("Status")}</th>
-              <th className="text-left px-4 py-2.5">{t("Actions")}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map(m => (
-              <tr key={m.id} className={`border-t border-border hover:bg-muted/10 cursor-pointer ${!m.replied ? "font-medium" : ""}`} onClick={() => { setSelected(m); setShowReply(false); setReplySent(false); }}>
-                <td className="px-4 py-2.5 text-burgundy">{m.id}</td>
-                <td className="px-4 py-2.5">
-                  <div>{m.name}</div>
-                  <div className="text-[10px] text-muted-foreground font-normal">{m.email}</div>
-                </td>
-                <td className="px-4 py-2.5">{m.subject}</td>
-                <td className="px-4 py-2.5 text-muted-foreground font-normal">{m.date}</td>
-                <td className="px-4 py-2.5">{statusBadge(m.status)}</td>
-                <td className="px-4 py-2.5">
-                  <button className="p-1 hover:bg-muted/20 rounded"><Eye size={14} className="text-muted-foreground" /></button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+        {/* Messages Table */}
+        {loading ? (
+          <TableSkeletonLoader columns={7} rows={6} />
+        ) : (
+          <div className="bg-card rounded-xl border border-border overflow-hidden shadow-sm">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-muted/50 border-b border-border">
+                <tr>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Enquiry ID</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Name</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider hidden md:table-cell">Email</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider hidden lg:table-cell">Phone</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Department</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider hidden sm:table-cell">Date</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {messages.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="px-4 py-12 text-center">
+                      <div className="flex flex-col items-center gap-2">
+                        <Mail size={32} className="text-muted-foreground/30" />
+                        <span className="text-sm text-muted-foreground">No enquiries found</span>
+                      </div>
+                    </td>
+                  </tr>
+                ) : (
+                  messages.map((m) => (
+                    <tr 
+                      key={m.id} 
+                      className="border-t border-border hover:bg-muted/20 transition-colors cursor-pointer group" 
+                      onClick={() => setSelected(m)}
+                    >
+                      <td className="px-4 py-3">
+                        <span className="text-xs font-mono text-burgundy font-semibold">{m.enquiryId}</span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          <div className="w-7 h-7 rounded-full bg-burgundy/10 flex items-center justify-center">
+                            <span className="text-xs font-semibold text-burgundy">{getInitials(m.name)}</span>
+                          </div>
+                          <span className="text-sm font-medium">{m.name}</span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 hidden md:table-cell text-sm">{m.email}</td>
+                      <td className="px-4 py-3 hidden lg:table-cell text-sm">{m.phone}</td>
+                      <td className="px-4 py-3">
+                        <span className="text-xs px-2 py-1 rounded-full bg-burgundy/5 text-burgundy">
+                          {m.department}
+                        </span>
+                       </td>
+                      <td className="px-4 py-3 hidden sm:table-cell text-xs text-muted-foreground">{m.date}</td>
+                      <td className="px-4 py-3">
+                        <button className="p-1.5 rounded-lg hover:bg-muted transition-colors">
+                          <Eye size={14} className="text-muted-foreground group-hover:text-burgundy transition-colors" />
+                        </button>
+                       </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        )}
 
-      {selected && (
-        <div className="fixed inset-0 bg-black/30 z-50 flex items-center justify-center p-4" onClick={() => setSelected(null)}>
-          <div className="bg-card rounded-xl shadow-lg max-w-lg w-full p-6" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <Mail size={18} className="text-burgundy" />
-                <h3 className="font-serif font-semibold text-foreground">{selected.subject}</h3>
-              </div>
-              <button onClick={() => setSelected(null)} className="text-muted-foreground hover:text-foreground"><X size={16} /></button>
+        {totalPages > 1 && (
+          <div className="sticky bottom-0 z-20 mt-6 -mx-2 px-2 py-3 bg-background/95 backdrop-blur border-t border-border flex flex-wrap items-center justify-between gap-3">
+            <div className="text-xs text-muted-foreground">
+              Showing {(currentPage - 1) * limit + 1} to {Math.min(currentPage * limit, totalRecords)} of {totalRecords}
             </div>
-            <div className="grid grid-cols-2 gap-3 text-sm mb-3">
-              <div><span className="text-muted-foreground">{t("Name")}:</span> <span className="font-medium">{selected.name}</span></div>
-              <div><span className="text-muted-foreground">{t("Email")}:</span> <span className="font-medium">{selected.email}</span></div>
-              <div><span className="text-muted-foreground">{t("Phone")}:</span> <span className="font-medium">{selected.phone}</span></div>
-              <div><span className="text-muted-foreground">{t("Date")}:</span> <span className="font-medium">{selected.date}</span></div>
-            </div>
-            <div className="text-sm bg-muted/10 rounded-lg p-3 mb-4">
-              <p className="text-muted-foreground text-[11px] mb-1">{t("Message")}:</p>
-              <p>{selected.message}</p>
-            </div>
-
-            {replySent ? (
-              <div className="flex items-center gap-2 p-3 bg-success/10 rounded-lg mb-3 animate-fade-in">
-                <CheckCircle size={16} className="text-success" />
-                <span className="text-sm font-sans text-success">{t("Reply sent and forwarded to department")}</span>
-              </div>
-            ) : showReply ? (
-              <div className="space-y-3 mb-3 animate-fade-in">
-                <div>
-                  <label className="text-xs font-sans text-muted-foreground">{t("Forward to Department")} *</label>
-                  <select value={replyDept} onChange={e => setReplyDept(e.target.value)}
-                    className="w-full mt-1 px-3 py-2 rounded-lg border border-border text-sm font-sans focus:outline-none focus:ring-1 focus:ring-gold">
-                    <option value="">{t("Select Department")}</option>
-                    {deptOptions.map(d => <option key={d} value={d}>{d}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="text-xs font-sans text-muted-foreground">{t("Reply Message")} *</label>
-                  <textarea value={replyText} onChange={e => setReplyText(e.target.value)} placeholder={t("Type your reply...")}
-                    className="w-full mt-1 px-3 py-2 rounded-lg border border-border text-sm font-sans focus:outline-none focus:ring-1 focus:ring-gold resize-none" rows={3} />
-                </div>
-                <div className="flex gap-2">
-                  <button onClick={handleReply} disabled={!replyText.trim() || !replyDept}
-                    className="flex items-center gap-1 px-4 py-2 rounded-md bg-burgundy text-primary-foreground text-xs font-sans font-medium hover:bg-burgundy-deep disabled:opacity-50">
-                    <Send size={12} /> {t("Send Reply")}
-                  </button>
-                  <button onClick={() => setShowReply(false)} className="px-4 py-2 rounded-md bg-section-bg text-muted-foreground text-xs font-sans font-medium">{t("Cancel")}</button>
-                </div>
-              </div>
-            ) : null}
-
-            <div className="flex gap-2 justify-end">
-              {!showReply && !replySent && (
-                <button onClick={() => setShowReply(true)} className="px-4 py-1.5 text-xs bg-burgundy/10 text-burgundy rounded-lg hover:bg-burgundy/20 flex items-center gap-1">
-                  <Reply size={12} /> {t("Reply")}
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                disabled={currentPage === 1 || loading}
+                className="px-3 py-1.5 rounded-lg border border-border text-xs disabled:opacity-50 disabled:cursor-not-allowed hover:bg-muted transition-colors"
+              >
+                Previous
+              </button>
+              {getPageNumbers().map((page, index) => (
+                <button
+                  key={index}
+                  type="button"
+                  onClick={() => typeof page === "number" && setCurrentPage(page)}
+                  disabled={page === "..." || loading}
+                  className={`min-w-[34px] px-2 py-1.5 rounded-lg border text-xs transition-all ${
+                    currentPage === page
+                      ? "bg-burgundy text-white border-burgundy shadow-sm"
+                      : page === "..."
+                      ? "border-transparent cursor-default"
+                      : "border-border hover:bg-muted"
+                  }`}
+                >
+                  {page}
                 </button>
-              )}
-              <button onClick={() => setSelected(null)} className="px-4 py-1.5 text-xs border border-border rounded-lg hover:bg-muted/20">{t("Close")}</button>
+              ))}
+              <button
+                type="button"
+                onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                disabled={currentPage === totalPages || loading}
+                className="px-3 py-1.5 rounded-lg border border-border text-xs disabled:opacity-50 disabled:cursor-not-allowed hover:bg-muted transition-colors"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Message Detail Modal */}
+      {selected && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setSelected(null)}>
+          <div className="bg-card rounded-2xl shadow-2xl border border-border max-w-lg w-full animate-in fade-in zoom-in duration-200" onClick={e => e.stopPropagation()}>
+            {/* Header */}
+            <div className="flex items-center justify-between p-5 border-b border-border">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-burgundy/10 flex items-center justify-center">
+                  <Mail size={18} className="text-burgundy" />
+                </div>
+                <div>
+                  <h3 className="font-serif font-semibold text-foreground">{selected.department}</h3>
+                  <p className="text-xs text-muted-foreground">Enquiry #{selected.enquiryId}</p>
+                </div>
+              </div>
+              <button onClick={() => setSelected(null)} className="p-1 rounded-lg hover:bg-muted transition-colors">
+                <X size={18} className="text-muted-foreground" />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="p-5 space-y-4">
+              {/* Sender Info */}
+              <div className="grid grid-cols-2 gap-3 p-3 rounded-lg bg-muted/30">
+                <div className="flex items-center gap-2">
+                  <User size={14} className="text-muted-foreground" />
+                  <div>
+                    <p className="text-[10px] text-muted-foreground uppercase">Name</p>
+                    <p className="text-sm font-medium">{selected.name}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Mail size={14} className="text-muted-foreground" />
+                  <div>
+                    <p className="text-[10px] text-muted-foreground uppercase">Email</p>
+                    <p className="text-sm font-medium">{selected.email}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Phone size={14} className="text-muted-foreground" />
+                  <div>
+                    <p className="text-[10px] text-muted-foreground uppercase">Phone</p>
+                    <p className="text-sm font-medium">{selected.phone}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Calendar size={14} className="text-muted-foreground" />
+                  <div>
+                    <p className="text-[10px] text-muted-foreground uppercase">Date</p>
+                    <p className="text-sm font-medium">{selected.date}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Message */}
+              <div className="rounded-lg bg-muted/20 p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <MessageSquare size={14} className="text-burgundy" />
+                  <p className="text-xs font-semibold text-foreground uppercase tracking-wide">Message</p>
+                </div>
+                <p className="text-sm leading-relaxed">{selected.message}</p>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="flex justify-end p-5 border-t border-border">
+              <button 
+                onClick={() => setSelected(null)} 
+                className="px-4 py-2 text-sm border border-border rounded-lg hover:bg-muted transition-all"
+              >
+                Close
+              </button>
             </div>
           </div>
         </div>

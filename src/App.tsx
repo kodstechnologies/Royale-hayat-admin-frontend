@@ -12,10 +12,17 @@ import InternationalPatients from "./pages/InternationalPatients";
 import AlSafwaEnrollments from "./pages/AlSafwaEnrollments";
 import ContactMessages from "./pages/ContactMessages";
 import JobApplications from "./pages/job/JobApplications";
+import CreateJobPage from "./pages/job/createJob";
+import EditJobPage from "./pages/job/EditJob";
 import FeedbackReviews from "./pages/FeedbackReviews";
 import Doctors from "./pages/Doctors";
+import CreateDoctorPage from "./pages/doctor/CreateDoctorPage";
+import EditDoctorPage from "./pages/doctor/EditDoctorPage";
+import ViewDoctor from "./pages/doctor/ViewDoctor";
 import DoctorProfile from "./pages/DoctorProfile";
 import Departments from "./pages/Departments";
+import Categories from "./pages/Categories";
+import Subspecialities from "./pages/Subspecialities";
 import Services from "./pages/Services";
 import Documents from "./pages/Documents";
 import Reports from "./pages/Reports";
@@ -38,11 +45,18 @@ const App = () => (
             <Route path="/medical-records-requests" element={<MedicalRecordsRequests />} />
             <Route path="/international-patients" element={<InternationalPatients />} />
             <Route path="/al-safwa-enrollments" element={<AlSafwaEnrollments />} />
-            <Route path="/contact-messages" element={<ContactMessages />} />
+            <Route path="/enquiries" element={<ContactMessages />} />
             <Route path="/job-applications" element={<JobApplications />} />
+            <Route path="/jobs/create" element={<CreateJobPage />} />
+            <Route path="/jobs/edit/:id" element={<EditJobPage />} />
             <Route path="/feedback" element={<FeedbackReviews />} />
             <Route path="/doctors" element={<Doctors />} />
+            <Route path="/doctors/create" element={<CreateDoctorPage />} />
+            <Route path="/doctors/edit/:id" element={<EditDoctorPage />} />
+            <Route path="/doctors/view/:id" element={<ViewDoctor />} />
             <Route path="/doctors/:id" element={<DoctorProfile />} />
+            <Route path="/categories" element={<Categories />} />
+            <Route path="/subspecialities" element={<Subspecialities />} />
             <Route path="/departments" element={<Departments />} />
             <Route path="/services" element={<Services />} />
             <Route path="/documents" element={<Documents />} />

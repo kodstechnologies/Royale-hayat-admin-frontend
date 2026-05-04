@@ -27,10 +27,11 @@ export const getDoctorById = async (id: string) => {
 };
 
 export const createDoctor = async (payload: DoctorPayload | FormData) => {
+  console.log(payload,"------------");
   return api.post("/api/v1/doctors", payload);
 };
 
-export const editDoctor = async (id: string, payload: DoctorPayload) => {
+export const editDoctor = async (id: string, payload: DoctorPayload | FormData) => {
   return api.put(`/api/v1/doctors/${id}`, payload);
 };
 
