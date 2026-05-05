@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import AdminLayout from "@/components/layout/AdminLayout";
 import { toast } from "sonner";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -9,7 +10,7 @@ import {
   getDepartments,
   updateDepartment as updateDepartmentApi,
 } from "@/api/department";
-import { Pencil, Trash2, Image as ImageIcon } from "lucide-react";
+import { Eye, Pencil, Trash2, Image as ImageIcon } from "lucide-react";
 import CreateDepartment, { type CreateDepartmentFormData } from "./department/createDepartment";
 import EditDepartmentModal, { type EditDepartmentFormData } from "./department/editDepartment";
 import {
@@ -57,6 +58,7 @@ const getSubspecialityIdsFromDepartment = (dept: Department | null): string[] =>
 };
 
 const Departments = () => {
+  const navigate = useNavigate();
   const { t } = useLanguage();
   const [departments, setDepartments] = useState<Department[]>([]);
   const [selectedDept, setSelectedDept] = useState<Department | null>(null);
@@ -394,6 +396,14 @@ const Departments = () => {
                         </div>
                       )}
                       <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => navigate(`/departments/view/${dept._id}`)}
+                          className="inline-flex items-center justify-center gap-1 px-2.5 py-1.5 rounded-lg border border-border text-xs font-medium hover:bg-muted transition-colors"
+                        >
+                          <Eye size={12} />
+                          View
+                        </button>
                         <button
                           type="button"
                           onClick={() => openDepartment(dept._id)}

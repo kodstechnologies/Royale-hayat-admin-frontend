@@ -21,6 +21,7 @@ import EditDoctorPage from "./pages/doctor/EditDoctorPage";
 import ViewDoctor from "./pages/doctor/ViewDoctor";
 import DoctorProfile from "./pages/DoctorProfile";
 import Departments from "./pages/Departments";
+import ViewDepartment from "./pages/department/ViewDepartment";
 import Categories from "./pages/Categories";
 import Subspecialities from "./pages/Subspecialities";
 import Services from "./pages/Services";
@@ -58,6 +59,7 @@ const App = () => (
             <Route path="/categories" element={<Categories />} />
             <Route path="/subspecialities" element={<Subspecialities />} />
             <Route path="/departments" element={<Departments />} />
+            <Route path="/departments/view/:id" element={<ViewDepartment />} />
             <Route path="/services" element={<Services />} />
             <Route path="/documents" element={<Documents />} />
             <Route path="/reports" element={<Reports />} />
