@@ -16,7 +16,7 @@ import EditDepartmentModal, { type EditDepartmentFormData } from "./department/e
 import {
   appendDepartmentRichContentToFormData,
   richContentFromApi,
-} from "./department/departmentFormShared";
+} from "./department/DepartmentFormShared";
 import AlertBox from "@/components/AlertBox";
 import Loader from "@/components/SkeletonLoader";
 
@@ -155,10 +155,10 @@ const Departments = () => {
       await createDepartment(formPayload);
       setMessage("Department created successfully.");
       showSuccessToast("Department created successfully.");
-      
+
       setCurrentPage(1);
       await fetchDepartments();
-      
+
       setTimeout(() => setMessage(""), 3000);
     } catch (error: any) {
       const errorMessage = error?.response?.data?.message || "Failed to create department.";
@@ -245,19 +245,19 @@ const Departments = () => {
 
   const confirmDelete = async () => {
     if (!departmentToDelete) return;
-    
+
     setIsDeleting(true);
     try {
       await deleteDepartmentApi(departmentToDelete._id);
       setMessage("Department deleted successfully.");
       showSuccessToast("Department deleted successfully.");
-      
+
       if (departments.length === 1 && currentPage > 1) {
         setCurrentPage((prev) => prev - 1);
       } else {
         await fetchDepartments();
       }
-      
+
       setTimeout(() => setMessage(""), 3000);
       setShowDeleteAlert(false);
       setDepartmentToDelete(null);
@@ -273,7 +273,7 @@ const Departments = () => {
   const getPageNumbers = () => {
     const pageNumbers = [];
     const maxVisible = 5;
-    
+
     if (totalPages <= maxVisible) {
       for (let i = 1; i <= totalPages; i++) {
         pageNumbers.push(i);
@@ -301,7 +301,7 @@ const Departments = () => {
         pageNumbers.push(totalPages);
       }
     }
-    
+
     return pageNumbers;
   };
 
@@ -349,14 +349,14 @@ const Departments = () => {
                     key={dept._id}
                     className="group bg-card rounded-xl border border-border overflow-hidden hover:shadow-lg transition-all duration-200 hover:-translate-y-0.5"
                   >
-                    <div 
+                    <div
                       className="relative h-40 cursor-pointer overflow-hidden"
                       onClick={() => openDepartment(dept._id)}
                     >
                       {dept.image ? (
-                        <img 
-                          src={dept.image} 
-                          alt={dept.name} 
+                        <img
+                          src={dept.image}
+                          alt={dept.name}
                           className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
                         />
                       ) : (
@@ -431,7 +431,7 @@ const Departments = () => {
                   <div className="text-xs text-muted-foreground">
                     Showing {(currentPage - 1) * limit + 1} to {Math.min(currentPage * limit, totalRecords)} of {totalRecords}
                   </div>
-                  
+
                   <div className="flex items-center gap-1">
                     <button
                       type="button"
@@ -448,13 +448,12 @@ const Departments = () => {
                         type="button"
                         onClick={() => typeof page === "number" && setCurrentPage(page)}
                         disabled={page === "..." || loading}
-                        className={`min-w-[34px] px-2 py-1.5 rounded-lg border text-xs transition-all ${
-                          currentPage === page
-                            ? "bg-burgundy text-white border-burgundy shadow-sm"
-                            : page === "..."
+                        className={`min-w-[34px] px-2 py-1.5 rounded-lg border text-xs transition-all ${currentPage === page
+                          ? "bg-burgundy text-white border-burgundy shadow-sm"
+                          : page === "..."
                             ? "border-transparent cursor-default"
                             : "border-border hover:bg-muted"
-                        }`}
+                          }`}
                       >
                         {page}
                       </button>

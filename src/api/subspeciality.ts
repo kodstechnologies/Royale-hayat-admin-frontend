@@ -5,15 +5,20 @@ const BASE = "/api/v1/subspecialities";
 export type CustomSubspecialityDoc = {
   _id: string;
   subHeading?: string;
+  arabicSubHeading?: string;
   explanations?: string[];
+  arabicExplanations?: string[];
   createdAt?: string;
   updatedAt?: string;
+
 };
 
 export type Subspeciality = {
   _id: string;
   name: string;
+  arabicName: string;
   description: string;
+  arabicDescription: string
   createdAt?: string;
   updatedAt?: string;
   /** Populated from API as objects; may be absent. */
@@ -22,12 +27,16 @@ export type Subspeciality = {
 
 export type CustomSubspecialityInput = {
   subHeading?: string;
+  arabicSubHeading?: string;
   explanations?: string[];
+  arabicExplanations?: string[];
 };
 
 export type CreateSubspecialityPayload = {
   name: string;
+  arabicName: String;
   description: string;
+  arabicDescription: String
   customSubspecialities?: (string | CustomSubspecialityInput)[];
 };
 

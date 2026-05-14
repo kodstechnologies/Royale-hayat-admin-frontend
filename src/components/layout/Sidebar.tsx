@@ -68,29 +68,81 @@ const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
       to={item.to}
       onMouseEnter={() => setHoveredItem(item.to)}
       onMouseLeave={() => setHoveredItem(null)}
-      className={`group relative flex items-center gap-3 px-3 py-2.5 mx-2 rounded-xl text-sm font-medium transition-all duration-200
-        ${isActive
-          ? "bg-gradient-to-r from-burgundy/10 to-burgundy/5 text-burgundy shadow-sm"
-          : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-burgundy"
+      className={`
+      group relative flex items-center gap-3 
+      px-3 py-3 mx-3 mb-2
+      rounded-2xl text-sm font-medium
+      transition-all duration-300 ease-in-out
+      border backdrop-blur-sm
+
+      ${isActive
+          ? `
+          bg-gradient-to-r from-burgundy to-burgundy/90
+          text-white
+          border-burgundy/80
+          shadow-lg shadow-burgundy/20
+          scale-[1.02]
+        `
+          : `
+          bg-white/5
+          text-sidebar-foreground
+          border-white/10
+          hover:bg-white/10
+          hover:border-burgundy/30
+          hover:shadow-md
+          hover:translate-x-1
+          hover:text-white
+        `
         }
-        ${collapsed ? "justify-center px-2" : ""}
-      `}
+
+      ${collapsed ? "justify-center px-2" : ""}
+    `}
     >
-      <item.icon 
-        size={20} 
-        className={`transition-all duration-200 ${
-          isActive 
-            ? "text-burgundy" 
-            : "text-sidebar-foreground/70 group-hover:text-burgundy group-hover:scale-105"
-        }`}
-      />
-      {!collapsed && (
-        <span className="truncate">{t(item.label)}</span>
+      {/* Active Indicator */}
+      {isActive && (
+        <div className="absolute left-0 top-2 bottom-2 w-1 rounded-r-full bg-white" />
       )}
-      
-      {/* Tooltip for collapsed mode */}
+
+      {/* Icon Container */}
+      <div
+        className={`
+        flex items-center justify-center
+        w-10 h-10 rounded-xl
+        transition-all duration-300
+
+        ${isActive
+            ? "bg-white/20 text-white"
+            : "bg-white/5 text-sidebar-foreground/70 group-hover:bg-burgundy/20 group-hover:text-burgundy"
+          }
+      `}
+      >
+        <item.icon size={18} />
+      </div>
+
+      {!collapsed && (
+        <span
+          className={`
+    flex-1 text-[14px] leading-5
+    whitespace-normal break-words
+    transition-colors duration-300
+    ${isActive ? "text-white" : "text-sidebar-foreground group-hover:text-burgundy"}
+  `}
+        >
+          {t(item.label)}
+        </span>
+      )}
+
+      {/* Hover Glow */}
+      {!isActive && (
+        <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-r from-burgundy/5 to-transparent pointer-events-none" />
+      )}
+
+      {/* Tooltip */}
       {collapsed && hoveredItem === item.to && (
-        <div className={`fixed ${isRTL ? "right-20" : "left-20"} z-50 px-2 py-1 text-xs font-medium text-white bg-gray-900 rounded-md shadow-lg whitespace-nowrap`}>
+        <div
+          className={`fixed ${isRTL ? "right-20" : "left-20"
+            } z-50 px-3 py-2 text-xs font-medium text-white bg-gray-900 rounded-lg shadow-xl whitespace-nowrap`}
+        >
           {t(item.label)}
         </div>
       )}
@@ -98,21 +150,20 @@ const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
   );
 
   return (
-    <aside 
-      className={`${collapsed ? "w-20" : "w-64"} bg-gradient-to-b from-sidebar via-sidebar to-sidebar/95 min-h-screen flex flex-col transition-all duration-300 ease-in-out shrink-0 fixed ${isRTL ? "right-0" : "left-0"} top-0 z-30 h-screen shadow-2xl`}
+    <aside
+      className={`${collapsed ? "w-[80px]" : "w-[320px]"} bg-gradient-to-b from-sidebar via-sidebar to-sidebar/95 min-h-screen flex flex-col transition-all duration-300 ease-in-out shrink-0 fixed ${isRTL ? "right-0" : "left-0"} top-0 z-30 h-screen shadow-2xl`}
     >
       {/* Logo Section */}
       <div className="relative h-24 flex items-center justify-center border-b border-sidebar-border/50 px-3 bg-white/5 backdrop-blur-sm">
         <div className="relative">
-          <img 
-            src={logo} 
-            alt="Royale Hayat Hospital" 
-            className={`transition-all duration-300 object-contain ${
-              collapsed ? "h-12 w-auto" : "h-16 w-auto"
-            }`} 
+          <img
+            src={logo}
+            alt="Royale Hayat Hospital"
+            className={`transition-all duration-300 object-contain ${collapsed ? "h-12 w-auto" : "h-16 w-auto"
+              }`}
           />
         </div>
-        
+
         {/* Toggle Button */}
         {onToggle && (
           <button
@@ -186,7 +237,7 @@ const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
       {/* Footer Section */}
       <div className="border-t border-sidebar-border/50 bg-white/5 backdrop-blur-sm">
         {/* User Profile (Optional) */}
-      
+
 
         {/* Settings */}
         <NavLink
@@ -207,8 +258,8 @@ const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
         </NavLink>
 
         {/* Logout Button */}
-        <button 
-          onClick={handleLogout} 
+        <button
+          onClick={handleLogout}
           title={collapsed ? t("Secure Logout") : undefined}
           aria-label={t("Secure Logout")}
           className={`flex items-center gap-3 px-3 py-2.5 mx-2 mb-3 rounded-xl text-sm font-medium transition-all duration-200 text-red-400 hover:bg-red-500/10 hover:text-red-300 w-full group

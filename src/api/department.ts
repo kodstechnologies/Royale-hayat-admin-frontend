@@ -1,5 +1,21 @@
 import api from "./axiosInstance";
-
+export type Department = {
+  _id: string;
+  departmentId?: string;
+  name?: string;
+  arabicName?: string;
+  description?: string;
+  arabicDescription?: string;
+  catagory?: string | any;
+  subspecialities?: any[];
+  image?: string;
+  subSpecialties?: string[];
+  isActive?: boolean;
+  order?: number;
+  createdAt?: string;
+  updatedAt?: string;
+  customExplainantions?: any[];
+};
 export type DepartmentPayload = {
   departmentId: string;
   name: string;

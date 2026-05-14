@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import { useNavigate, useParams } from "react-router-dom";
 import { toast } from "sonner";
+import { Plus, Trash2 } from "lucide-react";
 import AdminLayout from "@/components/layout/AdminLayout";
 import Loader from "@/components/SkeletonLoader";
 import { Switch } from "@/components/ui/switch";
@@ -23,18 +24,29 @@ type FormDataType = {
   imageFile: File | null;
 };
 
-const toItems = (value: string) => value.split(",").map((v) => v.trim()).filter(Boolean);
+const SEPARATOR = "|||";
+
+const toItems = (value: string) => value.split(SEPARATOR).map((v) => v.trim()).filter(Boolean);
 const removeItem = (value: string, itemToRemove: string) =>
   toItems(value)
     .filter((item) => item !== itemToRemove)
-    .join(", ");
+    .join(SEPARATOR);
 const addUniqueItem = (value: string, next: string) => {
   const normalized = next.trim();
   if (!normalized) return value;
   const existing = toItems(value);
   if (existing.some((item) => item.toLowerCase() === normalized.toLowerCase())) return value;
-  return [...existing, normalized].join(", ");
+  return [...existing, normalized].join(SEPARATOR);
 };
+const toEditorRows = (value: string) => {
+  if (!value) return [""];
+  const rows = value.split(SEPARATOR).map((row) => row.trim());
+  return rows.length ? rows : [""];
+};
+const toCommaSeparated = (rows: string[]) =>
+  rows
+    .map((row) => row.trim())
+    .join(SEPARATOR);
 
 const toggleSubId = (id: string, current: string[]) => {
   const next = new Set(current);
@@ -54,8 +66,6 @@ const EditDoctorPage = () => {
   const [previewUrl, setPreviewUrl] = useState("");
   const [dragActive, setDragActive] = useState(false);
   const [languageInput, setLanguageInput] = useState("");
-  const [expertiseInput, setExpertiseInput] = useState("");
-  const [qualificationInput, setQualificationInput] = useState("");
   const [initialValues, setInitialValues] = useState<FormDataType>({
     doctorId: "",
     name: "",
@@ -122,9 +132,9 @@ const EditDoctorPage = () => {
           title: doctor?.title || "",
           initials: doctor?.initials || "",
           availableOnline: Boolean(doctor?.availableOnline),
-          languages: (doctor?.languages || []).join(", "),
-          expertise: (doctor?.expertise || []).join(", "),
-          qualifications: (doctor?.qualifications || []).join(", "),
+          languages: (doctor?.languages || []).join(SEPARATOR),
+          expertise: (doctor?.expertise || []).join(SEPARATOR),
+          qualifications: (doctor?.qualifications || []).join(SEPARATOR),
           imageFile: null,
         });
         setPreviewUrl(doctor?.image || "");
@@ -329,28 +339,107 @@ const EditDoctorPage = () => {
 
               <div>
                 <label className="text-xs font-medium">Expertise</label>
-                <div className="mt-1 flex gap-2">
-                  <input value={expertiseInput} onChange={(e) => setExpertiseInput(e.target.value)} className="flex-1 px-3 py-2 rounded-lg border border-border bg-background text-sm" />
-                  <button type="button" onClick={() => { setFieldValue("expertise", addUniqueItem(values.expertise, expertiseInput)); setExpertiseInput(""); }} className="px-4 py-2 rounded-md bg-burgundy text-primary-foreground text-xs">Add</button>
+                <div className="mt-1 space-y-2">
+                  {toEditorRows(values.expertise).map((line, index) => (
+                    <div key={`expertise-${index}`} className="flex gap-2 items-center">
+                      <input
+                        type="text"
+                        value={line}
+                        onChange={(e) => {
+                          const next = [...toEditorRows(values.expertise)];
+                          next[index] = e.target.value;
+                          setFieldValue("expertise", toCommaSeparated(next));
+                        }}
+                        placeholder="Add expertise"
+                        className="flex-1 min-w-0 px-3 py-2 rounded-lg border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-burgundy/20 focus:border-burgundy transition-all"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const rows = toEditorRows(values.expertise);
+                          if (rows.length <= 1) {
+                            setFieldValue("expertise", "");
+                            return;
+                          }
+                          const next = rows.filter((_, i) => i !== index);
+                          setFieldValue("expertise", toCommaSeparated(next));
+                        }}
+                        className="shrink-0 p-2 rounded-lg border border-border text-muted-foreground hover:text-destructive hover:border-destructive/40 transition-colors"
+                        title="Remove line"
+                        aria-label="Remove line"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
                 </div>
-                {toItems(values.expertise).length > 0 && <div className="mt-2 flex flex-wrap gap-2">{toItems(values.expertise).map((item) => <span key={item} className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs bg-burgundy/10 text-burgundy">{item}<button type="button" onClick={() => setFieldValue("expertise", removeItem(values.expertise, item))}>x</button></span>)}</div>}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const rows = [...toEditorRows(values.expertise), ""];
+                    setFieldValue("expertise", toCommaSeparated(rows));
+                  }}
+                  className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-dashed border-border text-xs font-medium text-muted-foreground hover:text-foreground hover:border-burgundy/50 hover:bg-muted/50 transition-colors"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  Add line
+                </button>
               </div>
 
               <div>
                 <label className="text-xs font-medium">Qualifications</label>
-                <div className="mt-1 flex gap-2">
-                  <input value={qualificationInput} onChange={(e) => setQualificationInput(e.target.value)} className="flex-1 px-3 py-2 rounded-lg border border-border bg-background text-sm" />
-                  <button type="button" onClick={() => { setFieldValue("qualifications", addUniqueItem(values.qualifications, qualificationInput)); setQualificationInput(""); }} className="px-4 py-2 rounded-md bg-burgundy text-primary-foreground text-xs">Add</button>
+                <div className="mt-1 space-y-2">
+                  {toEditorRows(values.qualifications).map((line, index) => (
+                    <div key={`qualification-${index}`} className="flex gap-2 items-center">
+                      <input
+                        type="text"
+                        value={line}
+                        onChange={(e) => {
+                          const next = [...toEditorRows(values.qualifications)];
+                          next[index] = e.target.value;
+                          setFieldValue("qualifications", toCommaSeparated(next));
+                        }}
+                        placeholder="Add qualification"
+                        className="flex-1 min-w-0 px-3 py-2 rounded-lg border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-burgundy/20 focus:border-burgundy transition-all"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const rows = toEditorRows(values.qualifications);
+                          if (rows.length <= 1) {
+                            setFieldValue("qualifications", "");
+                            return;
+                          }
+                          const next = rows.filter((_, i) => i !== index);
+                          setFieldValue("qualifications", toCommaSeparated(next));
+                        }}
+                        className="shrink-0 p-2 rounded-lg border border-border text-muted-foreground hover:text-destructive hover:border-destructive/40 transition-colors"
+                        title="Remove line"
+                        aria-label="Remove line"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
                 </div>
-                {toItems(values.qualifications).length > 0 && <div className="mt-2 flex flex-wrap gap-2">{toItems(values.qualifications).map((item) => <span key={item} className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs bg-burgundy/10 text-burgundy">{item}<button type="button" onClick={() => setFieldValue("qualifications", removeItem(values.qualifications, item))}>x</button></span>)}</div>}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const rows = [...toEditorRows(values.qualifications), ""];
+                    setFieldValue("qualifications", toCommaSeparated(rows));
+                  }}
+                  className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-dashed border-border text-xs font-medium text-muted-foreground hover:text-foreground hover:border-burgundy/50 hover:bg-muted/50 transition-colors"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  Add line
+                </button>
               </div>
 
               <div>
                 <label className="text-xs font-medium block mb-2">Doctor Image</label>
                 <div
-                  className={`relative rounded-lg border-2 border-dashed transition-all ${
-                    dragActive ? "border-burgundy bg-burgundy/5" : "border-border bg-muted/30"
-                  }`}
+                  className={`relative rounded-lg border-2 border-dashed transition-all ${dragActive ? "border-burgundy bg-burgundy/5" : "border-border bg-muted/30"
+                    }`}
                   onDragEnter={handleDrag}
                   onDragLeave={handleDrag}
                   onDragOver={handleDrag}

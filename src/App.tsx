@@ -4,7 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { LanguageProvider } from "@/contexts/LanguageContext";
-import Login from "./pages/Login";
+import Login from "./pages/login/Login";
 import Dashboard from "./pages/Dashboard";
 import AppointmentRequests from "./pages/AppointmentRequests";
 import MedicalRecordsRequests from "./pages/MedicalRecordsRequests";
@@ -21,14 +21,19 @@ import EditDoctorPage from "./pages/doctor/EditDoctorPage";
 import ViewDoctor from "./pages/doctor/ViewDoctor";
 import DoctorProfile from "./pages/DoctorProfile";
 import Departments from "./pages/Departments";
+import CreateDepartmentPage from "./pages/department/createDepartment";
+import EditDepartmentPage from "./pages/department/editDepartment";
 import ViewDepartment from "./pages/department/ViewDepartment";
 import Categories from "./pages/Categories";
 import Subspecialities from "./pages/Subspecialities";
+import CreateSubspecialityPage from "./pages/subspeciality/CreateSubspeciality";
+import EditSubspecialityPage from "./pages/subspeciality/EditSubspeciality";
 import Services from "./pages/Services";
 import Documents from "./pages/Documents";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
+import OtpScreen from "./pages/login/otpScreen";
 
 const queryClient = new QueryClient();
 
@@ -41,6 +46,7 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/login" element={<Login />} />
+            <Route path="/otp" element={<OtpScreen />} />
             <Route path="/" element={<Dashboard />} />
             <Route path="/appointment-requests" element={<AppointmentRequests />} />
             <Route path="/medical-records-requests" element={<MedicalRecordsRequests />} />
@@ -58,7 +64,12 @@ const App = () => (
             <Route path="/doctors/:id" element={<DoctorProfile />} />
             <Route path="/categories" element={<Categories />} />
             <Route path="/subspecialities" element={<Subspecialities />} />
+            <Route path="/subspecialities/create" element={<CreateSubspecialityPage />} />
+            <Route path="/subspecialities/edit/:id" element={<EditSubspecialityPage />} />
             <Route path="/departments" element={<Departments />} />
+
+            {/* <Route path="/departments/create" element={<CreateDepartmentPage />} />
+            <Route path="/departments/edit/:id" element={<EditDepartmentPage />} /> */}
             <Route path="/departments/view/:id" element={<ViewDepartment />} />
             <Route path="/services" element={<Services />} />
             <Route path="/documents" element={<Documents />} />

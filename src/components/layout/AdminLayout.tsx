@@ -11,7 +11,7 @@ interface AdminLayoutProps {
 
 const AdminLayout = ({ children, title }: AdminLayoutProps) => {
   const [collapsed, setCollapsed] = useState(false);
-  const sidebarWidth = collapsed ? 72 : 256;
+  const sidebarWidth = collapsed ? 80 : 320;
   const { t, isRTL } = useLanguage();
 
   return (

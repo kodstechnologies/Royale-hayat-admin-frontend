@@ -7,7 +7,7 @@ import {
   DepartmentRichFields,
   richContentInitialValues,
   type DepartmentRichContentValues,
-} from "./departmentFormShared";
+} from "./DepartmentFormShared";
 
 export type CreateDepartmentFormData = DepartmentRichContentValues & {
   departmentId: string;
@@ -169,9 +169,9 @@ const CreateDepartment = ({ saving, onSubmit }: CreateDepartmentProps) => {
                     <label className="text-xs font-medium block mb-1">
                       Department ID <span className="text-red-500">*</span>
                     </label>
-                    <Field 
-                      name="departmentId" 
-                      className="w-full px-3 py-2 rounded-lg border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-burgundy/20 focus:border-burgundy transition-all" 
+                    <Field
+                      name="departmentId"
+                      className="w-full px-3 py-2 rounded-lg border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-burgundy/20 focus:border-burgundy transition-all"
                       placeholder="Enter department ID"
                     />
                     <ErrorMessage name="departmentId" component="p" className="text-xs text-red-500 mt-1" />
@@ -181,9 +181,9 @@ const CreateDepartment = ({ saving, onSubmit }: CreateDepartmentProps) => {
                     <label className="text-xs font-medium block mb-1">
                       Name <span className="text-red-500">*</span>
                     </label>
-                    <Field 
-                      name="name" 
-                      className="w-full px-3 py-2 rounded-lg border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-burgundy/20 focus:border-burgundy transition-all" 
+                    <Field
+                      name="name"
+                      className="w-full px-3 py-2 rounded-lg border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-burgundy/20 focus:border-burgundy transition-all"
                       placeholder="Enter department name"
                     />
                     <ErrorMessage name="name" component="p" className="text-xs text-red-500 mt-1" />
@@ -193,11 +193,11 @@ const CreateDepartment = ({ saving, onSubmit }: CreateDepartmentProps) => {
                     <label className="text-xs font-medium block mb-1">
                       Description <span className="text-red-500">*</span>
                     </label>
-                    <Field 
-                      as="textarea" 
-                      name="description" 
-                      rows={3} 
-                      className="w-full px-3 py-2 rounded-lg border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-burgundy/20 focus:border-burgundy transition-all resize-none" 
+                    <Field
+                      as="textarea"
+                      name="description"
+                      rows={3}
+                      className="w-full px-3 py-2 rounded-lg border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-burgundy/20 focus:border-burgundy transition-all resize-none"
                       placeholder="Enter department description (min. 10 characters)"
                     />
                     <ErrorMessage name="description" component="p" className="text-xs text-red-500 mt-1" />
@@ -266,9 +266,8 @@ const CreateDepartment = ({ saving, onSubmit }: CreateDepartmentProps) => {
                   <div>
                     <label className="text-xs font-medium block mb-2">Image (optional)</label>
                     <div
-                      className={`relative rounded-lg border-2 border-dashed transition-all ${
-                        dragActive ? "border-burgundy bg-burgundy/5" : "border-border bg-muted/30"
-                      }`}
+                      className={`relative rounded-lg border-2 border-dashed transition-all ${dragActive ? "border-burgundy bg-burgundy/5" : "border-border bg-muted/30"
+                        }`}
                       onDragEnter={handleDrag}
                       onDragLeave={handleDrag}
                       onDragOver={handleDrag}
@@ -290,9 +289,9 @@ const CreateDepartment = ({ saving, onSubmit }: CreateDepartmentProps) => {
                       <div className="flex flex-col items-center justify-center py-6 px-4 text-center">
                         {previewUrl ? (
                           <div className="relative w-full">
-                            <img 
-                              src={previewUrl} 
-                              alt="Preview" 
+                            <img
+                              src={previewUrl}
+                              alt="Preview"
                               className="max-h-32 w-auto mx-auto rounded-lg object-cover"
                             />
                             <button

@@ -6,7 +6,7 @@ import { fetchAllSubspecialities, type Subspeciality } from "@/api/subspeciality
 import {
   DepartmentRichFields,
   type DepartmentRichContentValues,
-} from "./departmentFormShared";
+} from "./DepartmentFormShared";
 
 export type EditDepartmentFormData = DepartmentRichContentValues & {
   departmentId: string;

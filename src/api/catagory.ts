@@ -7,6 +7,7 @@ export type Catagory = {
   name: string;
   createdAt?: string;
   updatedAt?: string;
+  arabicName: string;
 };
 
 export type CatagoryListMeta = {
@@ -18,10 +19,12 @@ export type CatagoryListMeta = {
 
 export type CreateCatagoryPayload = {
   name: string;
+  arabicName: string;
 };
 
 export type UpdateCatagoryPayload = {
   name: string;
+  arabicName: string;
 };
 
 export type ListCatagoriesParams = {
