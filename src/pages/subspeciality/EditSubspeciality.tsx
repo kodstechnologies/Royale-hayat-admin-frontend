@@ -1,7 +1,6 @@
+// EditSubspeciality.tsx
 import { useParams } from "react-router-dom";
-
 import AdminLayout from "@/components/layout/AdminLayout";
-
 import SubspecialityForm from "../../components/subspeciality/SubspecialityForm";
 
 const EditSubspeciality = () => {
@@ -9,10 +8,9 @@ const EditSubspeciality = () => {
 
     return (
         <AdminLayout title="Edit Subspeciality">
-            <SubspecialityForm
-                mode="edit"
-                subspecialityId={id}
-            />
+            <div className="space-y-6">
+                <SubspecialityForm mode="edit" subspecialityId={id} />
+            </div>
         </AdminLayout>
     );
 };

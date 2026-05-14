@@ -10,7 +10,8 @@ import AppointmentRequests from "./pages/AppointmentRequests";
 import MedicalRecordsRequests from "./pages/MedicalRecordsRequests";
 import InternationalPatients from "./pages/InternationalPatients";
 import AlSafwaEnrollments from "./pages/AlSafwaEnrollments";
-import ContactMessages from "./pages/ContactMessages";
+import Enquiries from "./pages/Enquiries";
+
 import JobApplications from "./pages/job/JobApplications";
 import CreateJobPage from "./pages/job/createJob";
 import EditJobPage from "./pages/job/EditJob";
@@ -34,6 +35,7 @@ import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import OtpScreen from "./pages/login/otpScreen";
+import ViewEnquiry from "./pages/enquiries/viewEnquiry";
 
 const queryClient = new QueryClient();
 
@@ -52,7 +54,8 @@ const App = () => (
             <Route path="/medical-records-requests" element={<MedicalRecordsRequests />} />
             <Route path="/international-patients" element={<InternationalPatients />} />
             <Route path="/al-safwa-enrollments" element={<AlSafwaEnrollments />} />
-            <Route path="/enquiries" element={<ContactMessages />} />
+            <Route path="/enquiries" element={<Enquiries />} />
+            <Route path="/enquiries/view/:id" element={<ViewEnquiry />} />
             <Route path="/job-applications" element={<JobApplications />} />
             <Route path="/jobs/create" element={<CreateJobPage />} />
             <Route path="/jobs/edit/:id" element={<EditJobPage />} />
@@ -63,13 +66,15 @@ const App = () => (
             <Route path="/doctors/view/:id" element={<ViewDoctor />} />
             <Route path="/doctors/:id" element={<DoctorProfile />} />
             <Route path="/categories" element={<Categories />} />
+         
             <Route path="/subspecialities" element={<Subspecialities />} />
             <Route path="/subspecialities/create" element={<CreateSubspecialityPage />} />
             <Route path="/subspecialities/edit/:id" element={<EditSubspecialityPage />} />
             <Route path="/departments" element={<Departments />} />
+            
 
-            {/* <Route path="/departments/create" element={<CreateDepartmentPage />} />
-            <Route path="/departments/edit/:id" element={<EditDepartmentPage />} /> */}
+            <Route path="/departments/create" element={<CreateDepartmentPage />} />
+            <Route path="/departments/edit/:id" element={<EditDepartmentPage />} />
             <Route path="/departments/view/:id" element={<ViewDepartment />} />
             <Route path="/services" element={<Services />} />
             <Route path="/documents" element={<Documents />} />

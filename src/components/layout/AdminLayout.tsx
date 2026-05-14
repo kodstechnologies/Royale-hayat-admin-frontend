@@ -23,8 +23,10 @@ const AdminLayout = ({ children, title }: AdminLayoutProps) => {
         className="flex-1 flex flex-col min-w-0 transition-all duration-300"
         style={isRTL ? { marginRight: sidebarOffset } : { marginLeft: sidebarOffset }}
       >
-        {/* Gap cover — blocks scrolled content from showing in the 12px space above the floating header */}
-        <div className="sticky top-0 z-20 h-3 bg-section-bg shrink-0" />
+        {/* Fixed gap cover — blocks scrolled content showing in the 12px space above the floating header */}
+        <div
+          className="fixed top-0 left-0 right-0 z-[25] h-3 bg-section-bg pointer-events-none"
+        />
         <Header title={t(title)}>
           <button
             onClick={() => setCollapsed(!collapsed)}

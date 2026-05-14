@@ -74,10 +74,10 @@ const Header = ({ title, children }: HeaderProps) => {
         sticky top-3 z-20
         mx-3
         h-16
-        bg-white/70
+        bg-white/90
         backdrop-blur-2xl
         border border-white/30
-        shadow-[0_20px_60px_rgba(0,0,0,0.08)]
+        
         rounded-[32px]
         flex items-center justify-between
         px-6
@@ -103,7 +103,7 @@ const Header = ({ title, children }: HeaderProps) => {
       {/* RIGHT SECTION */}
       <div className="flex items-center gap-3">
         {/* SEARCH */}
-        <div className="relative hidden md:block">
+        {/* <div className="relative hidden md:block">
           <Search
             size={18}
             className={`absolute ${isRTL ? "right-4" : "left-4"
@@ -131,12 +131,9 @@ const Header = ({ title, children }: HeaderProps) => {
               placeholder:text-muted-foreground/70
             `}
           />
-        </div>
+        </div> */}
 
-        {/* LANGUAGE */}
-        <div className="rounded-2xl border border-border/40 bg-white/70 dark:bg-sidebar-accent/40 p-1 shadow-sm">
-          <LanguageToggle />
-        </div>
+       
 
         {/* NOTIFICATIONS */}
         <div className="relative">
