@@ -293,7 +293,7 @@ const Login = () => {
             {/* Footer note */}
             <div className="mt-8 pt-4 border-t border-slate-100">
               <p className="text-xs text-slate-400 text-center">
-                Secure encrypted connection
+                {/* Secure encrypted connection */}
               </p>
             </div>
           </div>

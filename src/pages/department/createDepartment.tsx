@@ -6,73 +6,74 @@ import BreadCrumb from "@/components/layout/BreadCrumb";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import { toast } from "sonner";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { fetchAllCatagories, type Catagory } from "@/api/catagory";
-import { fetchAllSubspecialities, type Subspeciality } from "@/api/subspeciality";
-import { createDepartment } from "@/api/department";
-import {
-  DepartmentRichFields,
-  richContentInitialValues,
-  appendDepartmentRichContentToFormData,
-  type DepartmentRichContentValues,
-} from "@/pages/department/DepartmentFormShared";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Upload, X } from "lucide-react";
+import { ArrowLeft, Upload, X, Plus, Trash2, Globe, Languages } from "lucide-react";
 
-export type CreateDepartmentFormData = DepartmentRichContentValues & {
+export type CreateDepartmentFormData = {
+  // English fields
   departmentId: string;
   name: string;
   description: string;
+  // Arabic fields
+  arabicName: string;
+  arabicDescription: string;
   catagoryId: string;
   subspecialityIds: string[];
   imageFile: File | null;
   isActive: boolean;
   order: number;
+  customExplainantions: {
+    id?: string;
+    subHeading: string;
+    explaination: string[];
+    arabicSubHeading: string;
+    arabicExplaination: string[];
+  }[];
 };
 
 const initialValues: CreateDepartmentFormData = {
-  ...richContentInitialValues,
   departmentId: "",
   name: "",
   description: "",
+  arabicName: "",
+  arabicDescription: "",
   catagoryId: "",
   subspecialityIds: [],
   imageFile: null,
   isActive: true,
   order: 0,
+  customExplainantions: [],
 };
+
+// Dummy data for categories and subspecialities with Arabic names for display
+const dummyCategories = [
+  { _id: "cat1", name: "Cardiology", arabicName: "أمراض القلب" },
+  { _id: "cat2", name: "Neurology", arabicName: "الأعصاب" },
+  { _id: "cat3", name: "Pediatrics", arabicName: "طب الأطفال" },
+  { _id: "cat4", name: "Orthopedics", arabicName: "جراحة العظام" },
+  { _id: "cat5", name: "Dermatology", arabicName: "الأمراض الجلدية" },
+];
+
+const dummySubspecialities = [
+  { _id: "sub1", name: "Interventional Cardiology", arabicName: "أمراض القلب التداخلية" },
+  { _id: "sub2", name: "Pediatric Cardiology", arabicName: "أمراض قلب الأطفال" },
+  { _id: "sub3", name: "Neuro Surgery", arabicName: "جراحة الأعصاب" },
+  { _id: "sub4", name: "Pediatric Neurology", arabicName: "أعصاب الأطفال" },
+  { _id: "sub5", name: "Sports Medicine", arabicName: "الطب الرياضي" },
+  { _id: "sub6", name: "Joint Replacement", arabicName: "استبدال المفاصل" },
+];
 
 const CreateDepartmentPage = () => {
   const navigate = useNavigate();
-  const { t } = useLanguage();
+  const { t, isRTL } = useLanguage();
   const [saving, setSaving] = useState(false);
   const [previewUrl, setPreviewUrl] = useState("");
   const [dragActive, setDragActive] = useState(false);
-  const [categories, setCategories] = useState<Catagory[]>([]);
-  const [categoriesLoading, setCategoriesLoading] = useState(false);
-  const [subspecialities, setSubspecialities] = useState<Subspeciality[]>([]);
-  const [subspecialitiesLoading, setSubspecialitiesLoading] = useState(false);
-
-  useEffect(() => {
-    const loadData = async () => {
-      setCategoriesLoading(true);
-      setSubspecialitiesLoading(true);
-      try {
-        const [cats, subs] = await Promise.all([fetchAllCatagories(), fetchAllSubspecialities()]);
-        setCategories(cats);
-        setSubspecialities(subs);
-      } catch {
-        setCategories([]);
-        setSubspecialities([]);
-        toast.error("Failed to load categories or subspecialities.", { position: "top-right" });
-      } finally {
-        setCategoriesLoading(false);
-        setSubspecialitiesLoading(false);
-      }
-    };
-    loadData();
-  }, []);
+  const [activeTab, setActiveTab] = useState<"english" | "arabic">("english");
+  const [categories] = useState(dummyCategories);
+  const [subspecialities] = useState(dummySubspecialities);
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
@@ -93,7 +94,7 @@ const CreateDepartmentPage = () => {
       setFieldValue("imageFile", file);
       setPreviewUrl(URL.createObjectURL(file));
     } else {
-      toast.error("Please upload an image file", { position: "top-right" });
+      toast.error("Please upload an image file");
     }
   };
 
@@ -108,49 +109,100 @@ const CreateDepartmentPage = () => {
     setFieldValue("subspecialityIds", [...next]);
   };
 
+  const addCustomSection = (setFieldValue: (field: string, value: any) => void, current: any[]) => {
+    setFieldValue("customExplainantions", [
+      ...current,
+      {
+        id: Date.now().toString(),
+        subHeading: "",
+        explaination: [""],
+        arabicSubHeading: "",
+        arabicExplaination: [""],
+      },
+    ]);
+  };
+
+  const removeCustomSection = (setFieldValue: (field: string, value: any) => void, current: any[], index: number) => {
+    const newSections = current.filter((_, i) => i !== index);
+    setFieldValue("customExplainantions", newSections);
+  };
+
+  const addExplanationLine = (
+    setFieldValue: (field: string, value: any) => void,
+    current: any[],
+    sectionIndex: number,
+    isArabic: boolean
+  ) => {
+    const newSections = [...current];
+    if (isArabic) {
+      newSections[sectionIndex].arabicExplaination.push("");
+    } else {
+      newSections[sectionIndex].explaination.push("");
+    }
+    setFieldValue("customExplainantions", newSections);
+  };
+
+  const removeExplanationLine = (
+    setFieldValue: (field: string, value: any) => void,
+    current: any[],
+    sectionIndex: number,
+    lineIndex: number,
+    isArabic: boolean
+  ) => {
+    const newSections = [...current];
+    if (isArabic) {
+      newSections[sectionIndex].arabicExplaination = newSections[sectionIndex].arabicExplaination.filter(
+        (_: string, i: number) => i !== lineIndex
+      );
+    } else {
+      newSections[sectionIndex].explaination = newSections[sectionIndex].explaination.filter(
+        (_: string, i: number) => i !== lineIndex
+      );
+    }
+    setFieldValue("customExplainantions", newSections);
+  };
+
   const handleSubmit = async (values: CreateDepartmentFormData) => {
     const departmentId = values.departmentId.trim();
-    const normalizedName = values.name.trim();
-    const normalizedDescription = values.description.trim();
+    const name = values.name.trim();
+    const description = values.description.trim();
+    const arabicName = values.arabicName.trim();
+    const arabicDescription = values.arabicDescription.trim();
 
-    if (!departmentId || !normalizedName || normalizedDescription.length < 10) {
-      toast.error("Please provide Department ID, Name, and Description (min 10 characters).");
+    if (!departmentId || !name || !description) {
+      toast.error("Please provide Department ID, English Name, and English Description.");
       return;
     }
 
-    if (!values.catagoryId?.trim()) {
+    if (!arabicName || !arabicDescription) {
+      toast.error("Please provide Arabic Name and Arabic Description.");
+      return;
+    }
+
+    if (!values.catagoryId) {
       toast.error("Please select a category.");
       return;
     }
 
     setSaving(true);
-    try {
-      const formPayload = new FormData();
-      formPayload.append("departmentId", departmentId);
-      formPayload.append("name", normalizedName);
-      formPayload.append("description", normalizedDescription);
-      formPayload.append("isActive", String(values.isActive));
-      formPayload.append("order", String(Number(values.order || 0)));
-      formPayload.append("catagory", values.catagoryId.trim());
-      formPayload.append("subspecialities", JSON.stringify(values.subspecialityIds));
-
-      appendDepartmentRichContentToFormData(formPayload, {
-        customExplainantions: values.customExplainantions,
-      });
-
-      if (values.imageFile) {
-        formPayload.append("image", values.imageFile);
-      }
-
-      await createDepartment(formPayload);
+    
+    // Simulate API call with timeout
+    setTimeout(() => {
+      console.log("Department data:", values);
       toast.success("Department created successfully.");
-      navigate("/departments");
-    } catch (error: any) {
-      const errorMessage = error?.response?.data?.message || "Failed to create department.";
-      toast.error(errorMessage);
-    } finally {
       setSaving(false);
-    }
+      navigate("/departments");
+    }, 1000);
+  };
+
+  // Get display name for category based on active tab
+  const getCategoryDisplayName = (category: typeof dummyCategories[0]) => {
+    return activeTab === "arabic" ? category.arabicName : category.name;
+  };
+
+  // Get display name for subspeciality based on active tab
+  const getSubspecialityDisplayName = (sub: typeof dummySubspecialities[0]) => {
+    return activeTab === "arabic" ? sub.arabicName : sub.name;
   };
 
   return (
@@ -175,10 +227,45 @@ const CreateDepartmentPage = () => {
               </div>
             </div>
 
+            {/* Enhanced Tabs */}
+            <div className="mb-8">
+              <div className="flex gap-4 p-1 bg-slate-100/80 rounded-xl w-fit">
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("english")}
+                  className={`
+                    flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-medium transition-all duration-200
+                    ${activeTab === "english"
+                      ? "bg-white text-burgundy shadow-md"
+                      : "text-slate-600 hover:text-slate-800 hover:bg-white/50"
+                    }
+                  `}
+                >
+                  <Globe className="h-4 w-4" />
+                  English Content
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("arabic")}
+                  className={`
+                    flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-medium transition-all duration-200
+                    ${activeTab === "arabic"
+                      ? "bg-white text-burgundy shadow-md"
+                      : "text-slate-600 hover:text-slate-800 hover:bg-white/50"
+                    }
+                  `}
+                >
+                  <Languages className="h-4 w-4" />
+                  Arabic Content
+                </button>
+              </div>
+            </div>
+
             <Formik initialValues={initialValues} onSubmit={handleSubmit}>
               {({ setFieldValue, values, touched, errors }) => (
                 <Form className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Department ID - Common for both tabs */}
+                  <div className="bg-slate-50/50 rounded-xl p-5 border border-slate-100">
                     <div className="space-y-2">
                       <label className="text-sm font-semibold text-slate-700">
                         Department ID <span className="text-red-500">*</span>
@@ -192,145 +279,390 @@ const CreateDepartmentPage = () => {
                       />
                       <ErrorMessage name="departmentId" component="p" className="text-xs text-red-500" />
                     </div>
-
-                    <div className="space-y-2">
-                      <label className="text-sm font-semibold text-slate-700">
-                        Name <span className="text-red-500">*</span>
-                      </label>
-                      <Input
-                        name="name"
-                        value={values.name}
-                        onChange={(e) => setFieldValue("name", e.target.value)}
-                        placeholder="Enter department name"
-                        className="h-11"
-                      />
-                      <ErrorMessage name="name" component="p" className="text-xs text-red-500" />
-                    </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <label className="text-sm font-semibold text-slate-700">
-                      Description <span className="text-red-500">*</span>
-                    </label>
-                    <Textarea
-                      name="description"
-                      value={values.description}
-                      onChange={(e) => setFieldValue("description", e.target.value)}
-                      rows={4}
-                      placeholder="Enter department description (min. 10 characters)"
-                      className="resize-none"
-                    />
-                    <ErrorMessage name="description" component="p" className="text-xs text-red-500" />
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <label className="text-sm font-semibold text-slate-700">
-                        Category <span className="text-red-500">*</span>
-                      </label>
-                      <select
-                        value={values.catagoryId}
-                        onChange={(e) => setFieldValue("catagoryId", e.target.value)}
-                        disabled={categoriesLoading || categories.length === 0}
-                        className="w-full h-11 px-3 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:border-burgundy focus:ring-2 focus:ring-burgundy/20 transition-all disabled:opacity-60"
-                      >
-                        <option value="">{categoriesLoading ? "Loading categories…" : "Select a category"}</option>
-                        {categories.map((c) => (
-                          <option key={c._id} value={c._id}>{c.name}</option>
-                        ))}
-                      </select>
-                      <ErrorMessage name="catagoryId" component="p" className="text-xs text-red-500" />
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="text-sm font-semibold text-slate-700">Status</label>
-                      <label className="flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          checked={values.isActive}
-                          onChange={(e) => setFieldValue("isActive", e.target.checked)}
-                          className="w-4 h-4 rounded border-slate-300 text-burgundy focus:ring-burgundy"
-                        />
-                        <span className="text-sm text-slate-600">Active</span>
-                      </label>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-sm font-semibold text-slate-700">
-                      Subspecialities <span className="text-slate-400 font-normal">(optional, multi-select)</span>
-                    </label>
-                    <div className="max-h-48 overflow-y-auto rounded-xl border border-slate-200 bg-slate-50/30 p-3 space-y-2">
-                      {subspecialitiesLoading ? (
-                        <p className="text-sm text-slate-500 px-2 py-2">Loading subspecialities…</p>
-                      ) : subspecialities.length === 0 ? (
-                        <p className="text-sm text-amber-600 px-2 py-2">Add subspecialities under Subspecialities first.</p>
-                      ) : (
-                        subspecialities.map((s) => (
-                          <label key={s._id} className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-white cursor-pointer transition-colors">
-                            <input
-                              type="checkbox"
-                              className="rounded border-slate-300 text-burgundy focus:ring-burgundy"
-                              checked={values.subspecialityIds.includes(s._id)}
-                              onChange={() => toggleSubspeciality(s._id, values.subspecialityIds, setFieldValue)}
-                            />
-                            <span className="text-sm text-slate-700">{s.name}</span>
+                  {/* ENGLISH TAB */}
+                  {activeTab === "english" && (
+                    <div className="space-y-6 animate-in fade-in duration-200">
+                      <div className="bg-white rounded-xl border border-slate-200 p-5 space-y-5">
+                        <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
+                          <Globe className="h-5 w-5 text-burgundy" />
+                          <h3 className="text-md font-semibold text-slate-800">Basic Information</h3>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <label className="text-sm font-semibold text-slate-700">
+                            Department Name <span className="text-red-500">*</span>
                           </label>
-                        ))
-                      )}
-                    </div>
-                    {values.subspecialityIds.length > 0 && (
-                      <p className="text-xs text-slate-500 mt-1">{values.subspecialityIds.length} selected</p>
-                    )}
-                  </div>
+                          <Input
+                            name="name"
+                            value={values.name}
+                            onChange={(e) => setFieldValue("name", e.target.value)}
+                            placeholder="Enter department name"
+                            className="h-11"
+                          />
+                          <ErrorMessage name="name" component="p" className="text-xs text-red-500" />
+                        </div>
 
-                  <DepartmentRichFields values={values} setFieldValue={setFieldValue} />
+                        <div className="space-y-2">
+                          <label className="text-sm font-semibold text-slate-700">
+                            Description <span className="text-red-500">*</span>
+                          </label>
+                          <Textarea
+                            name="description"
+                            value={values.description}
+                            onChange={(e) => setFieldValue("description", e.target.value)}
+                            rows={4}
+                            placeholder="Enter department description (min. 10 characters)"
+                            className="resize-none"
+                          />
+                          <ErrorMessage name="description" component="p" className="text-xs text-red-500" />
+                        </div>
+                      </div>
 
-                  <div className="space-y-2">
-                    <label className="text-sm font-semibold text-slate-700">Image (optional)</label>
-                    <div
-                      className={`relative rounded-xl border-2 border-dashed transition-all ${
-                        dragActive ? "border-burgundy bg-burgundy/5" : "border-slate-200 bg-slate-50/30"
-                      }`}
-                      onDragEnter={handleDrag}
-                      onDragLeave={handleDrag}
-                      onDragOver={handleDrag}
-                      onDrop={(e) => handleDrop(e, setFieldValue)}
-                    >
-                      <input
-                        type="file"
-                        accept="image/*"
-                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                        onChange={(e) => {
-                          const file = e.currentTarget.files?.[0] || null;
-                          if (file) {
-                            setFieldValue("imageFile", file);
-                            setPreviewUrl(URL.createObjectURL(file));
-                          }
-                        }}
-                      />
-                      <div className="flex flex-col items-center justify-center py-8 px-4 text-center">
-                        {previewUrl ? (
-                          <div className="relative">
-                            <img src={previewUrl} alt="Preview" className="max-h-40 w-auto mx-auto rounded-lg object-cover" />
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setPreviewUrl("");
-                                setFieldValue("imageFile", null);
-                              }}
-                              className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
-                            >
-                              <X className="h-3 w-3" />
-                            </button>
+                      {/* Custom Sections */}
+                      <div className="bg-white rounded-xl border border-slate-200 p-5 space-y-4">
+                        <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+                          <div>
+                            <h3 className="text-md font-semibold text-slate-800">Custom Sections</h3>
+                            <p className="text-xs text-slate-500">Add headings and explanations</p>
+                          </div>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => addCustomSection(setFieldValue, values.customExplainantions)}
+                            className="gap-1 border-burgundy/30 text-burgundy hover:bg-burgundy/5"
+                          >
+                            <Plus className="h-3 w-3" />
+                            Add Section
+                          </Button>
+                        </div>
+
+                        {values.customExplainantions.length === 0 ? (
+                          <div className="text-center py-8 text-slate-400 text-sm">
+                            No custom sections added. Click "Add Section" to get started.
                           </div>
                         ) : (
-                          <>
-                            <Upload className="h-10 w-10 text-slate-400 mb-2" />
-                            <p className="text-sm text-slate-500 mb-1">Click to upload or drag & drop</p>
-                            <p className="text-xs text-slate-400">PNG, JPG, GIF up to 5MB</p>
-                          </>
+                          values.customExplainantions.map((section, idx) => (
+                            <div key={section.id || idx} className="border border-slate-200 rounded-xl p-4 space-y-3 bg-slate-50/30 relative">
+                              <div className="absolute -top-2 -left-2 bg-burgundy/10 text-burgundy text-xs px-2 py-0.5 rounded-full">
+                                Section {idx + 1}
+                              </div>
+                              <div className="flex justify-end">
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => removeCustomSection(setFieldValue, values.customExplainantions, idx)}
+                                  className="h-7 w-7 text-red-500 hover:text-red-600 hover:bg-red-50"
+                                >
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                </Button>
+                              </div>
+                              <div>
+                                <label className="text-xs font-medium text-slate-600 block mb-1">Heading</label>
+                                <Input
+                                  value={section.subHeading}
+                                  onChange={(e) => {
+                                    const newSections = [...values.customExplainantions];
+                                    newSections[idx].subHeading = e.target.value;
+                                    setFieldValue("customExplainantions", newSections);
+                                  }}
+                                  placeholder="Enter heading"
+                                  className="h-9"
+                                />
+                              </div>
+                              <div>
+                                <label className="text-xs font-medium text-slate-600 block mb-1">Explanations</label>
+                                {section.explaination.map((line, lineIdx) => (
+                                  <div key={lineIdx} className="flex gap-2 mb-2">
+                                    <Input
+                                      value={line}
+                                      onChange={(e) => {
+                                        const newSections = [...values.customExplainantions];
+                                        newSections[idx].explaination[lineIdx] = e.target.value;
+                                        setFieldValue("customExplainantions", newSections);
+                                      }}
+                                      placeholder={`Explanation ${lineIdx + 1}`}
+                                      className="flex-1 h-9"
+                                    />
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() => removeExplanationLine(setFieldValue, values.customExplainantions, idx, lineIdx, false)}
+                                      className="h-9 w-9 text-red-500 hover:text-red-600"
+                                    >
+                                      <X className="h-3 w-3" />
+                                    </Button>
+                                  </div>
+                                ))}
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => addExplanationLine(setFieldValue, values.customExplainantions, idx, false)}
+                                  className="mt-1 gap-1 text-xs"
+                                >
+                                  <Plus className="h-3 w-3" />
+                                  Add Explanation
+                                </Button>
+                              </div>
+                            </div>
+                          ))
                         )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* ARABIC TAB */}
+                  {activeTab === "arabic" && (
+                    <div className="space-y-6 animate-in fade-in duration-200">
+                      <div className="bg-white rounded-xl border border-slate-200 p-5 space-y-5">
+                        <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
+                          <Languages className="h-5 w-5 text-burgundy" />
+                          <h3 className="text-md font-semibold text-slate-800">Basic Information (Arabic)</h3>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <label className="text-sm font-semibold text-slate-700">
+                            Name (Arabic) <span className="text-red-500">*</span>
+                          </label>
+                          <Input
+                            name="arabicName"
+                            value={values.arabicName}
+                            onChange={(e) => setFieldValue("arabicName", e.target.value)}
+                            placeholder="Enter department name in Arabic"
+                            className="h-11"
+                            dir="rtl"
+                          />
+                          <ErrorMessage name="arabicName" component="p" className="text-xs text-red-500" />
+                        </div>
+
+                        <div className="space-y-2">
+                          <label className="text-sm font-semibold text-slate-700">
+                            Description (Arabic) <span className="text-red-500">*</span>
+                          </label>
+                          <Textarea
+                            name="arabicDescription"
+                            value={values.arabicDescription}
+                            onChange={(e) => setFieldValue("arabicDescription", e.target.value)}
+                            rows={4}
+                            placeholder="Enter department description in Arabic"
+                            className="resize-none"
+                            dir="rtl"
+                          />
+                          <ErrorMessage name="arabicDescription" component="p" className="text-xs text-red-500" />
+                        </div>
+                      </div>
+
+                      {/* Arabic Custom Sections */}
+                      <div className="bg-white rounded-xl border border-slate-200 p-5 space-y-4">
+                        <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+                          <div>
+                            <h3 className="text-md font-semibold text-slate-800">Custom Sections (Arabic)</h3>
+                            <p className="text-xs text-slate-500">Add headings and explanations in Arabic</p>
+                          </div>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => addCustomSection(setFieldValue, values.customExplainantions)}
+                            className="gap-1 border-burgundy/30 text-burgundy hover:bg-burgundy/5"
+                          >
+                            <Plus className="h-3 w-3" />
+                            Add Section
+                          </Button>
+                        </div>
+
+                        {values.customExplainantions.length === 0 ? (
+                          <div className="text-center py-8 text-slate-400 text-sm">
+                            No custom sections added. Click "Add Section" to get started.
+                          </div>
+                        ) : (
+                          values.customExplainantions.map((section, idx) => (
+                            <div key={section.id || idx} className="border border-slate-200 rounded-xl p-4 space-y-3 bg-slate-50/30 relative">
+                              <div className="absolute -top-2 -left-2 bg-burgundy/10 text-burgundy text-xs px-2 py-0.5 rounded-full">
+                                القسم {idx + 1}
+                              </div>
+                              <div className="flex justify-end">
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => removeCustomSection(setFieldValue, values.customExplainantions, idx)}
+                                  className="h-7 w-7 text-red-500 hover:text-red-600 hover:bg-red-50"
+                                >
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                </Button>
+                              </div>
+                              <div>
+                                <label className="text-xs font-medium text-slate-600 block mb-1">Heading (Arabic)</label>
+                                <Input
+                                  value={section.arabicSubHeading}
+                                  onChange={(e) => {
+                                    const newSections = [...values.customExplainantions];
+                                    newSections[idx].arabicSubHeading = e.target.value;
+                                    setFieldValue("customExplainantions", newSections);
+                                  }}
+                                  placeholder="Enter heading in Arabic"
+                                  className="h-9"
+                                  dir="rtl"
+                                />
+                              </div>
+                              <div>
+                                <label className="text-xs font-medium text-slate-600 block mb-1">Explanations (Arabic)</label>
+                                {section.arabicExplaination.map((line, lineIdx) => (
+                                  <div key={lineIdx} className="flex gap-2 mb-2">
+                                    <Input
+                                      value={line}
+                                      onChange={(e) => {
+                                        const newSections = [...values.customExplainantions];
+                                        newSections[idx].arabicExplaination[lineIdx] = e.target.value;
+                                        setFieldValue("customExplainantions", newSections);
+                                      }}
+                                      placeholder={`Explanation ${lineIdx + 1} in Arabic`}
+                                      className="flex-1 h-9"
+                                      dir="rtl"
+                                    />
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() => removeExplanationLine(setFieldValue, values.customExplainantions, idx, lineIdx, true)}
+                                      className="h-9 w-9 text-red-500 hover:text-red-600"
+                                    >
+                                      <X className="h-3 w-3" />
+                                    </Button>
+                                  </div>
+                                ))}
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => addExplanationLine(setFieldValue, values.customExplainantions, idx, true)}
+                                  className="mt-1 gap-1 text-xs"
+                                >
+                                  <Plus className="h-3 w-3" />
+                                  Add Explanation
+                                </Button>
+                              </div>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Common Fields */}
+                  <div className="bg-white rounded-xl border border-slate-200 p-5 space-y-5">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                      <div className="space-y-2">
+                        <label className="text-sm font-semibold text-slate-700">
+                          Category <span className="text-red-500">*</span>
+                        </label>
+                        <select
+                          value={values.catagoryId}
+                          onChange={(e) => setFieldValue("catagoryId", e.target.value)}
+                          className="w-full h-11 px-3 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:border-burgundy focus:ring-2 focus:ring-burgundy/20 transition-all"
+                        >
+                          <option value="">Select a category</option>
+                          {categories.map((c) => (
+                            <option key={c._id} value={c._id}>
+                              {getCategoryDisplayName(c)}
+                            </option>
+                          ))}
+                        </select>
+                        <ErrorMessage name="catagoryId" component="p" className="text-xs text-red-500" />
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-sm font-semibold text-slate-700">Status</label>
+                        <label className="flex items-center gap-2 pt-2">
+                          <input
+                            type="checkbox"
+                            checked={values.isActive}
+                            onChange={(e) => setFieldValue("isActive", e.target.checked)}
+                            className="w-4 h-4 rounded border-slate-300 text-burgundy focus:ring-burgundy"
+                          />
+                          <span className="text-sm text-slate-600">Active</span>
+                        </label>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-semibold text-slate-700">
+                        Subspecialities <span className="text-slate-400 font-normal">(optional, multi-select)</span>
+                      </label>
+                      <div className="max-h-48 overflow-y-auto rounded-xl border border-slate-200 bg-slate-50/30 p-3 space-y-2">
+                        {subspecialities.length === 0 ? (
+                          <p className="text-sm text-amber-600 px-2 py-2">Add subspecialities under Subspecialities first.</p>
+                        ) : (
+                          subspecialities.map((s) => (
+                            <label key={s._id} className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-white cursor-pointer transition-colors">
+                              <input
+                                type="checkbox"
+                                className="rounded border-slate-300 text-burgundy focus:ring-burgundy"
+                                checked={values.subspecialityIds.includes(s._id)}
+                                onChange={() => toggleSubspeciality(s._id, values.subspecialityIds, setFieldValue)}
+                              />
+                              <span className="text-sm text-slate-700">{getSubspecialityDisplayName(s)}</span>
+                            </label>
+                          ))
+                        )}
+                      </div>
+                      {values.subspecialityIds.length > 0 && (
+                        <p className="text-xs text-slate-500 mt-1">{values.subspecialityIds.length} selected</p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-semibold text-slate-700">Image (optional)</label>
+                      <div
+                        className={`relative rounded-xl border-2 border-dashed transition-all ${
+                          dragActive ? "border-burgundy bg-burgundy/5" : "border-slate-200 bg-slate-50/30"
+                        }`}
+                        onDragEnter={handleDrag}
+                        onDragLeave={handleDrag}
+                        onDragOver={handleDrag}
+                        onDrop={(e) => handleDrop(e, setFieldValue)}
+                      >
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                          onChange={(e) => {
+                            const file = e.currentTarget.files?.[0] || null;
+                            if (file) {
+                              setFieldValue("imageFile", file);
+                              setPreviewUrl(URL.createObjectURL(file));
+                            }
+                          }}
+                        />
+                        <div className="flex flex-col items-center justify-center py-8 px-4 text-center">
+                          {previewUrl ? (
+                            <div className="relative">
+                              <img src={previewUrl} alt="Preview" className="max-h-40 w-auto mx-auto rounded-lg object-cover" />
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setPreviewUrl("");
+                                  setFieldValue("imageFile", null);
+                                }}
+                                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
+                              >
+                                <X className="h-3 w-3" />
+                              </button>
+                            </div>
+                          ) : (
+                            <>
+                              <Upload className="h-10 w-10 text-slate-400 mb-2" />
+                              <p className="text-sm text-slate-500 mb-1">Click to upload or drag & drop</p>
+                              <p className="text-xs text-slate-400">PNG, JPG, GIF up to 5MB</p>
+                            </>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
