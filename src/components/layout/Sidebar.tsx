@@ -73,7 +73,7 @@ const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
       px-3 py-3 mx-3 mb-2
       rounded-2xl text-sm font-medium
       transition-all duration-300 ease-in-out
-      border backdrop-blur-sm
+      border
 
       ${isActive
           ? `
@@ -84,14 +84,14 @@ const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
           scale-[1.02]
         `
           : `
-          bg-white/5
-          text-sidebar-foreground
-          border-white/10
-          hover:bg-white/10
+          bg-white/60
+          text-slate-700
+          border-white/40
+          hover:bg-white/80
           hover:border-burgundy/30
           hover:shadow-md
           hover:translate-x-1
-          hover:text-white
+          hover:text-burgundy
         `
         }
 
@@ -112,7 +112,7 @@ const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
 
         ${isActive
             ? "bg-white/20 text-white"
-            : "bg-white/5 text-sidebar-foreground/70 group-hover:bg-burgundy/20 group-hover:text-burgundy"
+            : "bg-white/60 text-slate-500 group-hover:bg-burgundy/10 group-hover:text-burgundy"
           }
       `}
       >
@@ -125,7 +125,7 @@ const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
     flex-1 text-[14px] leading-5
     whitespace-normal break-words
     transition-colors duration-300
-    ${isActive ? "text-white" : "text-sidebar-foreground group-hover:text-burgundy"}
+    ${isActive ? "text-white" : "text-slate-700 group-hover:text-burgundy"}
   `}
         >
           {t(item.label)}
@@ -150,127 +150,184 @@ const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
   );
 
   return (
-    <aside
-      className={`${collapsed ? "w-[80px]" : "w-[320px]"} bg-gradient-to-b from-sidebar via-sidebar to-sidebar/95 min-h-screen flex flex-col transition-all duration-300 ease-in-out shrink-0 fixed ${isRTL ? "right-0" : "left-0"} top-0 z-30 h-screen shadow-2xl`}
-    >
-      {/* Logo Section */}
-      <div className="relative h-24 flex items-center justify-center border-b border-sidebar-border/50 px-3 bg-white/5 backdrop-blur-sm">
-        <div className="relative">
-          <img
-            src={logo}
-            alt="Royale Hayat Hospital"
-            className={`transition-all duration-300 object-contain ${collapsed ? "h-12 w-auto" : "h-16 w-auto"
-              }`}
-          />
-        </div>
-
-        {/* Toggle Button */}
-        {onToggle && (
-          <button
-            onClick={onToggle}
-            className={`absolute ${isRTL ? "left-3" : "right-3"} top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-sidebar-accent text-sidebar-foreground hover:bg-burgundy hover:text-white transition-all duration-200 shadow-md hover:shadow-lg`}
-          >
-            {collapsed ? (
-              <ChevronRight size={16} className={isRTL ? "rotate-180" : ""} />
-            ) : (
-              <ChevronLeft size={16} className={isRTL ? "rotate-180" : ""} />
-            )}
-          </button>
-        )}
-      </div>
-
-      {/* Navigation */}
-      <nav className="flex-1 py-6 overflow-y-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-sidebar-accent">
-        {/* Main Section */}
-        {!collapsed && (
-          <div className="px-4 mb-3">
-            <p className="text-xs font-semibold text-sidebar-foreground/50 uppercase tracking-wider">
-              {t("Main")}
-            </p>
+    <>
+      <aside
+        className={`
+          ${collapsed ? "w-[80px]" : "w-[320px]"} 
+          bg-white/70
+          h-screen
+          flex flex-col
+          transition-all duration-500 ease-in-out
+          shrink-0 fixed
+          ${isRTL ? "right-3" : "left-3"}
+          top-3
+          z-30
+          shadow-[0_20px_60px_rgba(0,0,0,0.12)]
+          backdrop-blur-2xl
+          border border-white/30
+          overflow-hidden
+          rounded-[32px]
+        `}
+      >
+        {/* Logo Section */}
+        <div className="relative h-24 flex items-center justify-center border-b border-white/20 px-3 bg-white/50 backdrop-blur-sm shrink-0">
+          <div className="relative">
+            <div className="absolute inset-0 bg-burgundy/20 rounded-full blur-2xl"></div>
+            <img
+              src={logo}
+              alt="Royale Hayat Hospital"
+              className={`transition-all duration-300 object-contain relative z-10 ${collapsed ? "h-12 w-auto" : "h-16 w-auto"
+                }`}
+            />
           </div>
-        )}
-        <div className="space-y-0.5">
-          {mainNavItems.map((item) => {
-            const isActive = isRouteActive(item.to);
-            return <NavItem key={item.to} item={item} isActive={isActive} />;
-          })}
-        </div>
 
-        {/* Separator */}
-        <div className="relative my-4">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-sidebar-border/30"></div>
-          </div>
-          {!collapsed && (
-            <div className="relative flex justify-center text-xs">
-              <span className="px-2 bg-sidebar text-sidebar-foreground/50">
-                {t("Management")}
-              </span>
-            </div>
+          {/* Toggle Button */}
+          {onToggle && (
+            <button
+              onClick={onToggle}
+              className={`absolute ${isRTL ? "left-3" : "right-3"} top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-white/80 text-slate-600 hover:bg-burgundy hover:text-white transition-all duration-200 shadow-md hover:shadow-lg z-20`}
+            >
+              {collapsed ? (
+                <ChevronRight size={16} className={isRTL ? "rotate-180" : ""} />
+              ) : (
+                <ChevronLeft size={16} className={isRTL ? "rotate-180" : ""} />
+              )}
+            </button>
           )}
         </div>
 
-        {/* Management Section */}
-        <div className="space-y-0.5">
-          {managementNavItems.map((item) => {
-            const isActive = isRouteActive(item.to);
-            return <NavItem key={item.to} item={item} isActive={isActive} />;
-          })}
-        </div>
+        {/* Scrollable Navigation Area */}
+        <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+          <nav className="flex-1 py-6 overflow-y-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-burgundy/30">
+            {/* Main Section */}
+            {!collapsed && (
+              <div className="px-4 mb-3">
+                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                  {t("Main")}
+                </p>
+              </div>
+            )}
 
-        {/* Separator */}
-        <div className="relative my-4">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-sidebar-border/30"></div>
+            <div className="space-y-0.5">
+              {mainNavItems.map((item) => {
+                const isActive = isRouteActive(item.to);
+                return (
+                  <NavItem
+                    key={item.to}
+                    item={item}
+                    isActive={isActive}
+                  />
+                );
+              })}
+            </div>
+
+            {/* Separator */}
+            <div className="relative my-4">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-white/20"></div>
+              </div>
+
+              {!collapsed && (
+                <div className="relative flex justify-center text-xs">
+                  <span className="px-2 bg-white/70 text-slate-400">
+                    {t("Management")}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Management Section */}
+            <div className="space-y-0.5">
+              {managementNavItems.map((item) => {
+                const isActive = isRouteActive(item.to);
+                return (
+                  <NavItem
+                    key={item.to}
+                    item={item}
+                    isActive={isActive}
+                  />
+                );
+              })}
+            </div>
+
+            {/* Separator */}
+            <div className="relative my-4">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-white/20"></div>
+              </div>
+            </div>
+
+            {/* Reports */}
+            <div className="space-y-0.5">
+              {(() => {
+                const isActive = isRouteActive(reportsNavItem.to);
+                return (
+                  <NavItem
+                    item={reportsNavItem}
+                    isActive={isActive}
+                  />
+                );
+              })()}
+            </div>
+          </nav>
+
+          {/* Footer Section */}
+          <div className="border-t border-white/20 bg-white/50 backdrop-blur-sm shrink-0">
+            {/* Settings */}
+            <NavLink
+              to="/settings"
+              title={collapsed ? t("Settings") : undefined}
+              aria-label={t("Settings")}
+              className={({ isActive }) => `
+                group flex items-center gap-3 px-3 py-2.5 mx-2 rounded-xl text-sm font-medium transition-all duration-200
+                ${isActive || isRouteActive("/settings")
+                  ? "bg-gradient-to-r from-burgundy/10 to-burgundy/5 text-burgundy"
+                  : "text-slate-600 hover:bg-white/60 hover:text-burgundy"
+                }
+                ${collapsed ? "justify-center px-2" : ""}
+              `}
+            >
+              <Settings size={20} className="transition-transform group-hover:rotate-90" />
+              {!collapsed && <span>{t("Settings")}</span>}
+            </NavLink>
+
+            {/* Logout Button */}
+            <button
+              onClick={handleLogout}
+              title={collapsed ? t("Secure Logout") : undefined}
+              aria-label={t("Secure Logout")}
+              className={`
+                flex items-center gap-3 px-3 py-2.5 mx-2 mb-3 rounded-xl text-sm font-medium transition-all duration-200 text-red-500 hover:bg-red-50 hover:text-red-600 w-full group
+                ${collapsed ? "justify-center px-2" : ""}
+              `}
+            >
+              <LogOut size={20} className="transition-transform group-hover:translate-x-0.5" />
+              {!collapsed && <span>{t("Secure Logout")}</span>}
+            </button>
           </div>
         </div>
+      </aside>
 
-        {/* Reports Section */}
-        <div className="space-y-0.5">
-          {(() => {
-            const isActive = isRouteActive(reportsNavItem.to);
-            return <NavItem item={reportsNavItem} isActive={isActive} />;
-          })()}
-        </div>
-      </nav>
-
-      {/* Footer Section */}
-      <div className="border-t border-sidebar-border/50 bg-white/5 backdrop-blur-sm">
-        {/* User Profile (Optional) */}
-
-
-        {/* Settings */}
-        <NavLink
-          to="/settings"
-          title={collapsed ? t("Settings") : undefined}
-          aria-label={t("Settings")}
-          className={({ isActive }) => `
-            group flex items-center gap-3 px-3 py-2.5 mx-2 rounded-xl text-sm font-medium transition-all duration-200
-            ${isActive || isRouteActive("/settings")
-              ? "bg-gradient-to-r from-burgundy/10 to-burgundy/5 text-burgundy"
-              : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-burgundy"
-            }
-            ${collapsed ? "justify-center px-2" : ""}
-          `}
-        >
-          <Settings size={20} className="transition-transform group-hover:rotate-90" />
-          {!collapsed && <span>{t("Settings")}</span>}
-        </NavLink>
-
-        {/* Logout Button */}
-        <button
-          onClick={handleLogout}
-          title={collapsed ? t("Secure Logout") : undefined}
-          aria-label={t("Secure Logout")}
-          className={`flex items-center gap-3 px-3 py-2.5 mx-2 mb-3 rounded-xl text-sm font-medium transition-all duration-200 text-red-400 hover:bg-red-500/10 hover:text-red-300 w-full group
-            ${collapsed ? "justify-center px-2" : ""}
-          `}
-        >
-          <LogOut size={20} className="transition-transform group-hover:translate-x-0.5" />
-          {!collapsed && <span>{t("Secure Logout")}</span>}
-        </button>
-      </div>
-    </aside>
+      {/* Add custom styles for scrollbar */}
+      <style>{`
+        .scrollbar-thin::-webkit-scrollbar {
+          width: 4px;
+        }
+        
+        .scrollbar-thin::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        
+        .scrollbar-thin::-webkit-scrollbar-thumb {
+          background: rgba(139, 30, 63, 0.2);
+          border-radius: 20px;
+        }
+        
+        .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+          background: rgba(139, 30, 63, 0.4);
+        }
+      `}</style>
+    </>
   );
 };
 

@@ -71,14 +71,16 @@ const Header = ({ title, children }: HeaderProps) => {
   return (
     <header
       className="
-        sticky top-0 z-20
-        h-20
-        bg-white/70 dark:bg-sidebar/70
-        backdrop-blur-xl
-        border-b border-white/20
-        shadow-sm
+        sticky top-3 z-20
+        mx-3
+        h-16
+        bg-white/70
+        backdrop-blur-2xl
+        border border-white/30
+        shadow-[0_20px_60px_rgba(0,0,0,0.08)]
+        rounded-[32px]
         flex items-center justify-between
-        px-8
+        px-6
         shrink-0
       "
     >
@@ -86,7 +88,7 @@ const Header = ({ title, children }: HeaderProps) => {
       <div className="flex items-center gap-4">
         {children}
 
-        <div>
+        {/* <div>
           <h2 className="text-2xl font-bold tracking-tight text-foreground">
             {title}
           </h2>
@@ -95,7 +97,7 @@ const Header = ({ title, children }: HeaderProps) => {
             <BreadCrumb />
           </div>
 
-        </div>
+        </div> */}
       </div>
 
       {/* RIGHT SECTION */}

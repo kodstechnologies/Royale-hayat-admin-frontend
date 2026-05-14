@@ -12,6 +12,8 @@ interface AdminLayoutProps {
 const AdminLayout = ({ children, title }: AdminLayoutProps) => {
   const [collapsed, setCollapsed] = useState(false);
   const sidebarWidth = collapsed ? 80 : 320;
+  // Sidebar is fixed with left-3 (12px) gap, so content must clear sidebarWidth + 12px
+  const sidebarOffset = sidebarWidth + 12;
   const { t, isRTL } = useLanguage();
 
   return (
@@ -19,8 +21,10 @@ const AdminLayout = ({ children, title }: AdminLayoutProps) => {
       <Sidebar collapsed={collapsed} />
       <div
         className="flex-1 flex flex-col min-w-0 transition-all duration-300"
-        style={isRTL ? { marginRight: sidebarWidth } : { marginLeft: sidebarWidth }}
+        style={isRTL ? { marginRight: sidebarOffset } : { marginLeft: sidebarOffset }}
       >
+        {/* Gap cover — blocks scrolled content from showing in the 12px space above the floating header */}
+        <div className="sticky top-0 z-20 h-3 bg-section-bg shrink-0" />
         <Header title={t(title)}>
           <button
             onClick={() => setCollapsed(!collapsed)}
@@ -33,7 +37,7 @@ const AdminLayout = ({ children, title }: AdminLayoutProps) => {
             }
           </button>
         </Header>
-        <main className="flex-1 p-6 overflow-auto">
+        <main className="flex-1 p-6 pt-4 overflow-auto">
           {children}
         </main>
       </div>
