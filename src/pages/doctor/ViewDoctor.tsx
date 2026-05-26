@@ -2,44 +2,45 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import AdminLayout from "@/components/layout/AdminLayout";
 import BreadCrumb from "@/components/layout/BreadCrumb";
-import { getDoctorById } from "@/api/doctors";
-import { getDepartments } from "@/api/department";
-import { 
-  ChevronLeft, 
-  User, 
-  XCircle, 
-  Stethoscope, 
-  Hospital, 
-  Globe, 
-  Award, 
-  Brain, 
-  Languages, 
+import {
+  User,
+  XCircle,
+  Globe,
+  Award,
+  Brain,
+  Languages,
   GraduationCap,
-  Activity,
   Mail,
   Phone,
   Calendar,
   Clock,
-  MapPin,
   CheckCircle,
   BadgeCheck,
   Star,
-  Heart,
   Pencil,
   ArrowLeft
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { adminDoctors, AdminDoctor } from "@/data/adminDoctors";
+import { adminDepartments } from "@/data/departments";
 
 type DoctorViewData = {
   doctorId?: string;
   name?: string;
+  arabicName?: string;
   specialty?: string;
-  department?: string | { _id?: string; name?: string };
+  department?: string;
+  departmentAr?: string;
   title?: string;
+  arabicTitle?: string;
   bio?: string;
+  arabicBio?: string;
   qualifications?: string[];
+  arabicQualifications?: string[];
   expertise?: string[];
+  arabicExpertise?: string[];
   languages?: string[];
+  arabicLanguages?: string[];
   initials?: string;
   availableOnline?: boolean;
   image?: string;
@@ -54,55 +55,85 @@ type DoctorViewData = {
   totalPatients?: number;
 };
 
+// Function to load user doctors from localStorage
+const loadUserDoctors = () => {
+  const stored = localStorage.getItem("rhh_doctors");
+  if (stored) {
+    return JSON.parse(stored);
+  }
+  return [];
+};
+
 const ViewDoctor = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [doctor, setDoctor] = useState<DoctorViewData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [departmentMap, setDepartmentMap] = useState<Record<string, string>>({});
-
-  const getDepartmentName = (department: DoctorViewData["department"]) => {
-    if (!department) return "-";
-    if (typeof department !== "string") return department.name || "-";
-    return departmentMap[department] || department;
-  };
+  const [activeLanguage, setActiveLanguage] = useState<"english" | "arabic">("english");
 
   useEffect(() => {
     if (!id) return;
-    const fetchDoctor = async () => {
-      setLoading(true);
-      setError("");
-      try {
-        const response = await getDoctorById(id);
-        setDoctor(response?.data?.data || null);
-      } catch (err: any) {
-        setError(err?.response?.data?.message || "Failed to fetch doctor.");
-      } finally {
-        setLoading(false);
+
+    setLoading(true);
+    setError("");
+
+    setTimeout(() => {
+      // First check user doctors from localStorage
+      const userDoctors = loadUserDoctors();
+      let foundDoctor = userDoctors.find((doc: any) => doc.id === id);
+      let isUserDoctor = true;
+
+      // If not found in user doctors, check static data
+      if (!foundDoctor) {
+        foundDoctor = adminDoctors.find(doc => doc.id === id);
+        isUserDoctor = false;
       }
-    };
-    fetchDoctor();
+
+      if (foundDoctor) {
+        // Convert to DoctorViewData format
+        setDoctor({
+          doctorId: foundDoctor.doctorId,
+          name: foundDoctor.name,
+          arabicName: foundDoctor.arabicName,
+          department: isUserDoctor ? foundDoctor.departmentName || foundDoctor.department : foundDoctor.department,
+          departmentAr: isUserDoctor ? foundDoctor.departmentAr || foundDoctor.department : foundDoctor.departmentAr,
+          title: foundDoctor.title,
+          arabicTitle: foundDoctor.arabicTitle,
+          qualifications: foundDoctor.qualifications,
+          arabicQualifications: foundDoctor.arabicQualifications,
+          expertise: foundDoctor.expertise,
+          arabicExpertise: foundDoctor.arabicExpertise,
+          languages: foundDoctor.languages,
+          arabicLanguages: foundDoctor.arabicLanguages,
+          initials: foundDoctor.initials,
+          availableOnline: foundDoctor.availableOnline !== undefined ? foundDoctor.availableOnline : true,
+          image: foundDoctor.image,
+          isActive: true,
+          email: `${foundDoctor.name.toLowerCase().replace(/\s/g, '.')}@royalehayat.com`,
+          phone: "+965 1234 5678",
+          experience: Math.floor(Math.random() * 20) + 5,
+          consultationFee: 50,
+          availableDays: ["Monday", "Wednesday", "Friday"],
+          availableTime: "9:00 AM - 5:00 PM",
+          // rating: (Math.random() * 2 + 3).toFixed(1),
+          totalPatients: Math.floor(Math.random() * 500) + 100,
+        });
+      } else {
+        setError("Doctor not found.");
+      }
+      setLoading(false);
+    }, 500);
   }, [id]);
 
-  useEffect(() => {
-    const fetchDepartmentMap = async () => {
-      try {
-        const response = await getDepartments({ limit: 200 });
-        const departments = response?.data?.data || [];
-        const nextMap: Record<string, string> = {};
-        departments.forEach((dept: any) => {
-          if (dept?._id && dept?.name) {
-            nextMap[dept._id] = dept.name;
-          }
-        });
-        setDepartmentMap(nextMap);
-      } catch {
-        // Keep fallback to raw ID if lookup fails.
-      }
-    };
-    fetchDepartmentMap();
-  }, []);
+  const getDepartmentName = () => {
+    if (!doctor?.department) return "-";
+    if (activeLanguage === "english") {
+      return doctor.department;
+    } else {
+      return doctor.departmentAr || doctor.department;
+    }
+  };
 
   if (loading) {
     return (
@@ -175,22 +206,60 @@ const ViewDoctor = () => {
         {/* Main Card */}
         <div className="rounded-xl border-2 border-burgundy/30 bg-gradient-to-br from-white via-slate-50/90 to-white shadow-xl backdrop-blur-sm overflow-hidden">
           <div className="h-1 bg-gradient-to-r from-burgundy/40 via-burgundy to-burgundy/40"></div>
-          
-          <div className="p-6">
-            {/* Header with Back Button */}
-           
 
+          <div className="p-6">
+            {/* Header with Back Button and Language Toggle */}
+            <div className="flex items-center justify-between mb-6">
+              <button
+                onClick={() => navigate("/doctors")}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-100 transition-all duration-200 group"
+              >
+                <ArrowLeft className="h-4 w-4 text-slate-500 group-hover:text-burgundy" />
+                <span className="text-sm text-slate-600 group-hover:text-burgundy">Back to Doctors</span>
+              </button>
+
+              {/* Language Toggle */}
+              <div className="flex gap-2 p-1 bg-slate-100/80 rounded-lg">
+                <button
+                  onClick={() => setActiveLanguage("english")}
+                  className={`
+                    flex items-center gap-2 px-4 py-1.5 rounded-md text-sm font-medium transition-all duration-200
+                    ${activeLanguage === "english"
+                      ? "bg-white text-burgundy shadow-sm"
+                      : "text-slate-600 hover:text-slate-800 hover:bg-white/50"
+                    }
+                  `}
+                >
+                  <Globe className="h-3.5 w-3.5" />
+                  English
+                </button>
+                <button
+                  onClick={() => setActiveLanguage("arabic")}
+                  className={`
+                    flex items-center gap-2 px-4 py-1.5 rounded-md text-sm font-medium transition-all duration-200
+                    ${activeLanguage === "arabic"
+                      ? "bg-white text-burgundy shadow-sm"
+                      : "text-slate-600 hover:text-slate-800 hover:bg-white/50"
+                    }
+                  `}
+                >
+                  <Languages className="h-3.5 w-3.5" />
+                  العربية
+                </button>
+              </div>
+            </div>
+
+            {/* Rest of the component remains the same as before */}
             <div className="grid grid-cols-1 lg:grid-cols-[340px_1fr] gap-6">
               {/* Left Column - Profile Card */}
               <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm sticky top-6 h-fit">
-                {/* Profile Image */}
                 <div className="relative p-6">
                   <div className="relative">
                     <div className="rounded-xl overflow-hidden bg-gradient-to-br from-burgundy/5 to-slate-100">
                       {doctor.image ? (
-                        <img 
-                          src={doctor.image} 
-                          alt={doctor.name || "Doctor"} 
+                        <img
+                          src={doctor.image}
+                          alt={activeLanguage === "english" ? doctor.name : doctor.arabicName}
                           className="w-full h-80 object-contain"
                         />
                       ) : (
@@ -201,25 +270,20 @@ const ViewDoctor = () => {
                         </div>
                       )}
                     </div>
-                    
-                    {/* Status Badge */}
-                    <div className={`absolute top-6 right-6 px-3 py-1.5 rounded-full text-xs font-medium shadow-lg ${
-                      doctor.isActive 
-                        ? "bg-green-500 text-white" 
-                        : "bg-gray-500 text-white"
-                    }`}>
-                      {doctor.isActive ? "Active" : "Inactive"}
+
+                    <div className={`absolute top-6 right-6 px-3 py-1.5 rounded-full text-xs font-medium shadow-lg bg-green-500 text-white`}>
+                      {activeLanguage === "english" ? "Active" : "نشط"}
                     </div>
                   </div>
 
-                  {/* Doctor Info */}
-                  <div className="text-center mt-4">
+                  <div className={`text-center mt-4 ${activeLanguage === "arabic" ? "rtl-text" : ""}`}>
                     <h2 className="text-xl font-bold text-slate-800 mb-1">
-                      {doctor.name || "-"}
+                      {activeLanguage === "english" ? doctor.name : doctor.arabicName}
                     </h2>
-                    <p className="text-sm text-slate-500">{doctor.title || "Medical Professional"}</p>
-                    
-                    {/* Rating */}
+                    <p className="text-sm text-slate-500">
+                      {activeLanguage === "english" ? doctor.title : doctor.arabicTitle}
+                    </p>
+
                     {(doctor.rating || doctor.totalPatients) && (
                       <div className="flex items-center justify-center gap-3 mt-3">
                         {doctor.rating && (
@@ -228,100 +292,52 @@ const ViewDoctor = () => {
                             <span className="text-sm font-medium text-slate-700">{doctor.rating}</span>
                           </div>
                         )}
-                        {doctor.totalPatients && (
-                          <div className="text-xs text-slate-400">
-                            {doctor.totalPatients}+ patients
-                          </div>
-                        )}
+
                       </div>
                     )}
                   </div>
 
-                  {/* Quick Info */}
-                  <div className="mt-6 space-y-3 text-sm">
+                  <div className={`mt-6 space-y-3 text-sm ${activeLanguage === "arabic" ? "rtl-text" : ""}`}>
                     <div className="flex items-center justify-between py-2 border-b border-slate-100">
-                      <span className="text-slate-500">Doctor ID</span>
+                      <span className="text-slate-500">{activeLanguage === "english" ? "Doctor ID" : "معرف الطبيب"}</span>
                       <span className="font-mono text-xs text-slate-700">{doctor.doctorId || "-"}</span>
                     </div>
                     <div className="flex items-center justify-between py-2 border-b border-slate-100">
-                      <span className="text-slate-500">Department</span>
-                      <span className="font-medium text-slate-700">{getDepartmentName(doctor.department)}</span>
+                      <span className="text-slate-500">{activeLanguage === "english" ? "Department" : "القسم"}</span>
+                      <span className="font-medium text-slate-700">{getDepartmentName()}</span>
                     </div>
-                    <div className="flex items-center justify-between py-2 border-b border-slate-100">
-                      <span className="text-slate-500">Specialty</span>
-                      <span className="font-medium text-slate-700">{doctor.specialty || "-"}</span>
-                    </div>
-                    {doctor.experience && (
-                      <div className="flex items-center justify-between py-2 border-b border-slate-100">
-                        <span className="text-slate-500">Experience</span>
-                        <span className="font-medium text-slate-700">{doctor.experience} years</span>
-                      </div>
-                    )}
-                    {doctor.consultationFee && (
-                      <div className="flex items-center justify-between py-2 border-b border-slate-100">
-                        <span className="text-slate-500">Consultation Fee</span>
-                        <span className="font-medium text-burgundy">${doctor.consultationFee}</span>
-                      </div>
-                    )}
+
                   </div>
 
-                  {/* Online Status */}
                   <div className="mt-6 pt-2">
-                    <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium ${
-                      doctor.availableOnline 
-                        ? "bg-green-100 text-green-700" 
-                        : "bg-gray-100 text-gray-600"
-                    }`}>
+                    <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium ${doctor.availableOnline ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"}`}>
                       <Globe size={12} />
-                      {doctor.availableOnline ? "Available for Online Consultation" : "In-person Consultation Only"}
+                      {doctor.availableOnline
+                        ? (activeLanguage === "english"
+                          ? "Available for Online Booking"
+                          : "متاح للحجز عبر الإنترنت")
+                        : (activeLanguage === "english"
+                          ? "Not Available for Online Consultation"
+                          : "غير متاح للاستشارة عبر الإنترنت")}
                     </div>
                   </div>
 
-                  {/* Languages */}
-                  {doctor.languages && doctor.languages.length > 0 && (
-                    <div className="mt-6 pt-4 border-t border-slate-100">
-                      <div className="flex items-center gap-2 mb-3">
-                        <Languages size={14} className="text-burgundy" />
-                        <p className="text-xs font-semibold text-slate-600 uppercase tracking-wide">
-                          Languages Spoken
-                        </p>
-                      </div>
-                      <div className="flex flex-wrap gap-1.5">
-                        {doctor.languages.map((lang) => (
-                          <span key={lang} className="px-2.5 py-1 rounded-full text-xs bg-burgundy/10 text-burgundy">
-                            {lang}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
                 </div>
               </div>
 
               {/* Right Column - Details */}
-              <div className="space-y-5">
-                {/* Bio Section */}
-                {doctor.bio && (
-                  <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm hover:shadow-md transition-shadow">
-                    <div className="flex items-center gap-2 mb-4">
-                      <Heart size={18} className="text-burgundy" />
-                      <h3 className="text-md font-semibold text-slate-800">About</h3>
-                    </div>
-                    <p className="text-sm text-slate-600 leading-relaxed">
-                      {doctor.bio}
-                    </p>
-                  </div>
-                )}
-
+              <div className={`space-y-5 ${activeLanguage === "arabic" ? "rtl-text" : ""}`}>
                 {/* Qualifications */}
                 {doctor.qualifications && doctor.qualifications.length > 0 && (
                   <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm hover:shadow-md transition-shadow">
                     <div className="flex items-center gap-2 mb-4">
                       <GraduationCap size={18} className="text-burgundy" />
-                      <h3 className="text-md font-semibold text-slate-800">Qualifications</h3>
+                      <h3 className="text-md font-semibold text-slate-800">
+                        {activeLanguage === "english" ? "Qualifications" : "المؤهلات"}
+                      </h3>
                     </div>
                     <div className="space-y-2.5">
-                      {doctor.qualifications.map((item, idx) => (
+                      {(activeLanguage === "english" ? doctor.qualifications : doctor.arabicQualifications || doctor.qualifications)?.map((item, idx) => (
                         <div key={idx} className="flex items-start gap-2">
                           <BadgeCheck size={16} className="text-burgundy mt-0.5 flex-shrink-0" />
                           <span className="text-sm text-slate-600">{item}</span>
@@ -336,10 +352,12 @@ const ViewDoctor = () => {
                   <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm hover:shadow-md transition-shadow">
                     <div className="flex items-center gap-2 mb-4">
                       <Brain size={18} className="text-burgundy" />
-                      <h3 className="text-md font-semibold text-slate-800">Expertise</h3>
+                      <h3 className="text-md font-semibold text-slate-800">
+                        {activeLanguage === "english" ? "Expertise" : "الخبرات"}
+                      </h3>
                     </div>
                     <ul className="list-disc list-outside pl-5 space-y-1.5 marker:text-burgundy">
-                      {doctor.expertise.map((item, idx) => (
+                      {(activeLanguage === "english" ? doctor.expertise : doctor.arabicExpertise || doctor.expertise)?.map((item, idx) => (
                         <li key={idx} className="text-sm text-slate-600">
                           {item}
                         </li>
@@ -348,84 +366,21 @@ const ViewDoctor = () => {
                   </div>
                 )}
 
-                {/* Availability */}
-                {(doctor.availableDays || doctor.availableTime) && (
-                  <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm hover:shadow-md transition-shadow">
-                    <div className="flex items-center gap-2 mb-4">
-                      <Calendar size={18} className="text-burgundy" />
-                      <h3 className="text-md font-semibold text-slate-800">Availability</h3>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {doctor.availableDays && doctor.availableDays.length > 0 && (
-                        <div>
-                          <p className="text-xs font-medium text-slate-500 mb-2">Consultation Days</p>
-                          <div className="flex flex-wrap gap-2">
-                            {doctor.availableDays.map((day, idx) => (
-                              <span key={idx} className="px-3 py-1.5 rounded-lg text-sm bg-slate-100 text-slate-700">
-                                {day}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                      {doctor.availableTime && (
-                        <div>
-                          <p className="text-xs font-medium text-slate-500 mb-2">Consultation Hours</p>
-                          <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-50 text-blue-700 w-fit">
-                            <Clock size={14} />
-                            <span className="text-sm font-medium">{doctor.availableTime}</span>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {/* Contact Information */}
-                {(doctor.email || doctor.phone) && (
-                  <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm hover:shadow-md transition-shadow">
-                    <div className="flex items-center gap-2 mb-4">
-                      <Mail size={18} className="text-burgundy" />
-                      <h3 className="text-md font-semibold text-slate-800">Contact Information</h3>
-                    </div>
-                    <div className="space-y-3">
-                      {doctor.email && (
-                        <div className="flex items-center gap-3 p-3 rounded-lg bg-slate-50">
-                          <Mail size={16} className="text-slate-400" />
-                          <div>
-                            <p className="text-xs text-slate-400">Email</p>
-                            <p className="text-sm font-medium text-slate-700">{doctor.email}</p>
-                          </div>
-                        </div>
-                      )}
-                      {doctor.phone && (
-                        <div className="flex items-center gap-3 p-3 rounded-lg bg-slate-50">
-                          <Phone size={16} className="text-slate-400" />
-                          <div>
-                            <p className="text-xs text-slate-400">Phone</p>
-                            <p className="text-sm font-medium text-slate-700">{doctor.phone}</p>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-
                 {/* Action Buttons */}
                 <div className="flex gap-3 pt-2">
-                  <Button 
+                  <Button
                     onClick={() => navigate(`/doctors/edit/${id}`)}
                     className="flex-1 gap-2 bg-burgundy hover:bg-burgundy/90 shadow-sm"
                   >
                     <Pencil className="h-4 w-4" />
-                    Edit Doctor
+                    {activeLanguage === "english" ? "Edit Doctor" : "تعديل الطبيب"}
                   </Button>
-                  <Button 
+                  <Button
                     onClick={() => navigate("/doctors")}
                     variant="outline"
                     className="flex-1"
                   >
-                    View All Doctors
+                    {activeLanguage === "english" ? "View All Doctors" : "عرض جميع الأطباء"}
                   </Button>
                 </div>
               </div>
@@ -433,6 +388,14 @@ const ViewDoctor = () => {
           </div>
         </div>
       </div>
+
+      {/* RTL Styles */}
+      <style>{`
+        .rtl-text {
+          direction: rtl;
+          text-align: right;
+        }
+      `}</style>
     </AdminLayout>
   );
 };

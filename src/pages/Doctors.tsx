@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
 import AdminLayout from "@/components/layout/AdminLayout";
 import BreadCrumb from "@/components/layout/BreadCrumb";
-import { Search, Pencil, Trash2, ExternalLink, Plus, X, CheckCircle, XCircle } from "lucide-react";
-import { deleteDoctor, getDoctors } from "@/api/doctors";
-import { getDepartments } from "@/api/department";
+import { Search, Pencil, Trash2, ExternalLink, Plus, X, CheckCircle, XCircle, Star, StarOff } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Loader from "@/components/SkeletonLoader";
 import { Button } from "@/components/ui/button";
 import AlertBox from "@/components/AlertBox";
+import { adminDoctors, AdminDoctor } from "@/data/adminDoctors";
+import { adminDepartments } from "@/data/departments";
+import { toast } from "sonner";
 
 type Doctor = {
   _id: string;
@@ -26,6 +27,89 @@ type Doctor = {
   availableOnline: boolean;
   image?: string;
   isActive: boolean;
+  isFeatured?: boolean;
+};
+
+const getStoredFeaturedDoctors = (): string[] => {
+  const stored = localStorage.getItem("rhh_featured_doctors");
+  if (stored) {
+    return JSON.parse(stored);
+  }
+  return [];
+};
+
+const saveFeaturedDoctors = (featuredIds: string[]) => {
+  localStorage.setItem("rhh_featured_doctors", JSON.stringify(featuredIds));
+};
+
+// Convert adminDoctors to the format expected by the component
+const convertToDoctor = (adminDoctor: AdminDoctor, index: number): Doctor => {
+  return {
+    _id: adminDoctor.id,
+    doctorId: adminDoctor.doctorId,
+    name: adminDoctor.name,
+    specialty: adminDoctor.title?.split(",")[0] || "General",
+    department: adminDoctor.department,
+    title: adminDoctor.title,
+    bio: "",
+    qualifications: adminDoctor.qualifications,
+    expertise: adminDoctor.expertise,
+    languages: adminDoctor.languages,
+    initials: adminDoctor.initials,
+    color: "bg-burgundy",
+    symptoms: [],
+    availableOnline: adminDoctor.availableOnline,
+    image: adminDoctor.image,
+    isActive: true,
+    isFeatured: false,
+  };
+};
+
+// Function to load user doctors from localStorage
+const loadUserDoctors = () => {
+  const stored = localStorage.getItem("rhh_doctors");
+  if (stored) {
+    return JSON.parse(stored);
+  }
+  return [];
+};
+
+// Function to convert user doctor to Doctor type
+const convertUserDoctorToDoctor = (userDoctor: any): Doctor => {
+  return {
+    _id: userDoctor.id,
+    doctorId: userDoctor.doctorId,
+    name: userDoctor.name,
+    specialty: userDoctor.title?.split(",")[0] || "General",
+    department: userDoctor.department,
+    title: userDoctor.title,
+    bio: "",
+    qualifications: userDoctor.qualifications || [],
+    expertise: userDoctor.expertise || [],
+    languages: userDoctor.languages || [],
+    initials: userDoctor.initials || "DR",
+    color: "bg-burgundy",
+    symptoms: [],
+    availableOnline: userDoctor.availableOnline !== undefined ? userDoctor.availableOnline : true,
+    image: userDoctor.image,
+    isActive: userDoctor.isActive !== undefined ? userDoctor.isActive : true,
+    isFeatured: false,
+  };
+};
+
+// Get merged doctors (user doctors + static doctors)
+const getMergedDoctors = (): Doctor[] => {
+  const userDoctors = loadUserDoctors();
+  const convertedUserDoctors = userDoctors.map(convertUserDoctorToDoctor);
+  const staticDoctors = adminDoctors.map((doctor, index) => convertToDoctor(doctor, index));
+  
+  // Create a Set of existing doctor IDs from user doctors
+  const existingDoctorIds = new Set(convertedUserDoctors.map(doc => doc.doctorId));
+  // Filter out static doctors that have the same doctorId as user doctors
+  const newStaticDoctors = staticDoctors.filter(doc => !existingDoctorIds.has(doc.doctorId));
+  
+  // Return user doctors first (newest), then remaining static doctors
+  return [...convertedUserDoctors, ...newStaticDoctors];
 };
 
 const Doctors = () => {
@@ -42,59 +126,92 @@ const Doctors = () => {
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
   const [doctorToDelete, setDoctorToDelete] = useState<Doctor | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  
+  // Feature Doctor States
+  const [isFeatureMode, setIsFeatureMode] = useState(false);
+  const [selectedDoctors, setSelectedDoctors] = useState<Set<string>>(new Set());
+  
   const navigate = useNavigate();
+
+  // Load merged doctors on mount
+  useEffect(() => {
+    loadDoctors();
+  }, []);
+
+  const loadDoctors = () => {
+    const mergedDoctors = getMergedDoctors();
+    const featuredIds = getStoredFeaturedDoctors();
+
+    const doctorsWithFeatured = mergedDoctors.map((doctor) => ({
+      ...doctor,
+      isFeatured: featuredIds.includes(doctor._id),
+    }));
+
+    setDoctors(doctorsWithFeatured);
+    setTotalRecords(doctorsWithFeatured.length);
+    setTotalPages(Math.ceil(doctorsWithFeatured.length / limit));
+  };
+
+  // Listen for doctor updates from create/edit page
+  useEffect(() => {
+    const handleDoctorsUpdate = () => {
+      loadDoctors();
+      if (currentPage > Math.ceil(doctors.length / limit)) {
+        setCurrentPage(1);
+      }
+    };
+    
+    window.addEventListener("doctorsUpdated", handleDoctorsUpdate);
+    
+    return () => {
+      window.removeEventListener("doctorsUpdated", handleDoctorsUpdate);
+    };
+  }, [currentPage, limit, doctors.length]);
+
+  // Setup department options from adminDepartments
+  useEffect(() => {
+    const deptOptions = adminDepartments.map(dept => ({
+      _id: dept.id,
+      name: dept.name
+    }));
+    setDepartmentOptions(deptOptions);
+    
+    const deptMap: Record<string, string> = {};
+    adminDepartments.forEach(dept => {
+      deptMap[dept.id] = dept.name;
+    });
+    setDepartmentMap(deptMap);
+  }, []);
+
+  // Filter doctors based on search and department
+  const filteredDoctors = doctors.filter(doctor => {
+    const matchesSearch = search === "" || 
+      doctor.name.toLowerCase().includes(search.toLowerCase()) ||
+      (doctor.specialty && doctor.specialty.toLowerCase().includes(search.toLowerCase())) ||
+      (doctor.title && doctor.title.toLowerCase().includes(search.toLowerCase()));
+    
+    const matchesDepartment = selectedDepartmentId === "all" || 
+      (typeof doctor.department === "string" && doctor.department === selectedDepartmentId);
+    
+    return matchesSearch && matchesDepartment;
+  });
+
+  // Pagination
+  const paginatedDoctors = filteredDoctors.slice((currentPage - 1) * limit, currentPage * limit);
+  const totalFilteredPages = Math.ceil(filteredDoctors.length / limit);
+
+  useEffect(() => {
+    setTotalPages(totalFilteredPages);
+    setTotalRecords(filteredDoctors.length);
+    if (currentPage > totalFilteredPages && totalFilteredPages > 0) {
+      setCurrentPage(totalFilteredPages);
+    }
+  }, [filteredDoctors.length, totalFilteredPages, currentPage]);
 
   const getDepartmentName = (department: Doctor["department"]) => {
     if (typeof department !== "string") return department?.name || "-";
     return departmentMap[department] || department || "-";
   };
-
-  const fetchDoctors = async () => {
-    setLoading(true);
-    try {
-      const response = await getDoctors({
-        page: currentPage,
-        limit,
-        ...(selectedDepartmentId === "all" ? {} : { department: selectedDepartmentId }),
-        ...(search.trim() ? { search: search.trim() } : {}),
-      });
-      setDoctors(response?.data?.data || []);
-      setTotalPages(response?.data?.meta?.totalPages || 1);
-      setTotalRecords(response?.data?.meta?.totalRecords || 0);
-    } catch (error: any) {
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchDoctors();
-  }, [currentPage, limit, selectedDepartmentId, search]);
-
-  useEffect(() => {
-    const fetchDepartmentMap = async () => {
-      try {
-        const response = await getDepartments({ limit: 200 });
-        const departments = response?.data?.data || [];
-        const nextMap: Record<string, string> = {};
-        departments.forEach((dept: any) => {
-          if (dept?._id && dept?.name) {
-            nextMap[dept._id] = dept.name;
-          }
-        });
-        setDepartmentOptions(
-          departments
-            .filter((dept: any) => dept?._id && dept?.name)
-            .map((dept: any) => ({ _id: dept._id, name: dept.name }))
-        );
-        setDepartmentMap(nextMap);
-      } catch {
-        // Keep fallback to raw ID if lookup fails.
-      }
-    };
-    fetchDepartmentMap();
-  }, []);
 
   const handleDeleteClick = (doctor: Doctor) => {
     setDoctorToDelete(doctor);
@@ -105,20 +222,80 @@ const Doctors = () => {
     if (!doctorToDelete) return;
 
     setIsDeleting(true);
-    try {
-      await deleteDoctor(doctorToDelete._id);
-      if (doctors.length === 1 && currentPage > 1) {
-        setCurrentPage((prev) => prev - 1);
+    setTimeout(() => {
+      // Check if this is a user-created doctor (by checking if it exists in localStorage)
+      const userDoctors = loadUserDoctors();
+      const isUserCreated = userDoctors.some((doc: any) => doc.id === doctorToDelete._id);
+      
+      let updatedDoctors;
+      if (isUserCreated) {
+        // Remove from localStorage
+        const updatedUserDoctors = userDoctors.filter((doc: any) => doc.id !== doctorToDelete._id);
+        localStorage.setItem("rhh_doctors", JSON.stringify(updatedUserDoctors));
+        updatedDoctors = doctors.filter(doc => doc._id !== doctorToDelete._id);
       } else {
-        await fetchDoctors();
+        // For static doctors, just remove from the current view (or mark as inactive)
+        updatedDoctors = doctors.filter(doc => doc._id !== doctorToDelete._id);
       }
+      
+      const featuredIds = getStoredFeaturedDoctors();
+      const updatedFeatured = featuredIds.filter((id) => id !== doctorToDelete._id);
+      saveFeaturedDoctors(updatedFeatured);
+
+      setDoctors(updatedDoctors);
+
+      // Dispatch event to notify other components
+      window.dispatchEvent(new Event("doctorsUpdated"));
+      
+      // Adjust pagination if needed
+      const newTotalPages = Math.ceil(updatedDoctors.length / limit);
+      if (currentPage > newTotalPages && newTotalPages > 0) {
+        setCurrentPage(newTotalPages);
+      }
+      
+      toast.success("Doctor deleted successfully");
       setShowDeleteAlert(false);
       setDoctorToDelete(null);
-    } catch (error: any) {
-      console.error(error);
-    } finally {
       setIsDeleting(false);
+    }, 500);
+  };
+
+  // Feature Doctor Functions
+  const handleFeatureDoctorMode = () => {
+    const alreadyFeatured = doctors.filter((doctor) => doctor.isFeatured).map((doctor) => doctor._id);
+    setSelectedDoctors(new Set(alreadyFeatured));
+    setIsFeatureMode(true);
+  };
+
+  const toggleDoctorSelection = (doctorId: string) => {
+    const newSelection = new Set(selectedDoctors);
+    if (newSelection.has(doctorId)) {
+      newSelection.delete(doctorId);
+    } else {
+      newSelection.add(doctorId);
     }
+    setSelectedDoctors(newSelection);
+  };
+
+  const handleSaveFeaturedDoctors = () => {
+    const featuredIds = Array.from(selectedDoctors);
+    saveFeaturedDoctors(featuredIds);
+
+    const updatedDoctors = doctors.map((doctor) => ({
+      ...doctor,
+      isFeatured: featuredIds.includes(doctor._id),
+    }));
+    setDoctors(updatedDoctors);
+
+    toast.success(`${featuredIds.length} doctor(s) marked as featured`);
+    setIsFeatureMode(false);
+    setSelectedDoctors(new Set());
+    window.dispatchEvent(new Event("doctorsUpdated"));
+  };
+
+  const cancelFeatureMode = () => {
+    setIsFeatureMode(false);
+    setSelectedDoctors(new Set());
   };
 
   const getPageNumbers = () => {
@@ -146,21 +323,78 @@ const Doctors = () => {
           <div className="h-1 bg-gradient-to-r from-burgundy/40 via-burgundy to-burgundy/40"></div>
           
           <div className="p-6">
-            {/* Header with Create Button */}
+            {/* Header with Buttons */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
               <div>
                 <h3 className="text-xl font-bold text-slate-800">Doctors Management</h3>
                 <p className="text-sm text-slate-500 mt-1">Manage doctor profiles, specialties, and availability</p>
               </div>
               
-              <Button
-                onClick={() => navigate("/doctors/create")}
-                className="gap-2 bg-burgundy hover:bg-burgundy/90 shadow-md hover:shadow-lg transition-all duration-200"
-              >
-                <Plus className="h-4 w-4" />
-                Create Doctor
-              </Button>
+              <div className="flex gap-2">
+                {!isFeatureMode ? (
+                  <>
+                    <Button
+                      onClick={handleFeatureDoctorMode}
+                      className="gap-2 bg-amber-600 hover:bg-amber-700 shadow-md hover:shadow-lg transition-all duration-200"
+                    >
+                      <Star className="h-4 w-4" />
+                      Feature Doctors
+                    </Button>
+                    <Button
+                      onClick={() => navigate("/featured-doctors")}
+                      variant="outline"
+                      className="gap-2"
+                    >
+                      <Star className="h-4 w-4" />
+                      View Featured
+                    </Button>
+                    <Button
+                      onClick={() => navigate("/doctors/create")}
+                      className="gap-2 bg-burgundy hover:bg-burgundy/90 shadow-md hover:shadow-lg transition-all duration-200"
+                    >
+                      <Plus className="h-4 w-4" />
+                      Create Doctor
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button
+                      onClick={handleSaveFeaturedDoctors}
+                      className="gap-2 bg-green-600 hover:bg-green-700"
+                    >
+                      <CheckCircle className="h-4 w-4" />
+                      Save Featured ({selectedDoctors.size})
+                    </Button>
+                    <Button
+                      onClick={cancelFeatureMode}
+                      variant="outline"
+                      className="gap-2"
+                    >
+                      <X className="h-4 w-4" />
+                      Cancel
+                    </Button>
+                  </>
+                )}
+              </div>
             </div>
+
+            {/* Feature Mode Banner */}
+            {isFeatureMode && (
+              <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Star className="h-5 w-5 text-amber-600" />
+                  <span className="text-sm text-amber-800">
+                    Select doctors to feature on the homepage. Selected: <strong>{selectedDoctors.size}</strong> doctor(s)
+                  </span>
+                </div>
+                <button
+                  onClick={() => setSelectedDoctors(new Set(doctors.map(d => d._id)))}
+                  className="text-xs text-amber-600 hover:text-amber-800 underline"
+                >
+                  Select All
+                </button>
+              </div>
+            )}
 
             {/* Search and Filter Section */}
             <div className="flex flex-col sm:flex-row gap-3 mb-6">
@@ -215,7 +449,7 @@ const Doctors = () => {
             ) : (
               <>
                 {/* Empty State */}
-                {doctors.length === 0 ? (
+                {paginatedDoctors.length === 0 ? (
                   <div className="text-center py-16">
                     <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-slate-100 flex items-center justify-center">
                       <svg className="w-10 h-10 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -236,15 +470,24 @@ const Doctors = () => {
                   <>
                     {/* Doctors Grid */}
                     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-                      {doctors.map((doctor) => (
+                      {paginatedDoctors.map((doctor) => (
                         <div
                           key={doctor._id}
-                          className="group bg-white rounded-xl border border-slate-200 overflow-hidden hover:shadow-lg transition-all duration-200 hover:-translate-y-0.5"
+                          className={`group bg-white rounded-xl border overflow-hidden hover:shadow-lg transition-all duration-200 hover:-translate-y-0.5 ${
+                            isFeatureMode && selectedDoctors.has(doctor._id)
+                              ? "border-amber-400 ring-2 ring-amber-400"
+                              : "border-slate-200"
+                          }`}
+                          onClick={() => {
+                            if (isFeatureMode) {
+                              toggleDoctorSelection(doctor._id);
+                            }
+                          }}
                         >
                           <div className="p-4">
                             <div className="flex items-start justify-between mb-4">
                               <div className="flex items-center gap-3">
-                                <div className="w-14 h-14 rounded-full bg-gradient-to-br from-burgundy/20 to-burgundy/10 flex items-center justify-center overflow-hidden border-2 border-burgundy/20">
+                                <div className="w-14 h-14 rounded-full bg-gradient-to-br from-burgundy/20 to-burgundy/10 flex items-center justify-center overflow-hidden border-2 border-burgundy/20 relative">
                                   {doctor.image ? (
                                     <img src={doctor.image} alt={doctor.name} className="w-full h-full object-cover" />
                                   ) : (
@@ -252,36 +495,54 @@ const Doctors = () => {
                                       {doctor.name.split(" ").pop()?.[0] || doctor.name[0]}
                                     </span>
                                   )}
+                                  {doctor.isFeatured && !isFeatureMode && (
+                                    <div className="absolute -top-1 -right-1 bg-amber-500 rounded-full p-0.5">
+                                      <Star className="h-3 w-3 text-white fill-white" />
+                                    </div>
+                                  )}
                                 </div>
                                 <div>
                                   <p className="text-base font-semibold text-slate-800">{doctor.name}</p>
                                   <p className="text-xs text-slate-500">{doctor.specialty || "General"}</p>
                                 </div>
                               </div>
-                              <span
-                                className={`px-2 py-1 rounded-full text-[10px] font-medium flex items-center gap-1 ${
-                                  doctor.isActive 
-                                    ? "bg-green-100 text-green-700" 
-                                    : "bg-red-100 text-red-700"
-                                }`}
-                              >
-                                {doctor.isActive ? (
-                                  <CheckCircle className="h-3 w-3" />
-                                ) : (
-                                  <XCircle className="h-3 w-3" />
+                              <div className="flex flex-col items-end gap-1">
+                                <span
+                                  className={`px-2 py-1 rounded-full text-[10px] font-medium flex items-center gap-1 ${
+                                    doctor.isActive 
+                                      ? "bg-green-100 text-green-700" 
+                                      : "bg-red-100 text-red-700"
+                                  }`}
+                                >
+                                  {doctor.isActive ? (
+                                    <CheckCircle className="h-3 w-3" />
+                                  ) : (
+                                    <XCircle className="h-3 w-3" />
+                                  )}
+                                  {doctor.isActive ? "Active" : "Inactive"}
+                                </span>
+                                {isFeatureMode && (
+                                  <div className={`w-4 h-4 rounded border ${
+                                    selectedDoctors.has(doctor._id)
+                                      ? "bg-amber-500 border-amber-500"
+                                      : "border-slate-300"
+                                  }`}>
+                                    {selectedDoctors.has(doctor._id) && (
+                                      <CheckCircle className="h-3 w-3 text-white" />
+                                    )}
+                                  </div>
                                 )}
-                                {doctor.isActive ? "Active" : "Inactive"}
-                              </span>
+                              </div>
                             </div>
 
                             <div className="space-y-2 mb-4">
                               <div className="flex justify-between text-xs">
                                 <span className="text-slate-500">Department</span>
-                                <span className="text-slate-700 font-medium">{getDepartmentName(doctor.department)}</span>
+                                <span className="text-slate-700 font-medium text-right">{getDepartmentName(doctor.department)}</span>
                               </div>
                               <div className="flex justify-between text-xs">
                                 <span className="text-slate-500">Title</span>
-                                <span className="text-slate-700">{doctor.title || "-"}</span>
+                                <span className="text-slate-700 text-right">{doctor.title?.substring(0, 30) || "-"}</span>
                               </div>
                               <div className="flex justify-between text-xs">
                                 <span className="text-slate-500">Online Booking</span>
@@ -295,7 +556,7 @@ const Doctors = () => {
                               <div className="flex flex-wrap gap-1 mb-4">
                                 {doctor.expertise.slice(0, 3).map((exp) => (
                                   <span key={exp} className="px-2 py-0.5 rounded-full text-[10px] bg-burgundy/10 text-burgundy">
-                                    {exp.length > 12 ? exp.slice(0, 10) + '...' : exp}
+                                    {exp.length > 15 ? exp.slice(0, 12) + '...' : exp}
                                   </span>
                                 ))}
                                 {doctor.expertise.length > 3 && (
@@ -314,35 +575,16 @@ const Doctors = () => {
                                 <ExternalLink size={12} />
                                 View
                               </button>
-                              <button
-                                onClick={() => navigate(`/doctors/edit/${doctor._id}`)}
-                                className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 text-xs font-medium hover:bg-slate-50 transition-colors"
-                              >
-                                <Pencil size={12} />
-                                Edit
-                              </button>
-                              <button
-                                onClick={() => handleDeleteClick(doctor)}
-                                className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-200 text-red-600 text-xs font-medium hover:bg-red-50 transition-colors"
-                              >
-                                <Trash2 size={12} />
-                                Delete
-                              </button>
                             </div>
                           </div>
                         </div>
                       ))}
                     </div>
 
-                    {/* Pagination */}
+                    {/* Pagination - Bottom Right */}
                     {totalPages > 1 && (
                       <div className="mt-6 pt-4 border-t border-slate-100">
-                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                          <p className="text-sm text-slate-500">
-                            Showing <span className="font-medium text-slate-700">{((currentPage - 1) * limit) + 1}</span> to{' '}
-                            <span className="font-medium text-slate-700">{Math.min(currentPage * limit, totalRecords)}</span> of{' '}
-                            <span className="font-medium text-slate-700">{totalRecords}</span> doctors
-                          </p>
+                        <div className="flex justify-end">
                           <div className="flex gap-2">
                             <button
                               type="button"

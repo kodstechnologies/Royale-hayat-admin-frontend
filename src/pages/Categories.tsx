@@ -3,91 +3,99 @@ import AdminLayout from "@/components/layout/AdminLayout";
 import BreadCrumb from "@/components/layout/BreadCrumb";
 import { toast } from "sonner";
 import { useLanguage } from "@/contexts/LanguageContext";
-import {
-  createCatagory,
-  deleteCatagory as deleteCatagoryApi,
-  getCatagories,
-  updateCatagory as updateCatagoryApi,
-  type Catagory,
-} from "@/api/catagory";
-import { Pencil, Plus, Trash2, Search, X, Check, ArrowLeft, ChevronLeft, ChevronRight,FolderOpen } from "lucide-react";
+import { Pencil, Plus, Trash2, Search, X, Check, ArrowLeft, ChevronLeft, ChevronRight, FolderOpen, Globe, Languages } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import AlertBox from "@/components/AlertBox";
-import Loader from "@/components/SkeletonLoader";
+
+type Category = {
+  _id: string;
+  name: string;
+  arabicName: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+// Initial categories data
+const initialCategories: Category[] = [
+  {
+    _id: "1",
+    name: "Clinical speciality",
+    arabicName: "التخصصات السريرية",
+    createdAt: "2024-01-15T10:30:00Z",
+    updatedAt: "2024-01-15T10:30:00Z",
+  },
+  {
+    _id: "2",
+    name: "Clinical Support Service",
+    arabicName: "خدمات الدعم السريري",
+    createdAt: "2024-01-16T11:30:00Z",
+    updatedAt: "2024-01-16T11:30:00Z",
+  },
+  {
+    _id: "3",
+    name: "Home Care Service",
+    arabicName: "خدمات الرعاية المنزلية",
+    createdAt: "2024-01-17T12:30:00Z",
+    updatedAt: "2024-01-17T12:30:00Z",
+  },
+];
 
 const Categories = () => {
   const { t } = useLanguage();
 
-  const [items, setItems] = useState<Catagory[]>([]);
+  const [items, setItems] = useState<Category[]>(initialCategories);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const [currentPage, setCurrentPage] = useState(1);
   const [limit] = useState(10);
-  const [totalPages, setTotalPages] = useState(1);
+  const [totalPages, setTotalPages] = useState(Math.ceil(initialCategories.length / 10));
 
   const [search, setSearch] = useState("");
   const [searchInput, setSearchInput] = useState("");
 
   const [isFormVisible, setIsFormVisible] = useState(false);
-  const [editingItem, setEditingItem] = useState<Catagory | null>(null);
+  const [editingItem, setEditingItem] = useState<Category | null>(null);
+  const [activeTab, setActiveTab] = useState<"english" | "arabic">("english");
 
   const [nameDraft, setNameDraft] = useState("");
   const [arabicNameDraft, setArabicNameDraft] = useState("");
 
   const [deleteOpen, setDeleteOpen] = useState(false);
-  const [toDelete, setToDelete] = useState<Catagory | null>(null);
+  const [toDelete, setToDelete] = useState<Category | null>(null);
   const [deleting, setDeleting] = useState(false);
 
-  const [listNonce, setListNonce] = useState(0);
+  // Filter items based on search
+  const filteredItems = items.filter(item => 
+    item.name.toLowerCase().includes(search.toLowerCase()) ||
+    item.arabicName.toLowerCase().includes(search.toLowerCase())
+  );
 
-  const fetchList = useCallback(async () => {
-    setLoading(true);
-
-    try {
-      const res = await getCatagories({
-        page: currentPage,
-        limit,
-        ...(search.trim() ? { search: search.trim() } : {}),
-        sortBy: "createdAt",
-        sortOrder: "desc",
-      });
-
-      setItems(res?.data?.data ?? []);
-      setTotalPages(res?.data?.meta?.totalPages ?? 1);
-    } catch (error: unknown) {
-      const err = error as {
-        response?: { data?: { message?: string } };
-      };
-
-      const msg =
-        err?.response?.data?.message ??
-        "Failed to load categories.";
-
-      toast.error(msg);
-    } finally {
-      setLoading(false);
-    }
-  }, [currentPage, limit, search]);
+  // Pagination
+  const paginatedItems = filteredItems.slice((currentPage - 1) * limit, currentPage * limit);
+  const totalFilteredPages = Math.ceil(filteredItems.length / limit);
 
   useEffect(() => {
-    if (!isFormVisible) {
-      fetchList();
+    setTotalPages(totalFilteredPages);
+    if (currentPage > totalFilteredPages && totalFilteredPages > 0) {
+      setCurrentPage(totalFilteredPages);
     }
-  }, [fetchList, listNonce, isFormVisible]);
+  }, [filteredItems.length, totalFilteredPages, currentPage]);
 
   const openCreateForm = () => {
     setNameDraft("");
     setArabicNameDraft("");
     setEditingItem(null);
+    setActiveTab("english");
     setIsFormVisible(true);
   };
 
-  const openEditForm = (row: Catagory) => {
+  const openEditForm = (row: Category) => {
     setEditingItem(row);
     setNameDraft(row.name);
-    setArabicNameDraft(row.arabicName || "");
+    setArabicNameDraft(row.arabicName);
+    setActiveTab("english");
     setIsFormVisible(true);
   };
 
@@ -96,37 +104,46 @@ const Categories = () => {
     setEditingItem(null);
     setNameDraft("");
     setArabicNameDraft("");
+    setActiveTab("english");
   };
 
-  const submitForm = async () => {
+  const submitForm = () => {
     const name = nameDraft.trim();
     const arabicName = arabicNameDraft.trim();
 
     if (!name) {
-      toast.error(t("Name is required"));
+      toast.error("English Name is required");
       return;
     }
 
     if (!arabicName) {
-      toast.error(t("Arabic name is required"));
+      toast.error("Arabic Name is required");
       return;
     }
 
     setSaving(true);
 
-    try {
+    setTimeout(() => {
       if (editingItem) {
-        await updateCatagoryApi(editingItem._id, {
-          name,
-          arabicName,
-        });
-        toast.success(t("Category updated successfully"));
+        // Update existing category
+        const updatedItems = items.map(item =>
+          item._id === editingItem._id
+            ? { ...item, name, arabicName, updatedAt: new Date().toISOString() }
+            : item
+        );
+        setItems(updatedItems);
+        toast.success("Category updated successfully");
       } else {
-        await createCatagory({
+        // Create new category
+        const newCategory: Category = {
+          _id: Date.now().toString(),
           name,
           arabicName,
-        });
-        toast.success(t("Category created successfully"));
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+        setItems([newCategory, ...items]);
+        toast.success("Category created successfully");
         
         setCurrentPage(1);
         setSearch("");
@@ -137,54 +154,34 @@ const Categories = () => {
       setEditingItem(null);
       setNameDraft("");
       setArabicNameDraft("");
-      setListNonce((n) => n + 1);
-    } catch (error: unknown) {
-      const err = error as {
-        response?: { data?: { message?: string } };
-      };
-
-      toast.error(
-        err?.response?.data?.message ??
-        t("Failed to save")
-      );
-    } finally {
       setSaving(false);
-    }
+    }, 500);
   };
 
-  const confirmDelete = (row: Catagory) => {
+  const confirmDelete = (row: Category) => {
     setToDelete(row);
     setDeleteOpen(true);
   };
 
-  const runDelete = async () => {
+  const runDelete = () => {
     if (!toDelete) return;
 
     setDeleting(true);
 
-    try {
-      await deleteCatagoryApi(toDelete._id);
-
-      toast.success(
-        t("Category deleted successfully")
-      );
-
+    setTimeout(() => {
+      const updatedItems = items.filter(item => item._id !== toDelete._id);
+      setItems(updatedItems);
+      toast.success("Category deleted successfully");
       setDeleteOpen(false);
       setToDelete(null);
-
-      setListNonce((n) => n + 1);
-    } catch (error: unknown) {
-      const err = error as {
-        response?: { data?: { message?: string } };
-      };
-
-      toast.error(
-        err?.response?.data?.message ??
-        t("Failed to delete")
-      );
-    } finally {
       setDeleting(false);
-    }
+
+      // Adjust pagination if needed
+      const newTotalPages = Math.ceil(updatedItems.length / limit);
+      if (currentPage > newTotalPages && newTotalPages > 0) {
+        setCurrentPage(newTotalPages);
+      }
+    }, 500);
   };
 
   const applySearch = () => {
@@ -198,92 +195,147 @@ const Categories = () => {
     setCurrentPage(1);
   };
 
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'short', 
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
   return (
     <AdminLayout title="Categories">
       <div className="space-y-6">
-        {/* Breadcrumb */}
         <BreadCrumb />
         
         {/* Form View - Add/Edit Category */}
         {isFormVisible && (
-          <div className="rounded-xl border-2 border-burgundy/30 bg-gradient-to-br from-white to-burgundy/5 p-8 shadow-xl">
-            <div className="flex items-center gap-4 mb-6">
-              <button
-                onClick={cancelForm}
-                className="p-2 rounded-xl hover:bg-slate-100 transition-all duration-200 group"
-              >
-                <ArrowLeft className="h-5 w-5 text-slate-500 group-hover:text-burgundy" />
-              </button>
-              <div>
-                <h2 className="text-2xl font-bold text-slate-800">
-                  {editingItem ? t("Edit Category") : t("Add New Category")}
-                </h2>
-                <p className="text-sm text-slate-500 mt-1">
-                  {editingItem 
-                    ? t("Update the category details below") 
-                    : t("Fill in the details to create a new category")}
-                </p>
-              </div>
-            </div>
+          <div className="rounded-xl border-2 border-burgundy/30 bg-gradient-to-br from-white via-slate-50/90 to-white shadow-xl backdrop-blur-sm overflow-hidden">
+            <div className="h-1 bg-gradient-to-r from-burgundy/40 via-burgundy to-burgundy/40"></div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-slate-700">
-                  {t("English Name")} <span className="text-red-500">*</span>
-                </label>
-                <Input
-                  value={nameDraft}
-                  onChange={(e) => setNameDraft(e.target.value)}
-                  placeholder={t("Enter category name")}
-                  autoFocus
-                  className="h-11 border-slate-200 focus:border-burgundy focus:ring-burgundy/20 transition-all"
-                />
+            <div className="p-6">
+              <div className="flex items-center gap-4 mb-6">
+                <button
+                  onClick={cancelForm}
+                  className="p-2 rounded-xl hover:bg-slate-100 transition-all duration-200 group"
+                >
+                  <ArrowLeft className="h-5 w-5 text-slate-500 group-hover:text-burgundy" />
+                </button>
+                <div>
+                  <h2 className="text-2xl font-bold text-slate-800">
+                    {editingItem ? "Edit Category" : "Add New Category"}
+                  </h2>
+                  <p className="text-sm text-slate-500 mt-1">
+                    {editingItem 
+                      ? "Update the category details below" 
+                      : "Fill in the details to create a new category"}
+                  </p>
+                </div>
               </div>
 
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-slate-700">
-                  {t("Arabic Name")} <span className="text-red-500">*</span>
-                </label>
-                <Input
-                  value={arabicNameDraft}
-                  onChange={(e) => setArabicNameDraft(e.target.value)}
-                  placeholder={t("Enter Arabic category name")}
-                  dir="rtl"
-                  className="h-11 border-slate-200 focus:border-burgundy focus:ring-burgundy/20 transition-all"
-                />
+              {/* Tabs */}
+              <div className="mb-6">
+                <div className="flex gap-4 p-1 bg-slate-100/80 rounded-xl w-fit">
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("english")}
+                    className={`
+                      flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-medium transition-all duration-200
+                      ${activeTab === "english"
+                        ? "bg-white text-burgundy shadow-md"
+                        : "text-slate-600 hover:text-slate-800 hover:bg-white/50"
+                      }
+                    `}
+                  >
+                    <Globe className="h-4 w-4" />
+                    English Name
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("arabic")}
+                    className={`
+                      flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-medium transition-all duration-200
+                      ${activeTab === "arabic"
+                        ? "bg-white text-burgundy shadow-md"
+                        : "text-slate-600 hover:text-slate-800 hover:bg-white/50"
+                      }
+                    `}
+                  >
+                    <Languages className="h-4 w-4" />
+                    Arabic Name
+                  </button>
+                </div>
               </div>
-            </div>
+              
+              <div className="mb-6">
+                {activeTab === "english" && (
+                  <div className="space-y-2 animate-in fade-in duration-200">
+                    <label className="text-sm font-semibold text-slate-700">
+                      English Name <span className="text-red-500">*</span>
+                    </label>
+                    <Input
+                      value={nameDraft}
+                      onChange={(e) => setNameDraft(e.target.value)}
+                      placeholder="Enter category name in English"
+                      autoFocus
+                      className="h-11"
+                    />
+                  </div>
+                )}
+                
+                {activeTab === "arabic" && (
+                  <div className="space-y-2 animate-in fade-in duration-200">
+                    <label className="text-sm font-semibold text-slate-700">
+                      Arabic Name <span className="text-red-500">*</span>
+                    </label>
+                    <Input
+                      value={arabicNameDraft}
+                      onChange={(e) => setArabicNameDraft(e.target.value)}
+                      placeholder="Enter category name in Arabic"
+                      dir="rtl"
+                      className="h-11"
+                    />
+                  </div>
+                )}
+              </div>
 
-            <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
-              <Button
-                variant="outline"
-                onClick={cancelForm}
-                className="gap-2 h-11 px-6"
-              >
-                <X className="h-4 w-4" />
-                {t("Cancel")}
-              </Button>
-              <Button
-                onClick={submitForm}
-                disabled={saving}
-                className="gap-2 h-11 px-6 bg-burgundy hover:bg-burgundy/90"
-              >
-                <Check className="h-4 w-4" />
-                {saving ? t("Saving...") : (editingItem ? t("Update Category") : t("Create Category"))}
-              </Button>
+              <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
+                <Button
+                  variant="outline"
+                  onClick={cancelForm}
+                  className="gap-2"
+                >
+                  <X className="h-4 w-4" />
+                  Cancel
+                </Button>
+                <Button
+                  onClick={submitForm}
+                  disabled={saving}
+                  className="gap-2 bg-burgundy hover:bg-burgundy/90"
+                >
+                  <Check className="h-4 w-4" />
+                  {saving ? "Saving..." : (editingItem ? "Update Category" : "Create Category")}
+                </Button>
+              </div>
             </div>
           </div>
         )}
 
-       
-
         {/* Main Card - Search, Add Button & Table */}
         {!isFormVisible && (
-          <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-            {/* Card Header with Search and Add Button */}
-            <div className="px-6 py-4 border-b border-slate-100 bg-gradient-to-r from-slate-50/50 to-white">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-               
+          <div className="rounded-xl border-2 border-burgundy/30 bg-gradient-to-br from-white via-slate-50/90 to-white shadow-xl backdrop-blur-sm overflow-hidden">
+            <div className="h-1 bg-gradient-to-r from-burgundy/40 via-burgundy to-burgundy/40"></div>
+            
+            <div className="p-6">
+              {/* Header */}
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+                <div>
+                  <h3 className="text-xl font-bold text-slate-800">Categories Management</h3>
+                  <p className="text-sm text-slate-500 mt-1">Manage your product categories</p>
+                </div>
                 
                 <div className="flex flex-col sm:flex-row gap-3">
                   {/* Search Section */}
@@ -291,7 +343,7 @@ const Categories = () => {
                     <div className="relative">
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                       <Input
-                        placeholder={t("Search categories...")}
+                        placeholder="Search categories..."
                         value={searchInput}
                         onChange={(e) => setSearchInput(e.target.value)}
                         onKeyDown={(e) => e.key === "Enter" && applySearch()}
@@ -303,7 +355,7 @@ const Categories = () => {
                       onClick={applySearch}
                       size="sm"
                     >
-                      {t("Search")}
+                      Search
                     </Button>
                     {search && (
                       <Button
@@ -311,88 +363,83 @@ const Categories = () => {
                         onClick={clearSearch}
                         size="sm"
                       >
-                        {t("Clear")}
+                        Clear
                       </Button>
                     )}
                   </div>
 
                   {/* Add Category Button */}
-                  <Button
+                  {/* <Button
                     onClick={openCreateForm}
                     className="gap-2 bg-burgundy hover:bg-burgundy/90"
-                    size="default"
                   >
                     <Plus className="h-4 w-4" />
-                    {t("Add category")}
-                  </Button>
+                    Add Category
+                  </Button> */}
                 </div>
               </div>
-            </div>
 
-            {/* Table Section */}
-            {loading ? (
-              <div className="p-8">
-                <Loader />
-              </div>
-            ) : (
-              <>
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="bg-slate-50 border-b border-slate-100">
-                        <th className="text-left py-4 px-6 font-semibold text-slate-700 text-sm">
-                          {t("English Name")}
-                        </th>
-                        <th className="text-left py-4 px-6 font-semibold text-slate-700 text-sm">
-                          {t("Arabic Name")}
-                        </th>
-                        <th className="text-left py-4 px-6 font-semibold text-slate-700 text-sm hidden md:table-cell">
-                          {t("Last Updated")}
-                        </th>
-                        <th className="text-right py-4 px-6 font-semibold text-slate-700 text-sm w-[120px]">
-                          {t("Actions")}
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {items.length === 0 ? (
-                        <tr>
-                          <td colSpan={4} className="text-center py-12">
-                            <div className="flex flex-col items-center justify-center gap-2">
-                              <FolderOpen className="h-12 w-12 text-slate-300" />
-                              <p className="text-slate-500">{t("No data available")}</p>
-                              <Button
-                                variant="outline"
-                                onClick={openCreateForm}
-                                className="mt-2 gap-2"
-                              >
-                                <Plus className="h-4 w-4" />
-                                {t("Add your first category")}
-                              </Button>
-                            </div>
-                          </td>
+              {/* Table Section */}
+              {paginatedItems.length === 0 ? (
+                <div className="text-center py-16">
+                  <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-slate-100 flex items-center justify-center">
+                    <FolderOpen className="h-10 w-10 text-slate-400" />
+                  </div>
+                  <p className="text-slate-500 font-medium">No categories found</p>
+                  <p className="text-sm text-slate-400 mt-1">Try adjusting your search or create a new category</p>
+                  <Button
+                    variant="outline"
+                    onClick={openCreateForm}
+                    className="mt-4 gap-2"
+                  >
+                    <Plus className="h-4 w-4" />
+                    Add your first category
+                  </Button>
+                </div>
+              ) : (
+                <>
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b border-slate-200 bg-slate-50/50">
+                          <th className="text-left py-3 px-4 font-semibold text-slate-600 text-xs uppercase tracking-wider">
+                            English Name
+                          </th>
+                          <th className="text-left py-3 px-4 font-semibold text-slate-600 text-xs uppercase tracking-wider">
+                            Arabic Name
+                          </th>
+                          <th className="text-left py-3 px-4 font-semibold text-slate-600 text-xs uppercase tracking-wider hidden md:table-cell">
+                            Last Updated
+                          </th>
+                          {/* <th className="text-right py-3 px-4 font-semibold text-slate-600 text-xs uppercase tracking-wider w-[100px]">
+                            Actions
+                          </th> */}
                         </tr>
-                      ) : (
-                        items.map((row) => (
-                          <tr key={row._id} className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors">
-                            <td className="py-3 px-6">
-                              <span className="font-medium text-slate-800">{row.name}</span>
+                      </thead>
+                      <tbody>
+                        {paginatedItems.map((item, index) => (
+                          <tr
+                            key={item._id}
+                            className={`border-b border-slate-100 hover:bg-slate-50/50 transition-colors group ${
+                              index % 2 === 0 ? 'bg-white' : 'bg-slate-50/30'
+                            }`}
+                          >
+                            <td className="py-3 px-4">
+                              <span className="font-medium text-slate-800">{item.name}</span>
                             </td>
-                            <td className="py-3 px-6" dir="rtl">
-                              <span className="text-slate-700">{row.arabicName}</span>
+                            <td className="py-3 px-4" dir="rtl">
+                              <span className="text-slate-700">{item.arabicName}</span>
                             </td>
-                            <td className="py-3 px-6 text-slate-500 text-sm hidden md:table-cell">
-                              {row.updatedAt
-                                ? new Date(row.updatedAt).toLocaleString()
-                                : "—"}
+                            <td className="py-3 px-4 text-slate-500 text-sm hidden md:table-cell">
+                              {formatDate(item.updatedAt)}
                             </td>
-                            <td className="py-3 px-6 text-right">
+                            {/* <td className="py-3 px-4 text-right">
                               <div className="flex items-center justify-end gap-1">
                                 <Button
                                   variant="ghost"
                                   size="icon"
                                   className="h-8 w-8 text-slate-500 hover:text-burgundy hover:bg-burgundy/10"
-                                  onClick={() => openEditForm(row)}
+                                  onClick={() => openEditForm(item)}
                                 >
                                   <Pencil className="h-4 w-4" />
                                 </Button>
@@ -400,79 +447,80 @@ const Categories = () => {
                                   variant="ghost"
                                   size="icon"
                                   className="h-8 w-8 text-slate-500 hover:text-red-600 hover:bg-red-50"
-                                  onClick={() => confirmDelete(row)}
+                                  onClick={() => confirmDelete(item)}
                                 >
                                   <Trash2 className="h-4 w-4" />
                                 </Button>
                               </div>
-                            </td>
+                            </td> */}
                           </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
-                </div>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
 
-                {/* Pagination */}
-                {totalPages > 1 && (
-                  <div className="px-6 py-4 border-t border-slate-100 bg-slate-50/30">
-                    <div className="flex items-center justify-between">
-                      <p className="text-sm text-slate-500">
-                        Showing {((currentPage - 1) * limit) + 1} to {Math.min(currentPage * limit, items.length)} of {items.length} entries
-                      </p>
-                      <div className="flex gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          disabled={currentPage <= 1}
-                          onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                          className="gap-1"
-                        >
-                          <ChevronLeft className="h-4 w-4" />
-                          {t("Previous")}
-                        </Button>
-                        <div className="flex items-center gap-2">
-                          {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                            let pageNum;
-                            if (totalPages <= 5) {
-                              pageNum = i + 1;
-                            } else if (currentPage <= 3) {
-                              pageNum = i + 1;
-                            } else if (currentPage >= totalPages - 2) {
-                              pageNum = totalPages - 4 + i;
-                            } else {
-                              pageNum = currentPage - 2 + i;
-                            }
-                            
-                            return (
-                              <Button
-                                key={pageNum}
-                                variant={currentPage === pageNum ? "default" : "outline"}
-                                size="sm"
-                                onClick={() => setCurrentPage(pageNum)}
-                                className={currentPage === pageNum ? "bg-burgundy hover:bg-burgundy/90" : ""}
-                              >
-                                {pageNum}
-                              </Button>
-                            );
-                          })}
+                  {/* Pagination - Bottom Right */}
+                  {totalPages > 1 && (
+                    <div className="mt-6 pt-4 border-t border-slate-100">
+                      <div className="flex justify-end">
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={currentPage <= 1}
+                            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                            className="gap-1"
+                          >
+                            <ChevronLeft className="h-4 w-4" />
+                            Previous
+                          </Button>
+                          <div className="flex items-center gap-1">
+                            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                              let pageNum;
+                              if (totalPages <= 5) {
+                                pageNum = i + 1;
+                              } else if (currentPage <= 3) {
+                                pageNum = i + 1;
+                              } else if (currentPage >= totalPages - 2) {
+                                pageNum = totalPages - 4 + i;
+                              } else {
+                                pageNum = currentPage - 2 + i;
+                              }
+                              
+                              return (
+                                <Button
+                                  key={pageNum}
+                                  variant={currentPage === pageNum ? "default" : "outline"}
+                                  size="sm"
+                                  onClick={() => setCurrentPage(pageNum)}
+                                  className={`min-w-[36px] ${
+                                    currentPage === pageNum 
+                                      ? "bg-burgundy hover:bg-burgundy/90 text-white" 
+                                      : "hover:border-burgundy/30 hover:text-burgundy"
+                                  }`}
+                                >
+                                  {pageNum}
+                                </Button>
+                              );
+                            })}
+                          </div>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={currentPage >= totalPages}
+                            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                            className="gap-1"
+                          >
+                            Next
+                            <ChevronRight className="h-4 w-4" />
+                          </Button>
                         </div>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          disabled={currentPage >= totalPages}
-                          onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                          className="gap-1"
-                        >
-                          {t("Next")}
-                          <ChevronRight className="h-4 w-4" />
-                        </Button>
                       </div>
                     </div>
-                  </div>
-                )}
-              </>
-            )}
+                  )}
+                </>
+              )}
+            </div>
           </div>
         )}
       </div>
@@ -480,14 +528,14 @@ const Categories = () => {
       {/* DELETE ALERT */}
       <AlertBox
         isOpen={deleteOpen}
-        title={t("Delete category")}
+        title="Delete Category"
         message={
           toDelete
-            ? `${t("Delete category confirm")} "${toDelete.name}"?`
+            ? `Are you sure you want to delete "${toDelete.name}"? This action cannot be undone.`
             : ""
         }
-        confirmText={t("Delete")}
-        cancelText={t("Cancel")}
+        confirmText="Delete"
+        cancelText="Cancel"
         isDeleting={deleting}
         onClose={() => {
           if (!deleting) {
@@ -502,5 +550,3 @@ const Categories = () => {
 };
 
 export default Categories;
-
-// Import missing icon

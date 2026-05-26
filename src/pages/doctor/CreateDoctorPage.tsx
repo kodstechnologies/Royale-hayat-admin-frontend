@@ -1,22 +1,20 @@
 import { useCallback, useEffect, useState } from "react";
-import { Formik, Form, Field, ErrorMessage } from "formik";
+import { Formik, Form, ErrorMessage } from "formik";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { Plus, Trash2, ArrowLeft, Upload, X, Globe, Languages, User, Stethoscope, Award, Briefcase } from "lucide-react";
+import { Plus, Trash2, ArrowLeft, Upload, X, Globe, Languages, User, Award } from "lucide-react";
 import AdminLayout from "@/components/layout/AdminLayout";
 import BreadCrumb from "@/components/layout/BreadCrumb";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { createDoctor } from "@/api/doctors";
-import { getDepartments, getDepartmentById } from "@/api/department";
+import { adminDepartments } from "@/data/departments";
+import { getSubspecialitiesByDepartmentId } from "@/data/subspeciality";
 
 type FormDataType = {
   // English fields
   doctorId: string;
   name: string;
-  specialty: string;
   title: string;
   initials: string;
   languages: string;
@@ -24,7 +22,6 @@ type FormDataType = {
   qualifications: string;
   // Arabic fields
   arabicName: string;
-  arabicSpecialty: string;
   arabicTitle: string;
   arabicLanguages: string;
   arabicExpertise: string;
@@ -38,14 +35,12 @@ type FormDataType = {
 const initialValues: FormDataType = {
   doctorId: "",
   name: "",
-  specialty: "",
   title: "",
   initials: "",
   languages: "",
   expertise: "",
   qualifications: "",
   arabicName: "",
-  arabicSpecialty: "",
   arabicTitle: "",
   arabicLanguages: "",
   arabicExpertise: "",
@@ -54,6 +49,20 @@ const initialValues: FormDataType = {
   subspecialityIds: [],
   availableOnline: true,
   imageFile: null,
+};
+
+// Function to load user doctors from localStorage
+const loadUserDoctors = () => {
+  const stored = localStorage.getItem("rhh_doctors");
+  if (stored) {
+    return JSON.parse(stored);
+  }
+  return [];
+};
+
+// Function to save user doctors to localStorage
+const saveUserDoctors = (doctors: any[]) => {
+  localStorage.setItem("rhh_doctors", JSON.stringify(doctors));
 };
 
 const SEPARATOR = "|||";
@@ -91,56 +100,48 @@ const CreateDoctorPage = () => {
   const navigate = useNavigate();
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState<"english" | "arabic">("english");
-  const [departments, setDepartments] = useState<Array<{ _id: string; name: string; arabicName?: string }>>([]);
-  const [deptSubspecialities, setDeptSubspecialities] = useState<Array<{ _id: string; name: string; arabicName?: string }>>([]);
-  const [deptSubsLoading, setDeptSubsLoading] = useState(false);
+  const [departments, setDepartments] = useState<Array<{ _id: string; name: string; arabicName: string }>>([]);
+  const [deptSubspecialities, setDeptSubspecialities] = useState<Array<{ _id: string; name: string; arabicName: string }>>([]);
   const [previewUrl, setPreviewUrl] = useState("");
   const [dragActive, setDragActive] = useState(false);
   const [languageInput, setLanguageInput] = useState("");
   const [arabicLanguageInput, setArabicLanguageInput] = useState("");
 
-  const loadDepartmentSubspecialities = useCallback(async (departmentId: string) => {
+  // Load departments from adminDepartments
+  useEffect(() => {
+    const deptOptions = adminDepartments.map(dept => ({
+      _id: dept.id,
+      name: dept.name,
+      arabicName: dept.nameAr
+    }));
+    setDepartments(deptOptions);
+  }, []);
+
+  const loadDepartmentSubspecialities = useCallback((departmentId: string) => {
     if (!departmentId) {
       setDeptSubspecialities([]);
       return;
     }
-    setDeptSubsLoading(true);
-    try {
-      const res = await getDepartmentById(departmentId);
-      const dept = res?.data?.data;
-      const raw = Array.isArray(dept?.subspecialities) ? dept.subspecialities : [];
-      setDeptSubspecialities(
-        raw
-          .filter((s: { _id?: string }) => s && typeof s === "object" && s._id)
-          .map((s: { _id: string; name?: string; arabicName?: string }) => ({ 
-            _id: String(s._id), 
-            name: String(s.name || ""),
-            arabicName: String(s.arabicName || s.name || "")
-          })),
-      );
-    } catch {
-      setDeptSubspecialities([]);
-      toast.error("Could not load subspecialities for this department.", { position: "top-right" });
-    } finally {
-      setDeptSubsLoading(false);
-    }
-  }, []);
+    // Load from real subspeciality data, also merge any user-created ones from localStorage
+    const staticSubs = getSubspecialitiesByDepartmentId(departmentId).map((sub) => ({
+      _id: sub.id,
+      name: sub.name,
+      arabicName: sub.nameAr,
+    }));
 
-  useEffect(() => {
-    const loadDepartments = async () => {
-      try {
-        const response = await getDepartments({ limit: 100 });
-        const rawDepartments =
-          response?.data?.data?.data ||
-          response?.data?.data ||
-          response?.data?.items ||
-          [];
-        setDepartments((Array.isArray(rawDepartments) ? rawDepartments : []).filter((d: { _id?: string; name?: string; arabicName?: string }) => d?._id && d?.name));
-      } catch {
-        toast.error("Failed to fetch departments.", { position: "top-right" });
-      }
-    };
-    loadDepartments();
+    // Also check localStorage for user-created subspecialities linked to this department
+    const stored = localStorage.getItem("rhh_subspecialities");
+    const userSubs: Array<{ _id: string; name: string; arabicName: string }> = stored
+      ? (JSON.parse(stored) as any[])
+        .filter((s: any) => s.departmentId === departmentId)
+        .map((s: any) => ({ _id: s.id, name: s.name, arabicName: s.arabicName }))
+      : [];
+
+    // Merge, avoiding duplicates by _id
+    const staticIds = new Set(staticSubs.map((s) => s._id));
+    const merged = [...staticSubs, ...userSubs.filter((s) => !staticIds.has(s._id))];
+
+    setDeptSubspecialities(merged);
   }, []);
 
   const handleDrag = (e: React.DragEvent) => {
@@ -162,18 +163,80 @@ const CreateDoctorPage = () => {
       setFieldValue("imageFile", file);
       setPreviewUrl(URL.createObjectURL(file));
     } else {
-      toast.error("Please upload an image file", { position: "top-right" });
+      toast.error("Please upload an image file");
     }
   };
 
   // Get display name for subspeciality based on active tab
   const getSubspecialityDisplayName = (sub: typeof deptSubspecialities[0]) => {
-    return activeTab === "arabic" ? sub.arabicName || sub.name : sub.name;
+    return activeTab === "arabic" ? sub.arabicName : sub.name;
   };
 
   // Get display name for department based on active tab
   const getDepartmentDisplayName = (dept: typeof departments[0]) => {
-    return activeTab === "arabic" ? dept.arabicName || dept.name : dept.name;
+    return activeTab === "arabic" ? dept.arabicName : dept.name;
+  };
+
+  const handleSubmit = async (values: FormDataType) => {
+    if (!values.doctorId.trim()) {
+      toast.error("Doctor ID is required");
+      return;
+    }
+    if (!values.name.trim()) {
+      toast.error("English Name is required");
+      return;
+    }
+    if (!values.arabicName.trim()) {
+      toast.error("Arabic Name is required");
+      return;
+    }
+    if (!values.department.trim()) {
+      toast.error("Department is required");
+      return;
+    }
+
+    setSaving(true);
+
+    // Simulate API call
+    setTimeout(() => {
+      const newDoctor = {
+        id: Date.now().toString(),
+        doctorId: values.doctorId.trim(),
+        name: values.name.trim(),
+        arabicName: values.arabicName.trim(),
+        department: values.department,
+        departmentName: departments.find(d => d._id === values.department)?.name || values.department,
+        departmentAr: departments.find(d => d._id === values.department)?.arabicName || values.department,
+        subspecialityIds: values.subspecialityIds,
+        availableOnline: values.availableOnline,
+        title: values.title,
+        initials: values.initials,
+        languages: toItems(values.languages),
+        expertise: toItems(values.expertise),
+        qualifications: toItems(values.qualifications),
+        arabicTitle: values.arabicTitle,
+        arabicLanguages: toItems(values.arabicLanguages),
+        arabicExpertise: toItems(values.arabicExpertise),
+        arabicQualifications: toItems(values.arabicQualifications),
+        image: values.imageFile ? previewUrl : null,
+        isActive: true,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+
+      // Save to localStorage
+      const existingDoctors = loadUserDoctors();
+      const updatedDoctors = [newDoctor, ...existingDoctors];
+      saveUserDoctors(updatedDoctors);
+
+      // Dispatch event to notify list page
+      window.dispatchEvent(new Event("doctorsUpdated"));
+
+      console.log("Doctor created:", newDoctor);
+      toast.success("Doctor created successfully");
+      setSaving(false);
+      navigate("/doctors");
+    }, 1000);
   };
 
   return (
@@ -184,7 +247,7 @@ const CreateDoctorPage = () => {
         {/* Main Card */}
         <div className="rounded-xl border-2 border-burgundy/30 bg-gradient-to-br from-white via-slate-50/90 to-white shadow-xl backdrop-blur-sm overflow-hidden">
           <div className="h-1 bg-gradient-to-r from-burgundy/40 via-burgundy to-burgundy/40"></div>
-          
+
           <div className="p-6">
             {/* Header with Back Button */}
             <div className="flex items-center gap-4 mb-6">
@@ -244,40 +307,7 @@ const CreateDoctorPage = () => {
                 if (!values.department.trim()) errors.department = "Department is required";
                 return errors;
               }}
-              onSubmit={async (values) => {
-                setSaving(true);
-                try {
-                  const payload = new FormData();
-                  payload.append("doctorId", values.doctorId.trim());
-                  payload.append("name", values.name.trim());
-                  payload.append("arabicName", values.arabicName.trim());
-                  payload.append("department", values.department.trim());
-                  payload.append("subspecialities", JSON.stringify(values.subspecialityIds));
-                  payload.append("availableOnline", String(values.availableOnline));
-                  if (values.specialty.trim()) payload.append("specialty", values.specialty.trim());
-                  if (values.title.trim()) payload.append("title", values.title.trim());
-                  if (values.initials.trim()) payload.append("initials", values.initials.trim().toUpperCase());
-                  if (values.arabicSpecialty.trim()) payload.append("arabicSpecialty", values.arabicSpecialty.trim());
-                  if (values.arabicTitle.trim()) payload.append("arabicTitle", values.arabicTitle.trim());
-                  
-                  toItems(values.languages).forEach((item) => payload.append("languages", item));
-                  toItems(values.expertise).forEach((item) => payload.append("expertise", item));
-                  toItems(values.qualifications).forEach((item) => payload.append("qualifications", item));
-                  toItems(values.arabicLanguages).forEach((item) => payload.append("arabicLanguages", item));
-                  toItems(values.arabicExpertise).forEach((item) => payload.append("arabicExpertise", item));
-                  toItems(values.arabicQualifications).forEach((item) => payload.append("arabicQualifications", item));
-                  
-                  if (values.imageFile) payload.append("image", values.imageFile);
-                  await createDoctor(payload);
-                  toast.success("Doctor created successfully.", { position: "top-right" });
-                  navigate("/doctors");
-                } catch (error: unknown) {
-                  const err = error as { response?: { data?: { message?: string } } };
-                  toast.error(err?.response?.data?.message || "Failed to create doctor.", { position: "top-right" });
-                } finally {
-                  setSaving(false);
-                }
-              }}
+              onSubmit={handleSubmit}
             >
               {({ values, setFieldValue }) => (
                 <Form className="space-y-6">
@@ -301,13 +331,12 @@ const CreateDoctorPage = () => {
                   {/* ENGLISH TAB */}
                   {activeTab === "english" && (
                     <div className="space-y-6 animate-in fade-in duration-200">
-                      {/* Basic Information */}
                       <div className="bg-white rounded-xl border border-slate-200 p-5 space-y-5">
                         <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
                           <User className="h-5 w-5 text-burgundy" />
                           <h3 className="text-md font-semibold text-slate-800">Basic Information</h3>
                         </div>
-                        
+
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                           <div className="space-y-2">
                             <label className="text-sm font-semibold text-slate-700">
@@ -324,34 +353,23 @@ const CreateDoctorPage = () => {
                           </div>
 
                           <div className="space-y-2">
-                            <label className="text-sm font-semibold text-slate-700">Initials</label>
-                            <Input
-                              name="initials"
-                              value={values.initials}
-                              onChange={(e) => setFieldValue("initials", e.target.value.toUpperCase())}
-                              placeholder="Enter initials (e.g., JD)"
-                              className="h-11"
-                            />
-                          </div>
-
-                          <div className="space-y-2">
-                            <label className="text-sm font-semibold text-slate-700">Specialty</label>
-                            <Input
-                              name="specialty"
-                              value={values.specialty}
-                              onChange={(e) => setFieldValue("specialty", e.target.value)}
-                              placeholder="Enter specialty"
-                              className="h-11"
-                            />
-                          </div>
-
-                          <div className="space-y-2">
                             <label className="text-sm font-semibold text-slate-700">Title</label>
                             <Input
                               name="title"
                               value={values.title}
                               onChange={(e) => setFieldValue("title", e.target.value)}
                               placeholder="Enter title (e.g., Consultant)"
+                              className="h-11"
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <label className="text-sm font-semibold text-slate-700">Initials</label>
+                            <Input
+                              name="initials"
+                              value={values.initials}
+                              onChange={(e) => setFieldValue("initials", e.target.value.toUpperCase())}
+                              placeholder="Enter initials (e.g., Dr)"
                               className="h-11"
                             />
                           </div>
@@ -364,7 +382,7 @@ const CreateDoctorPage = () => {
                           <Globe className="h-5 w-5 text-burgundy" />
                           <h3 className="text-md font-semibold text-slate-800">Languages</h3>
                         </div>
-                        
+
                         <div className="space-y-2">
                           <div className="flex gap-2">
                             <Input
@@ -411,60 +429,7 @@ const CreateDoctorPage = () => {
                         </div>
                       </div>
 
-                      {/* Expertise Section */}
-                      <div className="bg-white rounded-xl border border-slate-200 p-5 space-y-4">
-                        <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
-                          <Award className="h-5 w-5 text-burgundy" />
-                          <h3 className="text-md font-semibold text-slate-800">Expertise</h3>
-                        </div>
-                        
-                        <div className="space-y-3">
-                          {toEditorRows(values.expertise).map((line, index) => (
-                            <div key={`expertise-${index}`} className="flex gap-2">
-                              <Input
-                                value={line}
-                                onChange={(e) => {
-                                  const next = [...toEditorRows(values.expertise)];
-                                  next[index] = e.target.value;
-                                  setFieldValue("expertise", toCommaSeparated(next));
-                                }}
-                                placeholder={`Expertise ${index + 1}`}
-                                className="flex-1 h-11"
-                              />
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => {
-                                  const rows = toEditorRows(values.expertise);
-                                  if (rows.length <= 1) {
-                                    setFieldValue("expertise", "");
-                                    return;
-                                  }
-                                  const next = rows.filter((_, i) => i !== index);
-                                  setFieldValue("expertise", toCommaSeparated(next));
-                                }}
-                                className="text-red-500 hover:text-red-600 hover:bg-red-50 h-11 w-11"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          ))}
-                        </div>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            const rows = [...toEditorRows(values.expertise), ""];
-                            setFieldValue("expertise", toCommaSeparated(rows));
-                          }}
-                          className="mt-2 gap-1 border-burgundy/30 text-burgundy hover:bg-burgundy/5"
-                        >
-                          <Plus className="h-3 w-3" />
-                          Add expertise
-                        </Button>
-                      </div>
+
 
                       {/* Qualifications Section */}
                       <div className="bg-white rounded-xl border border-slate-200 p-5 space-y-4">
@@ -472,7 +437,7 @@ const CreateDoctorPage = () => {
                           <Award className="h-5 w-5 text-burgundy" />
                           <h3 className="text-md font-semibold text-slate-800">Qualifications</h3>
                         </div>
-                        
+
                         <div className="space-y-3">
                           {toEditorRows(values.qualifications).map((line, index) => (
                             <div key={`qualification-${index}`} className="flex gap-2">
@@ -520,6 +485,62 @@ const CreateDoctorPage = () => {
                           Add qualification
                         </Button>
                       </div>
+
+
+                      {/* Expertise Section */}
+                      <div className="bg-white rounded-xl border border-slate-200 p-5 space-y-4">
+                        <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
+                          <Award className="h-5 w-5 text-burgundy" />
+                          <h3 className="text-md font-semibold text-slate-800">Expertise</h3>
+                        </div>
+
+                        <div className="space-y-3">
+                          {toEditorRows(values.expertise).map((line, index) => (
+                            <div key={`expertise-${index}`} className="flex gap-2">
+                              <Input
+                                value={line}
+                                onChange={(e) => {
+                                  const next = [...toEditorRows(values.expertise)];
+                                  next[index] = e.target.value;
+                                  setFieldValue("expertise", toCommaSeparated(next));
+                                }}
+                                placeholder={`Expertise ${index + 1}`}
+                                className="flex-1 h-11"
+                              />
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => {
+                                  const rows = toEditorRows(values.expertise);
+                                  if (rows.length <= 1) {
+                                    setFieldValue("expertise", "");
+                                    return;
+                                  }
+                                  const next = rows.filter((_, i) => i !== index);
+                                  setFieldValue("expertise", toCommaSeparated(next));
+                                }}
+                                className="text-red-500 hover:text-red-600 hover:bg-red-50 h-11 w-11"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            const rows = [...toEditorRows(values.expertise), ""];
+                            setFieldValue("expertise", toCommaSeparated(rows));
+                          }}
+                          className="mt-2 gap-1 border-burgundy/30 text-burgundy hover:bg-burgundy/5"
+                        >
+                          <Plus className="h-3 w-3" />
+                          Add expertise
+                        </Button>
+                      </div>
                     </div>
                   )}
 
@@ -531,7 +552,7 @@ const CreateDoctorPage = () => {
                           <Languages className="h-5 w-5 text-burgundy" />
                           <h3 className="text-md font-semibold text-slate-800">Basic Information (Arabic)</h3>
                         </div>
-                        
+
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                           <div className="space-y-2">
                             <label className="text-sm font-semibold text-slate-700">
@@ -546,18 +567,6 @@ const CreateDoctorPage = () => {
                               dir="rtl"
                             />
                             <ErrorMessage name="arabicName" component="p" className="text-xs text-red-500" />
-                          </div>
-
-                          <div className="space-y-2">
-                            <label className="text-sm font-semibold text-slate-700">Specialty (Arabic)</label>
-                            <Input
-                              name="arabicSpecialty"
-                              value={values.arabicSpecialty}
-                              onChange={(e) => setFieldValue("arabicSpecialty", e.target.value)}
-                              placeholder="التخصص"
-                              className="h-11"
-                              dir="rtl"
-                            />
                           </div>
 
                           <div className="space-y-2">
@@ -580,7 +589,7 @@ const CreateDoctorPage = () => {
                           <Globe className="h-5 w-5 text-burgundy" />
                           <h3 className="text-md font-semibold text-slate-800">Languages (Arabic)</h3>
                         </div>
-                        
+
                         <div className="space-y-2">
                           <div className="flex gap-2">
                             <Input
@@ -628,13 +637,71 @@ const CreateDoctorPage = () => {
                         </div>
                       </div>
 
+                      {/* Qualifications (Arabic) Section */}
+                      <div className="bg-white rounded-xl border border-slate-200 p-5 space-y-4">
+                        <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
+                          <Award className="h-5 w-5 text-burgundy" />
+                          <h3 className="text-md font-semibold text-slate-800">Qualifications (Arabic)</h3>
+                        </div>
+
+                        <div className="space-y-3">
+                          {toEditorRows(values.arabicQualifications).map((line, index) => (
+                            <div key={`arabic-qualification-${index}`} className="flex gap-2">
+                              <Input
+                                value={line}
+                                onChange={(e) => {
+                                  const next = [...toEditorRows(values.arabicQualifications)];
+                                  next[index] = e.target.value;
+                                  setFieldValue("arabicQualifications", toCommaSeparated(next));
+                                }}
+                                placeholder={`المؤهل ${index + 1}`}
+                                className="flex-1 h-11"
+                                dir="rtl"
+                              />
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => {
+                                  const rows = toEditorRows(values.arabicQualifications);
+                                  if (rows.length <= 1) {
+                                    setFieldValue("arabicQualifications", "");
+                                    return;
+                                  }
+                                  const next = rows.filter((_, i) => i !== index);
+                                  setFieldValue("arabicQualifications", toCommaSeparated(next));
+                                }}
+                                className="text-red-500 hover:text-red-600 hover:bg-red-50 h-11 w-11"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            const rows = [...toEditorRows(values.arabicQualifications), ""];
+                            setFieldValue("arabicQualifications", toCommaSeparated(rows));
+                          }}
+                          className="mt-2 gap-1 border-burgundy/30 text-burgundy hover:bg-burgundy/5"
+                        >
+                          <Plus className="h-3 w-3" />
+                          أضف مؤهلاً
+                        </Button>
+                      </div>
+                      
+
+
                       {/* Expertise (Arabic) Section */}
                       <div className="bg-white rounded-xl border border-slate-200 p-5 space-y-4">
                         <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
                           <Award className="h-5 w-5 text-burgundy" />
                           <h3 className="text-md font-semibold text-slate-800">Expertise (Arabic)</h3>
                         </div>
-                        
+
                         <div className="space-y-3">
                           {toEditorRows(values.arabicExpertise).map((line, index) => (
                             <div key={`arabic-expertise-${index}`} className="flex gap-2">
@@ -684,61 +751,7 @@ const CreateDoctorPage = () => {
                         </Button>
                       </div>
 
-                      {/* Qualifications (Arabic) Section */}
-                      <div className="bg-white rounded-xl border border-slate-200 p-5 space-y-4">
-                        <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
-                          <Award className="h-5 w-5 text-burgundy" />
-                          <h3 className="text-md font-semibold text-slate-800">Qualifications (Arabic)</h3>
-                        </div>
-                        
-                        <div className="space-y-3">
-                          {toEditorRows(values.arabicQualifications).map((line, index) => (
-                            <div key={`arabic-qualification-${index}`} className="flex gap-2">
-                              <Input
-                                value={line}
-                                onChange={(e) => {
-                                  const next = [...toEditorRows(values.arabicQualifications)];
-                                  next[index] = e.target.value;
-                                  setFieldValue("arabicQualifications", toCommaSeparated(next));
-                                }}
-                                placeholder={`المؤهل ${index + 1}`}
-                                className="flex-1 h-11"
-                                dir="rtl"
-                              />
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => {
-                                  const rows = toEditorRows(values.arabicQualifications);
-                                  if (rows.length <= 1) {
-                                    setFieldValue("arabicQualifications", "");
-                                    return;
-                                  }
-                                  const next = rows.filter((_, i) => i !== index);
-                                  setFieldValue("arabicQualifications", toCommaSeparated(next));
-                                }}
-                                className="text-red-500 hover:text-red-600 hover:bg-red-50 h-11 w-11"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          ))}
-                        </div>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            const rows = [...toEditorRows(values.arabicQualifications), ""];
-                            setFieldValue("arabicQualifications", toCommaSeparated(rows));
-                          }}
-                          className="mt-2 gap-1 border-burgundy/30 text-burgundy hover:bg-burgundy/5"
-                        >
-                          <Plus className="h-3 w-3" />
-                          أضف مؤهلاً
-                        </Button>
-                      </div>
+
                     </div>
                   )}
 
@@ -755,7 +768,7 @@ const CreateDoctorPage = () => {
                             const next = e.target.value;
                             setFieldValue("department", next);
                             setFieldValue("subspecialityIds", []);
-                            void loadDepartmentSubspecialities(next);
+                            loadDepartmentSubspecialities(next);
                           }}
                           className="w-full h-11 px-3 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:border-burgundy focus:ring-2 focus:ring-burgundy/20 transition-all"
                         >
@@ -770,7 +783,7 @@ const CreateDoctorPage = () => {
                       </div>
 
                       <div className="space-y-2">
-                        <label className="text-sm font-semibold text-slate-700">Available online</label>
+                        <label className="text-sm font-semibold text-slate-700">Available for online booking</label>
                         <div className="flex items-center gap-3 pt-2">
                           <Switch
                             checked={values.availableOnline}
@@ -790,9 +803,7 @@ const CreateDoctorPage = () => {
                           Subspecialities <span className="text-slate-400 font-normal">(optional, multi-select)</span>
                         </label>
                         <div className="max-h-48 overflow-y-auto rounded-xl border border-slate-200 bg-slate-50/30 p-3 space-y-2">
-                          {deptSubsLoading ? (
-                            <p className="text-sm text-slate-500 px-2 py-2">Loading subspecialities…</p>
-                          ) : deptSubspecialities.length === 0 ? (
+                          {deptSubspecialities.length === 0 ? (
                             <p className="text-sm text-amber-600 px-2 py-2">
                               This department has no linked subspecialities. Add them on the department edit screen.
                             </p>
@@ -836,7 +847,7 @@ const CreateDoctorPage = () => {
                               setFieldValue("imageFile", file);
                               setPreviewUrl(URL.createObjectURL(file));
                             } else if (file) {
-                              toast.error("Please upload an image file", { position: "top-right" });
+                              toast.error("Please upload an image file");
                             }
                           }}
                         />

@@ -20,7 +20,6 @@ export type CreateDepartmentFormData = {
   arabicName: string;
   arabicDescription: string;
   catagoryId: string;
-  subspecialityIds: string[];
   imageFile: File | null;
   isActive: boolean;
   order: number;
@@ -40,29 +39,19 @@ const initialValues: CreateDepartmentFormData = {
   arabicName: "",
   arabicDescription: "",
   catagoryId: "",
-  subspecialityIds: [],
   imageFile: null,
   isActive: true,
   order: 0,
   customExplainantions: [],
 };
 
-// Dummy data for categories and subspecialities with Arabic names for display
+// Dummy data for categories with Arabic names for display
 const dummyCategories = [
   { _id: "cat1", name: "Cardiology", arabicName: "أمراض القلب" },
   { _id: "cat2", name: "Neurology", arabicName: "الأعصاب" },
   { _id: "cat3", name: "Pediatrics", arabicName: "طب الأطفال" },
   { _id: "cat4", name: "Orthopedics", arabicName: "جراحة العظام" },
   { _id: "cat5", name: "Dermatology", arabicName: "الأمراض الجلدية" },
-];
-
-const dummySubspecialities = [
-  { _id: "sub1", name: "Interventional Cardiology", arabicName: "أمراض القلب التداخلية" },
-  { _id: "sub2", name: "Pediatric Cardiology", arabicName: "أمراض قلب الأطفال" },
-  { _id: "sub3", name: "Neuro Surgery", arabicName: "جراحة الأعصاب" },
-  { _id: "sub4", name: "Pediatric Neurology", arabicName: "أعصاب الأطفال" },
-  { _id: "sub5", name: "Sports Medicine", arabicName: "الطب الرياضي" },
-  { _id: "sub6", name: "Joint Replacement", arabicName: "استبدال المفاصل" },
 ];
 
 const CreateDepartmentPage = () => {
@@ -73,7 +62,6 @@ const CreateDepartmentPage = () => {
   const [dragActive, setDragActive] = useState(false);
   const [activeTab, setActiveTab] = useState<"english" | "arabic">("english");
   const [categories] = useState(dummyCategories);
-  const [subspecialities] = useState(dummySubspecialities);
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
@@ -96,17 +84,6 @@ const CreateDepartmentPage = () => {
     } else {
       toast.error("Please upload an image file");
     }
-  };
-
-  const toggleSubspeciality = (
-    id: string,
-    current: string[],
-    setFieldValue: (field: string, value: string[]) => void,
-  ) => {
-    const next = new Set(current);
-    if (next.has(id)) next.delete(id);
-    else next.add(id);
-    setFieldValue("subspecialityIds", [...next]);
   };
 
   const addCustomSection = (setFieldValue: (field: string, value: any) => void, current: any[]) => {
@@ -185,14 +162,45 @@ const CreateDepartmentPage = () => {
     }
 
     setSaving(true);
-    
+
+    // Get category name from ID for display
+    const selectedCategory = categories.find(c => c._id === values.catagoryId);
+    const categoryName = selectedCategory ? selectedCategory.name : "General";
+
+    // Prepare new department
+    const newDepartment = {
+      _id: Date.now().toString(),
+      departmentId,
+      name,
+      description,
+      arabicName,
+      arabicDescription,
+      catagoryId: values.catagoryId,
+      category: categoryName,
+      image: previewUrl || null,
+      isActive: values.isActive,
+      order: values.order || 0,
+      customExplainantions: values.customExplainantions,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    // Save to localStorage
+    const existingDepts = localStorage.getItem("rhh_departments");
+    let departments = existingDepts ? JSON.parse(existingDepts) : [];
+    departments = [newDepartment, ...departments];
+    localStorage.setItem("rhh_departments", JSON.stringify(departments));
+
+    // Dispatch event to notify Departments list page
+    window.dispatchEvent(new Event("departmentsUpdated"));
+
     // Simulate API call with timeout
     setTimeout(() => {
-      console.log("Department data:", values);
+      console.log("Department created:", newDepartment);
       toast.success("Department created successfully.");
       setSaving(false);
       navigate("/departments");
-    }, 1000);
+    }, 500);
   };
 
   // Get display name for category based on active tab
@@ -200,19 +208,14 @@ const CreateDepartmentPage = () => {
     return activeTab === "arabic" ? category.arabicName : category.name;
   };
 
-  // Get display name for subspeciality based on active tab
-  const getSubspecialityDisplayName = (sub: typeof dummySubspecialities[0]) => {
-    return activeTab === "arabic" ? sub.arabicName : sub.name;
-  };
-
   return (
     <AdminLayout title="Create Department">
       <div className="space-y-6">
         <BreadCrumb />
-        
+
         <div className="rounded-xl border-2 border-burgundy/30 bg-gradient-to-br from-white via-slate-50/90 to-white shadow-xl backdrop-blur-sm overflow-hidden">
           <div className="h-1 bg-gradient-to-r from-burgundy/40 via-burgundy to-burgundy/40"></div>
-          
+
           <div className="p-6">
             <div className="flex items-center gap-4 mb-6">
               <button
@@ -227,7 +230,7 @@ const CreateDepartmentPage = () => {
               </div>
             </div>
 
-            {/* Enhanced Tabs */}
+            {/* Tabs */}
             <div className="mb-8">
               <div className="flex gap-4 p-1 bg-slate-100/80 rounded-xl w-fit">
                 <button
@@ -289,7 +292,7 @@ const CreateDepartmentPage = () => {
                           <Globe className="h-5 w-5 text-burgundy" />
                           <h3 className="text-md font-semibold text-slate-800">Basic Information</h3>
                         </div>
-                        
+
                         <div className="space-y-2">
                           <label className="text-sm font-semibold text-slate-700">
                             Department Name <span className="text-red-500">*</span>
@@ -313,7 +316,7 @@ const CreateDepartmentPage = () => {
                             value={values.description}
                             onChange={(e) => setFieldValue("description", e.target.value)}
                             rows={4}
-                            placeholder="Enter department description (min. 10 characters)"
+                            placeholder="Enter department description"
                             className="resize-none"
                           />
                           <ErrorMessage name="description" component="p" className="text-xs text-red-500" />
@@ -424,7 +427,7 @@ const CreateDepartmentPage = () => {
                           <Languages className="h-5 w-5 text-burgundy" />
                           <h3 className="text-md font-semibold text-slate-800">Basic Information (Arabic)</h3>
                         </div>
-                        
+
                         <div className="space-y-2">
                           <label className="text-sm font-semibold text-slate-700">
                             Name (Arabic) <span className="text-red-500">*</span>
@@ -555,7 +558,7 @@ const CreateDepartmentPage = () => {
                     </div>
                   )}
 
-                  {/* Common Fields */}
+                  {/* Common Fields - Category, Status, Image */}
                   <div className="bg-white rounded-xl border border-slate-200 p-5 space-y-5">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                       <div className="space-y-2">
@@ -592,37 +595,10 @@ const CreateDepartmentPage = () => {
                     </div>
 
                     <div className="space-y-2">
-                      <label className="text-sm font-semibold text-slate-700">
-                        Subspecialities <span className="text-slate-400 font-normal">(optional, multi-select)</span>
-                      </label>
-                      <div className="max-h-48 overflow-y-auto rounded-xl border border-slate-200 bg-slate-50/30 p-3 space-y-2">
-                        {subspecialities.length === 0 ? (
-                          <p className="text-sm text-amber-600 px-2 py-2">Add subspecialities under Subspecialities first.</p>
-                        ) : (
-                          subspecialities.map((s) => (
-                            <label key={s._id} className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-white cursor-pointer transition-colors">
-                              <input
-                                type="checkbox"
-                                className="rounded border-slate-300 text-burgundy focus:ring-burgundy"
-                                checked={values.subspecialityIds.includes(s._id)}
-                                onChange={() => toggleSubspeciality(s._id, values.subspecialityIds, setFieldValue)}
-                              />
-                              <span className="text-sm text-slate-700">{getSubspecialityDisplayName(s)}</span>
-                            </label>
-                          ))
-                        )}
-                      </div>
-                      {values.subspecialityIds.length > 0 && (
-                        <p className="text-xs text-slate-500 mt-1">{values.subspecialityIds.length} selected</p>
-                      )}
-                    </div>
-
-                    <div className="space-y-2">
                       <label className="text-sm font-semibold text-slate-700">Image (optional)</label>
                       <div
-                        className={`relative rounded-xl border-2 border-dashed transition-all ${
-                          dragActive ? "border-burgundy bg-burgundy/5" : "border-slate-200 bg-slate-50/30"
-                        }`}
+                        className={`relative rounded-xl border-2 border-dashed transition-all ${dragActive ? "border-burgundy bg-burgundy/5" : "border-slate-200 bg-slate-50/30"
+                          }`}
                         onDragEnter={handleDrag}
                         onDragLeave={handleDrag}
                         onDragOver={handleDrag}

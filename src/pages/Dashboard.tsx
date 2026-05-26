@@ -1,163 +1,449 @@
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import AdminLayout from "@/components/layout/AdminLayout";
+import BreadCrumb from "@/components/layout/BreadCrumb";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { TrendingUp, TrendingDown, Calendar, Globe, Clock, Stethoscope, Activity, MessageSquare, Star, ClipboardList, Shield, Mail, UserCheck } from "lucide-react";
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell, LineChart, Line } from "recharts";
-import { appointments, doctors, departments, feedbackEntries, patients } from "@/data/mockDatabase";
+import {
+  TrendingUp,
+  Calendar,
+  Stethoscope,
+  MessageSquare,
+  Star,
+  ClipboardList,
+  Download,
+} from "lucide-react";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  AreaChart,
+  Area,
+  Cell,
+} from "recharts";
+import { toast } from "sonner";
+import { exportDashboardDataToExcel } from "@/lib/exportDashboardDataToEcxel";
+import {
+  getDashboardStats,
+  getCurrentWeekAppointmentRequests,
+  getMonthlyAppointmentRequests,
+  getFeedbackStarStats,
+  getDoctorsCountByDepartment,
+  type DashboardStats,
+  type WeeklyAppointmentDay,
+  type MonthlyAppointmentMonth,
+  type FeedbackStarBreakdownItem,
+  type DoctorsByDepartmentItem,
+} from "@/api/dashboard";
+
+const DEFAULT_WEEKLY: WeeklyAppointmentDay[] = [
+  { day: "Sunday", requests: 0 },
+  { day: "Monday", requests: 0 },
+  { day: "Tuesday", requests: 0 },
+  { day: "Wednesday", requests: 0 },
+  { day: "Thursday", requests: 0 },
+  { day: "Friday", requests: 0 },
+  { day: "Saturday", requests: 0 },
+];
+
+const DEFAULT_FEEDBACK: FeedbackStarBreakdownItem[] = [
+  { stars: 5, rating: "5 Stars", count: 0, percentage: "0.0%" },
+  { stars: 4, rating: "4 Stars", count: 0, percentage: "0.0%" },
+  { stars: 3, rating: "3 Stars", count: 0, percentage: "0.0%" },
+  { stars: 2, rating: "2 Stars", count: 0, percentage: "0.0%" },
+  { stars: 1, rating: "1 Star", count: 0, percentage: "0.0%" },
+];
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const { t } = useLanguage();
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [weeklyRequestsData, setWeeklyRequestsData] =
+    useState<WeeklyAppointmentDay[]>(DEFAULT_WEEKLY);
+  const [monthlyRequestsData, setMonthlyRequestsData] = useState<
+    MonthlyAppointmentMonth[]
+  >([]);
+  const [feedbackByRating, setFeedbackByRating] =
+    useState<FeedbackStarBreakdownItem[]>(DEFAULT_FEEDBACK);
+  const [doctorsByDepartment, setDoctorsByDepartment] = useState<
+    DoctorsByDepartmentItem[]
+  >([]);
+  const [totalDoctors, setTotalDoctors] = useState(0);
 
-  const pendingAppointments = appointments.filter(a => a.status === "pending").length;
-  const internationalPatients = patients.filter(p => p.isInternational).length;
-  const availableDoctors = doctors.filter(d => d.bookingOpen).length;
-  const avgRating = (feedbackEntries.reduce((s, f) => s + f.rating, 0) / feedbackEntries.length).toFixed(1);
+  useEffect(() => {
+    const loadDashboard = async () => {
+      setLoading(true);
+      try {
+        const [statsRes, weekRes, monthRes, feedbackRes, deptRes] =
+          await Promise.all([
+            getDashboardStats(),
+            getCurrentWeekAppointmentRequests(),
+            getMonthlyAppointmentRequests(7),
+            getFeedbackStarStats(),
+            getDoctorsCountByDepartment(),
+          ]);
 
-  const statsCards = [
-    { title: t("Appointment Requests"), value: String(pendingAppointments + 23), change: "+5", up: true, icon: Calendar, link: "/appointment-requests", color: "bg-burgundy/10 text-burgundy" },
-    { title: t("Medical Records Requests"), value: "8", change: "+3", up: true, icon: ClipboardList, link: "/medical-records-requests", color: "bg-info/10 text-info" },
-    { title: t("International Enquiries"), value: String(internationalPatients), change: "+12%", up: true, icon: Globe, link: "/international-patients", color: "bg-info/10 text-info" },
-    { title: t("Al Safwa Enrollments"), value: "6", change: "+2", up: true, icon: Shield, link: "/al-safwa-enrollments", color: "bg-gold/10 text-gold" },
-    { title: t("Contact Messages"), value: "8", change: "+4", up: true, icon: Mail, link: "/contact-messages", color: "bg-burgundy/10 text-burgundy" },
-    { title: t("Job Applications"), value: "8", change: "+3", up: true, icon: UserCheck, link: "/job-applications", color: "bg-success/10 text-success" },
-    { title: t("Feedback & Reviews"), value: String(feedbackEntries.length), change: "+8", up: true, icon: MessageSquare, link: "/feedback", color: "bg-warning/10 text-warning" },
-    { title: t("Avg Rating"), value: avgRating, change: "+0.2", up: true, icon: Star, link: "/feedback", color: "bg-gold/10 text-gold" },
-  ];
+        setStats(statsRes.data);
+        setWeeklyRequestsData(
+          weekRes.data.dailyBreakdown?.length
+            ? weekRes.data.dailyBreakdown
+            : DEFAULT_WEEKLY
+        );
+        setMonthlyRequestsData(monthRes.data.monthlyBreakdown ?? []);
+        setFeedbackByRating(
+          feedbackRes.data.combined?.breakdown?.length
+            ? feedbackRes.data.combined.breakdown
+            : DEFAULT_FEEDBACK
+        );
+        setDoctorsByDepartment(
+          (deptRes.data.breakdown ?? []).filter((item) => item.doctors > 0)
+        );
+        setTotalDoctors(deptRes.data.totalDoctors ?? 0);
+      } catch (error: unknown) {
+        const message =
+          (error as { response?: { data?: { message?: string } } })?.response
+            ?.data?.message ||
+          (error instanceof Error ? error.message : "Failed to load dashboard");
+        toast.error(message);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const weeklyData = [
-    { day: t("Sun"), requests: 12, converted: 8 },
-    { day: t("Mon"), requests: 18, converted: 14 },
-    { day: t("Tue"), requests: 15, converted: 11 },
-    { day: t("Wed"), requests: 22, converted: 17 },
-    { day: t("Thu"), requests: 19, converted: 15 },
-    { day: t("Fri"), requests: 6, converted: 4 },
-    { day: t("Sat"), requests: 4, converted: 3 },
-  ];
+    loadDashboard();
+  }, []);
 
-  const monthlyTrends = [
-    { month: "Oct", requests: 65, intl: 12, feedback: 28 },
-    { month: "Nov", requests: 72, intl: 15, feedback: 35 },
-    { month: "Dec", requests: 58, intl: 10, feedback: 22 },
-    { month: "Jan", requests: 85, intl: 18, feedback: 40 },
-    { month: "Feb", requests: 92, intl: 22, feedback: 45 },
-    { month: "Mar", requests: 98, intl: 25, feedback: 52 },
-    { month: "Apr", requests: 78, intl: 20, feedback: 38 },
-  ];
+  const avgRating = useMemo(
+    () => (stats?.averageRatings?.overall ?? 0).toFixed(1),
+    [stats]
+  );
 
-  const feedbackByRating = [
-    { rating: "5★", count: feedbackEntries.filter(f => f.rating === 5).length },
-    { rating: "4★", count: feedbackEntries.filter(f => f.rating === 4).length },
-    { rating: "3★", count: feedbackEntries.filter(f => f.rating === 3).length },
-    { rating: "2★", count: feedbackEntries.filter(f => f.rating === 2).length },
-    { rating: "1★", count: feedbackEntries.filter(f => f.rating === 1).length },
-  ];
+  const statsCards = useMemo(
+    () => [
+      {
+        title: t("Appointments"),
+        value: String(stats?.appointmentRequests ?? 0),
+        icon: Calendar,
+        link: "/appointment",
+        color: "from-rose-500/20 to-rose-500/5",
+        iconColor: "text-rose-600",
+      },
+      {
+        title: t("Medical Records Requests"),
+        value: String(stats?.medicalRecordRequests ?? 0),
+        icon: ClipboardList,
+        link: "/medical-records-requests",
+        color: "from-blue-500/20 to-blue-500/5",
+        iconColor: "text-blue-600",
+      },
+      {
+        title: t("Feedback & Reviews"),
+        value: String(stats?.feedbacksAndReviews?.total ?? 0),
+        icon: MessageSquare,
+        link: "/feedback",
+        color: "from-orange-500/20 to-orange-500/5",
+        iconColor: "text-orange-600",
+      },
+      {
+        title: t("Avg Rating"),
+        value: avgRating,
+        icon: Star,
+        link: "/feedback",
+        color: "from-yellow-500/20 to-yellow-500/5",
+        iconColor: "text-yellow-600",
+      },
+    ],
+    [t, stats, avgRating]
+  );
 
-  const departmentLoad = [
-    { dept: "OB/GYN", patients: 1240 }, { dept: "Pediatrics", patients: 1580 },
-    { dept: "Internal Med", patients: 1890 }, { dept: "Cardiology", patients: 890 },
-    { dept: "Surgery", patients: 730 }, { dept: "Dermatology", patients: 670 },
-  ];
+  const chartColor = "#8B1E3F";
 
-  const sourceDistribution = [
-    { name: t("Online"), value: 45, color: "hsl(213,60%,70%)" },
-    { name: t("Phone"), value: 25, color: "hsl(39,44%,70%)" },
-    { name: t("Walk-in"), value: 18, color: "hsl(125,40%,65%)" },
-    { name: t("International"), value: 12, color: "hsl(342,40%,70%)" },
-  ];
+  const handleExportToExcel = () => {
+    exportDashboardDataToExcel({
+      stats,
+      avgRating,
+      totalDoctors,
+      weeklyRequestsData,
+      monthlyRequestsData,
+      feedbackByRating,
+      doctorsByDepartment,
+    });
+    toast.success("Dashboard data exported successfully");
+  };
 
-  const chartColor = "hsl(342,40%,55%)";
+  const CustomTooltip = ({
+    active,
+    payload,
+    label,
+  }: {
+    active?: boolean;
+    payload?: Array<{ name: string; value: number }>;
+    label?: string;
+  }) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-white rounded-lg shadow-lg border border-slate-100 p-3">
+          <p className="text-xs font-semibold text-slate-800 mb-1">{label}</p>
+          {payload.map((p, idx) => (
+            <p key={idx} className="text-xs text-slate-600">
+              {p.name}: <span className="font-semibold text-burgundy">{p.value}</span>
+            </p>
+          ))}
+        </div>
+      );
+    }
+    return null;
+  };
+
+  const getFeedbackBarColor = (rating: string) => {
+    if (rating === "5 Stars") return "#10b981";
+    if (rating === "4 Stars") return "#34d399";
+    if (rating === "3 Stars") return "#fbbf24";
+    if (rating === "2 Stars") return "#f97316";
+    return "#ef4444";
+  };
+
+  if (loading) {
+    return (
+      <AdminLayout title="Dashboard">
+        <div className="flex justify-center items-center min-h-[400px]">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-burgundy" />
+        </div>
+      </AdminLayout>
+    );
+  }
 
   return (
     <AdminLayout title="Dashboard">
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-        {statsCards.map((card) => (
-          <div key={card.title} onClick={() => navigate(card.link)}
-            className="bg-card rounded-lg p-3.5 shadow-sm border border-border animate-fade-in cursor-pointer hover:shadow-md transition-shadow">
-            <div className="flex items-center justify-between mb-2">
-              <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${card.color}`}>
-                <card.icon size={15} />
-              </div>
-              <span className={`text-[10px] font-sans font-medium flex items-center gap-0.5 ${card.up ? "text-success" : "text-error"}`}>
-                {card.up ? <TrendingUp size={10} /> : <TrendingDown size={10} />}
-                {card.change}
-              </span>
+      <div className="space-y-6">
+        <BreadCrumb />
+
+        <div className="bg-gradient-to-r from-burgundy/5 via-white to-burgundy/3 rounded-xl border border-slate-100 p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-bold text-slate-800">Welcome back, Admin</h2>
+              <p className="text-sm text-slate-500 mt-1">
+                Here&apos;s what&apos;s happening with your hospital today
+              </p>
             </div>
-            <p className="text-xl font-serif font-bold text-foreground">{card.value}</p>
-            <p className="text-[10px] font-sans text-muted-foreground mt-0.5 truncate">{card.title}</p>
+            <div className="hidden md:flex items-center gap-4">
+              <button
+                onClick={handleExportToExcel}
+                className="flex items-center gap-2 px-4 py-2 bg-burgundy hover:bg-burgundy/90 text-white rounded-lg transition-all duration-200 shadow-md hover:shadow-lg"
+              >
+                <Download size={18} />
+                Export to Excel
+              </button>
+              <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-slate-200 shadow-sm">
+                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                <span className="text-xs text-slate-600">All systems operational</span>
+              </div>
+            </div>
           </div>
-        ))}
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-5">
-        <div className="bg-card rounded-lg p-5 shadow-sm border border-border">
-          <h3 className="font-serif font-semibold text-foreground mb-3 text-sm">{t("Weekly Requests & Conversions")}</h3>
-          <ResponsiveContainer width="100%" height={200}>
-            <BarChart data={weeklyData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(0,0%,92%)" />
-              <XAxis dataKey="day" tick={{ fontSize: 10, fontFamily: "Inter" }} />
-              <YAxis tick={{ fontSize: 10, fontFamily: "Inter" }} />
-              <Tooltip />
-              <Bar dataKey="requests" fill={chartColor} radius={[3, 3, 0, 0]} name={t("Requests")} />
-              <Bar dataKey="converted" fill="hsl(342,40%,75%)" radius={[3, 3, 0, 0]} name={t("Converted")} />
-            </BarChart>
-          </ResponsiveContainer>
         </div>
 
-        <div className="bg-card rounded-lg p-5 shadow-sm border border-border">
-          <h3 className="font-serif font-semibold text-foreground mb-3 text-sm">{t("Monthly Trends")}</h3>
-          <ResponsiveContainer width="100%" height={200}>
-            <AreaChart data={monthlyTrends}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(0,0%,92%)" />
-              <XAxis dataKey="month" tick={{ fontSize: 10, fontFamily: "Inter" }} />
-              <YAxis tick={{ fontSize: 10, fontFamily: "Inter" }} />
-              <Tooltip />
-              <Area type="monotone" dataKey="requests" stroke={chartColor} fill={chartColor} fillOpacity={0.06} strokeWidth={1.5} name={t("Requests")} />
-              <Area type="monotone" dataKey="intl" stroke="hsl(342,40%,75%)" fill="hsl(342,40%,75%)" fillOpacity={0.06} strokeWidth={1.5} name={t("International")} />
-              <Area type="monotone" dataKey="feedback" stroke="hsl(342,40%,85%)" fill="hsl(342,40%,85%)" fillOpacity={0.06} strokeWidth={1.5} name={t("Feedback")} />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-5">
-        <div className="bg-card rounded-lg p-5 shadow-sm border border-border">
-          <h3 className="font-serif font-semibold text-foreground mb-3 text-sm">{t("Request Sources")}</h3>
-          <ResponsiveContainer width="100%" height={180}>
-            <PieChart>
-              <Pie data={sourceDistribution} cx="50%" cy="50%" outerRadius={65} dataKey="value"
-                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} labelLine={false}>
-                {sourceDistribution.map((e, i) => <Cell key={i} fill={e.color} />)}
-              </Pie>
-              <Tooltip />
-            </PieChart>
-          </ResponsiveContainer>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {statsCards.map((card) => (
+            <div
+              key={card.title}
+              onClick={() => navigate(card.link)}
+              className="group bg-white rounded-xl p-4 shadow-sm border border-slate-100 cursor-pointer hover:shadow-lg hover:border-burgundy/20 transition-all duration-200 hover:-translate-y-0.5"
+            >
+              <div className="flex items-start justify-between mb-3">
+                <div
+                  className={`w-10 h-10 rounded-xl bg-gradient-to-br ${card.color} flex items-center justify-center group-hover:scale-110 transition-transform duration-200`}
+                >
+                  <card.icon size={18} className={card.iconColor} />
+                </div>
+                <span className="text-xs font-medium flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-green-600 bg-green-50">
+                  <TrendingUp size={10} />
+                  Live
+                </span>
+              </div>
+              <p className="text-2xl font-bold text-slate-800">{card.value}</p>
+              <p className="text-xs text-slate-500 mt-1 truncate">{card.title}</p>
+            </div>
+          ))}
         </div>
 
-        <div className="bg-card rounded-lg p-5 shadow-sm border border-border">
-          <h3 className="font-serif font-semibold text-foreground mb-3 text-sm">{t("Feedback by Rating")}</h3>
-          <ResponsiveContainer width="100%" height={180}>
-            <BarChart data={feedbackByRating} layout="vertical">
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(0,0%,92%)" />
-              <XAxis type="number" tick={{ fontSize: 10, fontFamily: "Inter" }} />
-              <YAxis type="category" dataKey="rating" tick={{ fontSize: 10, fontFamily: "Inter" }} width={30} />
-              <Tooltip />
-              <Bar dataKey="count" fill={chartColor} radius={[0, 3, 3, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
+            <div className="px-5 py-4 border-b border-slate-100 bg-gradient-to-r from-slate-50/50 to-white">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-md font-semibold text-slate-800">Weekly Requests</h3>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Appointment request trends for the current week
+                  </p>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <div className="w-2.5 h-2.5 rounded-full bg-burgundy" />
+                  <span className="text-xs text-slate-600">Requests</span>
+                </div>
+              </div>
+            </div>
+            <div className="p-5">
+              <ResponsiveContainer width="100%" height={260}>
+                <BarChart data={weeklyRequestsData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                  <XAxis
+                    dataKey="day"
+                    tick={{ fontSize: 11, fill: "#64748b" }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <YAxis
+                    tick={{ fontSize: 11, fill: "#64748b" }}
+                    axisLine={false}
+                    tickLine={false}
+                    allowDecimals={false}
+                  />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Bar
+                    dataKey="requests"
+                    fill={chartColor}
+                    radius={[4, 4, 0, 0]}
+                    barSize={40}
+                    name="Requests"
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
+            <div className="px-5 py-4 border-b border-slate-100 bg-gradient-to-r from-slate-50/50 to-white">
+              <h3 className="text-md font-semibold text-slate-800">Monthly Trends</h3>
+              <p className="text-xs text-slate-500 mt-0.5">Monthly appointment requests</p>
+            </div>
+            <div className="p-5">
+              <ResponsiveContainer width="100%" height={260}>
+                <AreaChart data={monthlyRequestsData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                  <XAxis
+                    dataKey="month"
+                    tick={{ fontSize: 11, fill: "#64748b" }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <YAxis
+                    tick={{ fontSize: 11, fill: "#64748b" }}
+                    axisLine={false}
+                    tickLine={false}
+                    allowDecimals={false}
+                  />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Area
+                    type="monotone"
+                    dataKey="requests"
+                    stroke={chartColor}
+                    fill={chartColor}
+                    fillOpacity={0.1}
+                    strokeWidth={2}
+                    name="Requests"
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
         </div>
 
-        <div className="bg-card rounded-lg p-5 shadow-sm border border-border">
-          <h3 className="font-serif font-semibold text-foreground mb-3 text-sm">{t("Department Patient Load")}</h3>
-          <ResponsiveContainer width="100%" height={180}>
-            <BarChart data={departmentLoad} layout="vertical">
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(0,0%,92%)" />
-              <XAxis type="number" tick={{ fontSize: 10, fontFamily: "Inter" }} />
-              <YAxis type="category" dataKey="dept" tick={{ fontSize: 9, fontFamily: "Inter" }} width={70} />
-              <Tooltip />
-              <Bar dataKey="patients" fill="hsl(342,40%,75%)" radius={[0, 3, 3, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
+            <div className="px-5 py-4 border-b border-slate-100 bg-gradient-to-r from-slate-50/50 to-white">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-md font-semibold text-slate-800">Feedback by Rating</h3>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Patient satisfaction distribution
+                  </p>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Star className="h-4 w-4 text-amber-400 fill-amber-400" />
+                  <span className="text-sm font-bold text-slate-800">{avgRating}</span>
+                  <span className="text-xs text-slate-500">/ 5</span>
+                </div>
+              </div>
+            </div>
+            <div className="p-5">
+              <ResponsiveContainer width="100%" height={260}>
+                <BarChart data={feedbackByRating} layout="vertical">
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                  <XAxis
+                    type="number"
+                    tick={{ fontSize: 11, fill: "#64748b" }}
+                    axisLine={false}
+                    tickLine={false}
+                    allowDecimals={false}
+                  />
+                  <YAxis
+                    type="category"
+                    dataKey="rating"
+                    tick={{ fontSize: 11, fill: "#64748b" }}
+                    width={65}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Bar dataKey="count" radius={[0, 4, 4, 0]} barSize={32} name="Count">
+                    {feedbackByRating.map((entry, index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={getFeedbackBarColor(entry.rating)}
+                      />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
+            <div className="px-5 py-4 border-b border-slate-100 bg-gradient-to-r from-slate-50/50 to-white">
+              <div className="flex items-center gap-2">
+                <Stethoscope className="h-4 w-4 text-burgundy" />
+                <h3 className="text-md font-semibold text-slate-800">Doctors by Department</h3>
+              </div>
+              <p className="text-xs text-slate-500 mt-0.5">Number of doctors per department</p>
+            </div>
+            <div className="p-5">
+              {doctorsByDepartment.length === 0 ? (
+                <p className="text-sm text-slate-500 text-center py-8">No doctors found</p>
+              ) : (
+                <div className="space-y-4 max-h-[260px] overflow-y-auto pr-1">
+                  {doctorsByDepartment.map((dept) => (
+                    <div key={dept.departmentId ?? dept.dept}>
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-xs font-medium text-slate-700">{dept.dept}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-semibold text-burgundy">
+                            {dept.doctors} doctors
+                          </span>
+                          <span className="text-xs text-slate-400">({dept.percent}%)</span>
+                        </div>
+                      </div>
+                      <div className="w-full bg-slate-100 rounded-full h-2">
+                        <div
+                          className="bg-gradient-to-r from-burgundy to-rose-400 h-2 rounded-full transition-all duration-500"
+                          style={{ width: `${dept.percent}%` }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <div className="mt-4 pt-3 border-t border-slate-100">
+                <div className="flex justify-between items-center">
+                  <span className="text-xs text-slate-500">Total Doctors</span>
+                  <span className="text-sm font-bold text-slate-800">{totalDoctors}</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </AdminLayout>

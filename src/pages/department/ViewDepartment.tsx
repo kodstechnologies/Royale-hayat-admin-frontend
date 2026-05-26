@@ -1,25 +1,61 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Pencil, Calendar, FolderOpen, CheckCircle, XCircle, Image as ImageIcon } from "lucide-react";
+import { ArrowLeft, Pencil, Calendar, FolderOpen, CheckCircle, XCircle, Image as ImageIcon, Globe, Languages } from "lucide-react";
 import AdminLayout from "@/components/layout/AdminLayout";
 import BreadCrumb from "@/components/layout/BreadCrumb";
-import { getDepartmentById } from "@/api/department";
 import Loader from "@/components/SkeletonLoader";
 import { Button } from "@/components/ui/button";
+import { adminDepartments, AdminDepartment } from "@/data/departments";
 
 type Department = {
   _id: string;
   departmentId: string;
   name: string;
+  nameAr: string;
   description: string;
+  descriptionAr: string;
   image?: string;
-  catagory?: string | { _id?: string; name?: string };
-  subspecialities?: (string | { _id?: string; name?: string })[];
-  customExplainantions?: { _id?: string; subHeading?: string; explaination?: string[] }[];
+  category: string;
+  createdAt: string;
+  updatedAt: string;
   isActive?: boolean;
-  order?: number;
-  createdAt?: string;
-  updatedAt?: string;
+  customExplainantions?: any[];
+};
+
+// Function to load departments from localStorage (user created)
+const loadUserDepartments = () => {
+  const stored = localStorage.getItem("rhh_departments");
+  if (stored) {
+    return JSON.parse(stored);
+  }
+  return [];
+};
+
+// Function to get category name from ID
+const getCategoryNameFromId = (categoryId: string): string => {
+  const categoryMap: Record<string, string> = {
+    cat1: "Cardiology",
+    cat2: "Neurology",
+    cat3: "Pediatrics",
+    cat4: "Orthopedics",
+    cat5: "Dermatology",
+  };
+  return categoryMap[categoryId] || "Clinical Speciality";
+};
+
+// Function to get category display name
+const getCategoryDisplayNameForDept = (category: string, isArabic: boolean) => {
+  const categoryMap: Record<string, { en: string; ar: string }> = {
+    "Clinical Speciality": { en: "Clinical Speciality", ar: "التخصصات السريرية" },
+    "Clinical Support Service": { en: "Clinical Support Service", ar: "خدمات الدعم السريري" },
+    "Home Care Service": { en: "Home Care Service", ar: "خدمات الرعاية المنزلية" },
+    "Cardiology": { en: "Cardiology", ar: "أمراض القلب" },
+    "Neurology": { en: "Neurology", ar: "الأعصاب" },
+    "Pediatrics": { en: "Pediatrics", ar: "طب الأطفال" },
+    "Orthopedics": { en: "Orthopedics", ar: "جراحة العظام" },
+    "Dermatology": { en: "Dermatology", ar: "الأمراض الجلدية" },
+  };
+  return categoryMap[category]?.[isArabic ? "ar" : "en"] || category;
 };
 
 const ViewDepartment = () => {
@@ -28,38 +64,66 @@ const ViewDepartment = () => {
   const [loading, setLoading] = useState(false);
   const [department, setDepartment] = useState<Department | null>(null);
   const [error, setError] = useState("");
+  const [activeLanguage, setActiveLanguage] = useState<"english" | "arabic">("english");
 
   useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      if (!id) return;
-      setLoading(true);
-      setError("");
-      try {
-        const response = await getDepartmentById(id);
-        if (cancelled) return;
-        setDepartment(response?.data?.data || null);
-      } catch (err: any) {
-        if (!cancelled) {
-          setDepartment(null);
-          setError(err?.response?.data?.message || "Failed to load department details.");
-        }
-      } finally {
-        if (!cancelled) setLoading(false);
+    if (!id) return;
+    
+    setLoading(true);
+    setError("");
+    
+    // Simulate loading delay
+    setTimeout(() => {
+      // First check if this is a user-created department from localStorage
+      const userDepartments = loadUserDepartments();
+      let foundDept = userDepartments.find((dept: any) => dept._id === id);
+      
+      // If not found in user departments, check static data
+      if (!foundDept) {
+        foundDept = adminDepartments.find(dept => dept.id === id);
       }
-    })();
-    return () => {
-      cancelled = true;
-    };
+      
+      if (foundDept) {
+        // Check if this is a user department (has catagoryId) or static department
+        if (foundDept.catagoryId) {
+          // This is a user-created department
+          const selectedCategory = getCategoryNameFromId(foundDept.catagoryId);
+          setDepartment({
+            _id: foundDept._id,
+            departmentId: foundDept.departmentId,
+            name: foundDept.name,
+            nameAr: foundDept.arabicName || foundDept.name,
+            description: foundDept.description,
+            descriptionAr: foundDept.arabicDescription || foundDept.description,
+            image: foundDept.image,
+            category: selectedCategory,
+            createdAt: foundDept.createdAt || new Date().toISOString(),
+            updatedAt: foundDept.updatedAt || new Date().toISOString(),
+            isActive: foundDept.isActive !== undefined ? foundDept.isActive : true,
+            customExplainantions: foundDept.customExplainantions || [],
+          });
+        } else {
+          // This is a static department from adminDepartments
+          setDepartment({
+            _id: foundDept.id,
+            departmentId: foundDept.clinicalCode || foundDept.id,
+            name: foundDept.name,
+            nameAr: foundDept.nameAr,
+            description: foundDept.description,
+            descriptionAr: foundDept.descriptionAr,
+            image: foundDept.image,
+            category: foundDept.category,
+            createdAt: foundDept.createdAt,
+            updatedAt: foundDept.updatedAt,
+            isActive: true,
+          });
+        }
+      } else {
+        setError("Department not found.");
+      }
+      setLoading(false);
+    }, 500);
   }, [id]);
-
-  const catName = typeof department?.catagory === "object" 
-    ? department.catagory?.name || "-" 
-    : department?.catagory || "-";
-  
-  const subs = (department?.subspecialities || [])
-    .map((s) => (typeof s === "string" ? s : s?.name || ""))
-    .filter(Boolean);
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return "—";
@@ -71,6 +135,25 @@ const ViewDepartment = () => {
       hour: '2-digit',
       minute: '2-digit'
     });
+  };
+
+  // Get category display name
+  const getCategoryDisplayName = (category: string) => {
+    return getCategoryDisplayNameForDept(category, activeLanguage === "arabic");
+  };
+
+  // Get category badge color
+  const getCategoryColor = (category: string) => {
+    switch (category) {
+      case "Clinical Speciality":
+        return "bg-blue-100 text-blue-700";
+      case "Clinical Support Service":
+        return "bg-green-100 text-green-700";
+      case "Home Care Service":
+        return "bg-purple-100 text-purple-700";
+      default:
+        return "bg-gray-100 text-gray-700";
+    }
   };
 
   return (
@@ -92,18 +175,53 @@ const ViewDepartment = () => {
                 >
                   <ArrowLeft className="h-5 w-5 text-slate-500 group-hover:text-burgundy" />
                 </button>
-                
+                <div>
+                  <h2 className="text-2xl font-bold text-slate-800">Department Details</h2>
+                  <p className="text-sm text-slate-500 mt-1">View department information</p>
+                </div>
               </div>
               
-              {department?._id && (
-                <Button
-                  onClick={() => navigate(`/departments/edit/${department._id}`)}
-                  className="gap-2 bg-burgundy hover:bg-burgundy/90 shadow-md hover:shadow-lg transition-all duration-200"
-                >
-                  <Pencil className="h-4 w-4" />
-                  Edit Department
-                </Button>
-              )}
+              <div className="flex gap-3">
+                {/* Language Toggle */}
+                <div className="flex gap-2 p-1 bg-slate-100/80 rounded-lg">
+                  <button
+                    onClick={() => setActiveLanguage("english")}
+                    className={`
+                      flex items-center gap-2 px-4 py-1.5 rounded-md text-sm font-medium transition-all duration-200
+                      ${activeLanguage === "english"
+                        ? "bg-white text-burgundy shadow-sm"
+                        : "text-slate-600 hover:text-slate-800 hover:bg-white/50"
+                      }
+                    `}
+                  >
+                    <Globe className="h-3.5 w-3.5" />
+                    English
+                  </button>
+                  <button
+                    onClick={() => setActiveLanguage("arabic")}
+                    className={`
+                      flex items-center gap-2 px-4 py-1.5 rounded-md text-sm font-medium transition-all duration-200
+                      ${activeLanguage === "arabic"
+                        ? "bg-white text-burgundy shadow-sm"
+                        : "text-slate-600 hover:text-slate-800 hover:bg-white/50"
+                      }
+                    `}
+                  >
+                    <Languages className="h-3.5 w-3.5" />
+                    العربية
+                  </button>
+                </div>
+
+                {department?._id && (
+                  <Button
+                    onClick={() => navigate(`/departments/edit/${department._id}`)}
+                    className="gap-2 bg-burgundy hover:bg-burgundy/90 shadow-md hover:shadow-lg transition-all duration-200"
+                  >
+                    <Pencil className="h-4 w-4" />
+                    Edit Department
+                  </Button>
+                )}
+              </div>
             </div>
 
             {/* Loading State */}
@@ -139,7 +257,7 @@ const ViewDepartment = () => {
                       {department.image ? (
                         <img 
                           src={department.image} 
-                          alt={department.name} 
+                          alt={activeLanguage === "english" ? department.name : department.nameAr} 
                           className="h-full w-full object-cover"
                         />
                       ) : (
@@ -154,35 +272,29 @@ const ViewDepartment = () => {
                   {/* Basic Info Card */}
                   <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
                     <div>
-                      <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Department ID</label>
+                      <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                        {activeLanguage === "english" ? "Department ID" : "معرف القسم"}
+                      </label>
                       <p className="text-sm font-mono text-slate-800 mt-1">{department.departmentId || "-"}</p>
                     </div>
                     
                     <div>
-                      <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Status</label>
+                      <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                        {activeLanguage === "english" ? "Status" : "الحالة"}
+                      </label>
                       <div className="mt-1">
-                        {department.isActive === false ? (
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700">
-                            <XCircle className="h-3 w-3" />
-                            Inactive
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
-                            <CheckCircle className="h-3 w-3" />
-                            Active
-                          </span>
-                        )}
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
+                          <CheckCircle className="h-3 w-3" />
+                          {activeLanguage === "english" ? "Active" : "نشط"}
+                        </span>
                       </div>
-                    </div>
-
-                    <div>
-                      <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Display Order</label>
-                      <p className="text-sm text-slate-800 mt-1">{department.order ?? 0}</p>
                     </div>
 
                     {department.createdAt && (
                       <div>
-                        <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Created At</label>
+                        <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                          {activeLanguage === "english" ? "Created At" : "تاريخ الإنشاء"}
+                        </label>
                         <div className="flex items-center gap-1 mt-1">
                           <Calendar className="h-3 w-3 text-slate-400" />
                           <p className="text-sm text-slate-600">{formatDate(department.createdAt)}</p>
@@ -190,9 +302,11 @@ const ViewDepartment = () => {
                       </div>
                     )}
 
-                    {department.updatedAt && department.createdAt !== department.updatedAt && (
+                    {department.updatedAt && (
                       <div>
-                        <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Last Updated</label>
+                        <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                          {activeLanguage === "english" ? "Last Updated" : "آخر تحديث"}
+                        </label>
                         <div className="flex items-center gap-1 mt-1">
                           <Calendar className="h-3 w-3 text-slate-400" />
                           <p className="text-sm text-slate-600">{formatDate(department.updatedAt)}</p>
@@ -205,74 +319,71 @@ const ViewDepartment = () => {
                 {/* Right Column - Details */}
                 <div className="lg:col-span-2 space-y-4">
                   {/* Name Card */}
-                  <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-                    <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Department Name</label>
-                    <h1 className="text-2xl font-bold text-slate-800 mt-1">{department.name}</h1>
+                  <div className={`rounded-xl border border-slate-200 bg-white p-5 shadow-sm ${activeLanguage === "arabic" ? "text-right" : ""}`}>
+                    <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                      {activeLanguage === "english" ? "Department Name" : "اسم القسم"}
+                    </label>
+                    <h1 className={`text-2xl font-bold text-slate-800 mt-1 ${activeLanguage === "arabic" ? "rtl-text" : ""}`}>
+                      {activeLanguage === "english" ? department.name : department.nameAr}
+                    </h1>
                   </div>
 
                   {/* Category Card */}
                   <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-                    <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Category</label>
+                    <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                      {activeLanguage === "english" ? "Category" : "التصنيف"}
+                    </label>
                     <div className="mt-2">
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-burgundy/10 text-burgundy text-sm font-medium">
+                      <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium ${getCategoryColor(department.category)}`}>
                         <FolderOpen className="h-3.5 w-3.5" />
-                        {catName}
+                        {getCategoryDisplayName(department.category)}
                       </span>
                     </div>
                   </div>
 
                   {/* Description Card */}
-                  <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-                    <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Description</label>
+                  <div className={`rounded-xl border border-slate-200 bg-white p-5 shadow-sm ${activeLanguage === "arabic" ? "rtl-text" : ""}`}>
+                    <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                      {activeLanguage === "english" ? "Description" : "الوصف"}
+                    </label>
                     <p className="text-sm text-slate-700 mt-2 whitespace-pre-wrap leading-relaxed">
-                      {department.description || "-"}
+                      {activeLanguage === "english" ? department.description : department.descriptionAr}
                     </p>
                   </div>
 
-                  {/* Subspecialities Card */}
-                  <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-                    <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Subspecialities</label>
-                    <div className="mt-3">
-                      {subs.length === 0 ? (
-                        <p className="text-sm text-slate-400 italic">No subspecialities linked to this department.</p>
-                      ) : (
-                        <div className="flex flex-wrap gap-2">
-                          {subs.map((name) => (
-                            <span key={name} className="px-3 py-1.5 rounded-lg bg-slate-100 text-slate-700 text-sm font-medium">
-                              {name}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Custom Sections Card */}
+                  {/* Custom Sections - Only show if there are custom sections */}
                   {department.customExplainantions && department.customExplainantions.length > 0 && (
                     <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
                       <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3 block">
-                        Custom Sections
+                        {activeLanguage === "english" ? "Custom Sections" : "أقسام مخصصة"}
                       </label>
                       <div className="space-y-4">
-                        {department.customExplainantions.map((block, index) => (
-                          <div key={block._id || index} className="rounded-lg border border-slate-100 bg-slate-50/50 p-4">
-                            {block.subHeading && (
-                              <h3 className="font-semibold text-slate-800 mb-3">{block.subHeading}</h3>
-                            )}
-                            {block.explaination?.length ? (
-                              <ul className="space-y-2">
-                                {block.explaination.map((line, li) => (
-                                  <li key={li} className="flex items-start gap-2 text-sm text-slate-600">
-                                    <span className="text-burgundy mt-1">•</span>
-                                    <span>{line}</span>
-                                  </li>
-                                ))}
-                              </ul>
-                            ) : (
-                              <p className="text-sm text-slate-400 italic">No explanation lines provided.</p>
-                            )}
-                          </div>
-                        ))}
+                        {department.customExplainantions.map((section, index) => {
+                          const heading = activeLanguage === "english" ? section.subHeading : section.arabicSubHeading;
+                          const explanations = activeLanguage === "english" ? section.explaination : section.arabicExplaination;
+                          
+                          if (!heading && (!explanations || explanations.length === 0)) return null;
+                          
+                          return (
+                            <div key={section.id || index} className="rounded-lg border border-slate-100 bg-slate-50/50 p-4">
+                              {heading && (
+                                <h3 className={`font-semibold text-slate-800 mb-3 ${activeLanguage === "arabic" ? "text-right" : ""}`}>
+                                  {heading}
+                                </h3>
+                              )}
+                              {explanations && explanations.length > 0 && (
+                                <ul className="space-y-2">
+                                  {explanations.map((line: string, li: number) => (
+                                    <li key={li} className="flex items-start gap-2 text-sm text-slate-600">
+                                      <span className="text-burgundy mt-1">•</span>
+                                      <span className={activeLanguage === "arabic" ? "rtl-text" : ""}>{line}</span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              )}
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                   )}
@@ -282,6 +393,14 @@ const ViewDepartment = () => {
           </div>
         </div>
       </div>
+
+      {/* Add RTL styles for Arabic text */}
+      <style>{`
+        .rtl-text {
+          direction: rtl;
+          text-align: right;
+        }
+      `}</style>
     </AdminLayout>
   );
 };

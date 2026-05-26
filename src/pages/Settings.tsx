@@ -1,9 +1,20 @@
 import { useState } from "react";
 import AdminLayout from "@/components/layout/AdminLayout";
-import { Save, Globe, Bell, Shield, Clock, Mail, MessageSquare, Download, Users, BarChart3 } from "lucide-react";
+import BreadCrumb from "@/components/layout/BreadCrumb";
+import { Lock, Eye, EyeOff, CheckCircle, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
+import { resetPassword } from "@/api/auth";
 
 const Settings = () => {
-  const [settings, setSettings] = useState({
+  const [saved, setSaved] = useState(false);
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const [generalSettings, setGeneralSettings] = useState({
     hospitalName: "Royale Hayat Hospital",
     email: "info@royalehayat.com",
     phone: "+965 2536 0555",
@@ -11,249 +22,321 @@ const Settings = () => {
     website: "https://www.royalehayat.com",
     timezone: "Asia/Kuwait",
     language: "English",
-    dateFormat: "DD/MM/YYYY",
-    currency: "KWD",
-    bookingEnabled: true,
-    intlPatientsEnabled: true,
-    notificationsEnabled: true,
-    smsNotifications: true,
-    emailReminders: true,
-    whatsappEnabled: true,
-    pushNotifications: false,
-    appointmentAlerts: true,
-    feedbackAlerts: true,
-    documentAlerts: true,
-    systemAlerts: true,
-    autoAssignDoctor: false,
-    requireInsurance: true,
-    maintenanceMode: false,
-    twoFactorAuth: true,
-    sessionTimeout: "30",
-    maxLoginAttempts: "5",
-    passwordExpiry: "90",
-    ipWhitelist: "",
-    smtpHost: "smtp.royalehayat.com",
-    smtpPort: "587",
-    senderEmail: "noreply@royalehayat.com",
-    smsProvider: "Twilio",
-    smsApiKey: "••••••••",
-    whatsappApiKey: "••••••••",
-    appointmentBuffer: "15",
-    maxAdvanceBooking: "30",
-    cancelPolicy: "24",
-    workingHoursStart: "08:00",
-    workingHoursEnd: "22:00",
-    defaultExportFormat: "CSV",
-    includePatientId: true,
-    autoBackup: true,
-    backupFrequency: "Daily",
-    defaultRole: "Staff",
-    requireApproval: true,
-    auditLogging: true,
-    dashboardRefresh: "5",
-    defaultDashboardView: "Overview",
   });
 
-  const [saved, setSaved] = useState(false);
-  const [activeTab, setActiveTab] = useState("general");
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
 
-  const handleSave = () => { setSaved(true); setTimeout(() => setSaved(false), 2000); };
+  const [passwordErrors, setPasswordErrors] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
 
-  const Toggle = ({ checked, onChange }: { checked: boolean; onChange: () => void }) => (
-    <button onClick={onChange} className={`w-10 h-6 rounded-full transition-colors ${checked ? "bg-success" : "bg-border"}`}>
-      <div className={`w-4 h-4 rounded-full bg-card shadow-sm transition-transform mx-1 ${checked ? "translate-x-4" : ""}`} />
-    </button>
-  );
+  const validatePassword = () => {
+    let isValid = true;
+    const errors = { currentPassword: "", newPassword: "", confirmPassword: "" };
 
-  const tabs = [
-    { id: "general", label: "General", icon: Globe },
-    { id: "notifications", label: "Notifications", icon: Bell },
-    { id: "communication", label: "Communication", icon: MessageSquare },
-    { id: "security", label: "Security", icon: Shield },
-    { id: "scheduling", label: "Scheduling", icon: Clock },
-    { id: "email", label: "Email / SMTP", icon: Mail },
-    { id: "export", label: "Data Export", icon: Download },
-    { id: "roles", label: "Roles & Access", icon: Users },
-    { id: "dashboard", label: "Dashboard", icon: BarChart3 },
-  ];
+    if (!passwordData.currentPassword) {
+      errors.currentPassword = "Current password is required";
+      isValid = false;
+    }
 
-  const InputField = ({ label, keyName, type = "text" }: { label: string; keyName: string; type?: string }) => (
-    <div>
-      <label className="text-xs font-sans text-muted-foreground">{label}</label>
-      <input type={type} value={settings[keyName as keyof typeof settings] as string}
-        onChange={e => setSettings({ ...settings, [keyName]: e.target.value })}
-        className="w-full mt-1 px-3 py-2 rounded-lg border border-border text-sm font-sans focus:outline-none focus:ring-1 focus:ring-gold" />
+    if (!passwordData.newPassword) {
+      errors.newPassword = "New password is required";
+      isValid = false;
+    } else if (passwordData.newPassword.length < 6) {
+      errors.newPassword = "Password must be at least 6 characters";
+      isValid = false;
+    }
+
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      errors.confirmPassword = "Passwords do not match";
+      isValid = false;
+    }
+
+    setPasswordErrors(errors);
+    return isValid;
+  };
+
+  const handleGeneralSave = () => {
+    setSaved(true);
+    setTimeout(() => setSaved(false), 3000);
+  };
+
+  const handlePasswordChange = async () => {
+    if (!validatePassword()) return;
+
+    setIsChangingPassword(true);
+    try {
+      const response = await resetPassword({
+        currentPassword: passwordData.currentPassword,
+        newPassword: passwordData.newPassword,
+        confirmNewPassword: passwordData.confirmPassword,
+      });
+
+      setPasswordData({ currentPassword: "", newPassword: "", confirmPassword: "" });
+      setPasswordErrors({ currentPassword: "", newPassword: "", confirmPassword: "" });
+      setSaved(true);
+      toast.success(response?.message || "Password updated successfully");
+      setTimeout(() => setSaved(false), 3000);
+    } catch (error: unknown) {
+      const apiError = error as {
+        response?: { data?: { message?: string; meta?: string[] } };
+      };
+
+      if (apiError.response?.data?.meta?.length) {
+        apiError.response.data.meta.forEach((msg) => toast.error(msg));
+      } else {
+        toast.error(
+          apiError.response?.data?.message || "Failed to update password"
+        );
+      }
+    } finally {
+      setIsChangingPassword(false);
+    }
+  };
+
+  const InputField = ({ label, value, onChange, placeholder, type = "text" }: {
+    label: string;
+    value: string;
+    onChange: (val: string) => void;
+    placeholder?: string;
+    type?: string;
+  }) => (
+    <div className="space-y-1.5">
+      <label className="text-sm font-semibold text-slate-700">{label}</label>
+      <Input
+        type={type}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className="h-11"
+      />
     </div>
   );
 
-  const ToggleField = ({ label, desc, keyName }: { label: string; desc: string; keyName: string }) => (
-    <div className="flex items-center justify-between py-2 border-b border-border last:border-0">
-      <div><span className="text-sm font-sans font-medium text-foreground">{label}</span><p className="text-xs font-sans text-muted-foreground mt-0.5">{desc}</p></div>
-      <Toggle checked={settings[keyName as keyof typeof settings] as boolean} onChange={() => setSettings({ ...settings, [keyName]: !settings[keyName as keyof typeof settings] })} />
+  const PasswordInput = ({ label, value, onChange, showPassword, setShowPassword, error, placeholder }: {
+    label: string;
+    value: string;
+    onChange: (val: string) => void;
+    showPassword: boolean;
+    setShowPassword: (val: boolean) => void;
+    error?: string;
+    placeholder?: string;
+  }) => (
+    <div className="space-y-1.5">
+      <label className="text-sm font-semibold text-slate-700">{label}</label>
+      <div className="relative">
+        <Input
+          type={showPassword ? "text" : "password"}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+          className={`h-11 pr-11 ${error ? "border-red-500 focus:ring-red-500" : ""}`}
+        />
+        <button
+          type="button"
+          onClick={() => setShowPassword(!showPassword)}
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+        >
+          {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+        </button>
+      </div>
+      {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
     </div>
   );
 
   return (
     <AdminLayout title="Settings">
-      {/* Horizontal Tabs */}
-      <div className="flex gap-1 flex-wrap mb-5 border-b border-border pb-3">
-        {tabs.map(tab => (
-          <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center gap-1.5 px-3 py-2 rounded-md text-xs font-sans font-medium transition-colors
-              ${activeTab === tab.id ? "bg-burgundy text-primary-foreground" : "text-muted-foreground hover:bg-section-bg"}`}>
-            <tab.icon size={13} /> {tab.label}
-          </button>
-        ))}
-      </div>
+      <div className="space-y-6">
+        <BreadCrumb />
 
-      <div className="max-w-3xl space-y-5">
-        {activeTab === "general" && (
-          <div className="bg-card rounded-lg shadow-sm border border-border p-6">
-            <h3 className="font-serif font-semibold text-foreground mb-4">General Settings</h3>
-            <div className="space-y-4">
-              {[["Hospital Name", "hospitalName"], ["Email", "email"], ["Phone", "phone"], ["Address", "address"], ["Website", "website"]].map(([l, k]) => (
-                <InputField key={k} label={l} keyName={k} />
-              ))}
-              <div className="grid grid-cols-2 gap-4">
-                {[["Timezone", "timezone"], ["Language", "language"], ["Date Format", "dateFormat"], ["Currency", "currency"]].map(([l, k]) => (
-                  <InputField key={k} label={l} keyName={k} />
-                ))}
-              </div>
+        {/* Main Card */}
+        <div className="rounded-xl border-2 border-burgundy/30 bg-gradient-to-br from-white via-slate-50/90 to-white shadow-xl backdrop-blur-sm overflow-hidden">
+          <div className="h-1 bg-gradient-to-r from-burgundy/40 via-burgundy to-burgundy/40"></div>
+
+          <div className="p-6">
+            <div className="mb-6">
+              <h3 className="text-xl font-bold text-slate-800">Settings</h3>
+              <p className="text-sm text-slate-500 mt-1">Manage your account and organization settings</p>
             </div>
-          </div>
-        )}
 
-        {activeTab === "notifications" && (
-          <div className="bg-card rounded-lg shadow-sm border border-border p-6">
-            <h3 className="font-serif font-semibold text-foreground mb-4">Notification Settings</h3>
-            <div className="space-y-1">
-              <ToggleField label="Email Notifications" desc="Receive email alerts for new enquiries and bookings" keyName="notificationsEnabled" />
-              <ToggleField label="SMS Notifications" desc="Send SMS to patients for appointment reminders" keyName="smsNotifications" />
-              <ToggleField label="Email Reminders" desc="Auto-send appointment reminders 24h before" keyName="emailReminders" />
-              <ToggleField label="Push Notifications" desc="Browser push notifications for urgent alerts" keyName="pushNotifications" />
-              <ToggleField label="Appointment Alerts" desc="Notify on new appointments and changes" keyName="appointmentAlerts" />
-              <ToggleField label="Feedback Alerts" desc="Notify on new feedback and reviews" keyName="feedbackAlerts" />
-              <ToggleField label="Document Upload Alerts" desc="Notify when patients upload documents" keyName="documentAlerts" />
-              <ToggleField label="System Alerts" desc="Notify on system events and maintenance" keyName="systemAlerts" />
-            </div>
-          </div>
-        )}
-
-        {activeTab === "communication" && (
-          <div className="bg-card rounded-lg shadow-sm border border-border p-6">
-            <h3 className="font-serif font-semibold text-foreground mb-4">Communication Settings</h3>
-            <div className="space-y-4">
-              <ToggleField label="WhatsApp Messaging" desc="Enable WhatsApp communication with patients" keyName="whatsappEnabled" />
-              <InputField label="SMS Provider" keyName="smsProvider" />
-              <InputField label="SMS API Key" keyName="smsApiKey" />
-              <InputField label="WhatsApp API Key" keyName="whatsappApiKey" />
-              <button className="px-4 py-2 rounded-md bg-section-bg border border-border text-sm font-sans font-medium text-foreground hover:bg-muted transition-colors">Send Test SMS</button>
-            </div>
-          </div>
-        )}
-
-        {activeTab === "security" && (
-          <div className="bg-card rounded-lg shadow-sm border border-border p-6">
-            <h3 className="font-serif font-semibold text-foreground mb-4">Security Settings</h3>
-            <div className="space-y-4">
-              <ToggleField label="Two-Factor Authentication" desc="Require 2FA for all admin users" keyName="twoFactorAuth" />
-              <ToggleField label="Maintenance Mode" desc="Disable public access to the website" keyName="maintenanceMode" />
-              <ToggleField label="Audit Logging" desc="Log all admin actions for compliance" keyName="auditLogging" />
-              <div className="grid grid-cols-3 gap-4">
-                <InputField label="Session Timeout (min)" keyName="sessionTimeout" type="number" />
-                <InputField label="Max Login Attempts" keyName="maxLoginAttempts" type="number" />
-                <InputField label="Password Expiry (days)" keyName="passwordExpiry" type="number" />
-              </div>
-              <InputField label="IP Whitelist (comma-separated)" keyName="ipWhitelist" />
-            </div>
-          </div>
-        )}
-
-        {activeTab === "scheduling" && (
-          <div className="bg-card rounded-lg shadow-sm border border-border p-6">
-            <h3 className="font-serif font-semibold text-foreground mb-4">Scheduling & Booking</h3>
-            <div className="space-y-4">
-              <ToggleField label="Online Booking" desc="Allow patients to book appointments online" keyName="bookingEnabled" />
-              <ToggleField label="International Patients Portal" desc="Enable intake forms for international patients" keyName="intlPatientsEnabled" />
-              <ToggleField label="Auto-Assign Doctor" desc="Automatically assign available doctor to new bookings" keyName="autoAssignDoctor" />
-              <ToggleField label="Require Insurance Info" desc="Mandate insurance details during booking" keyName="requireInsurance" />
-              <div className="grid grid-cols-2 gap-4">
-                <InputField label="Buffer Between Appointments (min)" keyName="appointmentBuffer" type="number" />
-                <InputField label="Max Advance Booking (days)" keyName="maxAdvanceBooking" type="number" />
-                <InputField label="Cancellation Policy (hours)" keyName="cancelPolicy" type="number" />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <InputField label="Working Hours Start" keyName="workingHoursStart" type="time" />
-                <InputField label="Working Hours End" keyName="workingHoursEnd" type="time" />
-              </div>
-            </div>
-          </div>
-        )}
-
-        {activeTab === "email" && (
-          <div className="bg-card rounded-lg shadow-sm border border-border p-6">
-            <h3 className="font-serif font-semibold text-foreground mb-4">Email / SMTP</h3>
-            <div className="space-y-4">
-              {[["SMTP Host", "smtpHost"], ["SMTP Port", "smtpPort"], ["Sender Email", "senderEmail"]].map(([l, k]) => (
-                <InputField key={k} label={l} keyName={k} />
-              ))}
-              <button className="px-4 py-2 rounded-md bg-section-bg border border-border text-sm font-sans font-medium text-foreground hover:bg-muted transition-colors">Send Test Email</button>
-            </div>
-          </div>
-        )}
-
-        {activeTab === "export" && (
-          <div className="bg-card rounded-lg shadow-sm border border-border p-6">
-            <h3 className="font-serif font-semibold text-foreground mb-4">Data Export Settings</h3>
-            <div className="space-y-4">
-              <InputField label="Default Export Format" keyName="defaultExportFormat" />
-              <ToggleField label="Include Patient ID" desc="Include patient IDs in exported files" keyName="includePatientId" />
-              <ToggleField label="Auto Backup" desc="Automatically backup data on schedule" keyName="autoBackup" />
-              <InputField label="Backup Frequency" keyName="backupFrequency" />
-            </div>
-          </div>
-        )}
-
-        {activeTab === "roles" && (
-          <div className="bg-card rounded-lg shadow-sm border border-border p-6">
-            <h3 className="font-serif font-semibold text-foreground mb-4">Roles & Access</h3>
-            <div className="space-y-4">
-              <InputField label="Default New User Role" keyName="defaultRole" />
-              <ToggleField label="Require Admin Approval" desc="New user registrations require admin approval" keyName="requireApproval" />
-              <div className="bg-section-bg rounded-lg p-4">
-                <p className="text-xs font-sans font-semibold text-foreground mb-2">Role Permissions Overview</p>
-                <div className="space-y-2 text-xs font-sans">
-                  {[
-                    { role: "Admin", perms: "Full access to all modules" },
-                    { role: "Staff", perms: "View patients, appointments. Limited editing." },
-                    { role: "Coordinator", perms: "Manage appointments, international patients, inbox" },
-                    { role: "Content Manager", perms: "Edit website content, manage services" },
-                  ].map(r => (
-                    <div key={r.role} className="flex justify-between items-center py-1 border-b border-border last:border-0">
-                      <span className="font-medium text-foreground">{r.role}</span>
-                      <span className="text-muted-foreground">{r.perms}</span>
-                    </div>
-                  ))}
+            {/* General Settings Section */}
+            {/* <div className="bg-white rounded-xl border border-slate-200 p-6 mb-6 shadow-sm">
+              <div className="flex items-center gap-3 mb-5 pb-3 border-b border-slate-100">
+                <div className="w-10 h-10 rounded-xl bg-burgundy/10 flex items-center justify-center">
+                  <Globe className="h-5 w-5 text-burgundy" />
+                </div>
+                <div>
+                  <h4 className="text-lg font-semibold text-slate-800">General Settings</h4>
+                  <p className="text-xs text-slate-500">Organization information and preferences</p>
                 </div>
               </div>
-            </div>
-          </div>
-        )}
 
-        {activeTab === "dashboard" && (
-          <div className="bg-card rounded-lg shadow-sm border border-border p-6">
-            <h3 className="font-serif font-semibold text-foreground mb-4">Dashboard Preferences</h3>
-            <div className="space-y-4">
-              <InputField label="Auto-refresh Interval (minutes)" keyName="dashboardRefresh" type="number" />
-              <InputField label="Default View" keyName="defaultDashboardView" />
-            </div>
-          </div>
-        )}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <InputField
+                  label="Hospital Name"
+                  value={generalSettings.hospitalName}
+                  onChange={(val) => setGeneralSettings({ ...generalSettings, hospitalName: val })}
+                  placeholder="Enter hospital name"
+                />
+                <InputField
+                  label="Email Address"
+                  value={generalSettings.email}
+                  onChange={(val) => setGeneralSettings({ ...generalSettings, email: val })}
+                  placeholder="Enter email address"
+                  type="email"
+                />
+                <InputField
+                  label="Phone Number"
+                  value={generalSettings.phone}
+                  onChange={(val) => setGeneralSettings({ ...generalSettings, phone: val })}
+                  placeholder="Enter phone number"
+                />
+                <InputField
+                  label="Website"
+                  value={generalSettings.website}
+                  onChange={(val) => setGeneralSettings({ ...generalSettings, website: val })}
+                  placeholder="Enter website URL"
+                />
+                <div className="md:col-span-2">
+                  <InputField
+                    label="Address"
+                    value={generalSettings.address}
+                    onChange={(val) => setGeneralSettings({ ...generalSettings, address: val })}
+                    placeholder="Enter hospital address"
+                  />
+                </div>
+                <InputField
+                  label="Timezone"
+                  value={generalSettings.timezone}
+                  onChange={(val) => setGeneralSettings({ ...generalSettings, timezone: val })}
+                  placeholder="Select timezone"
+                />
+                <InputField
+                  label="Default Language"
+                  value={generalSettings.language}
+                  onChange={(val) => setGeneralSettings({ ...generalSettings, language: val })}
+                  placeholder="Select language"
+                />
+              </div>
 
-        <button onClick={handleSave}
-          className="flex items-center gap-2 px-6 py-2.5 rounded-lg bg-burgundy text-primary-foreground text-sm font-sans font-medium hover:bg-burgundy-deep transition-colors">
-          <Save size={16} /> {saved ? "Saved!" : "Save Settings"}
-        </button>
+              <div className="flex justify-end mt-6 pt-4 border-t border-slate-100">
+                <Button onClick={handleGeneralSave} className="gap-2 bg-burgundy hover:bg-burgundy/90">
+                  <Save className="h-4 w-4" />
+                  Save General Settings
+                </Button>
+              </div>
+            </div> */}
+
+            {/* Change Password Section */}
+            <div className="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
+              <div className="flex items-center gap-3 mb-5 pb-3 border-b border-slate-100">
+                <div className="w-10 h-10 rounded-xl bg-burgundy/10 flex items-center justify-center">
+                  <Lock className="h-5 w-5 text-burgundy" />
+                </div>
+                <div>
+                  <h4 className="text-lg font-semibold text-slate-800">Change Password</h4>
+                  <p className="text-xs text-slate-500">Update your account password</p>
+                </div>
+              </div>
+
+              <div className="space-y-5">
+                <div className="space-y-1.5">
+                  <label className="text-sm font-semibold text-slate-700">Current Password</label>
+                  <div className="relative">
+                    <Input
+                      type={showCurrentPassword ? "text" : "password"}
+                      value={passwordData.currentPassword}
+                      onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
+                      placeholder="Enter current password"
+                      className={`h-11 pr-11 ${passwordErrors.currentPassword ? "border-red-500 focus:ring-red-500" : ""}`}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                    >
+                      {showCurrentPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
+                  {passwordErrors.currentPassword && <p className="text-xs text-red-500 mt-1">{passwordErrors.currentPassword}</p>}
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-sm font-semibold text-slate-700">New Password</label>
+                  <div className="relative">
+                    <Input
+                      type={showNewPassword ? "text" : "password"}
+                      value={passwordData.newPassword}
+                      onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
+                      placeholder="Enter new password (min. 6 characters)"
+                      className={`h-11 pr-11 ${passwordErrors.newPassword ? "border-red-500 focus:ring-red-500" : ""}`}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowNewPassword(!showNewPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                    >
+                      {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
+                  {passwordErrors.newPassword && <p className="text-xs text-red-500 mt-1">{passwordErrors.newPassword}</p>}
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-sm font-semibold text-slate-700">Confirm New Password</label>
+                  <div className="relative">
+                    <Input
+                      type={showConfirmPassword ? "text" : "password"}
+                      value={passwordData.confirmPassword}
+                      onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
+                      placeholder="Confirm new password"
+                      className={`h-11 pr-11 ${passwordErrors.confirmPassword ? "border-red-500 focus:ring-red-500" : ""}`}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                    >
+                      {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
+                  {passwordErrors.confirmPassword && <p className="text-xs text-red-500 mt-1">{passwordErrors.confirmPassword}</p>}
+                </div>
+              </div>
+
+              <div className="flex justify-end mt-6 pt-4 border-t border-slate-100">
+                <Button
+                  onClick={handlePasswordChange}
+                  disabled={isChangingPassword}
+                  className="gap-2 bg-burgundy hover:bg-burgundy/90"
+                >
+                  {isChangingPassword ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Lock className="h-4 w-4" />
+                  )}
+                  {isChangingPassword ? "Updating..." : "Change Password"}
+                </Button>
+              </div>
+            </div>
+
+            {/* Success Message */}
+            {saved && (
+              <div className="fixed bottom-6 right-6 bg-green-100 border border-green-200 rounded-xl p-4 shadow-lg animate-in slide-in-from-right-5 duration-300 z-50">
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="h-5 w-5 text-green-600" />
+                  <p className="text-sm font-medium text-green-700">Password updated successfully!</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     </AdminLayout>
   );
