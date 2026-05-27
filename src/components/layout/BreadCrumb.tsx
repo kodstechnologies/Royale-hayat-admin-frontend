@@ -20,6 +20,9 @@ import {
   ChevronRight,
   Home,
   Award,
+  Heart,
+  Users,
+  Sparkles,
 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 
@@ -44,6 +47,10 @@ const pageMap: Record<string, { label: string; icon: any; description?: string }
   "/job-posts":                 { label: "Job Posts",                icon: UserCheck, description: "Manage job postings and track applications" },
   "/jobs":                      { label: "Job Posts",                icon: UserCheck, description: "Manage job postings and track applications" },
   "/achievements":              { label: "Achievements",             icon: Award, description: "Manage employee achievements and recognitions" },
+  "/csr":                       { label: "CSR Initiatives",          icon: Heart, description: "Manage CSR initiatives and Celebrating Life content" },
+  "/work-culture":              { label: "Work Culture",             icon: Sparkles, description: "Manage work culture events and Life at RHH content" },
+  "/leadership":                { label: "Leadership Team",          icon: Users, description: "Manage leadership team members" },
+  "/life-at-rhh":               { label: "Life at RHH",              icon: Sparkles, description: "Manage Life at RHH content" },
 };
 
 // Add descriptions for nested routes
@@ -69,6 +76,27 @@ const nestedDescriptions: Record<string, string> = {
   "/achievements/create": "Add a new employee achievement",
   "/achievements/edit": "Update achievement details",
   "/achievements/view": "View achievement details",
+  "/csr/create": "Add a new CSR initiative",
+  "/csr/view": "View CSR initiative details",
+  "/csr/edit": "Update CSR initiative",
+  "/work-culture/create": "Add a new work culture event",
+  "/work-culture/view": "View work culture event details",
+  "/work-culture/edit": "Update work culture event",
+  "/leadership/create": "Add a new leadership team member",
+  "/leadership/view": "View leadership member details",
+  "/leadership/edit": "Update leadership team member",
+};
+
+const nestedPageLabels: Record<string, { label: string; description: string }> = {
+  "/csr/create": { label: "Add CSR Initiative", description: "Create a new CSR initiative" },
+  "/csr/view": { label: "View CSR Initiative", description: "View CSR initiative details" },
+  "/csr/edit": { label: "Edit CSR Initiative", description: "Update CSR initiative" },
+  "/work-culture/create": { label: "Add Work Culture Event", description: "Create a new work culture event" },
+  "/work-culture/view": { label: "View Work Culture", description: "View work culture event details" },
+  "/work-culture/edit": { label: "Edit Work Culture", description: "Update work culture event" },
+  "/leadership/create": { label: "Add Leadership Member", description: "Add a new leadership team member" },
+  "/leadership/view": { label: "View Leadership", description: "View leadership member details" },
+  "/leadership/edit": { label: "Edit Leadership", description: "Update leadership team member" },
 };
 
 const BreadCrumb = ({ lastCrumbLabel }: { lastCrumbLabel?: string } = {}) => {
@@ -77,25 +105,51 @@ const BreadCrumb = ({ lastCrumbLabel }: { lastCrumbLabel?: string } = {}) => {
 
   // Get current path segments
   const pathnames = location.pathname.split("/").filter((x) => x);
-  
+
+  const nestedKey = Object.keys(nestedPageLabels)
+    .filter((key) => location.pathname.startsWith(key))
+    .sort((a, b) => b.length - a.length)[0];
+
   // Match the most specific route first
   let match = pageMap[location.pathname];
   let description = match?.description;
-  
+  let pageLabel = match?.label;
+
   if (!match) {
-    // Check for nested routes — try progressively shorter path prefixes
     const basePath = `/${pathnames[0] || ""}`;
     match = pageMap[basePath];
 
-    // Find description by matching the longest prefix in nestedDescriptions
     const descKey = Object.keys(nestedDescriptions)
       .filter((key) => location.pathname.startsWith(key))
       .sort((a, b) => b.length - a.length)[0];
-    description = (descKey ? nestedDescriptions[descKey] : undefined) || `Manage ${match?.label?.toLowerCase() || "items"}`;
+    description =
+      (descKey ? nestedDescriptions[descKey] : undefined) ||
+      `Manage ${match?.label?.toLowerCase() || "items"}`;
+    pageLabel = match?.label;
   }
-  
-  const { label, icon: Icon } = match ?? { label: "Page", icon: FolderOpen };
-  const pageDescription = description || `Manage and configure ${label.toLowerCase()} settings`;
+
+  if (nestedKey) {
+    pageLabel = nestedPageLabels[nestedKey].label;
+    description = nestedPageLabels[nestedKey].description;
+  }
+
+  const { icon: Icon } = match ?? { icon: FolderOpen };
+  const label = pageLabel ?? "Page";
+  const pageDescription =
+    description || `Manage and configure ${label.toLowerCase()} settings`;
+
+  // Breadcrumb trail (hide MongoDB ObjectId segments)
+  const breadcrumbItems: { segment: string; to: string; parentSegment?: string }[] = [];
+  let pathSoFar = "";
+  pathnames.forEach((segment, index) => {
+    pathSoFar += `/${segment}`;
+    if (/^[0-9a-fA-F]{24}$/.test(segment)) return;
+    breadcrumbItems.push({
+      segment,
+      to: pathSoFar,
+      parentSegment: index > 0 ? pathnames[index - 1] : undefined,
+    });
+  });
 
   // Helper to format path segment
   const formatSegment = (segment: string, parentSegment?: string) => {
@@ -113,6 +167,9 @@ const BreadCrumb = ({ lastCrumbLabel }: { lastCrumbLabel?: string } = {}) => {
         "subspecialities": "Details",
         "achievements": "Details",
         "enquiries": "Details",
+        "csr": "Details",
+        "leadership": "Details",
+        "work-culture": "Details",
       };
       return contextLabels[parentSegment ?? ""] ?? "Details";
     }
@@ -130,6 +187,10 @@ const BreadCrumb = ({ lastCrumbLabel }: { lastCrumbLabel?: string } = {}) => {
       "subspecialities": "Subspecialities",
       "hospitality-services": "Hospitality Services",
       "achievements": "Achievements",
+      "csr": "CSR Initiatives",
+      "work-culture": "Work Culture",
+      "leadership": "Leadership Team",
+      "life-at-rhh": "Life at RHH",
       "create": "Create New",
       "edit": "Edit",
       "view": "View Details",
@@ -156,7 +217,7 @@ const BreadCrumb = ({ lastCrumbLabel }: { lastCrumbLabel?: string } = {}) => {
         <div className="px-8 py-6">
           {/* Breadcrumb navigation */}
           <div className="flex items-center flex-wrap gap-2 mb-4">
-            <span className="text-sm text-slate-500 font-medium">Pages</span>
+            <span className="text-sm text-slate-500 font-medium">{t("Pages")}</span>
             <ChevronRight size={14} className="text-slate-400" />
             <div className="flex items-center flex-wrap gap-2">
               {/* Home Link */}
@@ -165,25 +226,23 @@ const BreadCrumb = ({ lastCrumbLabel }: { lastCrumbLabel?: string } = {}) => {
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/80 hover:bg-burgundy/10 text-slate-600 hover:text-burgundy transition-all duration-200 text-sm font-medium shadow-sm border border-slate-200/50 backdrop-blur-sm"
               >
                 <Home size={14} />
-                <span>Home</span>
+                <span>{t("Home")}</span>
               </Link>
               
-              {pathnames.map((segment, index) => {
-                const isLast = index === pathnames.length - 1;
-                const to = `/${pathnames.slice(0, index + 1).join("/")}`;
-                const isClickable = pageMap[to] && !isLast;
-                const parentSegment = index > 0 ? pathnames[index - 1] : undefined;
-                // Use the override label for the last crumb if provided
-                const formattedLabel = isLast && lastCrumbLabel
-                  ? lastCrumbLabel
-                  : formatSegment(segment, parentSegment);
-                
+              {breadcrumbItems.map((item, index) => {
+                const isLast = index === breadcrumbItems.length - 1;
+                const isClickable = !!pageMap[item.to] && !isLast;
+                const formattedLabel =
+                  isLast && lastCrumbLabel
+                    ? lastCrumbLabel
+                    : t(formatSegment(item.segment, item.parentSegment));
+
                 return (
-                  <div key={index} className="flex items-center gap-2">
+                  <div key={item.to} className="flex items-center gap-2">
                     <ChevronRight size={14} className="text-slate-400" />
                     {isClickable ? (
                       <Link
-                        to={to}
+                        to={item.to}
                         className="inline-flex items-center px-3 py-1.5 rounded-full bg-white/80 hover:bg-burgundy/10 text-slate-600 hover:text-burgundy transition-all duration-200 text-sm font-medium shadow-sm border border-slate-200/50 backdrop-blur-sm"
                       >
                         {formattedLabel}
@@ -211,7 +270,7 @@ const BreadCrumb = ({ lastCrumbLabel }: { lastCrumbLabel?: string } = {}) => {
           
           {/* Page Description */}
           <p className="text-sm text-slate-500 ml-0">
-            {pageDescription}
+            {t(pageDescription)}
           </p>
         </div>
       </div>

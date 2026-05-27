@@ -15,7 +15,9 @@ import { getCSR, deleteCSR } from "@/api/csr";
 type CSR = {
   _id: string;
   heading: string;
+  subheading: string;
   arabicHeading: string;
+  subheadingArabic: string;
   description: string;
   arabicDescription: string;
   images: string[];
@@ -51,7 +53,15 @@ const AllCSR = () => {
       const response = await getCSR();
       const data = response.data || response;
       if (Array.isArray(data)) {
-        setCsrData(data);
+        setCsrData(
+          data.map((item: any) => ({
+            ...item,
+            arabicHeading: item.arabicHeading ?? item.headingArabic ?? "",
+            arabicDescription: item.arabicDescription ?? item.descriptionArabic ?? "",
+            subheading: item.subheading ?? "",
+            subheadingArabic: item.subheadingArabic ?? item.arabicSubheading ?? "",
+          }))
+        );
       } else {
         setCsrData([]);
       }
@@ -67,7 +77,10 @@ const AllCSR = () => {
   const filteredData = csrData.filter(item => {
     const searchValue = searchTerm.toLowerCase();
     const heading = activeLanguage === "english" ? item.heading.toLowerCase() : item.arabicHeading.toLowerCase();
-    const matchesSearch = searchTerm === "" || heading.includes(searchValue);
+    const subheading = activeLanguage === "english"
+      ? (item.subheading || "").toLowerCase()
+      : (item.subheadingArabic || "").toLowerCase();
+    const matchesSearch = searchTerm === "" || heading.includes(searchValue) || subheading.includes(searchValue);
     return matchesSearch;
   });
 
@@ -107,7 +120,7 @@ const AllCSR = () => {
     celebratingLife: activeLanguage === "english" ? "Celebrating Life" : "الاحتفال بالحياة",
     csrInitiatives: activeLanguage === "english" ? "CSR Initiatives" : "مبادرات المسؤولية الاجتماعية",
     addCSR: activeLanguage === "english" ? "Add Initiative" : "إضافة مبادرة",
-    searchPlaceholder: activeLanguage === "english" ? "Search by heading..." : "ابحث بالعنوان...",
+    searchPlaceholder: activeLanguage === "english" ? "Search by heading or subheading..." : "ابحث بالعنوان أو العنوان الفرعي...",
     heading: activeLanguage === "english" ? "Heading" : "العنوان",
     images: activeLanguage === "english" ? "Images" : "الصور",
     actions: activeLanguage === "english" ? "Actions" : "الإجراءات",
@@ -315,6 +328,11 @@ const AllCSR = () => {
                               <td className="px-6 py-4">
                                 <p className="font-medium text-slate-800">
                                   {activeLanguage === "english" ? item.heading : item.arabicHeading}
+                                  {(activeLanguage === "english" ? item.subheading : item.subheadingArabic) && (
+                                    <span className="block text-xs text-slate-500 mt-1">
+                                      {activeLanguage === "english" ? item.subheading : item.subheadingArabic}
+                                    </span>
+                                  )}
                                 </p>
                               </td>
                               <td className="px-6 py-4">

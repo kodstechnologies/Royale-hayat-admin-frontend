@@ -129,7 +129,10 @@ const EditLeadership = () => {
         setTimeout(() => setImageError(""), 5000);
         return;
       }
-      setFormData({ ...formData, imageFile: file });
+      if (previewUrl.startsWith("blob:")) {
+        URL.revokeObjectURL(previewUrl);
+      }
+      setFormData((prev) => ({ ...prev, imageFile: file }));
       setPreviewUrl(URL.createObjectURL(file));
       setImageError("");
     } else {
@@ -147,12 +150,33 @@ const EditLeadership = () => {
         setTimeout(() => setImageError(""), 5000);
         return;
       }
-      setFormData({ ...formData, imageFile: file });
+      if (previewUrl.startsWith("blob:")) {
+        URL.revokeObjectURL(previewUrl);
+      }
+      setFormData((prev) => ({ ...prev, imageFile: file }));
       setPreviewUrl(URL.createObjectURL(file));
       setImageError("");
     } else if (file) {
       toast.error("Please upload an image file");
     }
+    e.target.value = "";
+  };
+
+  const handleRemoveImage = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (previewUrl.startsWith("blob:")) {
+      URL.revokeObjectURL(previewUrl);
+    }
+
+    setPreviewUrl("");
+    setFormData((prev) => ({
+      ...prev,
+      imageFile: null,
+      existingImage: "",
+    }));
+    setImageError("Image is required");
   };
 
   const handleSubmit = async () => {
@@ -194,6 +218,11 @@ const EditLeadership = () => {
     if (!formData.descriptionArabic.trim()) {
       toast.error("Please enter description (Arabic)");
       setActiveTab("arabic");
+      return;
+    }
+    if (!formData.imageFile && !formData.existingImage) {
+      toast.error("Please upload an image");
+      setImageError("Image is required");
       return;
     }
 
@@ -437,12 +466,18 @@ const EditLeadership = () => {
                   <input
                     type="file"
                     accept="image/*"
-                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    className={`absolute inset-0 w-full h-full opacity-0 ${
+                      previewUrl ? "pointer-events-none" : "cursor-pointer"
+                    }`}
                     onChange={handleImageUpload}
                   />
-                  <div className="flex flex-col items-center justify-center py-8 px-4 text-center">
+                  <div
+                    className={`flex flex-col items-center justify-center py-8 px-4 text-center ${
+                      previewUrl ? "relative z-10" : ""
+                    }`}
+                  >
                     {previewUrl ? (
-                      <div className="relative">
+                      <div className="relative pointer-events-auto">
                         <img 
                           src={previewUrl} 
                           alt="Preview" 
@@ -450,11 +485,8 @@ const EditLeadership = () => {
                         />
                         <button
                           type="button"
-                          onClick={() => {
-                            setPreviewUrl(formData.existingImage);
-                            setFormData({ ...formData, imageFile: null });
-                          }}
-                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
+                          onClick={handleRemoveImage}
+                          className="absolute -top-2 -right-2 z-20 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
                         >
                           <X className="h-3 w-3" />
                         </button>

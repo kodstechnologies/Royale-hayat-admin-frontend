@@ -46,12 +46,19 @@ const ViewLeadership = () => {
     setLoading(true);
     try {
       const response = await getLeadershipById(id!);
-      const data = response.data || response;
-      
+      const raw = response.data ?? response;
+      const data = raw?.data ?? raw;
+
       if (data) {
-        setLeadership(data);
+        setLeadership({
+          ...data,
+          initialsArabic: data.initialsArabic ?? data.arabicInitials ?? "",
+          nameArabic: data.nameArabic ?? data.arabicName ?? "",
+          titleArabic: data.titleArabic ?? data.arabicTitle ?? "",
+          descriptionArabic: data.descriptionArabic ?? data.arabicDescription ?? "",
+        });
       } else {
-        toast.error(activeLanguage === "english" ? "Leadership member not found" : "لم يتم العثور على القيادي");
+        toast.error("Leadership member not found");
         navigate("/leadership");
       }
     } catch (error: any) {
@@ -70,7 +77,7 @@ const ViewLeadership = () => {
     try {
       await deleteLeadership(leadership._id);
       window.dispatchEvent(new Event("leadershipUpdated"));
-      toast.success(activeLanguage === "english" ? "Leadership member deleted successfully" : "تم حذف القيادي بنجاح");
+      toast.success("Leadership member deleted successfully");
       navigate("/leadership");
     } catch (error: any) {
       console.error("Error deleting leadership:", error);
@@ -81,27 +88,29 @@ const ViewLeadership = () => {
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    if (activeLanguage === "arabic") {
-      return date.toLocaleDateString("ar-SA", { year: "numeric", month: "long", day: "numeric" });
-    }
-    return date.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
   };
 
-  const getUIText = {
-    viewLeadership: activeLanguage === "english" ? "View Leadership" : "عرض القيادي",
-    personalInfo: activeLanguage === "english" ? "Personal Information" : "المعلومات الشخصية",
-    name: activeLanguage === "english" ? "Full Name" : "الاسم الكامل",
-    initials: activeLanguage === "english" ? "Initials" : "الأحرف الأولى",
-    title: activeLanguage === "english" ? "Title / Position" : "المسمى / المنصب",
-    description: activeLanguage === "english" ? "Description" : "الوصف",
-    createdAt: activeLanguage === "english" ? "Created Date" : "تاريخ الإنشاء",
-    lastUpdated: activeLanguage === "english" ? "Last Updated" : "آخر تحديث",
-    edit: activeLanguage === "english" ? "Edit" : "تعديل",
-    delete: activeLanguage === "english" ? "Delete" : "حذف",
-    back: activeLanguage === "english" ? "Back to List" : "رجوع إلى القائمة",
-    deleteConfirm: activeLanguage === "english" ? "Are you sure you want to delete this leadership member?" : "هل أنت متأكد أنك تريد حذف هذا القيادي؟",
-    cancel: activeLanguage === "english" ? "Cancel" : "إلغاء",
-    confirmDelete: activeLanguage === "english" ? "Delete" : "حذف",
+  const uiText = {
+    viewLeadership: "View Leadership",
+    personalInfo: "Personal Information",
+    name: "Full Name",
+    initials: "Initials",
+    title: "Title / Position",
+    description: "Description",
+    additionalInfo: "Additional Information",
+    createdAt: "Created Date",
+    lastUpdated: "Last Updated",
+    edit: "Edit",
+    delete: "Delete",
+    subtitle: "View leadership member details",
+    deleteConfirm: "Are you sure you want to delete this leadership member?",
+    cancel: "Cancel",
+    confirmDelete: "Delete",
   };
 
   if (loading) {
@@ -133,10 +142,8 @@ const ViewLeadership = () => {
               <ArrowLeft className="h-5 w-5 text-slate-500 group-hover:text-burgundy" />
             </button>
             <div>
-              <h2 className="text-2xl font-bold text-slate-800">{getUIText.viewLeadership}</h2>
-              <p className="text-sm text-slate-500 mt-1">
-                {activeLanguage === "english" ? "View leadership member details" : "عرض تفاصيل القيادي"}
-              </p>
+              <h2 className="text-2xl font-bold text-slate-800">{uiText.viewLeadership}</h2>
+              <p className="text-sm text-slate-500 mt-1">{uiText.subtitle}</p>
             </div>
           </div>
 
@@ -173,11 +180,11 @@ const ViewLeadership = () => {
                 className="gap-2 bg-blue-600 hover:bg-blue-700"
               >
                 <Edit className="h-4 w-4" />
-                {getUIText.edit}
+                {uiText.edit}
               </Button>
               <Button onClick={() => setShowDeleteConfirm(true)} variant="destructive" className="gap-2" disabled={isDeleting}>
                 <Trash2 className="h-4 w-4" />
-                {isDeleting ? "Deleting..." : getUIText.delete}
+                {isDeleting ? "Deleting..." : uiText.delete}
               </Button>
             </div>
 
@@ -202,26 +209,35 @@ const ViewLeadership = () => {
                 <div className="bg-white rounded-xl border border-slate-200 p-5">
                   <div className="flex items-center gap-2 pb-3 border-b border-slate-100 mb-4">
                     <User className="h-5 w-5 text-burgundy" />
-                    <h3 className="text-lg font-semibold text-slate-800">{getUIText.personalInfo}</h3>
+                    <h3 className="text-lg font-semibold text-slate-800">{uiText.personalInfo}</h3>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <p className="text-xs text-slate-500 mb-1">{getUIText.initials}</p>
-                      <p className="text-sm font-medium text-slate-800">
+                      <p className="text-xs text-slate-500 mb-1">{uiText.initials}</p>
+                      <p
+                        className="text-sm font-medium text-slate-800"
+                        dir={activeLanguage === "arabic" ? "rtl" : "ltr"}
+                      >
                         {activeLanguage === "english" ? leadership.initials : leadership.initialsArabic}
                       </p>
                     </div>
                     
                     <div className="md:col-span-2">
-                      <p className="text-xs text-slate-500 mb-1">{getUIText.name}</p>
-                      <p className="text-sm font-medium text-slate-800">
+                      <p className="text-xs text-slate-500 mb-1">{uiText.name}</p>
+                      <p
+                        className="text-sm font-medium text-slate-800"
+                        dir={activeLanguage === "arabic" ? "rtl" : "ltr"}
+                      >
                         {activeLanguage === "english" ? leadership.name : leadership.nameArabic}
                       </p>
                     </div>
                     <div className="md:col-span-2">
-                      <p className="text-xs text-slate-500 mb-1">{getUIText.title}</p>
-                      <p className="text-sm font-medium text-slate-800">
+                      <p className="text-xs text-slate-500 mb-1">{uiText.title}</p>
+                      <p
+                        className="text-sm font-medium text-slate-800"
+                        dir={activeLanguage === "arabic" ? "rtl" : "ltr"}
+                      >
                         {activeLanguage === "english" ? leadership.title : leadership.titleArabic}
                       </p>
                     </div>
@@ -232,9 +248,12 @@ const ViewLeadership = () => {
                 <div className="bg-white rounded-xl border border-slate-200 p-5">
                   <div className="flex items-center gap-2 pb-3 border-b border-slate-100 mb-4">
                     <FileText className="h-5 w-5 text-burgundy" />
-                    <h3 className="text-lg font-semibold text-slate-800">{getUIText.description}</h3>
+                    <h3 className="text-lg font-semibold text-slate-800">{uiText.description}</h3>
                   </div>
-                  <p className="text-sm text-slate-600 leading-relaxed">
+                  <p
+                    className="text-sm text-slate-600 leading-relaxed"
+                    dir={activeLanguage === "arabic" ? "rtl" : "ltr"}
+                  >
                     {activeLanguage === "english" ? leadership.description : leadership.descriptionArabic}
                   </p>
                 </div>
@@ -243,17 +262,17 @@ const ViewLeadership = () => {
                 <div className="bg-white rounded-xl border border-slate-200 p-5">
                   <div className="flex items-center gap-2 pb-3 border-b border-slate-100 mb-4">
                     <Briefcase className="h-5 w-5 text-burgundy" />
-                    <h3 className="text-lg font-semibold text-slate-800">{  "Additional Information"}</h3>
+                    <h3 className="text-lg font-semibold text-slate-800">{uiText.additionalInfo}</h3>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <p className="text-xs text-slate-500 mb-1">{getUIText.createdAt}</p>
+                      <p className="text-xs text-slate-500 mb-1">{uiText.createdAt}</p>
                       <p className="text-sm text-slate-700">{formatDate(leadership.createdAt)}</p>
                     </div>
                     {leadership.updatedAt && (
                       <div>
-                        <p className="text-xs text-slate-500 mb-1">{getUIText.lastUpdated}</p>
+                        <p className="text-xs text-slate-500 mb-1">{uiText.lastUpdated}</p>
                         <p className="text-sm text-slate-700">{formatDate(leadership.updatedAt)}</p>
                       </div>
                     )}
@@ -269,13 +288,13 @@ const ViewLeadership = () => {
       {showDeleteConfirm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl max-w-md w-full mx-4 p-6">
-            <h3 className="text-lg font-bold text-slate-800 mb-2">{getUIText.deleteConfirm}</h3>
+            <h3 className="text-lg font-bold text-slate-800 mb-2">{uiText.deleteConfirm}</h3>
             <div className="flex justify-end gap-3 mt-6">
               <Button variant="outline" onClick={() => setShowDeleteConfirm(false)}>
-                {getUIText.cancel}
+                {uiText.cancel}
               </Button>
               <Button variant="destructive" onClick={handleDelete} disabled={isDeleting}>
-                {isDeleting ? "Deleting..." : getUIText.confirmDelete}
+                {isDeleting ? "Deleting..." : uiText.confirmDelete}
               </Button>
             </div>
           </div>

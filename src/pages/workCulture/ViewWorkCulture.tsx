@@ -9,14 +9,15 @@ import { toast } from "sonner";
 import { getWorkCultureById, deleteWorkCulture } from "@/api/workCulture";
 
 type WorkCulture = {
-  id: string; // Changed from number to string for MongoDB ObjectId
+  _id?: string;
+  id: string;
   heading: string;
-  headingArabic: string; // Updated field name
+  headingArabic: string;
   description: string;
-  descriptionArabic: string; // Updated field name
+  descriptionArabic: string;
   images: string[];
-  status?: "show" | "hide"; // Made optional as it might not come from API
-  order?: number; // Made optional
+  status?: "show" | "hide";
+  order?: number;
   createdAt: string;
   updatedAt?: string;
 };
@@ -46,10 +47,16 @@ const ViewWorkCulture = () => {
     try {
       // Pass the ID as is (no parseInt for MongoDB ObjectId)
       const response = await getWorkCultureById(id);
-      const data = response.data || response;
-      
+      const raw = response.data ?? response;
+      const data = raw?.data ?? raw;
+
       if (data) {
-        setRecord(data);
+        setRecord({
+          ...data,
+          id: data.id ?? data._id ?? id!,
+          headingArabic: data.headingArabic ?? data.arabicHeading ?? "",
+          descriptionArabic: data.descriptionArabic ?? data.arabicDescription ?? "",
+        });
       } else {
         toast.error("Work culture not found");
         navigate("/work-culture");
@@ -81,25 +88,28 @@ const ViewWorkCulture = () => {
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString(activeLanguage === "arabic" ? "ar-SA" : "en-US", {
-      year: "numeric", month: "long", day: "numeric"
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
     });
   };
 
-  const getUIText = {
-    viewTitle: activeLanguage === "english" ? "View Work Culture" : "عرض ثقافة العمل",
-    backToList: activeLanguage === "english" ? "Back to List" : "رجوع إلى القائمة",
-    edit: activeLanguage === "english" ? "Edit" : "تعديل",
-    delete: activeLanguage === "english" ? "Delete" : "حذف",
-    heading: activeLanguage === "english" ? "Heading" : "العنوان",
-    description: activeLanguage === "english" ? "Description" : "الوصف",
-    images: activeLanguage === "english" ? "Images" : "الصور",
-    createdDate: activeLanguage === "english" ? "Created Date" : "تاريخ الإنشاء",
-    lastUpdated: activeLanguage === "english" ? "Last Updated" : "آخر تحديث",
-    deleteConfirm: activeLanguage === "english" ? "Delete Work Culture" : "حذف ثقافة العمل",
-    deleteMessage: activeLanguage === "english" ? "Are you sure you want to delete this work culture? This action cannot be undone." : "هل أنت متأكد أنك تريد حذف ثقافة العمل هذه؟ لا يمكن التراجع عن هذا الإجراء.",
-    cancel: activeLanguage === "english" ? "Cancel" : "إلغاء",
-    confirmDelete: activeLanguage === "english" ? "Delete" : "حذف",
+  const uiText = {
+    viewTitle: "View Work Culture",
+    backToList: "Back to List",
+    edit: "Edit",
+    delete: "Delete",
+    heading: "Heading",
+    description: "Description",
+    images: "Images",
+    createdDate: "Created Date",
+    lastUpdated: "Last Updated",
+    deleteConfirm: "Delete Work Culture",
+    deleteMessage:
+      "Are you sure you want to delete this work culture? This action cannot be undone.",
+    cancel: "Cancel",
+    confirmDelete: "Delete",
   };
 
   if (loading) {
@@ -125,8 +135,8 @@ const ViewWorkCulture = () => {
               <ArrowLeft className="h-5 w-5 text-slate-500 hover:text-burgundy" />
             </button>
             <div>
-              <h2 className="text-2xl font-bold text-slate-800">{getUIText.viewTitle}</h2>
-              <p className="text-sm text-slate-500 mt-1">{getUIText.backToList}</p>
+              <h2 className="text-2xl font-bold text-slate-800">{uiText.viewTitle}</h2>
+              <p className="text-sm text-slate-500 mt-1">{uiText.backToList}</p>
             </div>
           </div>
 
@@ -151,10 +161,10 @@ const ViewWorkCulture = () => {
               </button>
             </div>
             <Button onClick={() => navigate(`/work-culture/edit/${id}`)} className="gap-2 bg-blue-600 hover:bg-blue-700">
-              <Edit className="h-4 w-4" /> {getUIText.edit}
+              <Edit className="h-4 w-4" /> {uiText.edit}
             </Button>
             <Button onClick={() => setShowDeleteConfirm(true)} variant="destructive" className="gap-2" disabled={isDeleting}>
-              <Trash2 className="h-4 w-4" /> {isDeleting ? "Deleting..." : getUIText.delete}
+              <Trash2 className="h-4 w-4" /> {isDeleting ? "Deleting..." : uiText.delete}
             </Button>
           </div>
         </div>
@@ -165,17 +175,23 @@ const ViewWorkCulture = () => {
             <div className="space-y-6">
               {/* Heading */}
               <div>
-                <label className="text-xs text-slate-500 uppercase font-semibold">{getUIText.heading}</label>
-                <p className="text-lg font-semibold text-slate-800 mt-1">
+                <label className="text-xs text-slate-500 uppercase font-semibold">{uiText.heading}</label>
+                <p
+                  className="text-lg font-semibold text-slate-800 mt-1"
+                  dir={activeLanguage === "arabic" ? "rtl" : "ltr"}
+                >
                   {activeLanguage === "english" ? record.heading : record.headingArabic}
                 </p>
               </div>
 
               {/* Description */}
               <div>
-                <label className="text-xs text-slate-500 uppercase font-semibold block mb-2">{getUIText.description}</label>
+                <label className="text-xs text-slate-500 uppercase font-semibold block mb-2">{uiText.description}</label>
                 <div className="bg-slate-50 rounded-lg p-4">
-                  <p className="text-slate-600 leading-relaxed">
+                  <p
+                    className="text-slate-600 leading-relaxed"
+                    dir={activeLanguage === "arabic" ? "rtl" : "ltr"}
+                  >
                     {activeLanguage === "english" ? record.description : record.descriptionArabic}
                   </p>
                 </div>
@@ -183,7 +199,7 @@ const ViewWorkCulture = () => {
 
               {/* Images */}
               <div>
-                <label className="text-xs text-slate-500 uppercase font-semibold block mb-3">{getUIText.images} ({record.images?.length || 0})</label>
+                <label className="text-xs text-slate-500 uppercase font-semibold block mb-3">{uiText.images} ({record.images?.length || 0})</label>
                 {record.images && record.images.length > 0 ? (
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                     {record.images.map((img, idx) => (
@@ -210,12 +226,12 @@ const ViewWorkCulture = () => {
               {/* Created Date */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-slate-200">
                 <div>
-                  <label className="text-xs text-slate-500 uppercase font-semibold block mb-2">{getUIText.createdDate}</label>
+                  <label className="text-xs text-slate-500 uppercase font-semibold block mb-2">{uiText.createdDate}</label>
                   <p className="text-slate-700">{formatDate(record.createdAt)}</p>
                 </div>
                 {record.updatedAt && (
                   <div>
-                    <label className="text-xs text-slate-500 uppercase font-semibold block mb-2">{getUIText.lastUpdated}</label>
+                    <label className="text-xs text-slate-500 uppercase font-semibold block mb-2">{uiText.lastUpdated}</label>
                     <p className="text-slate-700">{formatDate(record.updatedAt)}</p>
                   </div>
                 )}
@@ -244,14 +260,14 @@ const ViewWorkCulture = () => {
       {showDeleteConfirm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl max-w-md w-full mx-4 p-6">
-            <h3 className="text-xl font-bold text-slate-800 mb-2">{getUIText.deleteConfirm}</h3>
-            <p className="text-slate-600">{getUIText.deleteMessage}</p>
+            <h3 className="text-xl font-bold text-slate-800 mb-2">{uiText.deleteConfirm}</h3>
+            <p className="text-slate-600">{uiText.deleteMessage}</p>
             <div className="flex justify-end gap-3 mt-6">
               <Button variant="outline" onClick={() => setShowDeleteConfirm(false)}>
-                {getUIText.cancel}
+                {uiText.cancel}
               </Button>
               <Button variant="destructive" onClick={handleDelete} disabled={isDeleting}>
-                {isDeleting ? "Deleting..." : getUIText.confirmDelete}
+                {isDeleting ? "Deleting..." : uiText.confirmDelete}
               </Button>
             </div>
           </div>

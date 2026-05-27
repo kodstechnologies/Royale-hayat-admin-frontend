@@ -8,19 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft, Save, Globe, Languages, FileText, Upload, X } from "lucide-react";
 import { toast } from "sonner";
-import { getCSRById, updateCSR } from "@/api/csr";
-
-type CSR = {
-  _id: string;
-  heading: string;
-  arabicHeading: string;
-  description: string;
-  arabicDescription: string;
-  images: string[];
-  status?: "show" | "hide";
-  order?: number;
-  createdAt: string;
-};
+import { getCSRById } from "@/api/csr";
+import api from "@/api/axiosInstance";
 
 const EditCSR = () => {
   const navigate = useNavigate();
@@ -29,16 +18,18 @@ const EditCSR = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState<"english" | "arabic">("english");
-  const [images, setImages] = useState<string[]>([]);
-  const [newImageFiles, setNewImageFiles] = useState<File[]>([]);
-  const [dragActive, setDragActive] = useState(false);
   const [existingImages, setExistingImages] = useState<string[]>([]);
+  const [newImageFiles, setNewImageFiles] = useState<File[]>([]);
+  const [newImagePreviews, setNewImagePreviews] = useState<string[]>([]);
+  const [dragActive, setDragActive] = useState(false);
 
   const [formData, setFormData] = useState({
     heading: "",
-    arabicHeading: "",
+    headingArabic: "",
+    subheading: "",
+    subheadingArabic: "",
     description: "",
-    arabicDescription: "",
+    descriptionArabic: "",
   });
 
   useEffect(() => {
@@ -46,24 +37,36 @@ const EditCSR = () => {
       navigate("/csr");
       return;
     }
-    
+
     loadCSRData();
   }, [id, navigate]);
+
+  useEffect(() => {
+    return () => {
+      newImagePreviews.forEach((preview) => {
+        if (preview.startsWith("blob:")) {
+          URL.revokeObjectURL(preview);
+        }
+      });
+    };
+  }, [newImagePreviews]);
 
   const loadCSRData = async () => {
     setLoading(true);
     try {
-      const response = await getCSRById(id);
-      const data = response.data || response;
-      
+      const response = await getCSRById(id!);
+      const raw = response.data ?? response;
+      const data = raw?.data ?? raw;
+
       if (data) {
         setFormData({
           heading: data.heading || "",
-          arabicHeading: data.arabicHeading || "",
+          headingArabic: data.headingArabic ?? data.arabicHeading ?? "",
+          subheading: data.subheading || "",
+          subheadingArabic: data.subheadingArabic ?? data.arabicSubheading ?? "",
           description: data.description || "",
-          arabicDescription: data.arabicDescription || "",
+          descriptionArabic: data.descriptionArabic ?? data.arabicDescription ?? "",
         });
-        setImages(data.images || []);
         setExistingImages(data.images || []);
       } else {
         toast.error("CSR initiative not found");
@@ -76,15 +79,6 @@ const EditCSR = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const convertToBase64 = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = (error) => reject(error);
-    });
   };
 
   const handleDrag = (e: React.DragEvent) => {
@@ -110,44 +104,58 @@ const EditCSR = () => {
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     await processImages(files);
+    e.target.value = "";
   };
 
   const processImages = async (files: File[]) => {
-    const imageFilesList = files.filter(file => file.type.startsWith("image/"));
+    const imageFilesList = files.filter((file) => file.type.startsWith("image/"));
     if (imageFilesList.length === 0) {
       toast.error("Please upload image files");
       return;
     }
 
-    // Check file size (5MB limit)
-    const oversizedFiles = imageFilesList.filter(file => file.size > 5 * 1024 * 1024);
+    const oversizedFiles = imageFilesList.filter((file) => file.size > 5 * 1024 * 1024);
     if (oversizedFiles.length > 0) {
       toast.error("Some images exceed 5MB limit");
       return;
     }
 
-    setNewImageFiles(prev => [...prev, ...imageFilesList]);
-
-    // Convert to base64 for preview
-    const newImages = await Promise.all(
-      imageFilesList.map(file => convertToBase64(file))
-    );
-    setImages(prev => [...prev, ...newImages]);
+    setNewImageFiles((prev) => [...prev, ...imageFilesList]);
+    const previews = imageFilesList.map((file) => URL.createObjectURL(file));
+    setNewImagePreviews((prev) => [...prev, ...previews]);
   };
 
-  const removeImage = (index: number) => {
-    setImages(prev => prev.filter((_, i) => i !== index));
+  const removeExistingImage = (index: number) => {
+    setExistingImages((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const removeNewImage = (index: number) => {
+    const preview = newImagePreviews[index];
+    if (preview?.startsWith("blob:")) {
+      URL.revokeObjectURL(preview);
+    }
+    setNewImageFiles((prev) => prev.filter((_, i) => i !== index));
+    setNewImagePreviews((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async () => {
-    // Validation
     if (!formData.heading.trim()) {
       toast.error("Please enter heading (English)");
       setActiveTab("english");
       return;
     }
-    if (!formData.arabicHeading.trim()) {
-      toast.error("الرجاء إدخال العنوان بالعربية");
+    if (!formData.headingArabic.trim()) {
+      toast.error("Please enter heading (Arabic)");
+      setActiveTab("arabic");
+      return;
+    }
+    if (!formData.subheading.trim()) {
+      toast.error("Please enter subheading (English)");
+      setActiveTab("english");
+      return;
+    }
+    if (!formData.subheadingArabic.trim()) {
+      toast.error("Please enter subheading (Arabic)");
       setActiveTab("arabic");
       return;
     }
@@ -156,36 +164,51 @@ const EditCSR = () => {
       setActiveTab("english");
       return;
     }
-    if (!formData.arabicDescription.trim()) {
-      toast.error("الرجاء إدخال الوصف بالعربية");
+    if (!formData.descriptionArabic.trim()) {
+      toast.error("Please enter description (Arabic)");
       setActiveTab("arabic");
       return;
     }
-    if (images.length === 0) {
+    if (existingImages.length === 0 && newImageFiles.length === 0) {
       toast.error("Please upload at least one image");
       return;
     }
 
     setSaving(true);
-    
-    try {
-      // Prepare payload for API
-      const payload = {
-        heading: formData.heading,
-        arabicHeading: formData.arabicHeading,
-        description: formData.description,
-        arabicDescription: formData.arabicDescription,
-        images: images,
-      };
 
-      await updateCSR(id!, payload);
-      
+    try {
+      const formDataToSend = new FormData();
+      formDataToSend.append("heading", formData.heading);
+      formDataToSend.append("headingArabic", formData.headingArabic);
+      formDataToSend.append("subheading", formData.subheading);
+      formDataToSend.append("subheadingArabic", formData.subheadingArabic);
+      formDataToSend.append("description", formData.description);
+      formDataToSend.append("descriptionArabic", formData.descriptionArabic);
+
+      if (existingImages.length > 0) {
+        existingImages.forEach((imageUrl) => {
+          formDataToSend.append("existingImages", imageUrl);
+        });
+      } else {
+        formDataToSend.append("existingImages", "");
+      }
+
+      newImageFiles.forEach((file) => {
+        formDataToSend.append("images", file);
+      });
+
+      const response = await api.put(`/api/v1/csr/${id}`, formDataToSend, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
       window.dispatchEvent(new Event("csrUpdated"));
-      toast.success("CSR initiative updated successfully!");
+      toast.success(response?.data?.message || "CSR initiative updated successfully!");
       navigate("/csr");
     } catch (error: any) {
       console.error("Error updating CSR:", error);
-      
+
       if (error?.response?.data?.message) {
         toast.error(error.response.data.message);
       } else if (error?.response?.data?.meta) {
@@ -199,14 +222,15 @@ const EditCSR = () => {
     }
   };
 
-  const getUIText = {
-    pageTitle: activeTab === "english" ? "Edit CSR Initiative" : "تعديل مبادرة",
-    pageDescription: activeTab === "english" ? "Edit CSR initiative" : "تعديل مبادرة",
-    heading: activeTab === "english" ? "Heading" : "العنوان",
-    description: activeTab === "english" ? "Description" : "الوصف",
-    images: activeTab === "english" ? "Upload Images" : "رفع الصور",
-    cancel: activeTab === "english" ? "Cancel" : "إلغاء",
-    save: activeTab === "english" ? "Save Changes" : "حفظ التغييرات",
+  const uiText = {
+    pageTitle: "Edit CSR Initiative",
+    pageDescription: "Edit CSR initiative",
+    heading: "Heading",
+    subheading: "Subheading",
+    description: "Description",
+    images: "Upload Images",
+    cancel: "Cancel",
+    save: "Save Changes",
   };
 
   if (loading) {
@@ -234,23 +258,27 @@ const EditCSR = () => {
                   <ArrowLeft className="h-5 w-5 text-slate-500 hover:text-burgundy" />
                 </button>
                 <div>
-                  <h2 className="text-2xl font-bold text-slate-800">{getUIText.pageTitle}</h2>
-                  <p className="text-sm text-slate-500 mt-1">{getUIText.pageDescription}</p>
+                  <h2 className="text-2xl font-bold text-slate-800">{uiText.pageTitle}</h2>
+                  <p className="text-sm text-slate-500 mt-1">{uiText.pageDescription}</p>
                 </div>
               </div>
 
               <div className="flex gap-2 p-1 bg-slate-100/80 rounded-lg">
-                <button onClick={() => setActiveTab("english")}
+                <button
+                  onClick={() => setActiveTab("english")}
                   className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${
                     activeTab === "english" ? "bg-white text-burgundy shadow-sm" : "text-slate-600"
-                  }`}>
+                  }`}
+                >
                   <Globe className="h-3.5 w-3.5 inline mr-2" />
                   English
                 </button>
-                <button onClick={() => setActiveTab("arabic")}
+                <button
+                  onClick={() => setActiveTab("arabic")}
                   className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${
                     activeTab === "arabic" ? "bg-white text-burgundy shadow-sm" : "text-slate-600"
-                  }`}>
+                  }`}
+                >
                   <Languages className="h-3.5 w-3.5 inline mr-2" />
                   العربية
                 </button>
@@ -258,68 +286,90 @@ const EditCSR = () => {
             </div>
 
             <div className="space-y-6">
-              {/* Heading */}
               <div className="bg-slate-50 rounded-xl p-5">
                 <div className="flex items-center gap-2 pb-2 border-b border-slate-200 mb-4">
                   <FileText className="h-5 w-5 text-burgundy" />
-                  <h3 className="font-semibold text-slate-800">{getUIText.heading}</h3>
+                  <h3 className="font-semibold text-slate-800">{uiText.heading}</h3>
                 </div>
                 <Input
-                  value={activeTab === "english" ? formData.heading : formData.arabicHeading}
-                  onChange={(e) => setFormData({
-                    ...formData,
-                    ...(activeTab === "english" ? { heading: e.target.value } : { arabicHeading: e.target.value })
-                  })}
+                  value={activeTab === "english" ? formData.heading : formData.headingArabic}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      ...(activeTab === "english"
+                        ? { heading: e.target.value }
+                        : { headingArabic: e.target.value }),
+                    })
+                  }
                   className="h-11"
                   dir={activeTab === "arabic" ? "rtl" : "ltr"}
                   placeholder={activeTab === "english" ? "Enter heading" : "أدخل العنوان"}
                 />
-                <p className="text-xs text-slate-400 mt-1">
-                  {activeTab === "english" ? "English heading" : "العنوان بالعربية"}
-                </p>
               </div>
 
-              {/* Description */}
               <div className="bg-slate-50 rounded-xl p-5">
                 <div className="flex items-center gap-2 pb-2 border-b border-slate-200 mb-4">
                   <FileText className="h-5 w-5 text-burgundy" />
-                  <h3 className="font-semibold text-slate-800">{getUIText.description}</h3>
+                  <h3 className="font-semibold text-slate-800">{uiText.subheading}</h3>
+                </div>
+                <Input
+                  value={activeTab === "english" ? formData.subheading : formData.subheadingArabic}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      ...(activeTab === "english"
+                        ? { subheading: e.target.value }
+                        : { subheadingArabic: e.target.value }),
+                    })
+                  }
+                  className="h-11"
+                  dir={activeTab === "arabic" ? "rtl" : "ltr"}
+                  placeholder={activeTab === "english" ? "Enter subheading" : "أدخل العنوان الفرعي"}
+                />
+              </div>
+
+              <div className="bg-slate-50 rounded-xl p-5">
+                <div className="flex items-center gap-2 pb-2 border-b border-slate-200 mb-4">
+                  <FileText className="h-5 w-5 text-burgundy" />
+                  <h3 className="font-semibold text-slate-800">{uiText.description}</h3>
                 </div>
                 <Textarea
-                  value={activeTab === "english" ? formData.description : formData.arabicDescription}
-                  onChange={(e) => setFormData({
-                    ...formData,
-                    ...(activeTab === "english" ? { description: e.target.value } : { arabicDescription: e.target.value })
-                  })}
+                  value={activeTab === "english" ? formData.description : formData.descriptionArabic}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      ...(activeTab === "english"
+                        ? { description: e.target.value }
+                        : { descriptionArabic: e.target.value }),
+                    })
+                  }
                   rows={6}
                   className="resize-none"
                   dir={activeTab === "arabic" ? "rtl" : "ltr"}
                   placeholder={activeTab === "english" ? "Enter description" : "أدخل الوصف"}
                 />
-                <p className="text-xs text-slate-400 mt-1">
-                  {activeTab === "english" ? "English description" : "الوصف بالعربية"}
-                </p>
               </div>
 
-              {/* Multiple Images Upload */}
               <div className="bg-slate-50 rounded-xl p-5">
                 <div className="flex items-center gap-2 pb-2 border-b border-slate-200 mb-4">
                   <Upload className="h-5 w-5 text-burgundy" />
-                  <h3 className="font-semibold text-slate-800">{getUIText.images}</h3>
+                  <h3 className="font-semibold text-slate-800">{uiText.images}</h3>
                 </div>
 
-                {/* Existing Images */}
                 {existingImages.length > 0 && (
                   <div className="mb-4">
-                    <h4 className="text-sm font-semibold text-slate-700 mb-2">
-                      {activeTab === "english" ? "Current Images" : "الصور الحالية"}
-                    </h4>
+                    <h4 className="text-sm font-semibold text-slate-700 mb-2">Current Images</h4>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                       {existingImages.map((img, idx) => (
-                        <div key={idx} className="relative group">
-                          <img src={img} alt={`Existing ${idx + 1}`} className="w-full h-32 object-cover rounded-lg" />
+                        <div key={`existing-${idx}`} className="relative group">
+                          <img
+                            src={img}
+                            alt={`Existing ${idx + 1}`}
+                            className="w-full h-32 object-cover rounded-lg"
+                          />
                           <button
-                            onClick={() => removeImage(idx)}
+                            type="button"
+                            onClick={() => removeExistingImage(idx)}
                             className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition"
                           >
                             <X className="h-3 w-3" />
@@ -330,14 +380,15 @@ const EditCSR = () => {
                   </div>
                 )}
 
-                {/* Upload New Images */}
-                <div className={`relative rounded-xl border-2 border-dashed transition-all p-8 ${
-                  dragActive ? "border-burgundy bg-burgundy/5" : "border-slate-300"
-                }`}
+                <div
+                  className={`relative rounded-xl border-2 border-dashed transition-all p-8 ${
+                    dragActive ? "border-burgundy bg-burgundy/5" : "border-slate-300"
+                  }`}
                   onDragEnter={handleDrag}
                   onDragLeave={handleDragLeave}
                   onDragOver={handleDrag}
-                  onDrop={handleDrop}>
+                  onDrop={handleDrop}
+                >
                   <input
                     type="file"
                     accept="image/*"
@@ -347,52 +398,44 @@ const EditCSR = () => {
                   />
                   <div className="text-center">
                     <Upload className="h-10 w-10 text-slate-400 mx-auto mb-2" />
-                    <p className="text-sm text-slate-500">
-                      {activeTab === "english" ? "Click to upload or drag & drop multiple images" : "انقر للرفع أو اسحب وأفلت صور متعددة"}
-                    </p>
-                    <p className="text-xs text-slate-400 mt-1">
-                      {activeTab === "english" ? "PNG, JPG, GIF up to 5MB each" : "PNG، JPG، GIF حتى 5 ميجابايت لكل صورة"}
-                    </p>
+                    <p className="text-sm text-slate-500">Click to upload or drag & drop additional images</p>
+                    <p className="text-xs text-slate-400 mt-1">PNG, JPG, GIF up to 5MB each</p>
                   </div>
                 </div>
 
-                {/* New Image Previews */}
-                {images.filter(img => !existingImages.includes(img)).length > 0 && (
+                {newImagePreviews.length > 0 && (
                   <div className="mt-4">
-                    <h4 className="text-sm font-semibold text-slate-700 mb-2">
-                      {activeTab === "english" ? "New Images" : "صور جديدة"}
-                    </h4>
+                    <h4 className="text-sm font-semibold text-slate-700 mb-2">New Images</h4>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                      {images.map((img, idx) => {
-                        if (!existingImages.includes(img)) {
-                          return (
-                            <div key={idx} className="relative group">
-                              <img src={img} alt={`New ${idx + 1}`} className="w-full h-32 object-cover rounded-lg" />
-                              <button
-                                onClick={() => removeImage(idx)}
-                                className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition"
-                              >
-                                <X className="h-3 w-3" />
-                              </button>
-                            </div>
-                          );
-                        }
-                        return null;
-                      })}
+                      {newImagePreviews.map((preview, idx) => (
+                        <div key={`new-${idx}`} className="relative group">
+                          <img
+                            src={preview}
+                            alt={`New ${idx + 1}`}
+                            className="w-full h-32 object-cover rounded-lg"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removeNewImage(idx)}
+                            className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 )}
               </div>
 
-              {/* Submit Button */}
               <div className="flex justify-end gap-3 pt-4 border-t">
                 <Button variant="outline" onClick={() => navigate("/csr")} className="gap-2">
                   <X className="h-4 w-4" />
-                  {getUIText.cancel}
+                  {uiText.cancel}
                 </Button>
                 <Button onClick={handleSubmit} disabled={saving} className="gap-2 bg-burgundy hover:bg-burgundy/90">
                   <Save className="h-4 w-4" />
-                  {saving ? (activeTab === "english" ? "Saving..." : "جاري الحفظ...") : getUIText.save}
+                  {saving ? "Saving..." : uiText.save}
                 </Button>
               </div>
             </div>

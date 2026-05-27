@@ -1,5 +1,6 @@
 import { useState } from "react";
 import AdminLayout from "@/components/layout/AdminLayout";
+import BreadCrumb from "@/components/layout/BreadCrumb";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Search, Eye, Shield, Reply, Send, CheckCircle, X } from "lucide-react";
 
@@ -42,6 +43,9 @@ const AlSafwaEnrollments = () => {
 
   return (
     <AdminLayout title="Al Safwa Enrollments">
+      <div className="space-y-6 mb-4">
+        <BreadCrumb />
+      </div>
       <p className="text-xs text-muted-foreground mb-4">{t("Manage enrollment applications for the Al Safwa Healthcare Program submitted via the website.")}</p>
 
       <div className="flex flex-wrap items-center gap-3 mb-4">

@@ -9,7 +9,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft, Save, Globe, Languages, FileText, Upload, X } from "lucide-react";
 import { toast } from "sonner";
 import { getWorkCultureById, updateWorkCulture } from "@/api/workCulture";
-import api from "@/api/axiosInstance";
 
 type WorkCulture = {
   _id: string;
@@ -173,11 +172,13 @@ const EditWorkCulture = () => {
       formDataToSend.append("description", formData.description);
       formDataToSend.append("descriptionArabic", formData.descriptionArabic);
       
-      // Send existing image URLs as strings
+      // Send retained existing images (empty string means clear all)
       if (existingImages.length > 0) {
         existingImages.forEach((imageUrl) => {
           formDataToSend.append("existingImages", imageUrl);
         });
+      } else {
+        formDataToSend.append("existingImages", "");
       }
       
       // Append new image files
@@ -185,16 +186,12 @@ const EditWorkCulture = () => {
         formDataToSend.append("images", file);
       });
 
-      const response = await api.put(`/work-culture/${id}`, formDataToSend, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
+      const response = await updateWorkCulture(id!, formDataToSend);
       
       // Dispatch event to notify list page
       window.dispatchEvent(new Event("workCultureUpdated"));
       
-      toast.success(response.data?.message || "Work culture updated successfully!");
+      toast.success(response?.message || "Work culture updated successfully!");
       navigate("/work-culture");
     } catch (error: any) {
       console.error("Error updating work culture:", error);
@@ -224,13 +221,13 @@ const EditWorkCulture = () => {
   }, [imagePreviews]);
 
   const getUIText = {
-    pageTitle: activeTab === "english" ? "Edit Work Culture" : "تعديل ثقافة عمل",
-    pageDescription: activeTab === "english" ? "Edit work culture content" : "تعديل محتوى ثقافة العمل",
-    heading: activeTab === "english" ? "Heading" : "العنوان",
-    description: activeTab === "english" ? "Description" : "الوصف",
-    images: activeTab === "english" ? "Upload Images" : "رفع الصور",
-    cancel: activeTab === "english" ? "Cancel" : "إلغاء",
-    save: activeTab === "english" ? "Save Changes" : "حفظ التغييرات",
+    pageTitle: "Edit Work Culture",
+    pageDescription: "Edit work culture content",
+    heading: "Heading",
+    description: "Description",
+    images: "Upload Images",
+    cancel: "Cancel",
+    save: "Save Changes",
   };
 
   if (loading) {
@@ -330,7 +327,7 @@ const EditWorkCulture = () => {
                 {existingImages.length > 0 && (
                   <div className="mb-4">
                     <h4 className="text-sm font-semibold text-slate-700 mb-2">
-                      {activeTab === "english" ? "Current Images" : "الصور الحالية"}
+                      Current Images
                     </h4>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                       {existingImages.map((img, idx) => (
@@ -366,10 +363,10 @@ const EditWorkCulture = () => {
                   <div className="text-center">
                     <Upload className="h-10 w-10 text-slate-400 mx-auto mb-2" />
                     <p className="text-sm text-slate-500">
-                      {activeTab === "english" ? "Click to upload or drag & drop additional images" : "انقر للرفع أو اسحب وأفلت صور إضافية"}
+                      Click to upload or drag & drop additional images
                     </p>
                     <p className="text-xs text-slate-400 mt-1">
-                      {activeTab === "english" ? "PNG, JPG, GIF up to 5MB each" : "PNG، JPG، GIF حتى 5 ميجابايت لكل صورة"}
+                      PNG, JPG, GIF up to 5MB each
                     </p>
                   </div>
                 </div>
@@ -378,7 +375,7 @@ const EditWorkCulture = () => {
                 {imageFiles.length > 0 && (
                   <div className="mt-4">
                     <h4 className="text-sm font-semibold text-slate-700 mb-2">
-                      {activeTab === "english" ? "New Images" : "صور جديدة"}
+                      New Images
                     </h4>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                       {imagePreviews.filter(preview => preview.startsWith('blob:')).map((preview, idx) => (
@@ -405,7 +402,7 @@ const EditWorkCulture = () => {
                 </Button>
                 <Button onClick={handleSubmit} disabled={saving} className="gap-2 bg-burgundy hover:bg-burgundy/90">
                   <Save className="h-4 w-4" />
-                  {saving ? (activeTab === "english" ? "Saving..." : "جاري الحفظ...") : getUIText.save}
+                  {saving ? "Saving..." : getUIText.save}
                 </Button>
               </div>
             </div>

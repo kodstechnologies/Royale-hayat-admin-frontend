@@ -267,7 +267,7 @@ const AddLeadership = () => {
                             : { initialsArabic: e.target.value }),
                         })
                       }
-                      placeholder={activeTab === "english" ? "e.g., JD" : "مثال: أ.م"}
+                      placeholder={activeTab === "english" ? "e.g., Dr." : "مثال: د. جون دو"}
                       className="h-11"
                       maxLength={5}
                       dir={activeTab === "arabic" ? "rtl" : "ltr"}

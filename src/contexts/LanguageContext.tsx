@@ -273,6 +273,39 @@ const translations: Record<string, Record<Language, string>> = {
   "Last 6 Months": { en: "Last 6 Months", ar: "آخر 6 أشهر" },
   "Last 1 Year": { en: "Last 1 Year", ar: "آخر سنة" },
   "Feedback": { en: "Feedback", ar: "ملاحظات" },
+  "CSR Initiatives": { en: "CSR Initiatives", ar: "مبادرات المسؤولية الاجتماعية" },
+  "Work Culture": { en: "Work Culture", ar: "ثقافة العمل" },
+  "Leadership Team": { en: "Leadership Team", ar: "فريق القيادة" },
+  "Life at RHH": { en: "Life at RHH", ar: "الحياة في آر إتش إتش" },
+  "View Details": { en: "View Details", ar: "عرض التفاصيل" },
+  "Create New": { en: "Create New", ar: "إنشاء جديد" },
+  "Add CSR Initiative": { en: "Add CSR Initiative", ar: "إضافة مبادرة" },
+  "View CSR Initiative": { en: "View CSR Initiative", ar: "عرض المبادرة" },
+  "Edit CSR Initiative": { en: "Edit CSR Initiative", ar: "تعديل المبادرة" },
+  "Add Work Culture Event": { en: "Add Work Culture Event", ar: "إضافة حدث ثقافة العمل" },
+  "View Work Culture": { en: "View Work Culture", ar: "عرض ثقافة العمل" },
+  "Edit Work Culture": { en: "Edit Work Culture", ar: "تعديل ثقافة العمل" },
+  "Add Leadership Member": { en: "Add Leadership Member", ar: "إضافة عضو قيادة" },
+  "View Leadership": { en: "View Leadership", ar: "عرض القيادي" },
+  "Edit Leadership": { en: "Edit Leadership", ar: "تعديل القيادي" },
+  "Manage CSR initiatives and Celebrating Life content": {
+    en: "Manage CSR initiatives and Celebrating Life content",
+    ar: "إدارة مبادرات المسؤولية الاجتماعية ومحتوى الاحتفال بالحياة",
+  },
+  "Manage work culture events and Life at RHH content": {
+    en: "Manage work culture events and Life at RHH content",
+    ar: "إدارة أحداث ثقافة العمل ومحتوى الحياة في آر إتش إتش",
+  },
+  "Manage leadership team members": {
+    en: "Manage leadership team members",
+    ar: "إدارة أعضاء فريق القيادة",
+  },
+  "Process and manage Al Safwa program enrollments": {
+    en: "Process and manage Al Safwa program enrollments",
+    ar: "معالجة وإدارة تسجيلات برنامج الصفوة",
+  },
+  "Home": { en: "Home", ar: "الرئيسية" },
+  "Pages": { en: "Pages", ar: "الصفحات" },
 };
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);

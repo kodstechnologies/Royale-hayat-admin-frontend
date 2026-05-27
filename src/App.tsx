@@ -32,7 +32,7 @@ import EditSubspecialityPage from "./pages/subspeciality/EditSubspeciality";
 import Services from "./pages/Services";
 import Documents from "./pages/Documents";
 import Reports from "./pages/Reports";
-import Settings from "./pages/Settings";
+import Settings from "./pages/settings/ChangePassword";
 import NotFound from "./pages/NotFound";
 import OtpScreen from "./pages/login/otpScreen";
 import ViewEnquiry from "./pages/enquiries/viewEnquiry";

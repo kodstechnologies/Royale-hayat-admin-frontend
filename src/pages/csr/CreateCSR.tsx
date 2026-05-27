@@ -23,6 +23,8 @@ const CreateCSR = () => {
   const [formData, setFormData] = useState({
     heading: "",
     headingArabic: "",
+    subheading: "",
+    subheadingArabic: "",
     description: "",
     descriptionArabic: "",
   });
@@ -126,6 +128,16 @@ const CreateCSR = () => {
       setActiveTab("arabic");
       return;
     }
+    if (!formData.subheading.trim()) {
+      toast.error("Please enter subheading (English)");
+      setActiveTab("english");
+      return;
+    }
+    if (!formData.subheadingArabic.trim()) {
+      toast.error("Please enter subheading (Arabic)");
+      setActiveTab("arabic");
+      return;
+    }
     if (!formData.description.trim()) {
       toast.error("Please enter description (English)");
       setActiveTab("english");
@@ -149,6 +161,8 @@ const CreateCSR = () => {
       const formDataToSend = new FormData();
       formDataToSend.append("heading", formData.heading);
       formDataToSend.append("headingArabic", formData.headingArabic);
+      formDataToSend.append("subheading", formData.subheading);
+      formDataToSend.append("subheadingArabic", formData.subheadingArabic);
       formDataToSend.append("description", formData.description);
       formDataToSend.append("descriptionArabic", formData.descriptionArabic);
       
@@ -190,6 +204,7 @@ const CreateCSR = () => {
     pageTitle: "Add CSR Initiative",
     pageDescription: "Add a new CSR initiative",
     heading: "Heading",
+    subheading: "Subheading",
     description: "Description",
     images: "Upload Images",
     cancel: "Cancel",
@@ -249,6 +264,24 @@ const CreateCSR = () => {
                     ...(activeTab === "english" ? { heading: e.target.value } : { headingArabic: e.target.value })
                   })}
                   placeholder={activeTab === "english" ? "Enter heading" : "أدخل العنوان"}
+                  className="h-11"
+                  dir={activeTab === "arabic" ? "rtl" : "ltr"}
+                />
+              </div>
+
+              {/* Description - Label always in English */}
+              <div className="bg-slate-50 rounded-xl p-5">
+                <div className="flex items-center gap-2 pb-2 border-b border-slate-200 mb-4">
+                  <FileText className="h-5 w-5 text-burgundy" />
+                  <h3 className="font-semibold text-slate-800">{getUIText.subheading}</h3>
+                </div>
+                <Input
+                  value={activeTab === "english" ? formData.subheading : formData.subheadingArabic}
+                  onChange={(e) => setFormData({
+                    ...formData,
+                    ...(activeTab === "english" ? { subheading: e.target.value } : { subheadingArabic: e.target.value })
+                  })}
+                  placeholder={activeTab === "english" ? "Enter subheading" : "أدخل العنوان الفرعي"}
                   className="h-11"
                   dir={activeTab === "arabic" ? "rtl" : "ltr"}
                 />
