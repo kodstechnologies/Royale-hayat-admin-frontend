@@ -8,8 +8,10 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import {
   getAppointmentRequests,
+  getAppointmentBookings,
   acceptRequest,
   cancelRequest,
+  type AppointmentListFilters,
 } from "@/api/appointmentRequest";
 
 // Types
@@ -45,22 +47,84 @@ type Booking = {
   timeSlot?: string;
 };
 
-// Mock Data
-const initialRequests: AppointmentRequest[] = [
-  { id: "1", fullName: "Sarah Al-Mutairi", phone: "+965 5501 1234", dateOfBirth: "1992-03-15", gender: "Female", department: "Obstetrics & Gynecology", doctorName: "Dr. Fatima Al-Zayed", symptoms: "Severe abdominal pain, irregular bleeding", urgency: "normal", status: "pending", preferredDate: "2024-12-20", timeSlot: { period: "morning", time: "10:00 AM" } },
-  { id: "2", fullName: "James Wilson", phone: "+44 7700 900123", dateOfBirth: "1965-08-22", gender: "Male", department: "Cardiology", doctorName: "Dr. Ahmed Al-Rashid", symptoms: "Chest pain, shortness of breath", urgency: "urgent", status: "confirmed", comments: "Emergency case, priority appointment scheduled", preferredDate: "2024-12-15", timeSlot: { period: "morning", time: "09:00 AM" } },
-  { id: "3", fullName: "Noura Al-Rashidi", phone: "+965 5502 3456", dateOfBirth: "1988-11-30", gender: "Female", department: "Dermatology", doctorName: "Dr. Layla Hassan", symptoms: "Skin rash, itching", urgency: "routine", status: "cancelled", comments: "Patient requested reschedule", preferredDate: "2024-12-18", timeSlot: { period: "afternoon", time: "02:00 PM" } },
-  { id: "4", fullName: "Maria Garcia", phone: "+34 612 345 678", dateOfBirth: "2022-04-15", gender: "Female", department: "Pediatrics", doctorName: "Dr. Sami Karam", symptoms: "High fever, persistent cough", urgency: "urgent", status: "pending", preferredDate: "2024-12-21", timeSlot: { period: "morning", time: "11:00 AM" } },
-  { id: "5", fullName: "Khalid Ibrahim", phone: "+965 5503 4567", dateOfBirth: "1975-06-10", gender: "Male", department: "Orthopedics", doctorName: "Dr. Youssef Mansour", symptoms: "Knee pain after injury", urgency: "normal", status: "confirmed", preferredDate: "2024-12-16", timeSlot: { period: "afternoon", time: "03:00 PM" } },
-];
+type ListFilters = {
+  fromDate: string;
+  toDate: string;
+  department: string;
+  doctor: string;
+  status: string;
+};
 
-const initialBookings: Booking[] = [
-  { id: "1", civilId: "295031234567", fullName: "Ahmed Al-Mutairi", dateOfBirth: "1985-05-20", nationality: "Kuwaiti", gender: "Male", passportNumber: "KUW1234567", symptoms: "Back pain", department: "Orthopedics", doctorName: "Dr. Khalid Al-Otaibi", appointmentDate: "2024-12-15", timeSlot: "10:00 AM" },
-  { id: "2", civilId: "289112345678", fullName: "Mona Al-Sabah", dateOfBirth: "1990-11-12", nationality: "Kuwaiti", gender: "Female", passportNumber: "KUW2345678", department: "Dermatology", doctorName: "Dr. Noura Al-Fares", appointmentDate: "2024-12-16", timeSlot: "02:00 PM" },
-  { id: "3", civilId: "302154321098", fullName: "John Smith", dateOfBirth: "1978-03-25", nationality: "British", gender: "Male", passportNumber: "GBR9876543", symptoms: "Chest pain", department: "Cardiology", doctorName: "Dr. Ahmed Al-Rashid", appointmentDate: "2024-12-14", timeSlot: "09:00 AM" },
-  { id: "4", civilId: "289998887777", fullName: "Fatima Al-Zayed", dateOfBirth: "1992-08-15", nationality: "Kuwaiti", gender: "Female", passportNumber: "KUW3456789", department: "Pediatrics", doctorName: "Dr. Sami Karam", appointmentDate: "2024-12-18", timeSlot: "11:00 AM" },
-  { id: "5", civilId: "303456789012", fullName: "Robert Brown", dateOfBirth: "1982-12-03", nationality: "American", gender: "Male", passportNumber: "USA1234567", symptoms: "High blood pressure", department: "Cardiology", doctorName: "Dr. Ahmed Al-Rashid", appointmentDate: "2024-12-20", timeSlot: "03:00 PM" },
-];
+const defaultListFilters: ListFilters = {
+  fromDate: "",
+  toDate: "",
+  department: "",
+  doctor: "",
+  status: "",
+};
+
+const formatDob = (value?: string) => {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return String(value);
+  return date.toISOString().split("T")[0];
+};
+
+const formatSymptoms = (symptoms?: string[] | string) => {
+  if (!symptoms) return "";
+  return Array.isArray(symptoms) ? symptoms.join(", ") : symptoms;
+};
+
+const mapApiStatusToUi = (
+  status?: string,
+): AppointmentRequest["status"] => {
+  if (status === "accepted") return "confirmed";
+  if (status === "cancelled") return "cancelled";
+  return "pending";
+};
+
+const mapUiStatusToApi = (
+  status: string,
+): AppointmentListFilters["status"] => {
+  if (!status) return "all";
+  if (status === "confirmed") return "accepted";
+  if (status === "cancelled") return "cancelled";
+  return "pending";
+};
+
+const mapRequestFromApi = (row: Record<string, unknown>): AppointmentRequest => ({
+  id: String(row._id ?? row.id ?? ""),
+  fullName: String(row.fullname ?? row.fullName ?? ""),
+  phone: String(row.phone ?? row.mobile_number ?? ""),
+  dateOfBirth: formatDob(String(row.dob ?? row.dateOfBirth ?? "")),
+  gender: String(row.gender ?? ""),
+  department: row.department ? String(row.department) : undefined,
+  doctorName: row.doctor ? String(row.doctor) : undefined,
+  symptoms: formatSymptoms(row.symptoms as string[] | string | undefined),
+  status: mapApiStatusToUi(row.status ? String(row.status) : undefined),
+  preferredDate: row.date ? String(row.date) : undefined,
+  timeSlot: row.time
+    ? { period: "", time: String(row.time) }
+    : undefined,
+  additionalNotes: row.additionalNotes
+    ? String(row.additionalNotes)
+    : undefined,
+});
+
+const mapBookingFromApi = (row: Record<string, unknown>): Booking => ({
+  id: String(row._id ?? row.id ?? ""),
+  civilId: String(row.national_id ?? row.civilId ?? ""),
+  fullName: String(row.fullname ?? row.fullName ?? ""),
+  dateOfBirth: formatDob(String(row.dob ?? row.dateOfBirth ?? "")),
+  nationality: String(row.nationality ?? ""),
+  gender: String(row.gender ?? ""),
+  passportNumber: String(row.passportNumber ?? ""),
+  symptoms: formatSymptoms(row.symptoms as string[] | string | undefined),
+  department: row.department ? String(row.department) : undefined,
+  doctorName: row.doctor ? String(row.doctor) : undefined,
+  appointmentDate: row.date ? String(row.date) : undefined,
+  timeSlot: row.time ? String(row.time) : undefined,
+});
 
 const statusStyles: Record<string, { color: string; bg: string; icon: any; label: string }> = {
   pending: { color: "text-amber-700", bg: "bg-amber-100", icon: Clock, label: "Pending" },
@@ -127,6 +191,7 @@ const FilterSection = ({
   doctors, 
   statuses,
   showStatusFilter = false,
+  hasData = false,
   clearFilters 
 }: { 
   showFilters: boolean;
@@ -137,8 +202,15 @@ const FilterSection = ({
   doctors: string[];
   statuses?: string[];
   showStatusFilter?: boolean;
+  hasData?: boolean;
   clearFilters: () => void;
 }) => {
+  const showFacetFilters = hasData;
+  const filterGridClass = showFacetFilters
+    ? showStatusFilter
+      ? "mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4"
+      : "mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
+    : "mt-4 grid grid-cols-1 md:grid-cols-2 gap-4";
   const formatDate = (dateString: string) => {
     if (!dateString) return "—";
     const date = new Date(dateString);
@@ -156,7 +228,7 @@ const FilterSection = ({
       </button>
 
       {showFilters && (
-        <div className="mt-4 grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className={filterGridClass}>
           <div>
             <label className="block text-xs font-medium text-slate-600 mb-1">From Date</label>
             <input
@@ -175,33 +247,37 @@ const FilterSection = ({
               className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-burgundy focus:border-transparent"
             />
           </div>
-          <div>
-            <label className="block text-xs font-medium text-slate-600 mb-1">Department</label>
-            <select
-              value={filters.department}
-              onChange={(e) => setFilters({ ...filters, department: e.target.value })}
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-burgundy focus:border-transparent"
-            >
-              <option value="">All Departments</option>
-              {departments.map(dept => (
-                <option key={dept} value={dept}>{dept}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-slate-600 mb-1">Doctor</label>
-            <select
-              value={filters.doctor}
-              onChange={(e) => setFilters({ ...filters, doctor: e.target.value })}
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-burgundy focus:border-transparent"
-            >
-              <option value="">All Doctors</option>
-              {doctors.map(doctor => (
-                <option key={doctor} value={doctor}>{doctor}</option>
-              ))}
-            </select>
-          </div>
-          {showStatusFilter && statuses && (
+          {showFacetFilters && (
+            <div>
+              <label className="block text-xs font-medium text-slate-600 mb-1">Department</label>
+              <select
+                value={filters.department}
+                onChange={(e) => setFilters({ ...filters, department: e.target.value })}
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-burgundy focus:border-transparent"
+              >
+                <option value="">All Departments</option>
+                {departments.map(dept => (
+                  <option key={dept} value={dept}>{dept}</option>
+                ))}
+              </select>
+            </div>
+          )}
+          {showFacetFilters && (
+            <div>
+              <label className="block text-xs font-medium text-slate-600 mb-1">Doctor</label>
+              <select
+                value={filters.doctor}
+                onChange={(e) => setFilters({ ...filters, doctor: e.target.value })}
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-burgundy focus:border-transparent"
+              >
+                <option value="">All Doctors</option>
+                {doctors.map(doctor => (
+                  <option key={doctor} value={doctor}>{doctor}</option>
+                ))}
+              </select>
+            </div>
+          )}
+          {showFacetFilters && showStatusFilter && statuses && (
             <div>
               <label className="block text-xs font-medium text-slate-600 mb-1">Status</label>
               <select
@@ -220,7 +296,10 @@ const FilterSection = ({
       )}
 
       {/* Active Filters */}
-      {(filters.fromDate || filters.toDate || filters.department || filters.doctor || filters.status) && (
+      {(filters.fromDate ||
+        filters.toDate ||
+        (showFacetFilters &&
+          (filters.department || filters.doctor || filters.status))) && (
         <div className="mt-3 flex flex-wrap gap-2">
           {filters.fromDate && (
             <span className="inline-flex items-center gap-1 px-2 py-1 bg-white rounded-full text-xs border border-slate-200">
@@ -238,7 +317,7 @@ const FilterSection = ({
               </button>
             </span>
           )}
-          {filters.department && (
+          {showFacetFilters && filters.department && (
             <span className="inline-flex items-center gap-1 px-2 py-1 bg-white rounded-full text-xs border border-slate-200">
               Dept: {filters.department}
               <button onClick={() => setFilters({ ...filters, department: "" })} className="hover:text-red-500">
@@ -246,7 +325,7 @@ const FilterSection = ({
               </button>
             </span>
           )}
-          {filters.doctor && (
+          {showFacetFilters && filters.doctor && (
             <span className="inline-flex items-center gap-1 px-2 py-1 bg-white rounded-full text-xs border border-slate-200">
               Doctor: {filters.doctor}
               <button onClick={() => setFilters({ ...filters, doctor: "" })} className="hover:text-red-500">
@@ -254,7 +333,7 @@ const FilterSection = ({
               </button>
             </span>
           )}
-          {filters.status && (
+          {showFacetFilters && filters.status && (
             <span className="inline-flex items-center gap-1 px-2 py-1 bg-white rounded-full text-xs border border-slate-200">
               Status: {filters.status.charAt(0).toUpperCase() + filters.status.slice(1)}
               <button onClick={() => setFilters({ ...filters, status: "" })} className="hover:text-red-500">
@@ -278,11 +357,15 @@ const FilterSection = ({
 const AppointmentRequestsList = ({ 
   requests, 
   loading, 
-  onStatusChange 
+  onStatusChange,
+  filters,
+  setFilters,
 }: { 
   requests: AppointmentRequest[]; 
   loading: boolean; 
   onStatusChange: (id: string, newStatus: string, comment: string) => Promise<void>;
+  filters: ListFilters;
+  setFilters: React.Dispatch<React.SetStateAction<ListFilters>>;
 }) => {
   const [expanded, setExpanded] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
@@ -293,56 +376,13 @@ const AppointmentRequestsList = ({
     name: "",
   });
   const [showFilters, setShowFilters] = useState(false);
-  const [filters, setFilters] = useState({
-    fromDate: "",
-    toDate: "",
-    department: "",
-    doctor: "",
-    status: "",
-  });
 
-  // Get unique values for filters
-  const departments = [...new Set(requests.map(r => r.department).filter(Boolean))];
-  const doctors = [...new Set(requests.map(r => r.doctorName).filter(Boolean))];
+  const departments = [...new Set(requests.map(r => r.department).filter(Boolean))] as string[];
+  const doctors = [...new Set(requests.map(r => r.doctorName).filter(Boolean))] as string[];
   const statuses = ["pending", "confirmed", "cancelled"];
 
-  // Filter requests
-  const filteredRequests = requests.filter(req => {
-    const dateToCheck = req.preferredDate;
-    
-    // Date range filter
-    if (filters.fromDate && dateToCheck) {
-      const requestDate = new Date(dateToCheck);
-      const fromDate = new Date(filters.fromDate);
-      if (requestDate < fromDate) return false;
-    }
-    if (filters.toDate && dateToCheck) {
-      const requestDate = new Date(dateToCheck);
-      const toDate = new Date(filters.toDate);
-      toDate.setHours(23, 59, 59);
-      if (requestDate > toDate) return false;
-    }
-    
-    // Department filter
-    if (filters.department && req.department !== filters.department) return false;
-    
-    // Doctor filter
-    if (filters.doctor && req.doctorName !== filters.doctor) return false;
-    
-    // Status filter
-    if (filters.status && req.status !== filters.status) return false;
-    
-    return true;
-  });
-
   const clearFilters = () => {
-    setFilters({
-      fromDate: "",
-      toDate: "",
-      department: "",
-      doctor: "",
-      status: "",
-    });
+    setFilters({ ...defaultListFilters });
   };
 
   const handleStatusUpdate = async (comment: string) => {
@@ -409,16 +449,17 @@ const AppointmentRequestsList = ({
         doctors={doctors}
         statuses={statuses}
         showStatusFilter={true}
+        hasData={requests.length > 0}
         clearFilters={clearFilters}
       />
 
       {/* Results Count */}
       <div className="text-sm text-slate-500">
-        Showing {filteredRequests.length} of {requests.length} requests
+        Showing {requests.length} request{requests.length === 1 ? "" : "s"}
       </div>
 
       <div className="space-y-4">
-        {filteredRequests.length === 0 ? (
+        {requests.length === 0 ? (
           <div className="text-center py-16">
             <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-100 flex items-center justify-center">
               <Calendar className="h-8 w-8 text-slate-400" />
@@ -426,7 +467,7 @@ const AppointmentRequestsList = ({
             <p className="text-slate-500 font-medium">No appointment requests found matching filters</p>
           </div>
         ) : (
-          filteredRequests.map((req) => {
+          requests.map((req) => {
             const StatusIcon = statusStyles[req.status].icon;
             const isActioning = actionLoading === req.id;
             
@@ -624,47 +665,20 @@ const AppointmentRequestsList = ({
 // Bookings Component
 const BookingsList = ({ 
   bookings, 
-  loading 
+  loading,
+  filters,
+  setFilters,
 }: { 
   bookings: Booking[]; 
   loading: boolean;
+  filters: Omit<ListFilters, "status">;
+  setFilters: React.Dispatch<React.SetStateAction<Omit<ListFilters, "status">>>;
 }) => {
   const [expanded, setExpanded] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
-  const [filters, setFilters] = useState({
-    fromDate: "",
-    toDate: "",
-    department: "",
-    doctor: "",
-  });
 
-  // Get unique departments and doctors for filters
-  const departments = [...new Set(bookings.map(b => b.department).filter(Boolean))];
-  const doctors = [...new Set(bookings.map(b => b.doctorName).filter(Boolean))];
-
-  // Filter bookings
-  const filteredBookings = bookings.filter(booking => {
-    // Date range filter
-    if (filters.fromDate && booking.appointmentDate) {
-      const bookingDate = new Date(booking.appointmentDate);
-      const fromDate = new Date(filters.fromDate);
-      if (bookingDate < fromDate) return false;
-    }
-    if (filters.toDate && booking.appointmentDate) {
-      const bookingDate = new Date(booking.appointmentDate);
-      const toDate = new Date(filters.toDate);
-      toDate.setHours(23, 59, 59);
-      if (bookingDate > toDate) return false;
-    }
-    
-    // Department filter
-    if (filters.department && booking.department !== filters.department) return false;
-    
-    // Doctor filter
-    if (filters.doctor && booking.doctorName !== filters.doctor) return false;
-    
-    return true;
-  });
+  const departments = [...new Set(bookings.map(b => b.department).filter(Boolean))] as string[];
+  const doctors = [...new Set(bookings.map(b => b.doctorName).filter(Boolean))] as string[];
 
   const clearFilters = () => {
     setFilters({
@@ -724,16 +738,17 @@ const BookingsList = ({
         departments={departments}
         doctors={doctors}
         showStatusFilter={false}
+        hasData={bookings.length > 0}
         clearFilters={clearFilters}
       />
 
       {/* Results Count */}
       <div className="text-sm text-slate-500">
-        Showing {filteredBookings.length} of {bookings.length} bookings
+        Showing {bookings.length} booking{bookings.length === 1 ? "" : "s"}
       </div>
 
       {/* Bookings List */}
-      {filteredBookings.length === 0 ? (
+      {bookings.length === 0 ? (
         <div className="text-center py-16">
           <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-100 flex items-center justify-center">
             <Calendar className="h-8 w-8 text-slate-400" />
@@ -741,7 +756,7 @@ const BookingsList = ({
           <p className="text-slate-500 font-medium">No bookings found matching filters</p>
         </div>
       ) : (
-        filteredBookings.map((booking) => (
+        bookings.map((booking) => (
           <div key={booking.id} className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow">
             <div
               className="flex items-center justify-between p-4 cursor-pointer hover:bg-slate-50/50 transition-colors"
@@ -882,54 +897,96 @@ const BookingsList = ({
 
 // Main Component
 const AppointmentRequests = () => {
-  const { t } = useLanguage();
+  useLanguage();
   const [activeTab, setActiveTab] = useState<"requests" | "bookings">("requests");
   const [requests, setRequests] = useState<AppointmentRequest[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loadingRequests, setLoadingRequests] = useState(true);
   const [loadingBookings, setLoadingBookings] = useState(true);
+  const [requestFilters, setRequestFilters] = useState<ListFilters>(defaultListFilters);
+  const [bookingFilters, setBookingFilters] = useState<Omit<ListFilters, "status">>({
+    fromDate: "",
+    toDate: "",
+    department: "",
+    doctor: "",
+  });
+
+  const fetchRequests = useCallback(async () => {
+    setLoadingRequests(true);
+    try {
+      const res = await getAppointmentRequests(1, 100, {
+        fromDate: requestFilters.fromDate || undefined,
+        toDate: requestFilters.toDate || undefined,
+        department: requestFilters.department || undefined,
+        doctor: requestFilters.doctor || undefined,
+        status: mapUiStatusToApi(requestFilters.status),
+      });
+      const list = res?.data ?? [];
+      setRequests(
+        Array.isArray(list)
+          ? list.map((row) => mapRequestFromApi(row as Record<string, unknown>))
+          : [],
+      );
+    } catch {
+      toast.error("Failed to load appointment requests");
+      setRequests([]);
+    } finally {
+      setLoadingRequests(false);
+    }
+  }, [requestFilters]);
+
+  const fetchBookings = useCallback(async () => {
+    setLoadingBookings(true);
+    try {
+      const res = await getAppointmentBookings(1, 100, {
+        fromDate: bookingFilters.fromDate || undefined,
+        toDate: bookingFilters.toDate || undefined,
+        department: bookingFilters.department || undefined,
+        doctor: bookingFilters.doctor || undefined,
+      });
+      const list = res?.data ?? [];
+      setBookings(
+        Array.isArray(list)
+          ? list.map((row) => mapBookingFromApi(row as Record<string, unknown>))
+          : [],
+      );
+    } catch {
+      toast.error("Failed to load appointment bookings");
+      setBookings([]);
+    } finally {
+      setLoadingBookings(false);
+    }
+  }, [bookingFilters]);
 
   useEffect(() => {
-    // Fetch appointment requests
-    const fetchRequests = async () => {
-      setLoadingRequests(true);
-      try {
-        const res = await getAppointmentRequests(1, 100);
-        const list = res?.data ?? res?.requests ?? res ?? [];
-        setRequests(Array.isArray(list) ? list : initialRequests);
-      } catch {
-        setRequests(initialRequests);
-      } finally {
-        setLoadingRequests(false);
-      }
-    };
+    void fetchRequests();
+  }, [fetchRequests]);
 
-    // Fetch bookings
-    const fetchBookings = async () => {
-      setLoadingBookings(true);
-      try {
-        // Replace with actual API call
-        // const res = await getBookings();
-        // setBookings(res.data);
-        await new Promise(resolve => setTimeout(resolve, 500));
-        setBookings(initialBookings);
-      } catch {
-        setBookings(initialBookings);
-      } finally {
-        setLoadingBookings(false);
-      }
-    };
-
-    fetchRequests();
-    fetchBookings();
-  }, []);
+  useEffect(() => {
+    void fetchBookings();
+  }, [fetchBookings]);
 
   const handleRequestStatusChange = async (id: string, newStatus: string, comment: string) => {
-    // Replace with actual API call
-    // await updateRequestStatus(id, newStatus, comment);
-    setRequests(prev => prev.map(r => 
-      r.id === id ? { ...r, status: newStatus as any, comments: comment } : r
-    ));
+    if (newStatus === "confirmed") {
+      await acceptRequest(id);
+    } else if (newStatus === "cancelled") {
+      await cancelRequest(id);
+    }
+
+    setRequests((prev) =>
+      prev.map((r) =>
+        r.id === id
+          ? {
+              ...r,
+              status: newStatus as AppointmentRequest["status"],
+              comments: comment || r.comments,
+            }
+          : r,
+      ),
+    );
+
+    await fetchRequests();
+    await fetchBookings();
   };
 
   const stats = {
@@ -1037,6 +1094,8 @@ const AppointmentRequests = () => {
                 requests={requests}
                 loading={loadingRequests}
                 onStatusChange={handleRequestStatusChange}
+                filters={requestFilters}
+                setFilters={setRequestFilters}
               />
             )}
 
@@ -1044,6 +1103,8 @@ const AppointmentRequests = () => {
               <BookingsList 
                 bookings={bookings}
                 loading={loadingBookings}
+                filters={bookingFilters}
+                setFilters={setBookingFilters}
               />
             )}
           </div>
