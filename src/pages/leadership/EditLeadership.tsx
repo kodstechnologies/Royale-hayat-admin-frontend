@@ -360,7 +360,7 @@ const EditLeadership = () => {
                       }
                       className="h-11"
                       maxLength={5}
-                      placeholder={activeTab === "english" ? "e.g., JD" : "مثال: أ.م"}
+                      placeholder={activeTab === "english" ? "e.g., Dr" : "مثال: أ.م"}
                       dir={activeTab === "arabic" ? "rtl" : "ltr"}
                     />
                   </div>
