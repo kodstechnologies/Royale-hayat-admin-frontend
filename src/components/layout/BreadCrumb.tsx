@@ -23,8 +23,11 @@ import {
   Heart,
   Users,
   Sparkles,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useLayoutControls } from "./LayoutControlsContext";
 
 const pageMap: Record<string, { label: string; icon: any; description?: string }> = {
   "/":                          { label: "Dashboard",                icon: LayoutDashboard, description: "Overview of hospital operations and key metrics" },
@@ -97,11 +100,24 @@ const nestedPageLabels: Record<string, { label: string; description: string }> =
   "/leadership/create": { label: "Add Leadership Member", description: "Add a new leadership team member" },
   "/leadership/view": { label: "View Leadership", description: "View leadership member details" },
   "/leadership/edit": { label: "Edit Leadership", description: "Update leadership team member" },
+  "/jobs/view": { label: "View Job Post", description: "View job posting details" },
+  "/jobs/edit": { label: "Edit Job Post", description: "Update job posting details" },
+  "/jobs/create": { label: "Create Job Post", description: "Create a new job posting" },
+  "/jobs/view-applications": { label: "Job Applications", description: "View job applications" },
+  "/job-posts/view": { label: "View Job Post", description: "View job posting details" },
+  "/job-posts/edit": { label: "Edit Job Post", description: "Update job posting details" },
+  "/job-posts/create": { label: "Create Job Post", description: "Create a new job posting" },
+};
+
+/** When nested routes use a different prefix than the list page (e.g. /jobs/* → /job-posts) */
+const breadcrumbLinkOverrides: Record<string, string> = {
+  jobs: "/job-posts",
 };
 
 const BreadCrumb = ({ lastCrumbLabel }: { lastCrumbLabel?: string } = {}) => {
   const location = useLocation();
   const { t } = useLanguage();
+  const layoutControls = useLayoutControls();
 
   // Get current path segments
   const pathnames = location.pathname.split("/").filter((x) => x);
@@ -146,7 +162,7 @@ const BreadCrumb = ({ lastCrumbLabel }: { lastCrumbLabel?: string } = {}) => {
     if (/^[0-9a-fA-F]{24}$/.test(segment)) return;
     breadcrumbItems.push({
       segment,
-      to: pathSoFar,
+      to: breadcrumbLinkOverrides[segment] ?? pathSoFar,
       parentSegment: index > 0 ? pathnames[index - 1] : undefined,
     });
   });
@@ -217,6 +233,20 @@ const BreadCrumb = ({ lastCrumbLabel }: { lastCrumbLabel?: string } = {}) => {
         <div className="px-8 py-6">
           {/* Breadcrumb navigation */}
           <div className="flex items-center flex-wrap gap-2 mb-4">
+            {layoutControls && (
+              <button
+                onClick={layoutControls.toggleSidebar}
+                className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-burgundy/25 bg-white/90 text-burgundy shadow-sm transition-all duration-200 hover:scale-105 hover:bg-burgundy/10"
+                aria-label={layoutControls.collapsed ? "Expand sidebar" : "Collapse sidebar"}
+                title={layoutControls.collapsed ? "Expand sidebar" : "Collapse sidebar"}
+              >
+                {layoutControls.collapsed ? (
+                  <PanelLeftOpen size={16} />
+                ) : (
+                  <PanelLeftClose size={16} />
+                )}
+              </button>
+            )}
             <span className="text-sm text-slate-500 font-medium">{t("Pages")}</span>
             <ChevronRight size={14} className="text-slate-400" />
             <div className="flex items-center flex-wrap gap-2">

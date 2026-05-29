@@ -2,6 +2,9 @@ import { useMemo, useState } from "react";
 import { CheckCircle2, Eye, EyeOff, ShieldCheck, UserPlus } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { PERMISSIONS } from "@/constants/permissions";
+import { toast } from "sonner";
+import { createSubadmin } from "@/api/subadmin";
 
 type Permission = {
   key: string;
@@ -9,49 +12,87 @@ type Permission = {
 };
 
 const permissions: Permission[] = [
-  { key: "dashboard", label: "Dashboard Access" },
-  { key: "appointments", label: "Appointment Requests" },
-  { key: "doctors", label: "Doctors Management" },
-  { key: "departments", label: "Departments Management" },
-  { key: "enquiries", label: "Enquiries Management" },
-  { key: "reports", label: "Reports & Documents" },
-  { key: "settings", label: "Settings Access" },
+  {
+    key: PERMISSIONS.APPOINTMENT_VIEW_ALL,
+    label: "View All Appointment Requests",
+  },
+  {
+    key: PERMISSIONS.APPOINTMENT_BOOKING_VIEW_ALL,
+    label: "View All Bookings",
+  },
+  {
+    key: PERMISSIONS.APPOINTMENT_REQUEST_ACCEPT,
+    label: "Accept Appointment Request",
+  },
+  {
+    key: PERMISSIONS.APPOINTMENT_CANCEL,
+    label: "Cancel Appointment Request",
+  },
 ];
+const defaultPermissionKeys = permissions.map((permission) => permission.key);
 
 const AddUserForm = () => {
   const [formData, setFormData] = useState({
+    name: "",
     email: "",
     password: "",
-    role: "",
+    role: "call_center",
   });
   const [showAddUserPassword, setShowAddUserPassword] = useState(false);
-  const [selectedPermissions, setSelectedPermissions] = useState<string[]>([]);
+  const [selectedPermissions, setSelectedPermissions] = useState<string[]>(
+    defaultPermissionKeys
+  );
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [userSaved, setUserSaved] = useState(false);
 
   const canSubmit = useMemo(() => {
     return (
+      formData.name.trim().length > 0 &&
       formData.email.trim().length > 0 &&
       formData.password.trim().length > 0 &&
       formData.role.trim().length > 0 &&
       selectedPermissions.length > 0
     );
-  }, [formData.email, formData.password, formData.role, selectedPermissions.length]);
+  }, [formData.name, formData.email, formData.password, formData.role, selectedPermissions.length]);
 
-  const handlePermissionToggle = (permissionKey: string) => {
-    setSelectedPermissions((prev) =>
-      prev.includes(permissionKey)
-        ? prev.filter((item) => item !== permissionKey)
-        : [...prev, permissionKey]
-    );
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!canSubmit) return;
 
-    // UI-only behavior until API integration is wired.
-    setUserSaved(true);
-    setTimeout(() => setUserSaved(false), 2500);
+    setIsSubmitting(true);
+    try {
+      const response = await createSubadmin({
+        name: formData.name.trim(),
+        email: formData.email.trim(),
+        password: formData.password,
+        role: formData.role,
+        permissions: selectedPermissions,
+      });
+
+      setFormData({
+        name: "",
+        email: "",
+        password: "",
+        role: "call_center",
+      });
+      setSelectedPermissions(defaultPermissionKeys);
+      setShowAddUserPassword(false);
+      setUserSaved(true);
+      toast.success(response?.message || "User added successfully");
+      setTimeout(() => setUserSaved(false), 2500);
+    } catch (error: unknown) {
+      const apiError = error as {
+        response?: { data?: { message?: string; meta?: string[] } };
+      };
+
+      if (apiError.response?.data?.meta?.length) {
+        apiError.response.data.meta.forEach((msg) => toast.error(msg));
+      } else {
+        toast.error(apiError.response?.data?.message || "Failed to add user");
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -72,7 +113,19 @@ const AddUserForm = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div className="space-y-1.5 md:col-span-2">
+            <label className="text-sm font-semibold text-slate-700">Name</label>
+            <Input
+              type="text"
+              value={formData.name}
+              onChange={(e) =>
+                setFormData((prev) => ({ ...prev, name: e.target.value }))
+              }
+              placeholder="Enter user name"
+              className="h-11"
+            />
+          </div>
           <div className="space-y-1.5">
             <label className="text-sm font-semibold text-slate-700">Email</label>
             <Input
@@ -110,15 +163,15 @@ const AddUserForm = () => {
 
           <div className="space-y-1.5">
             <label className="text-sm font-semibold text-slate-700">Role</label>
-            <Input
-              type="text"
+            <select
               value={formData.role}
               onChange={(e) =>
                 setFormData((prev) => ({ ...prev, role: e.target.value }))
               }
-              placeholder="Enter role (e.g. Sub Admin)"
-              className="h-11"
-            />
+              className="h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            >
+              <option value="call_center">Call Center Executive</option>
+            </select>
           </div>
         </div>
 
@@ -137,7 +190,8 @@ const AddUserForm = () => {
                 <input
                   type="checkbox"
                   checked={selectedPermissions.includes(permission.key)}
-                  onChange={() => handlePermissionToggle(permission.key)}
+                  disabled
+                  readOnly
                   className="h-4 w-4 accent-burgundy"
                 />
                 <span className="text-sm text-slate-700">{permission.label}</span>
@@ -149,11 +203,11 @@ const AddUserForm = () => {
         <div className="flex justify-end pt-4 border-t border-slate-100">
           <Button
             type="submit"
-            disabled={!canSubmit}
+            disabled={!canSubmit || isSubmitting}
             className="gap-2 bg-burgundy hover:bg-burgundy/90"
           >
             <UserPlus className="h-4 w-4" />
-            Add User
+            {isSubmitting ? "Adding..." : "Add User"}
           </Button>
         </div>
       </form>
@@ -163,7 +217,7 @@ const AddUserForm = () => {
           <div className="flex items-center gap-2">
             <CheckCircle2 className="h-5 w-5 text-green-600" />
             <p className="text-sm font-medium text-green-700">
-              User UI data captured successfully!
+              User added successfully!
             </p>
           </div>
         </div>

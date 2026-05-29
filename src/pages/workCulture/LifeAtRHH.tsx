@@ -99,11 +99,11 @@ const LifeAtRHH = () => {
             <div className="space-y-6">
               {/* Hero Section */}
               <div className="relative rounded-xl overflow-hidden">
-                <img 
+                {/* <img 
                   src={lifeAtRHHContent.image} 
                   alt={getUIText.lifeAtRHHHeading}
                   className="w-full h-64 md:h-96 object-cover"
-                />
+                /> */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex items-end">
                   <div className="p-6 md:p-8 text-white">
                     <h3 className="text-2xl md:text-4xl font-bold mb-2">{getUIText.lifeAtRHHHeading}</h3>

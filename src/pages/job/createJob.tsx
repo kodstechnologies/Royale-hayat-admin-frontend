@@ -45,6 +45,13 @@ const classificationOptions = [
   "Administration",
   "Nursing",
   "Allied Health",
+  "La Cosmetique Royale",
+  "Hospitality/Guest Services",
+  "Quality and Patient Safety",
+  "Royale Home Health",
+  "Specialist Doctors",
+  "Marketing and Communication",
+  "Surgical Services",
 ];
 
 const initialValues: JobForm = {

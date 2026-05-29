@@ -83,24 +83,29 @@ const AddAchievement = () => {
   };
 
   const handleSubmit = async () => {
+    const effectiveEmployeeName =
+      formData.employeeName.trim() || formData.arabicEmployeeName.trim();
+    const effectiveTitle = formData.title.trim() || formData.arabicTitle.trim();
+    const effectiveAchievements =
+      formData.achievements.trim() || formData.arabicAchievements.trim();
+    const effectiveDepartment =
+      formData.department.trim() || formData.arabicDepartment.trim();
+
     // Validation — all required fields checked regardless of active tab
     if (!formData.employeeId.trim()) {
       toast.error("Please enter Employee ID");
       return;
     }
-    if (!formData.employeeName.trim()) {
-      toast.error("Please enter Employee Name (English)");
-      setActiveTab("english");
+    if (!effectiveEmployeeName) {
+      toast.error("Please enter Employee Name");
       return;
     }
-    if (!formData.title.trim()) {
-      toast.error("Please enter Achievement Title (English)");
-      setActiveTab("english");
+    if (!effectiveTitle) {
+      toast.error("Please enter Achievement Title");
       return;
     }
-    if (!formData.achievements.trim()) {
-      toast.error("Please enter Achievement details (English)");
-      setActiveTab("english");
+    if (!effectiveAchievements) {
+      toast.error("Please enter Achievement details");
       return;
     }
     setSaving(true);
@@ -108,10 +113,15 @@ const AddAchievement = () => {
     try {
       const formPayload = buildAchievementFormData({
         employeeId: formData.employeeId,
-        employeeName: formData.employeeName,
-        department: formData.department,
-        title: formData.title,
-        achievements: formData.achievements,
+        employeeID: formData.employeeId,
+        employeeName: effectiveEmployeeName,
+        employeeNameArabic: formData.arabicEmployeeName,
+        department: effectiveDepartment,
+        arabicDepartment: formData.arabicDepartment,
+        title: effectiveTitle,
+        arabicTitle: formData.arabicTitle,
+        achievements: effectiveAchievements,
+        arabicAchievements: formData.arabicAchievements,
         visibilityStatus: status,
         imageFile: formData.imageFile,
       });
@@ -153,12 +163,10 @@ const AddAchievement = () => {
                 </button>
                 <div>
                   <h2 className="text-2xl font-bold text-slate-800">
-                    {activeTab === "english" ? "Add Achievement" : "إضافة إنجاز"}
+                    Add Achievement
                   </h2>
                   <p className="text-sm text-slate-500 mt-1">
-                    {activeTab === "english" 
-                      ? "Create a new employee achievement record" 
-                      : "إنشاء سجل إنجاز جديد للموظف"}
+                    Create a new employee achievement record
                   </p>
                 </div>
               </div>
@@ -201,7 +209,7 @@ const AddAchievement = () => {
                 <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
                   <User className="h-5 w-5 text-burgundy" />
                   <h3 className="text-md font-semibold text-slate-800">
-                    {activeTab === "english" ? "Employee Information" : "معلومات الموظف"}
+                    Employee Information
                   </h3>
                 </div>
 
@@ -209,12 +217,12 @@ const AddAchievement = () => {
                   {/* Employee ID */}
                   <div className="space-y-2">
                     <label className="text-sm font-semibold text-slate-700">
-                      {activeTab === "english" ? "Employee ID" : "معرف الموظف"} <span className="text-red-500">*</span>
+                      Employee ID <span className="text-red-500">*</span>
                     </label>
                     <Input
                       value={formData.employeeId}
                       onChange={(e) => setFormData({ ...formData, employeeId: e.target.value })}
-                      placeholder={activeTab === "english" ? "Enter Employee ID" : "أدخل معرف الموظف"}
+                      placeholder="Enter Employee ID"
                       className="h-11"
                     />
                   </div>
@@ -222,7 +230,7 @@ const AddAchievement = () => {
                   {/* Employee Name */}
                   <div className="space-y-2">
                     <label className="text-sm font-semibold text-slate-700">
-                      {activeTab === "english" ? "Employee Name" : "اسم الموظف"} <span className="text-red-500">*</span>
+                      Employee Name <span className="text-red-500">*</span>
                     </label>
                     <Input
                       value={activeTab === "english" ? formData.employeeName : formData.arabicEmployeeName}
@@ -241,7 +249,7 @@ const AddAchievement = () => {
                   {/* Department */}
                   <div className="space-y-2 md:col-span-2">
                     <label className="text-sm font-semibold text-slate-700">
-                      {activeTab === "english" ? "Department" : "القسم"}
+                      Department
                     </label>
                     <Input
                       value={activeTab === "english" ? formData.department : formData.arabicDepartment}
@@ -264,7 +272,7 @@ const AddAchievement = () => {
                 <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
                   <Award className="h-5 w-5 text-burgundy" />
                   <h3 className="text-md font-semibold text-slate-800">
-                    {activeTab === "english" ? "Achievement Details" : "تفاصيل الإنجاز"}
+                    Achievement Details
                   </h3>
                 </div>
 
@@ -272,7 +280,7 @@ const AddAchievement = () => {
                   {/* Title */}
                   <div className="space-y-2">
                     <label className="text-sm font-semibold text-slate-700">
-                      {activeTab === "english" ? "Title" : "عنوان الإنجاز"} <span className="text-red-500">*</span>
+                      Title <span className="text-red-500">*</span>
                     </label>
                     <Input
                       value={activeTab === "english" ? formData.title : formData.arabicTitle}
@@ -293,7 +301,7 @@ const AddAchievement = () => {
                   {/* Achievements */}
                   <div className="space-y-2">
                     <label className="text-sm font-semibold text-slate-700">
-                      {activeTab === "english" ? "Achievements" : "الإنجازات"} <span className="text-red-500">*</span>
+                      Achievements <span className="text-red-500">*</span>
                     </label>
                     <Textarea
                       value={activeTab === "english" ? formData.achievements : formData.arabicAchievements}
@@ -311,9 +319,7 @@ const AddAchievement = () => {
                       dir={activeTab === "arabic" ? "rtl" : "ltr"}
                     />
                     <p className="text-xs text-slate-400">
-                      {activeTab === "english" 
-                        ? "Provide a detailed description of the achievement, recognition, or award." 
-                        : "قدم وصفًا تفصيليًا للإنجاز أو التقدير أو الجائزة."}
+                      Provide a detailed description of the achievement, recognition, or award.
                     </p>
                   </div>
                 </div>
@@ -324,7 +330,7 @@ const AddAchievement = () => {
                 <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
                   <Upload className="h-5 w-5 text-burgundy" />
                   <h3 className="text-md font-semibold text-slate-800">
-                    {activeTab === "english" ? "Upload Image" : "رفع صورة"}
+                    Upload Image
                   </h3>
                 </div>
 
@@ -360,10 +366,10 @@ const AddAchievement = () => {
                       <>
                         <Upload className="h-10 w-10 text-slate-400 mb-2" />
                         <p className="text-sm text-slate-500 mb-1">
-                          {activeTab === "english" ? "Click to upload or drag & drop" : "انقر للرفع أو اسحب وأفلت"}
+                          Click to upload or drag & drop
                         </p>
                         <p className="text-xs text-slate-400">
-                          {activeTab === "english" ? "PNG, JPG, GIF up to 5MB" : "PNG، JPG، GIF حتى 5 ميجابايت"}
+                          PNG, JPG, GIF up to 5MB
                         </p>
                       </>
                     )}
@@ -376,7 +382,7 @@ const AddAchievement = () => {
                 <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
                   <Eye className="h-5 w-5 text-burgundy" />
                   <h3 className="text-md font-semibold text-slate-800">
-                    {activeTab === "english" ? "Visibility Status" : "حالة الظهور"}
+                    Visibility Status
                   </h3>
                 </div>
 
@@ -391,7 +397,7 @@ const AddAchievement = () => {
                   >
                     <Eye className="h-5 w-5" />
                     <span className="font-medium">
-                      {activeTab === "english" ? "Show" : "عرض"}
+                      Show
                     </span>
                   </button>
                   <button
@@ -404,15 +410,13 @@ const AddAchievement = () => {
                   >
                     <EyeOff className="h-5 w-5" />
                     <span className="font-medium">
-                      {activeTab === "english" ? "Hide" : "إخفاء"}
+                      Hide
                     </span>
                   </button>
                 </div>
                 
                 <p className="text-xs text-slate-500 text-center">
-                  {activeTab === "english" 
-                    ? "When set to 'Hide', this achievement will not be visible on the website" 
-                    : "عند الضبط على 'إخفاء'، لن يكون هذا الإنجاز ظاهرًا على الموقع"}
+                  When set to 'Hide', this achievement will not be visible on the website
                 </p>
               </div>
 
@@ -420,7 +424,7 @@ const AddAchievement = () => {
               <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
                 <Button variant="outline" onClick={() => navigate("/achievements")} className="gap-2">
                   <X className="h-4 w-4" />
-                  {activeTab === "english" ? "Cancel" : "إلغاء"}
+                  Cancel
                 </Button>
                 <Button 
                   onClick={handleSubmit} 
@@ -429,8 +433,8 @@ const AddAchievement = () => {
                 >
                   <Save className="h-4 w-4" />
                   {saving 
-                    ? (activeTab === "english" ? "Saving..." : "جاري الحفظ...") 
-                    : (activeTab === "english" ? "Submit" : "إرسال")}
+                    ? "Saving..."
+                    : "Submit"}
                 </Button>
               </div>
             </div>

@@ -85,18 +85,19 @@ export const linesToAchievementsText = (lines: string[] | string): string => {
 
 export const mapApiToAchievement = (api: ApiAchievement): Achievement => {
   const description = api.achievements ?? "";
+  const arabicDescription = api.arabicAchievements ?? description;
   return {
     id: api._id,
-    employeeId: api.employeeId,
+    employeeId: api.employeeId || api.employeeID || "",
     employeeName: api.employeeName,
-    arabicEmployeeName: api.employeeName,
+    arabicEmployeeName: api.employeeNameArabic || api.employeeName,
     title: api.title,
-    arabicTitle: api.title,
+    arabicTitle: api.arabicTitle || api.title,
     description,
-    arabicDescription: description,
+    arabicDescription,
     descriptionLines: achievementsTextToLines(description),
     department: api.department ?? "",
-    arabicDepartment: api.department ?? "",
+    arabicDepartment: api.arabicDepartment ?? api.department ?? "",
     division: "",
     arabicDivision: "",
     date: api.createdAt,
@@ -109,10 +110,15 @@ export const mapApiToAchievement = (api: ApiAchievement): Achievement => {
 
 export type AchievementFormPayload = {
   employeeId: string;
+  employeeID?: string;
   employeeName: string;
+  employeeNameArabic?: string;
   department?: string;
+  arabicDepartment?: string;
   title: string;
+  arabicTitle?: string;
   achievements: string;
+  arabicAchievements?: string;
   visibilityStatus: "show" | "hide";
   imageFile?: File | null;
 };
@@ -120,12 +126,25 @@ export type AchievementFormPayload = {
 export const buildAchievementFormData = (payload: AchievementFormPayload): FormData => {
   const formData = new FormData();
   formData.append("employeeId", payload.employeeId.trim());
+  formData.append("employeeID", (payload.employeeID || payload.employeeId).trim());
   formData.append("employeeName", payload.employeeName.trim());
+  if (payload.employeeNameArabic?.trim()) {
+    formData.append("employeeNameArabic", payload.employeeNameArabic.trim());
+  }
   formData.append("title", payload.title.trim());
+  if (payload.arabicTitle?.trim()) {
+    formData.append("arabicTitle", payload.arabicTitle.trim());
+  }
   formData.append("achievements", payload.achievements.trim());
+  if (payload.arabicAchievements?.trim()) {
+    formData.append("arabicAchievements", payload.arabicAchievements.trim());
+  }
   formData.append("visibilityStatus", payload.visibilityStatus);
   if (payload.department?.trim()) {
     formData.append("department", payload.department.trim());
+  }
+  if (payload.arabicDepartment?.trim()) {
+    formData.append("arabicDepartment", payload.arabicDepartment.trim());
   }
   if (payload.imageFile) {
     formData.append("image", payload.imageFile);

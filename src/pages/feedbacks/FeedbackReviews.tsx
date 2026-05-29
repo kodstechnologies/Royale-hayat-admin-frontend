@@ -142,7 +142,9 @@ const FeedbackReviews = () => {
         return {
           id: fb._id || fb.id,
           _id: fb._id || fb.id,
-          doctorId: typeof fb.doctor === 'object' ? fb.doctor._id : fb.doctor,
+          doctorId: typeof fb.doctor === 'object'
+            ? (fb.doctor.doctorId || fb.doctor._id || "")
+            : (fb.doctor || ""),
           patientName: fb.userName || "",
           patientNameAr: fb.arabicUserName || "",
           doctorName: doctorData.name,
@@ -219,11 +221,12 @@ const FeedbackReviews = () => {
           arabicFeedback: feedback.commentAr,
           stars: feedback.rating,
           shownOnWebsite: !feedback.showOnWebsite,
-          doctor: feedback.doctorId // Send only the doctor ID
+          doctorId: feedback.doctorId,
         };
         
         await updateDoctorFeedback({
-          id,
+          feedbackId: id,
+          doctorId: feedback.doctorId,
           data: payload,
         });
         
@@ -247,7 +250,7 @@ const FeedbackReviews = () => {
         };
         
         await updateHospitalFeedback({
-          id,
+          feedbackId: id,
           data: payload,
         });
         
@@ -272,7 +275,9 @@ const FeedbackReviews = () => {
     
     try {
       if (type === "doctor") {
-        await deleteDoctorFeedback(id);
+        const feedback = doctorFeedbacks.find(fb => fb.id === id);
+        if (!feedback?.doctorId) return;
+        await deleteDoctorFeedback(feedback.doctorId, id);
         setDoctorFeedbacks(prev => prev.filter(fb => fb.id !== id));
         toast.success(showArabicContent ? "تم حذف ملاحظة الطبيب بنجاح" : "Doctor feedback deleted successfully");
       } else {
@@ -318,11 +323,12 @@ const FeedbackReviews = () => {
           arabicFeedback: editFormData.commentAr,
           stars: editFormData.rating,
           shownOnWebsite: editFormData.showOnWebsite,
-          doctor: editFormData.doctorId // Send only the doctor ID
+          doctorId: editFormData.doctorId,
         };
         
         await updateDoctorFeedback({
-          id: editingFeedback.id,
+          feedbackId: editingFeedback.id,
+          doctorId: editFormData.doctorId,
           data: payload,
         });
         
@@ -357,7 +363,7 @@ const FeedbackReviews = () => {
         };
         
         await updateHospitalFeedback({
-          id: editingFeedback.id,
+          feedbackId: editingFeedback.id,
           data: payload,
         });
         

@@ -140,26 +140,19 @@ const AllCSR = () => {
   const CelebratingLifeTab = () => (
     <div className="space-y-6">
       {/* Hero Section */}
-      <div className="relative rounded-xl overflow-hidden">
-        <img 
-          src={celebratingLifeContent.image} 
-          alt={celebratingLifeContent.title}
-          className="w-full h-80 md:h-96 object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent flex items-end">
-          <div className="p-6 md:p-8 text-white">
-            <div className="flex items-center gap-2 mb-2">
-              <Flower2 className="h-6 w-6" />
-              <h3 className="text-2xl md:text-3xl font-bold">{celebratingLifeContent.title}</h3>
-            </div>
+      <div className="relative rounded-xl overflow-hidden bg-gradient-to-br from-burgundy to-burgundy/75 min-h-[180px] flex items-end">
+        <div className="absolute inset-0 bg-gradient-to-t from-black/45 to-transparent" />
+        <div className="relative p-6 md:p-8 text-white">
+          <div className="flex items-center gap-2 mb-1">
+            <Flower2 className="h-6 w-6" />
+            <h3 className="text-2xl md:text-4xl font-bold">{celebratingLifeContent.title}</h3>
           </div>
         </div>
       </div>
 
       {/* Description Section */}
-      <div className="bg-white rounded-xl border border-slate-200 p-6 md:p-8 shadow-sm">
-       
-        <div className="prose prose-lg max-w-none">
+      <div className="bg-white rounded-xl border border-slate-200 p-6 md:p-8">
+        <div className="prose prose-sm max-w-none">
           {celebratingLifeContent.description.split('\n\n').map((paragraph, idx) => (
             <p key={idx} className="text-slate-600 leading-relaxed mb-4 text-base">
               {paragraph}

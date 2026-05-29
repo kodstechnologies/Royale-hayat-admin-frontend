@@ -160,9 +160,7 @@ const AllWorkCulture = () => {
           {/* Tabs */}
           <div className="flex gap-1 p-1 bg-slate-100/80 rounded-xl w-fit">
             <button
-              onClick={() => {
-                navigate("/life-at-rhh");
-              }}
+              onClick={() => setActiveTab("life")}
               className={`flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                 activeTab === "life"
                   ? "bg-white text-burgundy shadow-md"
@@ -190,131 +188,160 @@ const AllWorkCulture = () => {
         <div className="rounded-xl border-2 border-burgundy/30 bg-gradient-to-br from-white via-slate-50/90 to-white shadow-xl backdrop-blur-sm overflow-hidden">
           <div className="h-1 bg-gradient-to-r from-burgundy/40 via-burgundy to-burgundy/40"></div>
           <div className="p-6">
-            {/* Search and Filter Section */}
-            <div className="flex flex-wrap gap-3 mb-6">
-              <div className="relative flex-1 min-w-[250px]">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                <input
-                  type="text"
-                  placeholder={getUIText.searchPlaceholder}
-                  value={searchTerm}
-                  onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-burgundy/20"
-                />
-              </div>
-            </div>
+            {activeTab === "life" ? (
+              <div className="space-y-6">
+                <div className="relative rounded-xl overflow-hidden bg-gradient-to-br from-burgundy to-burgundy/75 min-h-[180px] flex items-end">
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/45 to-transparent" />
+                  <div className="relative p-6 md:p-8 text-white">
+                    <h3 className="text-2xl md:text-4xl font-bold">
+                      {activeLanguage === "english" ? "Life at Royale Hayat Hospital" : "الحياة في مستشفى رويال حياة"}
+                    </h3>
+                  </div>
+                </div>
 
-            {/* Loading State */}
-            {loading ? (
-              <div className="flex justify-center items-center py-12">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-burgundy"></div>
+                <div className="bg-white rounded-xl border border-slate-200 p-6 md:p-8">
+                  <div className="prose prose-sm max-w-none">
+                    {(activeLanguage === "english"
+                      ? "At Royale Hayat Hospital, we hold a simple belief: people may forget what we said, but they will never forget how we made them feel as patients, family members, or colleagues.\n\nThat belief guides how we care, how we work, and how we treat one another. Every day, our teams deliver safe, modern, quality care with compassion and comfort-because healing is not only about medicine, but about experience.\n\nHere, professionalism meets kindness. Standards meet empathy. And work carries purpose. If this belief resonates with you, you already belong here."
+                      : "في مستشفى رويال حياة، نحن نتمسك بإيمان بسيط: قد ينسى الناس ما قلناه، لكنهم لن ينسوا أبدًا كيف جعلناهم يشعرون كمرضى أو أفراد عائلة أو زملاء.\n\nهذا الإيمان يوجه كيفية رعايتنا، وكيف نعمل، وكيف نتعامل مع بعضنا البعض. كل يوم، تقدم فرقنا رعاية آمنة وحديثة وعالية الجودة مع الرحمة والراحة - لأن الشفاء لا يتعلق فقط بالطب، بل بالتجربة.\n\nهنا، تلتقي الاحترافية باللطف. تلتقي المعايير بالتعاطف. ويحمل العمل هدفًا. إذا كان هذا الإيمان يتردد صداه معك، فأنت بالفعل تنتمي إلى هنا.")
+                      .split("\n\n")
+                      .map((paragraph, idx) => (
+                        <p key={idx} className="text-slate-600 leading-relaxed mb-4 text-base">
+                          {paragraph}
+                        </p>
+                      ))}
+                  </div>
+                </div>
               </div>
             ) : (
               <>
-                {/* Events Table */}
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead className="bg-slate-50 border-b border-slate-200">
-                      <tr>
-                        <th className="text-left px-6 py-4 text-xs font-semibold text-slate-500">#</th>
-                        <th className="text-left px-6 py-4 text-xs font-semibold text-slate-500">{getUIText.heading}</th>
-                        <th className="text-left px-6 py-4 text-xs font-semibold text-slate-500">{getUIText.images}</th>
-                        <th className="text-right px-6 py-4 text-xs font-semibold text-slate-500">{getUIText.actions}</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                      {paginatedData.length === 0 ? (
-                        <tr>
-                          <td colSpan={4} className="px-6 py-16 text-center">
-                            <div className="flex flex-col items-center">
-                              <Calendar className="h-12 w-12 text-slate-300 mb-3" />
-                              <p className="text-slate-500 font-medium">{getUIText.noData}</p>
-                              <p className="text-sm text-slate-400 mt-1">{getUIText.adjustFilters}</p>
-                              <Button
-                                onClick={() => navigate("/work-culture/create")}
-                                className="mt-4 gap-2 bg-burgundy hover:bg-burgundy/90"
-                              >
-                                <Plus className="h-4 w-4" />
-                                {getUIText.addEvent}
-                              </Button>
-                            </div>
-                           </td>
-                        </tr>
-                      ) : (
-                        paginatedData.map((item, index) => (
-                          <tr key={item._id} className="hover:bg-slate-50/50 transition-colors">
-                            <td className="px-6 py-4 text-sm text-slate-500">
-                              {(currentPage - 1) * itemsPerPage + index + 1}
-                            </td>
-                            <td className="px-6 py-4">
-                              <p className="font-medium text-slate-800">
-                                {activeLanguage === "english" ? item.heading : item.headingArabic}
-                              </p>
-                            </td>
-                            <td className="px-6 py-4">
-                              <div className="flex items-center gap-1">
-                                <ImageIcon className="h-4 w-4 text-slate-400" />
-                                <span className="text-sm text-slate-600">{item.images?.length || 0} images</span>
-                              </div>
-                            </td>
-                            <td className="px-6 py-4">
-                              <div className="flex justify-end gap-2">
-                                <button
-                                  onClick={() => navigate(`/work-culture/view/${item._id}`)}
-                                  className="p-2 rounded-lg text-blue-600 hover:bg-blue-50"
-                                >
-                                  <Eye className="h-4 w-4" />
-                                </button>
-                                <button
-                                  onClick={() => navigate(`/work-culture/edit/${item._id}`)}
-                                  className="p-2 rounded-lg text-amber-600 hover:bg-amber-50"
-                                >
-                                  <Edit className="h-4 w-4" />
-                                </button>
-                                <button
-                                  onClick={() => setShowDeleteConfirm(item._id)}
-                                  className="p-2 rounded-lg text-red-600 hover:bg-red-50"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
+                {/* Search and Filter Section */}
+                <div className="flex flex-wrap gap-3 mb-6">
+                  <div className="relative flex-1 min-w-[250px]">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                    <input
+                      type="text"
+                      placeholder={getUIText.searchPlaceholder}
+                      value={searchTerm}
+                      onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+                      className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-burgundy/20"
+                    />
+                  </div>
                 </div>
 
-                {/* Pagination */}
-                {totalPages > 1 && (
-                  <div className="flex justify-center gap-2 py-4 border-t border-slate-100 mt-4">
-                    <button
-                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                      disabled={currentPage === 1}
-                      className="px-3 py-1.5 rounded-lg border border-slate-200 text-xs disabled:opacity-50"
-                    >
-                      <ChevronLeft className="h-4 w-4" />
-                    </button>
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                      <button
-                        key={page}
-                        onClick={() => setCurrentPage(page)}
-                        className={`min-w-[34px] px-2 py-1.5 rounded-lg border text-xs ${
-                          currentPage === page ? "bg-burgundy text-white border-burgundy" : "border-slate-200"
-                        }`}
-                      >
-                        {page}
-                      </button>
-                    ))}
-                    <button
-                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                      disabled={currentPage === totalPages}
-                      className="px-3 py-1.5 rounded-lg border border-slate-200 text-xs disabled:opacity-50"
-                    >
-                      <ChevronRight className="h-4 w-4" />
-                    </button>
+                {/* Loading State */}
+                {loading ? (
+                  <div className="flex justify-center items-center py-12">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-burgundy"></div>
                   </div>
+                ) : (
+                  <>
+                    {/* Events Table */}
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
+                        <thead className="bg-slate-50 border-b border-slate-200">
+                          <tr>
+                            <th className="text-left px-6 py-4 text-xs font-semibold text-slate-500">#</th>
+                            <th className="text-left px-6 py-4 text-xs font-semibold text-slate-500">{getUIText.heading}</th>
+                            <th className="text-left px-6 py-4 text-xs font-semibold text-slate-500">{getUIText.images}</th>
+                            <th className="text-right px-6 py-4 text-xs font-semibold text-slate-500">{getUIText.actions}</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                          {paginatedData.length === 0 ? (
+                            <tr>
+                              <td colSpan={4} className="px-6 py-16 text-center">
+                                <div className="flex flex-col items-center">
+                                  <Calendar className="h-12 w-12 text-slate-300 mb-3" />
+                                  <p className="text-slate-500 font-medium">{getUIText.noData}</p>
+                                  <p className="text-sm text-slate-400 mt-1">{getUIText.adjustFilters}</p>
+                                  <Button
+                                    onClick={() => navigate("/work-culture/create")}
+                                    className="mt-4 gap-2 bg-burgundy hover:bg-burgundy/90"
+                                  >
+                                    <Plus className="h-4 w-4" />
+                                    {getUIText.addEvent}
+                                  </Button>
+                                </div>
+                               </td>
+                            </tr>
+                          ) : (
+                            paginatedData.map((item, index) => (
+                              <tr key={item._id} className="hover:bg-slate-50/50 transition-colors">
+                                <td className="px-6 py-4 text-sm text-slate-500">
+                                  {(currentPage - 1) * itemsPerPage + index + 1}
+                                </td>
+                                <td className="px-6 py-4">
+                                  <p className="font-medium text-slate-800">
+                                    {activeLanguage === "english" ? item.heading : item.headingArabic}
+                                  </p>
+                                </td>
+                                <td className="px-6 py-4">
+                                  <div className="flex items-center gap-1">
+                                    <ImageIcon className="h-4 w-4 text-slate-400" />
+                                    <span className="text-sm text-slate-600">{item.images?.length || 0} images</span>
+                                  </div>
+                                </td>
+                                <td className="px-6 py-4">
+                                  <div className="flex justify-end gap-2">
+                                    <button
+                                      onClick={() => navigate(`/work-culture/view/${item._id}`)}
+                                      className="p-2 rounded-lg text-blue-600 hover:bg-blue-50"
+                                    >
+                                      <Eye className="h-4 w-4" />
+                                    </button>
+                                    <button
+                                      onClick={() => navigate(`/work-culture/edit/${item._id}`)}
+                                      className="p-2 rounded-lg text-amber-600 hover:bg-amber-50"
+                                    >
+                                      <Edit className="h-4 w-4" />
+                                    </button>
+                                    <button
+                                      onClick={() => setShowDeleteConfirm(item._id)}
+                                      className="p-2 rounded-lg text-red-600 hover:bg-red-50"
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </button>
+                                  </div>
+                                </td>
+                              </tr>
+                            ))
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* Pagination */}
+                    {totalPages > 1 && (
+                      <div className="flex justify-center gap-2 py-4 border-t border-slate-100 mt-4">
+                        <button
+                          onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                          disabled={currentPage === 1}
+                          className="px-3 py-1.5 rounded-lg border border-slate-200 text-xs disabled:opacity-50"
+                        >
+                          <ChevronLeft className="h-4 w-4" />
+                        </button>
+                        {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                          <button
+                            key={page}
+                            onClick={() => setCurrentPage(page)}
+                            className={`min-w-[34px] px-2 py-1.5 rounded-lg border text-xs ${
+                              currentPage === page ? "bg-burgundy text-white border-burgundy" : "border-slate-200"
+                            }`}
+                          >
+                            {page}
+                          </button>
+                        ))}
+                        <button
+                          onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                          disabled={currentPage === totalPages}
+                          className="px-3 py-1.5 rounded-lg border border-slate-200 text-xs disabled:opacity-50"
+                        >
+                          <ChevronRight className="h-4 w-4" />
+                        </button>
+                      </div>
+                    )}
+                  </>
                 )}
               </>
             )}

@@ -14,6 +14,7 @@ import {
 
 import { notifications as notifData, Notification } from "@/data/mockDatabase";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { isCallCenterUser } from "@/lib/userRole";
 
 interface HeaderProps {
   title: string;
@@ -43,6 +44,7 @@ const Header = ({ title }: HeaderProps) => {
 
   const navigate = useNavigate();
   const { t, isRTL } = useLanguage();
+  const isCallCenter = isCallCenterUser();
 
   const unreadCount = notifs.filter((n) => !n.read).length;
 
@@ -59,6 +61,10 @@ const Header = ({ title }: HeaderProps) => {
     setShowNotifications(false);
     navigate(notif.link);
   };
+
+  if (isCallCenter) {
+    return null;
+  }
 
   return (
     /* Fixed pill — top-right corner, only icons visible */

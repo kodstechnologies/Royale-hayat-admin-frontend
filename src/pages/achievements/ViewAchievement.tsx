@@ -134,12 +134,10 @@ const ViewAchievement = () => {
                 </button>
                 <div>
                   <h2 className="text-2xl font-bold text-slate-800">
-                    {activeLanguage === "english" ? "Achievement Details" : "تفاصيل الإنجاز"}
+                    Achievement Details
                   </h2>
                   <p className="text-sm text-slate-500 mt-1">
-                    {activeLanguage === "english"
-                      ? "View complete achievement information"
-                      : "عرض معلومات الإنجاز الكاملة"}
+                    View complete achievement information
                   </p>
                 </div>
               </div>
@@ -180,7 +178,7 @@ const ViewAchievement = () => {
                   className="gap-2 bg-burgundy hover:bg-burgundy/90 shadow-md hover:shadow-lg transition-all duration-200"
                 >
                   <Pencil className="h-4 w-4" />
-                  {activeLanguage === "english" ? "Edit" : "تعديل"}
+                  Edit
                 </Button>
               </div>
             </div>
@@ -201,7 +199,7 @@ const ViewAchievement = () => {
                       <div className="text-center">
                         <ImageIcon className="h-16 w-16 text-slate-300 mx-auto mb-2" />
                         <p className="text-sm text-slate-400">
-                          {activeLanguage === "english" ? "No image available" : "لا توجد صورة"}
+                          No image available
                         </p>
                       </div>
                     )}
@@ -213,26 +211,26 @@ const ViewAchievement = () => {
                   <div className="flex items-center gap-2 pb-2 border-b border-slate-100 mb-3">
                     <FileText className="h-4 w-4 text-burgundy" />
                     <h3 className="text-sm font-semibold text-slate-800">
-                      {activeLanguage === "english" ? "Status Information" : "معلومات الحالة"}
+                      Status Information
                     </h3>
                   </div>
                   <div className="space-y-3">
                     <div className="flex justify-between items-center">
                       <span className="text-sm text-slate-600">
-                        {activeLanguage === "english" ? "Status" : "الحالة"}
+                        Status
                       </span>
                       {getStatusBadge(achievement.status)}
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-sm text-slate-600">
-                        {activeLanguage === "english" ? "Created At" : "تاريخ الإنشاء"}
+                        Created At
                       </span>
                       <span className="text-sm text-slate-700">{formatDate(achievement.createdAt)}</span>
                     </div>
                     {achievement.updatedAt && (
                       <div className="flex justify-between items-center">
                         <span className="text-sm text-slate-600">
-                          {activeLanguage === "english" ? "Last Updated" : "آخر تحديث"}
+                          Last Updated
                         </span>
                         <span className="text-sm text-slate-700">{formatDate(achievement.updatedAt)}</span>
                       </div>
@@ -248,11 +246,13 @@ const ViewAchievement = () => {
                   <div className="flex items-center gap-2 pb-2 border-b border-slate-100 mb-3">
                     <Award className="h-4 w-4 text-burgundy" />
                     <h3 className="text-sm font-semibold text-slate-800">
-                      {activeLanguage === "english" ? "Achievement Title" : "عنوان الإنجاز"}
+                      Achievement Title
                     </h3>
                   </div>
                   <h1 className={`text-xl font-bold text-slate-800 ${activeLanguage === "arabic" ? "rtl-text" : ""}`}>
-                    {activeLanguage === "english" ? achievement.title : achievement.arabicTitle}
+                    {activeLanguage === "english"
+                      ? achievement.title
+                      : achievement.arabicTitle || achievement.title}
                   </h1>
                 </div>
 
@@ -261,35 +261,39 @@ const ViewAchievement = () => {
                   <div className="flex items-center gap-2 pb-2 border-b border-slate-100 mb-3">
                     <User className="h-4 w-4 text-burgundy" />
                     <h3 className="text-sm font-semibold text-slate-800">
-                      {activeLanguage === "english" ? "Employee Information" : "معلومات الموظف"}
+                      Employee Information
                     </h3>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                        {activeLanguage === "english" ? "Employee ID" : "معرف الموظف"}
+                        Employee ID
                       </label>
                       <p className="text-sm font-mono text-slate-800 mt-1">{achievement.employeeId}</p>
                     </div>
                     <div>
                       <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                        {activeLanguage === "english" ? "Employee Name" : "اسم الموظف"}
+                        Employee Name
                       </label>
                       <p className="text-sm font-medium text-slate-800 mt-1">
-                        {activeLanguage === "english" ? achievement.employeeName : achievement.arabicEmployeeName}
+                        {activeLanguage === "english"
+                          ? achievement.employeeName
+                          : achievement.arabicEmployeeName || achievement.employeeName}
                       </p>
                     </div>
                     <div>
                       <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                        {activeLanguage === "english" ? "Department" : "القسم"}
+                        Department
                       </label>
                       <p className="text-sm text-slate-700 mt-1">
-                        {activeLanguage === "english" ? achievement.department : achievement.arabicDepartment}
+                        {activeLanguage === "english"
+                          ? achievement.department
+                          : achievement.arabicDepartment || achievement.department}
                       </p>
                     </div>
                     <div>
                       <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                        {activeLanguage === "english" ? "Division" : "القسم الفرعي"}
+                        Division
                       </label>
                       <p className="text-sm text-slate-700 mt-1">
                         {activeLanguage === "english" ? achievement.division : achievement.arabicDivision}
@@ -297,7 +301,7 @@ const ViewAchievement = () => {
                     </div>
                     <div>
                       <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                        {activeLanguage === "english" ? "Month" : "الشهر"}
+                        Month
                       </label>
                       <div className="flex items-center gap-1 mt-1">
                         <Calendar className="h-3.5 w-3.5 text-slate-400" />
@@ -317,11 +321,13 @@ const ViewAchievement = () => {
                   <div className="flex items-center gap-2 pb-2 border-b border-slate-100 mb-3">
                     <FileText className="h-4 w-4 text-burgundy" />
                     <h3 className="text-sm font-semibold text-slate-800">
-                      {activeLanguage === "english" ? "Achievement Description" : "وصف الإنجاز"}
+                      Achievement Description
                     </h3>
                   </div>
                   <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">
-                    {activeLanguage === "english" ? achievement.description : achievement.arabicDescription}
+                    {activeLanguage === "english"
+                      ? achievement.description
+                      : achievement.arabicDescription || achievement.description}
                   </p>
                 </div>
 
@@ -332,14 +338,14 @@ const ViewAchievement = () => {
                     variant="outline"
                     className="flex-1"
                   >
-                    {activeLanguage === "english" ? "Back to Employee Recognition" : "العودة إلى الإنجازات"}
+                    Back to Employee Recognition
                   </Button>
                   <Button
                     onClick={() => navigate(`/achievements/edit/${achievement.id}`)}
                     className="flex-1 gap-2 bg-burgundy hover:bg-burgundy/90"
                   >
                     <Pencil className="h-4 w-4" />
-                    {activeLanguage === "english" ? "Edit Achievement" : "تعديل الإنجاز"}
+                    Edit Achievement
                   </Button>
                 </div>
               </div>

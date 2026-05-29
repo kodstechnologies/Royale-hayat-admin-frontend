@@ -71,14 +71,18 @@ export const getAppointmentRequestById = async (id: string) => {
 
 // ================= ACCEPT REQUEST =================
 
-export const acceptRequest = async (id: string) => {
-  const response = await api.patch(`${REQUESTS_BASE}/accept/${id}`);
+export const acceptRequest = async (id: string, note?: string) => {
+  const response = await api.patch(`${REQUESTS_BASE}/accept/${id}`, {
+    note: note?.trim() || undefined,
+  });
   return response.data;
 };
 
 // ================= CANCEL REQUEST =================
 
-export const cancelRequest = async (id: string) => {
-  const response = await api.patch(`${REQUESTS_BASE}/cancel/${id}`);
+export const cancelRequest = async (id: string, note?: string) => {
+  const response = await api.patch(`${REQUESTS_BASE}/cancel/${id}`, {
+    note: note?.trim() || undefined,
+  });
   return response.data;
 };

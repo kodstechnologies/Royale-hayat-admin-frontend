@@ -18,8 +18,6 @@ import {
   Pencil,
 } from "lucide-react";
 import { format } from "date-fns";
-import { adminJobs } from "@/data/adminJobs";
-import { dummyApplications } from "@/data/dummyApplications";
 import { getJobById as getJobByIdApi } from "@/api/job";
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -71,27 +69,6 @@ const mapApiJob = (job: any, applicationsCount = 0): JobPost => ({
   applicationsCount: job.applicationsCount ?? applicationsCount,
 });
 
-/** Map a dummy AdminJob to JobPost */
-const mapDummyJob = (job: any, applicationsCount = 0): JobPost => ({
-  _id: job.id,
-  jobId: job.jobId,
-  title: job.title,
-  arabicTitle: job.arabicTitle ?? "",
-  classification: job.category ?? job.classification ?? "",
-  location: job.location,
-  type: job.type,
-  description: job.description,
-  arabicDescription: job.arabicDescription ?? "",
-  responsibilities: job.responsibilities ?? [],
-  arabicResponsibilities: job.arabicResponsibilities ?? [],
-  requirements: job.requirements ?? [],
-  arabicRequirements: job.arabicRequirements ?? [],
-  closingDate: job.closingDate,
-  isActive: job.isActive,
-  postedDate: job.createdAt?.split("T")[0] ?? new Date().toISOString().split("T")[0],
-  applicationsCount,
-});
-
 // ── Component ────────────────────────────────────────────────────────────────
 
 const ViewJobPost = () => {
@@ -107,28 +84,14 @@ const ViewJobPost = () => {
     const load = async () => {
       setLoading(true);
       try {
-        // Try real API first
         const res = await getJobByIdApi(id);
         const apiJob = res.data?.data;
         if (apiJob) {
-          const appCount = dummyApplications.filter(
-            (a) => a.jobId === apiJob.jobId
-          ).length;
-          setJob(mapApiJob(apiJob, appCount));
+          setJob(mapApiJob(apiJob, apiJob.applicationsCount ?? 0));
           return;
         }
       } catch {
-        // API failed — fall through to dummy data
-      }
-
-      // Fallback: check static dummy data
-      const staticJob = adminJobs.find((j) => j.id === id);
-      if (staticJob) {
-        const appCount = dummyApplications.filter(
-          (a) => a.jobId === staticJob.jobId
-        ).length;
-        setJob(mapDummyJob(staticJob, appCount));
-        return;
+        // API failed — show not found state
       }
 
       setJob(null);
@@ -214,12 +177,6 @@ const ViewJobPost = () => {
 
   // ── Render ─────────────────────────────────────────────────────────────────
 
-  const hasArabic =
-    !!job.arabicTitle ||
-    !!job.arabicDescription ||
-    job.arabicResponsibilities.length > 0 ||
-    job.arabicRequirements.length > 0;
-
   return (
     <AdminLayout title="View Job">
       <div className="space-y-6">
@@ -250,31 +207,29 @@ const ViewJobPost = () => {
                 </div>
               </div>
 
-              {/* Language Toggle — only show if Arabic content exists */}
-              {hasArabic && (
-                <div className="flex gap-2 p-1 bg-slate-100/80 rounded-lg">
-                  <button
-                    onClick={() => setActiveLanguage("english")}
-                    className={`flex items-center gap-2 px-4 py-1.5 rounded-md text-sm font-medium transition-all duration-200 ${
-                      activeLanguage === "english"
-                        ? "bg-white text-burgundy shadow-sm"
-                        : "text-slate-600 hover:text-slate-800 hover:bg-white/50"
-                    }`}
-                  >
-                    English
-                  </button>
-                  <button
-                    onClick={() => setActiveLanguage("arabic")}
-                    className={`flex items-center gap-2 px-4 py-1.5 rounded-md text-sm font-medium transition-all duration-200 ${
-                      activeLanguage === "arabic"
-                        ? "bg-white text-burgundy shadow-sm"
-                        : "text-slate-600 hover:text-slate-800 hover:bg-white/50"
-                    }`}
-                  >
-                    العربية
-                  </button>
-                </div>
-              )}
+              {/* Language Toggle */}
+              <div className="flex gap-2 p-1 bg-slate-100 rounded-lg border border-slate-200 shadow-sm">
+                <button
+                  onClick={() => setActiveLanguage("english")}
+                  className={`min-w-[96px] px-4 py-1.5 rounded-md text-sm font-medium transition-all duration-200 ${
+                    activeLanguage === "english"
+                      ? "bg-white text-burgundy shadow-sm border border-burgundy/20"
+                      : "text-slate-700 hover:text-slate-900 hover:bg-white/70"
+                  }`}
+                >
+                  English
+                </button>
+                <button
+                  onClick={() => setActiveLanguage("arabic")}
+                  className={`min-w-[96px] px-4 py-1.5 rounded-md text-sm font-medium transition-all duration-200 ${
+                    activeLanguage === "arabic"
+                      ? "bg-white text-burgundy shadow-sm border border-burgundy/20"
+                      : "text-slate-700 hover:text-slate-900 hover:bg-white/70"
+                  }`}
+                >
+                  العربية
+                </button>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

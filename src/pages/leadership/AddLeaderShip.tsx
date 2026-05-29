@@ -94,15 +94,6 @@ const AddLeadership = () => {
 
   const handleSubmit = async () => {
     // Validation
-    if (!formData.initials.trim()) {
-      toast.error("Please enter initials");
-      return;
-    }
-    if (!formData.initialsArabic.trim()) {
-      toast.error("Please enter initials (Arabic)");
-      setActiveTab("arabic");
-      return;
-    }
     if (!formData.name.trim()) {
       toast.error("Please enter name (English)");
       setActiveTab("english");
@@ -255,7 +246,7 @@ const AddLeadership = () => {
                   {/* Initials */}
                   <div className="space-y-2">
                     <label className="text-sm font-semibold text-slate-700">
-                      {getUIText.initials} <span className="text-red-500">*</span>
+                      {getUIText.initials} <span className="text-slate-400 text-xs">(Optional)</span>
                     </label>
                     <Input
                       value={activeTab === "english" ? formData.initials : formData.initialsArabic}

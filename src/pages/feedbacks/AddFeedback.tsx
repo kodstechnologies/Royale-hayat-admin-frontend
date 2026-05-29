@@ -18,15 +18,13 @@ import { getDoctors } from "@/api/doctors";
 import { adminDoctors } from "@/data/adminDoctors";
 
 type FeedbackDoctorOption = {
-  _id: string;
+  doctorId: string;
   name: string;
   arabicName: string;
   department: string;
   departmentAr: string;
   initials: string;
 };
-
-const isValidObjectId = (id: string) => /^[a-f\d]{24}$/i.test(id);
 
 type AddFeedbackProps = {
   onSave?: (feedback: any) => void;
@@ -73,7 +71,7 @@ const AddFeedback = ({ onSave }: AddFeedbackProps) => {
           );
           const departmentObj = doc.department && typeof doc.department === "object" ? doc.department : null;
           return {
-            _id: doc._id,
+            doctorId: doc.doctorId || "",
             name: doc.name || "",
             arabicName: doc.arabicName || doc.nameAr || adminMatch?.arabicName || "",
             department: departmentObj?.name || (typeof doc.department === "string" ? doc.department : doc.specialty || adminMatch?.department || ""),
@@ -81,7 +79,7 @@ const AddFeedback = ({ onSave }: AddFeedbackProps) => {
             initials: doc.initials || adminMatch?.initials || "DR",
           };
         });
-        setDoctorOptions(mapped.filter((d) => d._id && isValidObjectId(d._id)));
+        setDoctorOptions(mapped.filter((d) => d.doctorId));
       } catch (error) {
         console.error("Failed to load doctors:", error);
         toast.error("Failed to load doctors list");
@@ -96,7 +94,7 @@ const AddFeedback = ({ onSave }: AddFeedbackProps) => {
   const handleDoctorSelect = (doctorId: string) => {
     setSelectedDoctorId(doctorId);
     if (doctorId) {
-      const selectedDoctor = doctorOptions.find((doc) => doc._id === doctorId);
+      const selectedDoctor = doctorOptions.find((doc) => doc.doctorId === doctorId);
       if (selectedDoctor) {
         setFormData(prev => ({
           ...prev,
@@ -133,7 +131,7 @@ const AddFeedback = ({ onSave }: AddFeedbackProps) => {
     }
 
     if (feedbackType === "doctor") {
-      if (!selectedDoctorId || !isValidObjectId(selectedDoctorId)) {
+      if (!selectedDoctorId) {
         toast.error(activeLanguage === "english"
           ? "Please select a doctor from the list"
           : "الرجاء اختيار طبيب من القائمة");
@@ -152,7 +150,7 @@ const AddFeedback = ({ onSave }: AddFeedbackProps) => {
           arabicFeedback: formData.commentAr,
           stars: formData.rating,
           shownOnWebsite: true,
-          doctor: selectedDoctorId,
+          doctorId: selectedDoctorId,
         };
 
         await createDoctorFeedback({
@@ -437,7 +435,7 @@ const AddFeedback = ({ onSave }: AddFeedbackProps) => {
                             : getUIText.selectDoctorPlaceholder}
                         </option>
                         {doctorOptions.map((doctor) => (
-                          <option key={doctor._id} value={doctor._id}>
+                          <option key={doctor.doctorId} value={doctor.doctorId}>
                             {activeLanguage === "english" ? doctor.name : (doctor.arabicName || doctor.name)} - {activeLanguage === "english" ? doctor.department : (doctor.departmentAr || doctor.department)}
                           </option>
                         ))}

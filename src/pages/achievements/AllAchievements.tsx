@@ -67,6 +67,8 @@ const AllAchievements = () => {
   const totalAchievements = achievements.length;
   const publishedCount = achievements.filter((a) => a.status === "published").length;
   const draftCount = achievements.filter((a) => a.status === "draft").length;
+  const getAchievementId = (achievement: Achievement) =>
+    achievement.id || (achievement as unknown as { _id?: string })._id || "";
 
   const fetchAchievements = useCallback(async () => {
     setLoading(true);
@@ -91,8 +93,10 @@ const AllAchievements = () => {
     const matchesSearch =
       search === "" ||
       achievement.employeeName.toLowerCase().includes(search.toLowerCase()) ||
+      achievement.arabicEmployeeName.toLowerCase().includes(search.toLowerCase()) ||
       achievement.employeeId.toLowerCase().includes(search.toLowerCase()) ||
-      achievement.title.toLowerCase().includes(search.toLowerCase());
+      achievement.title.toLowerCase().includes(search.toLowerCase()) ||
+      achievement.arabicTitle.toLowerCase().includes(search.toLowerCase());
 
     const matchesStatus = selectedStatus === "all" || achievement.status === selectedStatus;
 
@@ -133,7 +137,12 @@ const AllAchievements = () => {
 
     setIsDeleting(true);
     try {
-      await deleteAchievement(achievementToDelete.id);
+      const achievementId = getAchievementId(achievementToDelete);
+      if (!achievementId) {
+        toast.error("Achievement ID is missing");
+        return;
+      }
+      await deleteAchievement(achievementId);
       toast.success("Achievement deleted successfully");
       setDeleteOpen(false);
       setAchievementToDelete(null);
@@ -148,15 +157,29 @@ const AllAchievements = () => {
 
   const updateVisibility = async (achievement: Achievement, visibility: "show" | "hide") => {
     try {
+      const achievementId = getAchievementId(achievement);
+      if (!achievementId) {
+        toast.error("Achievement ID is missing");
+        return;
+      }
       const formPayload = buildAchievementFormData({
-        employeeId: achievement.employeeId,
-        employeeName: achievement.employeeName,
-        department: achievement.department,
-        title: achievement.title,
-        achievements: achievement.description,
+        employeeId: achievement.employeeId || "temp",
+        employeeName: achievement.employeeName || "temp",
+        title: achievement.title || "temp",
+        achievements: achievement.description || "temp",
         visibilityStatus: visibility,
       });
-      await updateAchievement(achievement.id, formPayload);
+      formPayload.delete("employeeId");
+      formPayload.delete("employeeName");
+      formPayload.delete("title");
+      formPayload.delete("achievements");
+      formPayload.delete("employeeID");
+      formPayload.delete("employeeNameArabic");
+      formPayload.delete("department");
+      formPayload.delete("arabicDepartment");
+      formPayload.delete("arabicTitle");
+      formPayload.delete("arabicAchievements");
+      await updateAchievement(achievementId, formPayload);
       toast.success(visibility === "show" ? "Achievement published successfully" : "Achievement marked as draft");
       await fetchAchievements();
     } catch (error: unknown) {
@@ -175,17 +198,27 @@ const AllAchievements = () => {
       const published = achievements.filter((a) => a.status === "published");
       await Promise.all(
         published.map((a) =>
-          updateAchievement(
-            a.id,
-            buildAchievementFormData({
-              employeeId: a.employeeId,
-              employeeName: a.employeeName,
-              department: a.department,
-              title: a.title,
-              achievements: a.description,
+          (() => {
+            const achievementId = getAchievementId(a);
+            const payload = buildAchievementFormData({
+              employeeId: a.employeeId || "temp",
+              employeeName: a.employeeName || "temp",
+              title: a.title || "temp",
+              achievements: a.description || "temp",
               visibilityStatus: "hide",
-            })
-          )
+            });
+            payload.delete("employeeId");
+            payload.delete("employeeName");
+            payload.delete("title");
+            payload.delete("achievements");
+            payload.delete("employeeID");
+            payload.delete("employeeNameArabic");
+            payload.delete("department");
+            payload.delete("arabicDepartment");
+            payload.delete("arabicTitle");
+            payload.delete("arabicAchievements");
+            return updateAchievement(achievementId, payload);
+          })()
         )
       );
       toast.success("All achievements marked as draft");
@@ -339,7 +372,7 @@ const AllAchievements = () => {
                     <tbody>
                       {paginatedAchievements.map((achievement, index) => (
                         <tr
-                          key={achievement.id}
+                          key={getAchievementId(achievement)}
                           className={`border-b border-slate-100 hover:bg-slate-50/80 ${index % 2 === 0 ? "bg-white" : "bg-slate-50/30"}`}
                         >
                           <td className="py-3 px-4">
@@ -353,10 +386,10 @@ const AllAchievements = () => {
                           <td className="py-3 px-4">{getStatusBadge(achievement.status)}</td>
                           <td className="py-3 px-4 text-right">
                             <div className="flex items-center justify-end gap-1">
-                              <button onClick={() => navigate(`/achievements/view/${achievement.id}`)} className="p-1.5 rounded-lg text-slate-400 hover:text-burgundy hover:bg-burgundy/10" title="View">
+                              <button onClick={() => navigate(`/achievements/view/${getAchievementId(achievement)}`)} className="p-1.5 rounded-lg text-slate-400 hover:text-burgundy hover:bg-burgundy/10" title="View">
                                 <Eye size={14} />
                               </button>
-                              <button onClick={() => navigate(`/achievements/edit/${achievement.id}`)} className="p-1.5 rounded-lg text-slate-400 hover:text-burgundy hover:bg-burgundy/10" title="Edit">
+                              <button onClick={() => navigate(`/achievements/edit/${getAchievementId(achievement)}`)} className="p-1.5 rounded-lg text-slate-400 hover:text-burgundy hover:bg-burgundy/10" title="Edit">
                                 <Pencil size={14} />
                               </button>
                               {achievement.status === "published" ? (

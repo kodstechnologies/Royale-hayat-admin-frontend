@@ -12,7 +12,11 @@ export interface FeedbackPayload {
     arabicFeedback?: string;
     stars: number;
     shownOnWebsite?: boolean;
+    /** Business doctor id (preferred) */
+    doctorId?: string;
+    /** @deprecated use doctorId */
     doctor?: string;
+    feedbackId?: string;
 }
 
 export interface CreateFeedbackParams {
@@ -21,8 +25,17 @@ export interface CreateFeedbackParams {
     addedBy?: string;
 }
 
-export interface UpdateFeedbackParams {
-    id: string;
+export interface UpdateDoctorFeedbackParams {
+    /** MongoDB _id of the feedback document */
+    feedbackId: string;
+    /** Business doctor id */
+    doctorId: string;
+    data: FeedbackPayload;
+}
+
+export interface UpdateHospitalFeedbackParams {
+    /** MongoDB _id of the hospital feedback document */
+    feedbackId: string;
     data: FeedbackPayload;
 }
 
@@ -87,18 +100,21 @@ export const getAllDoctorFeedbacks =
 
 
 // ==============================
-// GET DOCTOR FEEDBACK BY ID
+// GET DOCTOR FEEDBACKS BY doctorId (business id, not MongoDB _id)
 // ==============================
-export const getDoctorFeedbackById =
-    async (id: string) => {
+export const getDoctorFeedbacksByDoctorId =
+    async (doctorId: string) => {
 
         const response =
             await api.get(
-                `/api/v1/doctor-feedback/${id}`
+                `/api/v1/doctor-feedback/${doctorId}`
             );
 
         return response.data;
     };
+
+/** @deprecated Use getDoctorFeedbacksByDoctorId */
+export const getDoctorFeedbackById = getDoctorFeedbacksByDoctorId;
 
 
 // ==============================
@@ -106,14 +122,15 @@ export const getDoctorFeedbackById =
 // ==============================
 export const updateDoctorFeedback =
     async ({
-        id,
+        feedbackId,
+        doctorId,
         data,
-    }: UpdateFeedbackParams) => {
+    }: UpdateDoctorFeedbackParams) => {
 
         const response =
             await api.put(
-                `/api/v1/doctor-feedback/update/${id}`,
-                data
+                `/api/v1/doctor-feedback/update/${doctorId}`,
+                { ...data, feedbackId }
             );
 
         return response.data;
@@ -124,11 +141,12 @@ export const updateDoctorFeedback =
 // DELETE DOCTOR FEEDBACK
 // ==============================
 export const deleteDoctorFeedback =
-    async (id: string) => {
+    async (doctorId: string, feedbackId: string) => {
 
         const response =
             await api.delete(
-                `/api/v1/doctor-feedback/delete/${id}`
+                `/api/v1/doctor-feedback/delete/${doctorId}`,
+                { data: { feedbackId } }
             );
 
         return response.data;
@@ -198,14 +216,14 @@ export const getAllHospitalFeedbacks =
 
 
 // ==============================
-// GET HOSPITAL FEEDBACK BY ID
+// GET HOSPITAL FEEDBACK BY feedbackId (MongoDB _id)
 // ==============================
 export const getHospitalFeedbackById =
-    async (id: string) => {
+    async (feedbackId: string) => {
 
         const response =
             await api.get(
-                `/api/v1/hospital-feedback/${id}`
+                `/api/v1/hospital-feedback/${feedbackId}`
             );
 
         return response.data;
@@ -217,13 +235,13 @@ export const getHospitalFeedbackById =
 // ==============================
 export const updateHospitalFeedback =
     async ({
-        id,
+        feedbackId,
         data,
-    }: UpdateFeedbackParams) => {
+    }: UpdateHospitalFeedbackParams) => {
 
         const response =
             await api.put(
-                `/api/v1/hospital-feedback/update/${id}`,
+                `/api/v1/hospital-feedback/update/${feedbackId}`,
                 data
             );
 
@@ -235,11 +253,11 @@ export const updateHospitalFeedback =
 // DELETE HOSPITAL FEEDBACK
 // ==============================
 export const deleteHospitalFeedback =
-    async (id: string) => {
+    async (feedbackId: string) => {
 
         const response =
             await api.delete(
-                `/api/v1/hospital-feedback/delete/${id}`
+                `/api/v1/hospital-feedback/delete/${feedbackId}`
             );
 
         return response.data;

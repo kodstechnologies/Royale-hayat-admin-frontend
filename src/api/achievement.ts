@@ -3,10 +3,15 @@ import api from "./axiosInstance";
 export type ApiAchievement = {
   _id: string;
   employeeId: string;
+  employeeID?: string;
   employeeName: string;
+  employeeNameArabic?: string;
   department?: string;
+  arabicDepartment?: string;
   title: string;
+  arabicTitle?: string;
   achievements: string;
+  arabicAchievements?: string;
   image?: string;
   visibilityStatus: "show" | "hide";
   createdAt: string;

@@ -13,6 +13,7 @@ import {
   cancelRequest,
   type AppointmentListFilters,
 } from "@/api/appointmentRequest";
+import { getStoredUserRole, isCallCenterRole } from "@/lib/userRole";
 
 // Types
 type AppointmentRequest = {
@@ -109,6 +110,7 @@ const mapRequestFromApi = (row: Record<string, unknown>): AppointmentRequest => 
   additionalNotes: row.additionalNotes
     ? String(row.additionalNotes)
     : undefined,
+  comments: row.note ? String(row.note) : undefined,
 });
 
 const mapBookingFromApi = (row: Record<string, unknown>): Booking => ({
@@ -132,18 +134,17 @@ const statusStyles: Record<string, { color: string; bg: string; icon: any; label
   cancelled: { color: "text-red-700", bg: "bg-red-100", icon: XCircle, label: "Cancelled" },
 };
 
-// Status Update Modal Component
-const StatusUpdateModal = ({ 
-  isOpen, 
-  onClose, 
-  onConfirm, 
-  currentStatus, 
-  itemName 
-}: { 
-  isOpen: boolean; 
-  onClose: () => void; 
-  onConfirm: (comment: string) => void; 
-  currentStatus: string; 
+const StatusUpdateModal = ({
+  isOpen,
+  onClose,
+  onConfirm,
+  currentStatus,
+  itemName,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: (comment: string) => void;
+  currentStatus: string;
   itemName: string;
 }) => {
   const [comment, setComment] = useState("");
@@ -159,22 +160,20 @@ const StatusUpdateModal = ({
           <span className="font-semibold">{currentStatus}</span>
         </p>
         <div className="mb-4">
-          <label className="block text-sm font-medium mb-2">Comments (Optional)</label>
+          <label className="block text-sm font-medium mb-2">Note (Optional)</label>
           <textarea
             value={comment}
             onChange={(e) => setComment(e.target.value)}
-            placeholder="Add any comments or notes..."
+            placeholder="Add a note for this status change..."
             className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-burgundy focus:border-transparent"
             rows={3}
           />
         </div>
         <div className="flex gap-2 justify-end">
           <Button variant="outline" onClick={onClose}>
-            Cancel
+            Close
           </Button>
-          <Button onClick={() => onConfirm(comment)}>
-            Confirm Status Change
-          </Button>
+          <Button onClick={() => onConfirm(comment)}>Confirm Status Change</Button>
         </div>
       </div>
     </div>
@@ -357,25 +356,32 @@ const FilterSection = ({
 const AppointmentRequestsList = ({ 
   requests, 
   loading, 
-  onStatusChange,
   filters,
   setFilters,
+  canManageRequests,
+  onStatusChange,
 }: { 
   requests: AppointmentRequest[]; 
   loading: boolean; 
-  onStatusChange: (id: string, newStatus: string, comment: string) => Promise<void>;
   filters: ListFilters;
   setFilters: React.Dispatch<React.SetStateAction<ListFilters>>;
+  canManageRequests: boolean;
+  onStatusChange: (id: string, newStatus: string, comment: string) => Promise<void>;
 }) => {
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [showFilters, setShowFilters] = useState(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
-  const [statusModal, setStatusModal] = useState<{ isOpen: boolean; id: string; newStatus: string; name: string }>({
+  const [statusModal, setStatusModal] = useState<{
+    isOpen: boolean;
+    id: string;
+    newStatus: string;
+    name: string;
+  }>({
     isOpen: false,
     id: "",
     newStatus: "",
     name: "",
   });
-  const [showFilters, setShowFilters] = useState(false);
 
   const departments = [...new Set(requests.map(r => r.department).filter(Boolean))] as string[];
   const doctors = [...new Set(requests.map(r => r.doctorName).filter(Boolean))] as string[];
@@ -470,7 +476,7 @@ const AppointmentRequestsList = ({
           requests.map((req) => {
             const StatusIcon = statusStyles[req.status].icon;
             const isActioning = actionLoading === req.id;
-            
+
             return (
               <div key={req.id} className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow">
                 <div
@@ -600,49 +606,55 @@ const AppointmentRequestsList = ({
                         <div className="space-y-2 md:col-span-2">
                           <div className="flex items-center gap-2">
                             <MessageSquare className="h-3.5 w-3.5 text-burgundy" />
-                            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Comments</span>
+                            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Note</span>
                           </div>
                           <p className="text-sm text-slate-700 italic">{req.comments}</p>
                         </div>
                       )}
                     </div>
 
-                    <div className="flex flex-wrap gap-2 pt-3 border-t border-slate-100">
-                      {req.status !== "confirmed" && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          disabled={isActioning}
-                          onClick={() => setStatusModal({
-                            isOpen: true,
-                            id: req.id,
-                            newStatus: "confirmed",
-                            name: req.fullName,
-                          })}
-                          className="gap-1.5 border-green-200 text-green-700 hover:bg-green-50 hover:border-green-300 hover:text-green-800"
-                        >
-                          <Check className="h-3.5 w-3.5" />
-                          {isActioning ? "Processing..." : "Confirm Request"}
-                        </Button>
-                      )}
-                      {req.status !== "cancelled" && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          disabled={isActioning}
-                          onClick={() => setStatusModal({
-                            isOpen: true,
-                            id: req.id,
-                            newStatus: "cancelled",
-                            name: req.fullName,
-                          })}
-                          className="gap-1.5 border-red-200 text-red-700 hover:bg-red-50 hover:border-red-300 hover:text-red-800"
-                        >
-                          <X className="h-3.5 w-3.5" />
-                          {isActioning ? "Processing..." : "Cancel Request"}
-                        </Button>
-                      )}
-                    </div>
+                    {canManageRequests && (
+                      <div className="flex flex-wrap gap-2 pt-3 border-t border-slate-100">
+                        {req.status !== "confirmed" && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            disabled={isActioning}
+                            onClick={() =>
+                              setStatusModal({
+                                isOpen: true,
+                                id: req.id,
+                                newStatus: "confirmed",
+                                name: req.fullName,
+                              })
+                            }
+                            className="gap-1.5 border-green-200 text-green-700 hover:bg-green-50 hover:border-green-300 hover:text-green-800"
+                          >
+                            <Check className="h-3.5 w-3.5" />
+                            {isActioning ? "Processing..." : "Confirm Request"}
+                          </Button>
+                        )}
+                        {req.status !== "cancelled" && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            disabled={isActioning}
+                            onClick={() =>
+                              setStatusModal({
+                                isOpen: true,
+                                id: req.id,
+                                newStatus: "cancelled",
+                                name: req.fullName,
+                              })
+                            }
+                            className="gap-1.5 border-red-200 text-red-700 hover:bg-red-50 hover:border-red-300 hover:text-red-800"
+                          >
+                            <X className="h-3.5 w-3.5" />
+                            {isActioning ? "Processing..." : "Cancel Request"}
+                          </Button>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -651,13 +663,17 @@ const AppointmentRequestsList = ({
         )}
       </div>
 
-      <StatusUpdateModal
-        isOpen={statusModal.isOpen}
-        onClose={() => setStatusModal({ isOpen: false, id: "", newStatus: "", name: "" })}
-        onConfirm={handleStatusUpdate}
-        currentStatus={statusModal.newStatus}
-        itemName={statusModal.name}
-      />
+      {canManageRequests && (
+        <StatusUpdateModal
+          isOpen={statusModal.isOpen}
+          onClose={() =>
+            setStatusModal({ isOpen: false, id: "", newStatus: "", name: "" })
+          }
+          onConfirm={handleStatusUpdate}
+          currentStatus={statusModal.newStatus}
+          itemName={statusModal.name}
+        />
+      )}
     </>
   );
 };
@@ -898,6 +914,7 @@ const BookingsList = ({
 // Main Component
 const AppointmentRequests = () => {
   useLanguage();
+  const canManageRequests = isCallCenterRole(getStoredUserRole());
   const [activeTab, setActiveTab] = useState<"requests" | "bookings">("requests");
   const [requests, setRequests] = useState<AppointmentRequest[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -966,11 +983,15 @@ const AppointmentRequests = () => {
     void fetchBookings();
   }, [fetchBookings]);
 
-  const handleRequestStatusChange = async (id: string, newStatus: string, comment: string) => {
+  const handleRequestStatusChange = async (
+    id: string,
+    newStatus: string,
+    comment: string,
+  ) => {
     if (newStatus === "confirmed") {
-      await acceptRequest(id);
+      await acceptRequest(id, comment);
     } else if (newStatus === "cancelled") {
-      await cancelRequest(id);
+      await cancelRequest(id, comment);
     }
 
     setRequests((prev) =>
@@ -1093,9 +1114,10 @@ const AppointmentRequests = () => {
               <AppointmentRequestsList 
                 requests={requests}
                 loading={loadingRequests}
-                onStatusChange={handleRequestStatusChange}
                 filters={requestFilters}
                 setFilters={setRequestFilters}
+                canManageRequests={canManageRequests}
+                onStatusChange={handleRequestStatusChange}
               />
             )}
 

@@ -43,7 +43,7 @@ export type HospitalFeedback = {
 };
 
 type FeedbackDoctorOption = {
-  _id: string;
+  doctorId: string;
   name: string;
   arabicName: string;
   department: string;
@@ -76,8 +76,6 @@ type EditFeedbackProps = {
   onClose: () => void;
   onSaved: (result: EditFeedbackSaveResult) => void;
 };
-
-const isValidObjectId = (id: string) => /^[a-f\d]{24}$/i.test(id);
 
 const hasText = (value?: string) => Boolean(value?.trim());
 
@@ -142,7 +140,7 @@ const EditFeedback = ({
           );
           const departmentObj = doc.department && typeof doc.department === "object" ? doc.department : null;
           return {
-            _id: doc._id,
+            doctorId: doc.doctorId || "",
             name: doc.name || "",
             arabicName: doc.arabicName || doc.nameAr || adminMatch?.arabicName || "",
             department:
@@ -152,7 +150,7 @@ const EditFeedback = ({
             initials: doc.initials || adminMatch?.initials || "DR",
           };
         });
-        setDoctorOptions(mapped.filter((d) => d._id && isValidObjectId(d._id)));
+        setDoctorOptions(mapped.filter((d) => d.doctorId));
       } catch (error) {
         console.error("Failed to load doctors:", error);
         toast.error(showArabicContent ? "فشل في تحميل قائمة الأطباء" : "Failed to load doctors list");
@@ -170,11 +168,11 @@ const EditFeedback = ({
     if (!df.doctorId) return;
 
     setDoctorOptions((prev) => {
-      if (prev.some((d) => d._id === df.doctorId)) return prev;
+      if (prev.some((d) => d.doctorId === df.doctorId)) return prev;
       return [
         ...prev,
         {
-          _id: df.doctorId,
+          doctorId: df.doctorId,
           name: df.doctorName,
           arabicName: df.doctorNameAr,
           department: df.doctorDepartment,
@@ -187,11 +185,11 @@ const EditFeedback = ({
 
   const handleDoctorSelect = (doctorId: string) => {
     if (doctorId) {
-      const selected = doctorOptions.find((doc) => doc._id === doctorId);
+      const selected = doctorOptions.find((doc) => doc.doctorId === doctorId);
       if (selected) {
         setFormData((prev) => ({
           ...prev,
-          doctorId: selected._id,
+          doctorId: selected.doctorId,
           doctorName: selected.name,
           doctorNameAr: selected.arabicName,
           doctorDepartment: selected.department,
@@ -233,7 +231,7 @@ const EditFeedback = ({
     setIsSubmitting(true);
     try {
       if (feedbackType === "doctor") {
-        if (!formData.doctorId || !isValidObjectId(formData.doctorId)) {
+        if (!formData.doctorId) {
           toast.error(
             showArabicContent ? "الرجاء اختيار طبيب من القائمة" : "Please select a doctor from the list"
           );
@@ -247,13 +245,17 @@ const EditFeedback = ({
           arabicFeedback: formData.commentAr,
           stars: formData.rating,
           shownOnWebsite: formData.showOnWebsite,
-          doctor: formData.doctorId,
+          doctorId: formData.doctorId,
         };
 
-        await updateDoctorFeedback({ id: feedback.id, data: payload });
+        await updateDoctorFeedback({
+          feedbackId: feedback.id,
+          doctorId: formData.doctorId,
+          data: payload,
+        });
 
         const doctorInitials =
-          doctorOptions.find((d) => d._id === formData.doctorId)?.initials ||
+          doctorOptions.find((d) => d.doctorId === formData.doctorId)?.initials ||
           (formData.doctorName || formData.doctorNameAr)
             .split(" ")
             .map((n) => n[0])
@@ -290,7 +292,7 @@ const EditFeedback = ({
           shownOnWebsite: formData.showOnWebsite,
         };
 
-        await updateHospitalFeedback({ id: feedback.id, data: payload });
+        await updateHospitalFeedback({ feedbackId: feedback.id, data: payload });
 
         onSaved({
           type: "hospital",
@@ -411,7 +413,7 @@ const EditFeedback = ({
                       {loadingDoctors ? uiText.loadingDoctors : uiText.selectDoctorPlaceholder}
                     </option>
                     {doctorOptions.map((doctor) => (
-                      <option key={doctor._id} value={doctor._id}>
+                      <option key={doctor.doctorId} value={doctor.doctorId}>
                         {showArabicContent
                           ? `${doctor.arabicName || doctor.name} - ${doctor.departmentAr || doctor.department}`
                           : `${doctor.name} - ${doctor.department}`}

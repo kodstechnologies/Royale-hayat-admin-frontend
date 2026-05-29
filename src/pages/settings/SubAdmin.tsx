@@ -265,7 +265,11 @@ const SubAdmin = () => {
               </div>
             )}
 
-            {activeTab === "add-user" && <AddUserForm />}
+            {activeTab === "add-user" && (
+              <div className="rounded-xl bg-slate-50/70 p-1">
+                <AddUserForm />
+              </div>
+            )}
 
             {passwordSaved && (
               <div className="fixed bottom-6 right-6 bg-green-100 border border-green-200 rounded-xl p-4 shadow-lg animate-in slide-in-from-right-5 duration-300 z-50">

@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import logo from "@/assets/rhh-logo.png";
 import { ShieldCheck, ChevronLeft, RefreshCw, Clock } from "lucide-react";
 import { verifyOtp } from "@/api/auth";
+import { getHomePathForUser } from "@/lib/userRole";
 
 const OtpScreen = () => {
   const navigate = useNavigate();
@@ -122,7 +123,7 @@ const OtpScreen = () => {
       localStorage.setItem("rhh_admin_auth", "true");
       localStorage.setItem("rhh_admin_user", JSON.stringify(user || {}));
 
-      navigate("/");
+      navigate(getHomePathForUser(user));
     } catch (err: any) {
       setError(err?.response?.data?.message || "OTP verification failed.");
     } finally {

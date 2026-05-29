@@ -21,14 +21,13 @@ import {
   ListTree,
   ChevronDown,
   Sparkles,
-  PanelLeftClose,
-  PanelLeftOpen,
   BriefcaseBusiness
 } from "lucide-react";
 
 import logo from "@/assets/rhh-logo.png";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { logout } from "@/api/auth";
+import { isCallCenterUser } from "@/lib/userRole";
 import { useState, useRef } from "react";
 
 const navItems = [
@@ -49,15 +48,17 @@ const navItems = [
 
 interface SidebarProps {
   collapsed: boolean;
-  onToggle?: () => void;
 }
 
-const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
+const Sidebar = ({ collapsed }: SidebarProps) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { t, isRTL } = useLanguage();
+  const isCallCenter = isCallCenterUser();
 
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
+  const navContainerRef = useRef<HTMLElement>(null);
+  const masterDropdownRef = useRef<HTMLDivElement>(null);
 
   const masterPaths = [
     "/categories",
@@ -76,7 +77,27 @@ const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
   );
 
   const handleMasterToggle = () => {
-    setMasterOpen((prev) => !prev);
+    setMasterOpen((prev) => {
+      const nextOpen = !prev;
+
+      if (nextOpen) {
+        setTimeout(() => {
+          if (masterDropdownRef.current) {
+            masterDropdownRef.current.scrollIntoView({
+              behavior: "smooth",
+              block: "nearest",
+            });
+          } else if (navContainerRef.current) {
+            navContainerRef.current.scrollTo({
+              top: navContainerRef.current.scrollTop + 140,
+              behavior: "smooth",
+            });
+          }
+        }, 120);
+      }
+
+      return nextOpen;
+    });
   };
 
   const isRouteActive = (path: string) =>
@@ -112,6 +133,9 @@ const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
     { to: "/csr", icon: Globe, label: "CSR" },
     { to: "/work-culture", icon: BriefcaseBusiness , label: "Work Culture" },
   ];
+  const visibleMainNavItems = isCallCenter
+    ? mainNavItems.filter((item) => item.to === "/appointment")
+    : mainNavItems;
 
   // Other management items
   const managementNavItems = [
@@ -286,35 +310,8 @@ const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
           rounded-2xl
         `}
       >
-        {/* Logo Section with Collapse Button */}
+        {/* Logo Section */}
         <div className="relative h-28 flex items-center justify-center border-b border-slate-100 px-2 bg-gradient-to-r from-white to-slate-50/50 shrink-0">
-          {/* Collapse/Expand Button */}
-          {onToggle && (
-            <button
-              onClick={onToggle}
-              className={`
-        absolute
-        ${isRTL ? "left-3" : "right-3"}
-        top-5
-        w-10 h-10
-        flex items-center justify-center
-        rounded-xl
-        bg-burgundy
-        text-white
-        shadow-lg
-        hover:scale-105
-        transition-all duration-300
-        z-50
-      `}
-            >
-              {collapsed ? (
-                <PanelLeftOpen size={20} />
-              ) : (
-                <PanelLeftClose size={20} />
-              )}
-            </button>
-          )}
-
           <div className="relative w-full flex justify-center px-0">
             {/* Glow Effect */}
             <div className="absolute inset-0 bg-burgundy/20 rounded-full blur-xl animate-pulse"></div>
@@ -333,10 +330,13 @@ const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
         </div>
         {/* Navigation Area */}
         <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
-          <nav className="flex-1 py-4 overflow-y-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-burgundy/30">
+          <nav
+            ref={navContainerRef}
+            className="flex-1 py-4 overflow-y-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-burgundy/30"
+          >
             {/* Main Nav Items */}
             <div className="space-y-0.5">
-              {mainNavItems.map((item) => {
+              {visibleMainNavItems.map((item) => {
                 const isActive = isRouteActive(item.to);
                 return (
                   <NavItem
@@ -349,7 +349,7 @@ const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
             </div>
 
             {/* Master Data Dropdown Section */}
-            {collapsed ? (
+            {!isCallCenter && (collapsed ? (
               /* Collapsed: show master items flat */
               <div className="space-y-0.5 mt-2">
                 {masterItems.map((item) => {
@@ -396,6 +396,7 @@ const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
 
                 {/* Dropdown Menu */}
                 <div
+                  ref={masterDropdownRef}
                   className={`
                     overflow-hidden transition-all duration-300 ease-in-out
                     ${masterOpen ? "max-h-[500px] mt-2" : "max-h-0"}
@@ -416,21 +417,23 @@ const Sidebar = ({ collapsed, onToggle }: SidebarProps) => {
                   </div>
                 </div>
               </div>
-            )}
+            ))}
 
             {/* Other Management Section */}
-            <div className="space-y-0.5 mt-2">
-              {managementNavItems.map((item) => {
-                const isActive = isRouteActive(item.to);
-                return (
-                  <NavItem
-                    key={item.to}
-                    item={item}
-                    isActive={isActive}
-                  />
-                );
-              })}
-            </div>
+            {!isCallCenter && (
+              <div className="space-y-0.5 mt-2">
+                {managementNavItems.map((item) => {
+                  const isActive = isRouteActive(item.to);
+                  return (
+                    <NavItem
+                      key={item.to}
+                      item={item}
+                      isActive={isActive}
+                    />
+                  );
+                })}
+              </div>
+            )}
 
             {/* Divider */}
             <div className="relative my-4 mx-3">
