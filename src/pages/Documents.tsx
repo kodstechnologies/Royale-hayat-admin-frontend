@@ -88,6 +88,8 @@ const Documents = () => {
   const [selectedCard, setSelectedCard] = useState<string | null>(null);
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>("");
   const [generatingQr, setGeneratingQr] = useState(false);
+  const [docToDelete, setDocToDelete] = useState<AdminDoc | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const { t } = useLanguage();
 
   // Helper: map API response shape → AdminDoc
@@ -288,15 +290,21 @@ const Documents = () => {
     }
   };
 
-  const handleDelete = async (doc: AdminDoc) => {
+  const confirmDelete = async () => {
+    if (!docToDelete) return;
+
+    setDeleting(true);
     try {
-      await deleteDocument(doc.id);
+      await deleteDocument(docToDelete.id);
+      setDocs((prev) => prev.filter((d) => d.id !== docToDelete.id));
+      toast.success(`"${docToDelete.title}" deleted`);
+      setDocToDelete(null);
     } catch (error) {
       console.error("Delete failed:", error);
-      // Proceed with local removal regardless
+      toast.error("Failed to delete document. Please try again.");
+    } finally {
+      setDeleting(false);
     }
-    setDocs(prev => prev.filter(d => d.id !== doc.id));
-    toast.success(`"${doc.title}" deleted`);
   };
 
   const generateQRCode = async (doc: AdminDoc) => {
@@ -650,7 +658,7 @@ const Documents = () => {
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
-                                handleDelete(doc);
+                                setDocToDelete(doc);
                               }}
                               className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 text-xs font-medium hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition-all"
                             >
@@ -1093,6 +1101,42 @@ const Documents = () => {
                   </div>
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete confirmation */}
+      {docToDelete && (
+        <div
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
+          onClick={() => !deleting && setDocToDelete(null)}
+        >
+          <div
+            className="bg-white rounded-xl max-w-md w-full mx-4 p-6 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-lg font-bold text-slate-800 mb-2">Delete document?</h3>
+            <p className="text-sm text-slate-600">
+              Are you sure you want to delete{" "}
+              <span className="font-semibold text-slate-800">&quot;{docToDelete.title}&quot;</span>?
+              This action cannot be undone.
+            </p>
+            <div className="flex justify-end gap-3 mt-6">
+              <Button
+                variant="outline"
+                onClick={() => setDocToDelete(null)}
+                disabled={deleting}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={confirmDelete}
+                disabled={deleting}
+              >
+                {deleting ? "Deleting..." : "Delete"}
+              </Button>
             </div>
           </div>
         </div>

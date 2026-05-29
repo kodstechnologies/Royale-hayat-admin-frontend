@@ -2,8 +2,10 @@ import { useState, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import logo from "@/assets/rhh-logo.png";
 import { ShieldCheck, ChevronLeft, RefreshCw, Clock } from "lucide-react";
-import { verifyOtp } from "@/api/auth";
+import { sendOtp, verifyOtp } from "@/api/auth";
 import { getHomePathForUser } from "@/lib/userRole";
+
+const OTP_DURATION_SECONDS = 5 * 60; // 5 minutes
 
 const OtpScreen = () => {
   const navigate = useNavigate();
@@ -12,11 +14,14 @@ const OtpScreen = () => {
 
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [loading, setLoading] = useState(false);
+  const [resending, setResending] = useState(false);
   const [error, setError] = useState("");
-  
-  // Timer states
-  const [timeLeft, setTimeLeft] = useState(600); // 10 minutes in seconds
+  const [successMessage, setSuccessMessage] = useState("");
+
+  const [timeLeft, setTimeLeft] = useState(OTP_DURATION_SECONDS);
   const [isTimerActive, setIsTimerActive] = useState(true);
+
+  const canResendOtp = !isTimerActive && timeLeft <= 0;
   
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
@@ -96,6 +101,7 @@ const OtpScreen = () => {
   const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setSuccessMessage("");
 
     const otpValue = otp.join("");
     
@@ -131,17 +137,37 @@ const OtpScreen = () => {
     }
   };
 
-  const handleResendOtp = () => {
-    if (!isTimerActive && timeLeft === 0) {
-      // Reset timer
-      setTimeLeft(600);
+  const handleResendOtp = async () => {
+    if (!canResendOtp || resending) return;
+
+    if (!email) {
+      setError("Email not found. Please go back and login again.");
+      return;
+    }
+
+    setResending(true);
+    setError("");
+    setSuccessMessage("");
+
+    try {
+      const response = await sendOtp(email);
+
+      if (!response?.success) {
+        setError(response?.message || "Failed to resend OTP.");
+        return;
+      }
+
+      setTimeLeft(OTP_DURATION_SECONDS);
       setIsTimerActive(true);
-      // Clear OTP fields
       setOtp(["", "", "", "", "", ""]);
-      // Focus on first input
+      setSuccessMessage("A new OTP has been sent to your email.");
       inputRefs.current[0]?.focus();
-      // Clear any previous errors
-      setError("");
+    } catch (err: any) {
+      setError(
+        err?.response?.data?.message || "Failed to resend OTP. Please try again.",
+      );
+    } finally {
+      setResending(false);
     }
   };
 
@@ -299,6 +325,12 @@ const OtpScreen = () => {
                 <CircularProgress progress={otpProgress} filledDigits={filledDigits} />
               </div>
 
+              {successMessage && (
+                <div className="flex items-center gap-2 p-3 rounded-xl bg-green-50 border border-green-200">
+                  <p className="text-sm text-green-700 font-medium">{successMessage}</p>
+                </div>
+              )}
+
               {/* ERROR */}
               {error && (
                 <div className="flex items-center gap-2 p-3 rounded-xl bg-red-50 border border-red-200 animate-in fade-in duration-200">
@@ -343,12 +375,12 @@ const OtpScreen = () => {
                 )}
               </button>
 
-              {/* Resend OTP Button */}
+              {/* Resend OTP Button — enabled after 5 min timer expires */}
               <div className="flex justify-center">
                 <button
                   type="button"
                   onClick={handleResendOtp}
-                  disabled={isTimerActive}
+                  disabled={!canResendOtp || resending}
                   className="
                     flex items-center gap-2
                     text-sm font-medium
@@ -359,11 +391,14 @@ const OtpScreen = () => {
                     active:scale-95
                   "
                   style={{
-                    color: !isTimerActive && timeLeft === 0 ? "#8B1E3F" : "#94a3b8",
+                    color: canResendOtp ? "#8B1E3F" : "#94a3b8",
                   }}
                 >
-                  <RefreshCw size={14} />
-                  <span>Resend OTP</span>
+                  <RefreshCw
+                    size={14}
+                    className={resending ? "animate-spin" : ""}
+                  />
+                  <span>{resending ? "Sending..." : "Resend OTP"}</span>
                 </button>
               </div>
 

@@ -1,4 +1,4 @@
-import { NavLink, useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
   CalendarCheck,
@@ -28,7 +28,9 @@ import logo from "@/assets/rhh-logo.png";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { logout } from "@/api/auth";
 import { isCallCenterUser } from "@/lib/userRole";
-import { useState, useRef } from "react";
+import { useState, useRef, useLayoutEffect, useCallback } from "react";
+
+const SIDEBAR_SCROLL_KEY = "rhh_admin_sidebar_scroll";
 
 const navItems = [
   { to: "/", icon: LayoutDashboard, label: "Dashboard" },
@@ -50,6 +52,123 @@ interface SidebarProps {
   collapsed: boolean;
 }
 
+type NavItemConfig = {
+  to: string;
+  icon: typeof LayoutDashboard;
+  label: string;
+};
+
+const SidebarNavItem = ({
+  item,
+  isActive,
+  showGoldenDot = false,
+  collapsed,
+  isRTL,
+  hoveredItem,
+  setHoveredItem,
+  t,
+  onNavigate,
+}: {
+  item: NavItemConfig;
+  isActive: boolean;
+  showGoldenDot?: boolean;
+  collapsed: boolean;
+  isRTL: boolean;
+  hoveredItem: string | null;
+  setHoveredItem: (value: string | null) => void;
+  t: (key: string) => string;
+  onNavigate: (to: string) => void;
+}) => (
+  <button
+    type="button"
+    onMouseDown={(e) => {
+      if (e.button !== 0) return;
+      e.preventDefault();
+    }}
+    onClick={() => onNavigate(item.to)}
+    onMouseEnter={() => setHoveredItem(item.to)}
+    onMouseLeave={() => setHoveredItem(null)}
+    className={`
+      box-border w-full max-w-full text-left
+      group relative flex items-center gap-3
+      px-3 py-2.5 mb-1.5
+      rounded-xl text-sm font-medium
+      transition-all duration-300 ease-in-out
+      border
+
+      ${isActive
+        ? `
+          bg-gradient-to-r from-burgundy to-burgundy/90
+          text-white
+          border-burgundy/80
+          shadow-lg shadow-burgundy/20
+        `
+        : `
+          bg-white/50
+          text-slate-600
+          border-transparent
+          hover:bg-white/80
+          hover:border-burgundy/20
+          hover:shadow-md
+          hover:text-burgundy
+        `
+      }
+
+      ${collapsed ? "justify-center px-2" : ""}
+    `}
+  >
+    {isActive && !showGoldenDot && (
+      <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 rounded-r-full bg-white shadow-sm" />
+    )}
+
+    {isActive && showGoldenDot && !collapsed && (
+      <div className="absolute left-0 top-1/2 -translate-y-1/2 z-30">
+        <div className="w-1.5 h-8 rounded-r-full bg-amber-400 shadow-sm" />
+      </div>
+    )}
+
+    <div
+      className={`
+        flex items-center justify-center
+        w-9 h-9 rounded-lg
+        transition-all duration-300
+        ${isActive
+          ? "bg-white/20 text-white shadow-sm"
+          : "bg-white/60 text-slate-500 group-hover:bg-burgundy/15 group-hover:text-burgundy group-hover:shadow-sm"
+        }
+      `}
+    >
+      <item.icon size={18} />
+    </div>
+
+    {!collapsed && (
+      <span
+        className={`
+          flex-1 text-[13px] leading-5 font-medium
+          whitespace-normal break-words
+          transition-colors duration-300
+          ${isActive ? "text-white" : "text-slate-700 group-hover:text-burgundy"}
+        `}
+      >
+        {t(item.label)}
+      </span>
+    )}
+
+    {!isActive && !collapsed && (
+      <div className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-r from-burgundy/5 to-transparent pointer-events-none" />
+    )}
+
+    {collapsed && hoveredItem === item.to && (
+      <div
+        className={`fixed ${isRTL ? "right-20" : "left-20"
+          } z-50 px-3 py-2 text-xs font-medium text-white bg-slate-800 rounded-lg shadow-xl whitespace-nowrap animate-in fade-in slide-in-from-left-2 duration-200`}
+      >
+        {t(item.label)}
+      </div>
+    )}
+  </button>
+);
+
 const Sidebar = ({ collapsed }: SidebarProps) => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -58,7 +177,20 @@ const Sidebar = ({ collapsed }: SidebarProps) => {
 
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
   const navContainerRef = useRef<HTMLElement>(null);
-  const masterDropdownRef = useRef<HTMLDivElement>(null);
+  const pendingScrollRestore = useRef<number | null>(null);
+
+  const persistNavScroll = useCallback(() => {
+    const nav = navContainerRef.current;
+    if (!nav) return;
+    pendingScrollRestore.current = nav.scrollTop;
+    sessionStorage.setItem(SIDEBAR_SCROLL_KEY, String(nav.scrollTop));
+  }, []);
+
+  const applySavedNavScroll = useCallback(() => {
+    const nav = navContainerRef.current;
+    if (!nav || pendingScrollRestore.current === null) return;
+    nav.scrollTop = pendingScrollRestore.current;
+  }, []);
 
   const masterPaths = [
     "/categories",
@@ -77,28 +209,50 @@ const Sidebar = ({ collapsed }: SidebarProps) => {
   );
 
   const handleMasterToggle = () => {
-    setMasterOpen((prev) => {
-      const nextOpen = !prev;
-
-      if (nextOpen) {
-        setTimeout(() => {
-          if (masterDropdownRef.current) {
-            masterDropdownRef.current.scrollIntoView({
-              behavior: "smooth",
-              block: "nearest",
-            });
-          } else if (navContainerRef.current) {
-            navContainerRef.current.scrollTo({
-              top: navContainerRef.current.scrollTop + 140,
-              behavior: "smooth",
-            });
-          }
-        }, 120);
-      }
-
-      return nextOpen;
-    });
+    persistNavScroll();
+    setMasterOpen((prev) => !prev);
   };
+
+  useLayoutEffect(() => {
+    if (pendingScrollRestore.current === null) return;
+
+    applySavedNavScroll();
+    const raf1 = requestAnimationFrame(applySavedNavScroll);
+    const raf2 = requestAnimationFrame(() => {
+      requestAnimationFrame(applySavedNavScroll);
+    });
+    const t1 = window.setTimeout(applySavedNavScroll, 0);
+    const t2 = window.setTimeout(applySavedNavScroll, 50);
+    const t3 = window.setTimeout(() => {
+      applySavedNavScroll();
+      pendingScrollRestore.current = null;
+    }, 150);
+
+    return () => {
+      cancelAnimationFrame(raf1);
+      cancelAnimationFrame(raf2);
+      window.clearTimeout(t1);
+      window.clearTimeout(t2);
+      window.clearTimeout(t3);
+    };
+  }, [location.pathname, applySavedNavScroll, masterOpen, collapsed]);
+
+  useLayoutEffect(() => {
+    const nav = navContainerRef.current;
+    if (!nav) return;
+
+    const saved = Number(sessionStorage.getItem(SIDEBAR_SCROLL_KEY) || 0);
+    if (saved > 0 && pendingScrollRestore.current === null) {
+      pendingScrollRestore.current = saved;
+      applySavedNavScroll();
+    }
+
+    const onScroll = () => {
+      sessionStorage.setItem(SIDEBAR_SCROLL_KEY, String(nav.scrollTop));
+    };
+    nav.addEventListener("scroll", onScroll, { passive: true });
+    return () => nav.removeEventListener("scroll", onScroll);
+  }, [applySavedNavScroll]);
 
   const isRouteActive = (path: string) =>
     path === "/"
@@ -164,131 +318,32 @@ const Sidebar = ({ collapsed }: SidebarProps) => {
     },
   ];
 
-  const NavItem = ({
-    item,
-    isActive,
+  const handleNavClick = useCallback(
+    (to: string) => {
+      persistNavScroll();
+      navigate(to, { preventScrollReset: true });
+    },
+    [navigate, persistNavScroll],
+  );
+
+  const renderNavItem = (
+    item: NavItemConfig,
+    isActive: boolean,
     showGoldenDot = false,
-  }: {
-    item: typeof navItems[0];
-    isActive: boolean;
-    showGoldenDot?: boolean;
-  }) => {
-    const itemRef = useRef<HTMLAnchorElement>(null);
-
-    const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
-      // Stop propagation to prevent parent dropdown from toggling
-      e.stopPropagation();
-
-      setTimeout(() => {
-        itemRef.current?.scrollIntoView({
-          behavior: "smooth",
-          block: "nearest",
-        });
-      }, 150);
-    };
-
-    return (
-      <NavLink
-        ref={itemRef}
-        key={item.to}
-        to={item.to}
-        onClick={handleClick}
-        onMouseEnter={() => setHoveredItem(item.to)}
-        onMouseLeave={() => setHoveredItem(null)}
-        className={`
-          group relative flex items-center gap-3
-          px-3 py-2.5 mx-3 mb-1.5
-          rounded-xl text-sm font-medium
-          transition-all duration-300 ease-in-out
-          border
-  
-          ${isActive
-            ? `
-              bg-gradient-to-r from-burgundy to-burgundy/90
-              text-white
-              border-burgundy/80
-              shadow-lg shadow-burgundy/20
-              scale-[1.02]
-            `
-            : `
-              bg-white/50
-              text-slate-600
-              border-transparent
-              hover:bg-white/80
-              hover:border-burgundy/20
-              hover:shadow-md
-              hover:translate-x-1
-              hover:text-burgundy
-            `
-          }
-  
-          ${collapsed ? "justify-center px-2" : ""}
-        `}
-      >
-        {/* Active Indicator Bar */}
-        {isActive && !showGoldenDot && (
-          <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 rounded-r-full bg-white shadow-sm" />
-        )}
-
-        {/* Golden Dot Indicator for Master Data Items */}
-        {isActive && showGoldenDot && !collapsed && (
-          <div className="absolute -left-[26px] top-1/2 -translate-y-1/2 z-30">
-            <div className="relative flex items-center justify-center">
-              <div className="absolute left-[10px] w-[14px] h-[1.5px] bg-amber-400/70 rounded-full" />
-              <div className="w-3 h-3 rounded-full bg-amber-400 border-2 border-white shadow-lg shadow-amber-400/70" />
-            </div>
-          </div>
-        )}
-
-        {/* Icon Container */}
-        <div
-          className={`
-            flex items-center justify-center
-            w-9 h-9 rounded-lg
-            transition-all duration-300
-  
-            ${isActive
-              ? "bg-white/20 text-white shadow-sm"
-              : "bg-white/60 text-slate-500 group-hover:bg-burgundy/15 group-hover:text-burgundy group-hover:shadow-sm"
-            }
-          `}
-        >
-          <item.icon size={18} />
-        </div>
-
-        {!collapsed && (
-          <span
-            className={`
-              flex-1 text-[13px] leading-5 font-medium
-              whitespace-normal break-words
-              transition-colors duration-300
-              ${isActive
-                ? "text-white"
-                : "text-slate-700 group-hover:text-burgundy"
-              }
-            `}
-          >
-            {t(item.label)}
-          </span>
-        )}
-
-        {/* Hover Glow Effect */}
-        {!isActive && !collapsed && (
-          <div className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-r from-burgundy/5 to-transparent pointer-events-none" />
-        )}
-
-        {/* Tooltip for Collapsed State */}
-        {collapsed && hoveredItem === item.to && (
-          <div
-            className={`fixed ${isRTL ? "right-20" : "left-20"
-              } z-50 px-3 py-2 text-xs font-medium text-white bg-slate-800 rounded-lg shadow-xl whitespace-nowrap animate-in fade-in slide-in-from-left-2 duration-200`}
-          >
-            {t(item.label)}
-          </div>
-        )}
-      </NavLink>
-    );
-  };
+  ) => (
+    <SidebarNavItem
+      key={item.to}
+      item={item}
+      isActive={isActive}
+      showGoldenDot={showGoldenDot}
+      collapsed={collapsed}
+      isRTL={isRTL}
+      hoveredItem={hoveredItem}
+      setHoveredItem={setHoveredItem}
+      t={t}
+      onNavigate={handleNavClick}
+    />
+  );
 
   return (
     <>
@@ -323,54 +378,39 @@ const Sidebar = ({ collapsed }: SidebarProps) => {
         transition-all duration-300
         object-contain
         relative z-10
-        ${collapsed ? "h-14 w-44" : "h-24 w-full max-w-[650px]"}
+        ${collapsed ? "h-14 w-44 max-w-full" : "h-24 w-full max-w-full"}
       `}
             />
           </div>
         </div>
         {/* Navigation Area */}
-        <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+        <div className="flex-1 flex flex-col min-h-0 overflow-x-hidden overflow-y-hidden">
           <nav
             ref={navContainerRef}
-            className="flex-1 py-4 overflow-y-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-burgundy/30"
+            className="sidebar-nav-scroll flex-1 min-h-0 overflow-x-hidden overflow-y-auto [overflow-anchor:none] px-3"
           >
             {/* Main Nav Items */}
-            <div className="space-y-0.5">
-              {visibleMainNavItems.map((item) => {
-                const isActive = isRouteActive(item.to);
-                return (
-                  <NavItem
-                    key={item.to}
-                    item={item}
-                    isActive={isActive}
-                  />
-                );
-              })}
+            <div className="space-y-0.5 min-w-0">
+              {visibleMainNavItems.map((item) =>
+                renderNavItem(item, isRouteActive(item.to)),
+              )}
             </div>
 
             {/* Master Data Dropdown Section */}
             {!isCallCenter && (collapsed ? (
               /* Collapsed: show master items flat */
               <div className="space-y-0.5 mt-2">
-                {masterItems.map((item) => {
-                  const isActive = isRouteActive(item.to);
-                  return (
-                    <NavItem
-                      key={item.to}
-                      item={item}
-                      isActive={isActive}
-                      showGoldenDot={false}
-                    />
-                  );
-                })}
+                {masterItems.map((item) =>
+                  renderNavItem(item, isRouteActive(item.to), false),
+                )}
               </div>
             ) : (
               /* Expanded: collapsible dropdown */
-              <div className="px-3 mt-4 mb-2">
+              <div className="mt-4 mb-2 min-w-0">
                 <button
                   onClick={handleMasterToggle}
                   className="
-                    w-full flex items-center justify-between
+                    box-border w-full max-w-full flex items-center justify-between
                     px-3 py-2.5 rounded-xl
                     bg-gradient-to-r from-burgundy/8 to-burgundy/3
                     border border-burgundy/10
@@ -396,24 +436,15 @@ const Sidebar = ({ collapsed }: SidebarProps) => {
 
                 {/* Dropdown Menu */}
                 <div
-                  ref={masterDropdownRef}
                   className={`
                     overflow-hidden transition-all duration-300 ease-in-out
                     ${masterOpen ? "max-h-[500px] mt-2" : "max-h-0"}
                   `}
                 >
                   <div className="space-y-0.5 pl-2 border-l-2 border-burgundy/10 ml-3">
-                    {masterItems.map((item) => {
-                      const isActive = isRouteActive(item.to);
-                      return (
-                        <NavItem
-                          key={item.to}
-                          item={item}
-                          isActive={isActive}
-                          showGoldenDot={true}
-                        />
-                      );
-                    })}
+                    {masterItems.map((item) =>
+                      renderNavItem(item, isRouteActive(item.to), true),
+                    )}
                   </div>
                 </div>
               </div>
@@ -422,36 +453,22 @@ const Sidebar = ({ collapsed }: SidebarProps) => {
             {/* Other Management Section */}
             {!isCallCenter && (
               <div className="space-y-0.5 mt-2">
-                {managementNavItems.map((item) => {
-                  const isActive = isRouteActive(item.to);
-                  return (
-                    <NavItem
-                      key={item.to}
-                      item={item}
-                      isActive={isActive}
-                    />
-                  );
-                })}
+                {managementNavItems.map((item) =>
+                  renderNavItem(item, isRouteActive(item.to)),
+                )}
               </div>
             )}
-
-            {/* Divider */}
-            <div className="relative my-4 mx-3">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-slate-200/50"></div>
-              </div>
-            </div>
           </nav>
 
           {/* Footer Section */}
-          <div className="border-t border-slate-100 bg-gradient-to-r from-white to-slate-50/50 backdrop-blur-sm shrink-0 mt-auto">
+          <div className="border-t border-slate-100 bg-gradient-to-r from-white to-slate-50/50 backdrop-blur-sm shrink-0 mt-auto overflow-x-hidden px-3">
             {/* Logout Button */}
             <button
               onClick={handleLogout}
               title={collapsed ? t("Secure Logout") : undefined}
               aria-label={t("Secure Logout")}
               className={`
-                flex items-center gap-3 px-3 py-2.5 mx-2 mb-3 rounded-xl text-sm font-medium transition-all duration-200 text-red-500 hover:bg-red-50 hover:text-red-600 w-full group
+                box-border flex w-full max-w-full items-center gap-3 px-3 py-2.5 mb-3 rounded-xl text-sm font-medium transition-all duration-200 text-red-500 hover:bg-red-50 hover:text-red-600 group
                 ${collapsed ? "justify-center px-2" : ""}
               `}
             >
@@ -466,26 +483,27 @@ const Sidebar = ({ collapsed }: SidebarProps) => {
         </div>
       </aside>
 
-      {/* Custom Scrollbar Styles */}
       <style>{`
-        .scrollbar-thin::-webkit-scrollbar {
+        .sidebar-nav-scroll {
+          scrollbar-width: thin;
+          scrollbar-color: rgba(139, 30, 63, 0.25) transparent;
+        }
+
+        .sidebar-nav-scroll::-webkit-scrollbar {
           width: 4px;
+          height: 0;
         }
 
-        .scrollbar-thin::-webkit-scrollbar-track {
-          background: transparent;
-          margin: 8px 0;
+        .sidebar-nav-scroll::-webkit-scrollbar:horizontal {
+          display: none;
+          height: 0;
         }
 
-        .scrollbar-thin::-webkit-scrollbar-thumb {
+        .sidebar-nav-scroll::-webkit-scrollbar-thumb {
           background: rgba(139, 30, 63, 0.25);
           border-radius: 20px;
         }
 
-        .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-          background: rgba(139, 30, 63, 0.45);
-        }
-        
         /* Fade-in animation for tooltips */
         @keyframes fadeInSlideLeft {
           from {

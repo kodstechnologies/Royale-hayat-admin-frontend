@@ -5,23 +5,39 @@ const api = axios.create({
     baseURL: VITE_BACKEND_API_URL,
     withCredentials: true,
 });
+
+/** 401 on these routes is expected (wrong OTP/password) — do not force logout redirect */
+const AUTH_PATHS_NO_SESSION_REDIRECT = [
+    "/api/v1/auth/login",
+    "/api/v1/auth/send-otp",
+    "/api/v1/auth/verify-otp",
+    "/api/v1/auth/reset-password",
+];
+
+const shouldRedirectToLoginOn401 = (requestUrl?: string) => {
+    const hasToken = !!localStorage.getItem("rhh_admin_access_token");
+    if (!hasToken) return false;
+
+    const url = requestUrl ?? "";
+    const isAuthFlowRequest = AUTH_PATHS_NO_SESSION_REDIRECT.some((path) =>
+        url.includes(path),
+    );
+    return !isAuthFlowRequest;
+};
+
 // RESPONSE INTERCEPTOR
 api.interceptors.response.use(
-
     (response) => response,
-
     (error) => {
-
-        if (error.response?.status === 401) {
-
-            // remove broken auth state if any
+        if (
+            error.response?.status === 401 &&
+            shouldRedirectToLoginOn401(error.config?.url)
+        ) {
             localStorage.clear();
-
-            // redirect login
             window.location.href = "/login";
         }
 
         return Promise.reject(error);
-    }
+    },
 );
 export default api;

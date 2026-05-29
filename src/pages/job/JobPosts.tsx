@@ -8,12 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
 import AlertBox from "@/components/AlertBox";
-import { adminJobs, AdminJob } from "@/data/adminJobs";
-import { dummyApplications } from "@/data/dummyApplications";
 import { getAllJobs, deleteJob as deleteJobApi } from "@/api/job";
-
-const getApplicationsCount = (jobId: string) =>
-  dummyApplications.filter((a) => a.jobId === jobId).length;
 
 type JobPost = {
   _id: string;
@@ -29,28 +24,8 @@ type JobPost = {
   isActive: boolean;
   postedDate: string;
   applicationsCount: number;
-  source: "api" | "dummy"; // track origin so we know which delete path to use
 };
 
-// ── Dummy data as fallback ──────────────────────────────────────────────────
-const dummyJobPosts: JobPost[] = adminJobs.map((job: AdminJob) => ({
-  _id: job.id,
-  jobId: job.jobId,
-  title: job.title,
-  classification: job.category,
-  location: job.location,
-  type: job.type,
-  description: job.description,
-  responsibilities: job.responsibilities,
-  requirements: job.requirements,
-  closingDate: job.closingDate,
-  isActive: job.isActive,
-  postedDate: job.createdAt.split("T")[0],
-  applicationsCount: getApplicationsCount(job.jobId),
-  source: "dummy",
-}));
-
-// ── Map a raw API job object to JobPost ────────────────────────────────────
 const mapApiJob = (job: any): JobPost => ({
   _id: job._id,
   jobId: job.jobId ?? "",
@@ -65,7 +40,6 @@ const mapApiJob = (job: any): JobPost => ({
   isActive: job.isActive ?? true,
   postedDate: job.postedDate ? new Date(job.postedDate).toISOString().split("T")[0] : new Date().toISOString().split("T")[0],
   applicationsCount: job.applicationsCount ?? 0,
-  source: "api",
 });
 
 const JobPosts = () => {
@@ -83,20 +57,14 @@ const JobPosts = () => {
   const [isDeleting, setIsDeleting] = useState(false);
   const navigate = useNavigate();
 
-  // ── Fetch from API and merge with dummy data ──────────────────────────────
   const fetchJobs = async () => {
     setLoading(true);
     try {
       const res = await getAllJobs({ limit: 100, sortBy: "postedDate", sortOrder: "desc" });
       const apiJobs: JobPost[] = (res.data?.data ?? []).map(mapApiJob);
-
-      // Merge: API jobs first, then dummy jobs whose jobId isn't already in API results
-      const apiJobIds = new Set(apiJobs.map((j) => j.jobId));
-      const fallbackDummy = dummyJobPosts.filter((j) => !apiJobIds.has(j.jobId));
-      setJobs([...apiJobs, ...fallbackDummy]);
+      setJobs(apiJobs);
     } catch {
-      // API unavailable — fall back entirely to dummy data
-      setJobs(dummyJobPosts);
+      setJobs([]);
     } finally {
       setLoading(false);
     }
@@ -152,14 +120,8 @@ const JobPosts = () => {
     if (!jobToDelete) return;
     setIsDeleting(true);
     try {
-      if (jobToDelete.source === "api") {
-        await deleteJobApi(jobToDelete._id);
-        // Refresh from API after deletion
-        await fetchJobs();
-      } else {
-        // Dummy job — just remove from local state
-        setJobs((prev) => prev.filter((j) => j._id !== jobToDelete._id));
-      }
+      await deleteJobApi(jobToDelete._id);
+      await fetchJobs();
     } catch (err: any) {
       // Keep the dialog open on error — user can retry or cancel
       console.error("Delete failed:", err);

@@ -762,12 +762,14 @@ const FeedbackReviews = () => {
                                 </>
                               )}
                             </button>
-                            <button
-                              onClick={() => openEditModal(fb, "doctor")}
-                              className="p-1.5 rounded-lg text-slate-500 hover:bg-blue-50 hover:text-blue-600 transition-colors"
-                            >
-                              <Edit className="h-4 w-4" />
-                            </button>
+                            {fb.addedByAdmin && (
+                              <button
+                                onClick={() => openEditModal(fb, "doctor")}
+                                className="p-1.5 rounded-lg text-slate-500 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                              >
+                                <Edit className="h-4 w-4" />
+                              </button>
+                            )}
                             <button
                               onClick={() => handleDelete(fb.id, "doctor")}
                               className="p-1.5 rounded-lg text-slate-500 hover:bg-red-50 hover:text-red-600 transition-colors"
@@ -909,12 +911,14 @@ const FeedbackReviews = () => {
                                 </>
                               )}
                             </button>
-                            <button
-                              onClick={() => openEditModal(fb, "hospital")}
-                              className="p-1.5 rounded-lg text-slate-500 hover:bg-blue-50 hover:text-blue-600 transition-colors"
-                            >
-                              <Edit className="h-4 w-4" />
-                            </button>
+                            {fb.addedByAdmin && (
+                              <button
+                                onClick={() => openEditModal(fb, "hospital")}
+                                className="p-1.5 rounded-lg text-slate-500 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                              >
+                                <Edit className="h-4 w-4" />
+                              </button>
+                            )}
                             <button
                               onClick={() => handleDelete(fb.id, "hospital")}
                               className="p-1.5 rounded-lg text-slate-500 hover:bg-red-50 hover:text-red-600 transition-colors"

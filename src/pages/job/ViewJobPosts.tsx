@@ -13,7 +13,6 @@ import {
   CheckCircle,
   XCircle,
   Users,
-  Building2,
   Tag,
   Pencil,
 } from "lucide-react";
@@ -102,18 +101,22 @@ const ViewJobPost = () => {
 
   // ── Helpers ────────────────────────────────────────────────────────────────
 
+  const isArabic = activeLanguage === "arabic";
+
   const getStatusBadge = (isActive: boolean) =>
     isActive ? (
       <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
         <CheckCircle className="h-3 w-3" />
-        {activeLanguage === "english" ? "Active" : "نشط"}
+        Active
       </span>
     ) : (
       <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
         <XCircle className="h-3 w-3" />
-        {activeLanguage === "english" ? "Closed" : "مغلق"}
+        Closed
       </span>
     );
+
+  const arabicValueClass = isArabic ? "rtl-text" : "";
 
   const formatDate = (dateString: string) => {
     if (!dateString) return "N/A";
@@ -196,13 +199,9 @@ const ViewJobPost = () => {
                   <ArrowLeft className="h-5 w-5 text-slate-500 group-hover:text-burgundy" />
                 </button>
                 <div>
-                  <h2 className="text-2xl font-bold text-slate-800">
-                    {activeLanguage === "english" ? "Job Details" : "تفاصيل الوظيفة"}
-                  </h2>
+                  <h2 className="text-2xl font-bold text-slate-800">Job Details</h2>
                   <p className="text-sm text-slate-500 mt-1">
-                    {activeLanguage === "english"
-                      ? "View complete job posting information"
-                      : "عرض معلومات الوظيفة الكاملة"}
+                    View complete job posting information
                   </p>
                 </div>
               </div>
@@ -236,59 +235,42 @@ const ViewJobPost = () => {
               {/* Left Column */}
               <div className="lg:col-span-1 space-y-5">
                 {/* Job Header Card */}
-                <div
-                  className={`bg-white rounded-xl border border-slate-200 p-5 shadow-sm ${
-                    activeLanguage === "arabic" ? "rtl-text" : ""
-                  }`}
-                >
+                <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
                   <div className="flex items-center gap-3 mb-4 pb-3 border-b border-slate-100">
-                    <div className="w-12 h-12 rounded-xl bg-burgundy/10 flex items-center justify-center">
+                    <div className="w-12 h-12 rounded-xl bg-burgundy/10 flex items-center justify-center shrink-0">
                       <Briefcase className="h-6 w-6 text-burgundy" />
                     </div>
-                    <div>
-                      <h3 className="font-semibold text-slate-800">
-                        {activeLanguage === "english" ? job.title : job.arabicTitle || job.title}
+                    <div className="min-w-0 flex-1">
+                      <h3 className={`font-semibold text-slate-800 ${arabicValueClass}`}>
+                        {isArabic ? job.arabicTitle || job.title : job.title}
                       </h3>
                       <p className="text-xs text-slate-500">{job.jobId}</p>
                     </div>
                   </div>
 
                   <div className="space-y-3">
-                    {/* <div className="flex items-center gap-2 text-sm">
-                      <Building2 className="h-4 w-4 text-slate-400" />
-                      <span className="text-slate-600">
-                        {activeLanguage === "english" ? "Classification:" : "التصنيف:"}
-                      </span>
-                      <span className="font-medium text-slate-800">{job.classification}</span>
-                    </div> */}
                     <div className="flex items-center gap-2 text-sm">
-                      <MapPin className="h-4 w-4 text-slate-400" />
-                      <span className="text-slate-600">
-                        {activeLanguage === "english" ? "Location:" : "الموقع:"}
+                      <MapPin className="h-4 w-4 text-slate-400 shrink-0" />
+                      <span className="text-slate-600 shrink-0">Location:</span>
+                      <span className={`font-medium text-slate-800 ${arabicValueClass}`}>
+                        {job.location}
                       </span>
-                      <span className="font-medium text-slate-800">{job.location}</span>
                     </div>
                     <div className="flex items-center gap-2 text-sm">
-                      <Tag className="h-4 w-4 text-slate-400" />
-                      <span className="text-slate-600">
-                        {activeLanguage === "english" ? "Employment Type:" : "نوع التوظيف:"}
-                      </span>
+                      <Tag className="h-4 w-4 text-slate-400 shrink-0" />
+                      <span className="text-slate-600 shrink-0">Employment Type:</span>
                       <span className="font-medium text-slate-800">{job.type}</span>
                     </div>
                     <div className="flex items-center gap-2 text-sm">
-                      <Calendar className="h-4 w-4 text-slate-400" />
-                      <span className="text-slate-600">
-                        {activeLanguage === "english" ? "Posted Date:" : "تاريخ النشر:"}
-                      </span>
+                      <Calendar className="h-4 w-4 text-slate-400 shrink-0" />
+                      <span className="text-slate-600 shrink-0">Posted Date:</span>
                       <span className="font-medium text-slate-800">
                         {formatDate(job.postedDate)}
                       </span>
                     </div>
                     <div className="flex items-center gap-2 text-sm">
-                      <Clock className="h-4 w-4 text-slate-400" />
-                      <span className="text-slate-600">
-                        {activeLanguage === "english" ? "Closing Date:" : "تاريخ الإغلاق:"}
-                      </span>
+                      <Clock className="h-4 w-4 text-slate-400 shrink-0" />
+                      <span className="text-slate-600 shrink-0">Closing Date:</span>
                       <span
                         className={`font-medium ${
                           isClosingSoon(job.closingDate) ? "text-red-600" : "text-slate-800"
@@ -296,9 +278,7 @@ const ViewJobPost = () => {
                       >
                         {formatDate(job.closingDate)}
                         {isClosingSoon(job.closingDate) && (
-                          <span className="ml-1 text-xs text-red-500">
-                            ({activeLanguage === "english" ? "Closing soon!" : "ينتهي قريباً!"})
-                          </span>
+                          <span className="ml-1 text-xs text-red-500">(Closing soon!)</span>
                         )}
                       </span>
                     </div>
@@ -306,40 +286,24 @@ const ViewJobPost = () => {
                 </div>
 
                 {/* Status Card */}
-                <div
-                  className={`bg-white rounded-xl border border-slate-200 p-5 shadow-sm ${
-                    activeLanguage === "arabic" ? "rtl-text" : ""
-                  }`}
-                >
+                <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
                   <div className="flex items-center gap-3 mb-4 pb-3 border-b border-slate-100">
                     <div className="w-12 h-12 rounded-xl bg-burgundy/10 flex items-center justify-center">
                       <FileText className="h-6 w-6 text-burgundy" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-slate-800">
-                        {activeLanguage === "english" ? "Job Status" : "حالة الوظيفة"}
-                      </h3>
-                      <p className="text-xs text-slate-500">
-                        {activeLanguage === "english"
-                          ? "Current posting status"
-                          : "حالة النشر الحالية"}
-                      </p>
+                      <h3 className="font-semibold text-slate-800">Job Status</h3>
+                      <p className="text-xs text-slate-500">Current posting status</p>
                     </div>
                   </div>
 
                   <div className="space-y-3">
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-slate-600">
-                        {activeLanguage === "english" ? "Post Status" : "حالة النشر"}
-                      </span>
+                      <span className="text-sm text-slate-600">Post Status</span>
                       {getStatusBadge(job.isActive)}
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-slate-600">
-                        {activeLanguage === "english"
-                          ? "Applications Received"
-                          : "الطلبات المستلمة"}
-                      </span>
+                      <span className="text-sm text-slate-600">Applications Received</span>
                       <span className="font-semibold text-burgundy">
                         {job.applicationsCount}
                       </span>
@@ -349,9 +313,7 @@ const ViewJobPost = () => {
 
                 {/* Quick Actions */}
                 <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-                  <h3 className="text-sm font-semibold text-slate-800 mb-3">
-                    {activeLanguage === "english" ? "Quick Actions" : "إجراءات سريعة"}
-                  </h3>
+                  <h3 className="text-sm font-semibold text-slate-800 mb-3">Quick Actions</h3>
                   <div className="space-y-2">
                     <Button
                       onClick={() => navigate(`/jobs/edit/${job._id}`)}
@@ -359,7 +321,7 @@ const ViewJobPost = () => {
                       className="w-full gap-2"
                     >
                       <Pencil className="h-4 w-4" />
-                      {activeLanguage === "english" ? "Edit Job Posting" : "تعديل الوظيفة"}
+                      Edit Job Posting
                     </Button>
                     
                     <Button
@@ -367,30 +329,26 @@ const ViewJobPost = () => {
                       className="w-full gap-2 bg-burgundy hover:bg-burgundy/90"
                     >
                       <Users className="h-4 w-4" />
-                      {activeLanguage === "english"
-                        ? `View Applications (${job.applicationsCount})`
-                        : `عرض الطلبات (${job.applicationsCount})`}
+                      {`View Applications (${job.applicationsCount})`}
                     </Button>
                   </div>
                 </div>
               </div>
 
               {/* Right Column */}
-              <div
-                className={`lg:col-span-2 space-y-5 ${
-                  activeLanguage === "arabic" ? "rtl-text" : ""
-                }`}
-              >
+              <div className="lg:col-span-2 space-y-5">
                 {/* Description */}
                 <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
                   <h3 className="text-md font-semibold text-slate-800 mb-3 flex items-center gap-2">
                     <FileText className="h-5 w-5 text-burgundy" />
-                    {activeLanguage === "english" ? "Job Description" : "وصف الوظيفة"}
+                    Job Description
                   </h3>
-                  <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-wrap">
-                    {activeLanguage === "english"
-                      ? job.description
-                      : job.arabicDescription || job.description}
+                  <p
+                    className={`text-sm text-slate-600 leading-relaxed whitespace-pre-wrap ${arabicValueClass}`}
+                  >
+                    {isArabic
+                      ? job.arabicDescription || job.description
+                      : job.description}
                   </p>
                 </div>
 
@@ -398,19 +356,15 @@ const ViewJobPost = () => {
                 <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
                   <h3 className="text-md font-semibold text-slate-800 mb-3 flex items-center gap-2">
                     <CheckCircle className="h-5 w-5 text-burgundy" />
-                    {activeLanguage === "english"
-                      ? "Key Responsibilities"
-                      : "المسؤوليات الرئيسية"}
+                    Key Responsibilities
                   </h3>
-                  <ul className="space-y-2">
-                    {(activeLanguage === "english"
-                      ? job.responsibilities
-                      : job.arabicResponsibilities.length
+                  <ul className={`space-y-2 ${arabicValueClass}`}>
+                    {(isArabic && job.arabicResponsibilities.length
                       ? job.arabicResponsibilities
                       : job.responsibilities
                     ).map((resp, idx) => (
                       <li key={idx} className="flex items-start gap-2 text-sm text-slate-600">
-                        <span className="text-burgundy mt-1">•</span>
+                        <span className="text-burgundy mt-1 shrink-0">•</span>
                         <span>{resp}</span>
                       </li>
                     ))}
@@ -421,19 +375,15 @@ const ViewJobPost = () => {
                 <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
                   <h3 className="text-md font-semibold text-slate-800 mb-3 flex items-center gap-2">
                     <CheckCircle className="h-5 w-5 text-burgundy" />
-                    {activeLanguage === "english"
-                      ? "Requirements & Qualifications"
-                      : "المتطلبات والمؤهلات"}
+                    Requirements & Qualifications
                   </h3>
-                  <ul className="space-y-2">
-                    {(activeLanguage === "english"
-                      ? job.requirements
-                      : job.arabicRequirements.length
+                  <ul className={`space-y-2 ${arabicValueClass}`}>
+                    {(isArabic && job.arabicRequirements.length
                       ? job.arabicRequirements
                       : job.requirements
                     ).map((req, idx) => (
                       <li key={idx} className="flex items-start gap-2 text-sm text-slate-600">
-                        <span className="text-burgundy mt-1">•</span>
+                        <span className="text-burgundy mt-1 shrink-0">•</span>
                         <span>{req}</span>
                       </li>
                     ))}
@@ -447,14 +397,14 @@ const ViewJobPost = () => {
                     variant="outline"
                     className="flex-1"
                   >
-                    {activeLanguage === "english" ? "Back to Jobs" : "العودة إلى الوظائف"}
+                    Back to Jobs
                   </Button>
                   <Button
                     onClick={() => navigate(`/jobs/edit/${job._id}`)}
                     className="flex-1 gap-2 bg-burgundy hover:bg-burgundy/90"
                   >
                     <Pencil className="h-4 w-4" />
-                    {activeLanguage === "english" ? "Edit Job" : "تعديل الوظيفة"}
+                    Edit Job
                   </Button>
                 </div>
               </div>

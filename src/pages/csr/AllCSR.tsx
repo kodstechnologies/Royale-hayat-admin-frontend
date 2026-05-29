@@ -140,12 +140,11 @@ const AllCSR = () => {
   const CelebratingLifeTab = () => (
     <div className="space-y-6">
       {/* Hero Section */}
-      <div className="relative rounded-xl overflow-hidden bg-gradient-to-br from-burgundy to-burgundy/75 min-h-[180px] flex items-end">
-        <div className="absolute inset-0 bg-gradient-to-t from-black/45 to-transparent" />
-        <div className="relative p-6 md:p-8 text-white">
+      <div className="relative rounded-xl overflow-hidden bg-gradient-to-br from-slate-50 to-slate-100 border border-slate-200 min-h-[180px] flex items-end">
+        <div className="relative p-6 md:p-8">
           <div className="flex items-center gap-2 mb-1">
-            <Flower2 className="h-6 w-6" />
-            <h3 className="text-2xl md:text-4xl font-bold">{celebratingLifeContent.title}</h3>
+            <Flower2 className="h-6 w-6 text-slate-700" />
+            <h3 className="text-2xl md:text-4xl font-bold text-slate-800">{celebratingLifeContent.title}</h3>
           </div>
         </div>
       </div>
@@ -214,7 +213,7 @@ const AllCSR = () => {
               onClick={() => setActiveTab("celebrating")}
               className={`flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                 activeTab === "celebrating"
-                  ? "bg-white text-burgundy shadow-md"
+                  ? "bg-white text-slate-800 shadow-md"
                   : "text-slate-600 hover:text-slate-800 hover:bg-white/50"
               }`}
             >
@@ -240,8 +239,7 @@ const AllCSR = () => {
 
         {/* Tab Content */}
         {activeTab === "celebrating" ? (
-          <div className="rounded-xl border-2 border-burgundy/30 bg-gradient-to-br from-white via-slate-50/90 to-white shadow-xl backdrop-blur-sm overflow-hidden">
-            <div className="h-1 bg-gradient-to-r from-burgundy/40 via-burgundy to-burgundy/40"></div>
+          <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
             <div className="p-6">
               <CelebratingLifeTab />
             </div>

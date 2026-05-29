@@ -163,7 +163,7 @@ const AllWorkCulture = () => {
               onClick={() => setActiveTab("life")}
               className={`flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                 activeTab === "life"
-                  ? "bg-white text-burgundy shadow-md"
+                  ? "bg-white text-slate-800 shadow-md"
                   : "text-slate-600 hover:text-slate-800 hover:bg-white/50"
               }`}
             >
@@ -185,15 +185,22 @@ const AllWorkCulture = () => {
         </div>
 
         {/* Tab Content - Only Events Tab Content */}
-        <div className="rounded-xl border-2 border-burgundy/30 bg-gradient-to-br from-white via-slate-50/90 to-white shadow-xl backdrop-blur-sm overflow-hidden">
-          <div className="h-1 bg-gradient-to-r from-burgundy/40 via-burgundy to-burgundy/40"></div>
+        <div
+          className={`rounded-xl overflow-hidden ${
+            activeTab === "life"
+              ? "border border-slate-200 bg-white shadow-sm"
+              : "border-2 border-burgundy/30 bg-gradient-to-br from-white via-slate-50/90 to-white shadow-xl backdrop-blur-sm"
+          }`}
+        >
+          {activeTab === "events" && (
+            <div className="h-1 bg-gradient-to-r from-burgundy/40 via-burgundy to-burgundy/40" />
+          )}
           <div className="p-6">
             {activeTab === "life" ? (
               <div className="space-y-6">
-                <div className="relative rounded-xl overflow-hidden bg-gradient-to-br from-burgundy to-burgundy/75 min-h-[180px] flex items-end">
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/45 to-transparent" />
-                  <div className="relative p-6 md:p-8 text-white">
-                    <h3 className="text-2xl md:text-4xl font-bold">
+                <div className="relative rounded-xl overflow-hidden bg-gradient-to-br from-slate-50 to-slate-100 border border-slate-200 min-h-[180px] flex items-end">
+                  <div className="relative p-6 md:p-8">
+                    <h3 className="text-2xl md:text-4xl font-bold text-slate-800">
                       {activeLanguage === "english" ? "Life at Royale Hayat Hospital" : "الحياة في مستشفى رويال حياة"}
                     </h3>
                   </div>
