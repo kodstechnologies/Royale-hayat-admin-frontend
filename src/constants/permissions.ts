@@ -28,18 +28,12 @@ export const PERMISSIONS = {
     SUBSPECIALITY_VIEW_ALL: 'subspeciality.view.all',
   
     // Appointments
-    APPOINTMENT_REQUEST: 'appointment.request',
-    APPOINTMENT_BOOKING: 'appointment.booking',
-    APPOINTMENT_CANCEL: 'appointment.cancel',
-    APPOINTMENT_VIEW: 'appointment.view',
-    APPOINTMENT_VIEW_ALL: 'appointment.view.all',
-
+    APPOINTMENT_REQUEST_CREATE: 'appointment.request.create',
+    APPOINTMENT_REQUEST_VIEW: 'appointment.request.view',
+    APPOINTMENT_REQUEST_VIEW_ALL: 'appointment.request.view.all',
     APPOINTMENT_REQUEST_ACCEPT: 'appointment.request.accept',
     APPOINTMENT_REQUEST_REJECT: 'appointment.request.reject',
-
-
-    APPOINTMENT_BOOKING_VIEW: 'appointment.booking.view',
-    APPOINTMENT_BOOKING_VIEW_ALL: 'appointment.booking.view.all',
+    
 
     // Users
     USER_CREATE: 'user.create',
@@ -49,10 +43,10 @@ export const PERMISSIONS = {
     USER_VIEW_ALL: 'user.view.all',
   
   
-    CALL_CENTER_VIEW_ALL: 'call.center.view.all',
-    CALL_CENTER_CREATE: 'call.center.create',
-    CALL_CENTER_UPDATE: 'call.center.update',
-    CALL_CENTER_DELETE: 'call.center.delete',
+    // CALL_CENTER_VIEW_ALL: 'call.center.view.all',
+    // CALL_CENTER_CREATE: 'call.center.create',
+    // CALL_CENTER_UPDATE: 'call.center.update',
+    // CALL_CENTER_DELETE: 'call.center.delete',
   
     // Enquiries
   

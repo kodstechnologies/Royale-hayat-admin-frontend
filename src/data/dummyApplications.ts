@@ -12,6 +12,7 @@ export type JobApplication = {
   jobId: string;
   appliedDate: string;
   status: "pending" | "reviewed" | "shortlisted" | "rejected";
+  isViewed?: boolean;
   experience?: number;
   currentCompany?: string;
   noticePeriod?: string;

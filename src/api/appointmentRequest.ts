@@ -3,6 +3,18 @@ import api from "./axiosInstance";
 const REQUESTS_BASE = "/api/v1/appointment-requests";
 const BOOKINGS_BASE = "/api/v1/appointment-booking-records";
 
+type ApiResponse<T> = {
+  success: boolean;
+  message: string;
+  data: T;
+};
+
+export type AppointmentCounts = {
+  total: number;
+  appointmentBookings: number;
+  appointmentRequests: number;
+};
+
 export type AppointmentListFilters = {
   page?: number;
   limit?: number;
@@ -84,5 +96,14 @@ export const cancelRequest = async (id: string, note?: string) => {
   const response = await api.patch(`${REQUESTS_BASE}/cancel/${id}`, {
     note: note?.trim() || undefined,
   });
+  return response.data;
+};
+
+// ================= GET UNVIEWED APPOINTMENT COUNTS =================
+
+export const getAppointmentCounts = async () => {
+  const response = await api.get<ApiResponse<AppointmentCounts>>(
+    `${BOOKINGS_BASE}/counts`,
+  );
   return response.data;
 };

@@ -39,6 +39,18 @@ export interface UpdateHospitalFeedbackParams {
     data: FeedbackPayload;
 }
 
+type ApiResponse<T> = {
+    success: boolean;
+    message: string;
+    data: T;
+};
+
+export type FeedbackCounts = {
+    total: number;
+    doctorFeedbacks: number;
+    hospitalFeedbacks: number;
+};
+
 
 // ======================================================
 // DOCTOR FEEDBACK APIs
@@ -258,6 +270,21 @@ export const deleteHospitalFeedback =
         const response =
             await api.delete(
                 `/api/v1/hospital-feedback/delete/${feedbackId}`
+            );
+
+        return response.data;
+    };
+
+
+// ==============================
+// GET UNVIEWED FEEDBACK COUNTS
+// ==============================
+export const getFeedbackCounts =
+    async () => {
+
+        const response =
+            await api.get<ApiResponse<FeedbackCounts>>(
+                `/api/v1/doctor-feedback/counts`
             );
 
         return response.data;

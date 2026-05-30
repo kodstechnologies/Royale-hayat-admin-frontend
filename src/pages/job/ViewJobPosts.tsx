@@ -39,7 +39,10 @@ type JobPost = {
   isActive: boolean;
   postedDate: string;
   applicationsCount: number;
+  unviewedApplicationsCount: number;
 };
+
+const formatBadgeCount = (count: number) => (count > 99 ? "99+" : String(count));
 
 // ── Mappers ──────────────────────────────────────────────────────────────────
 
@@ -66,6 +69,7 @@ const mapApiJob = (job: any, applicationsCount = 0): JobPost => ({
     ? new Date(job.postedDate).toISOString().split("T")[0]
     : new Date().toISOString().split("T")[0],
   applicationsCount: job.applicationsCount ?? applicationsCount,
+  unviewedApplicationsCount: job.unviewedApplicationsCount ?? 0,
 });
 
 // ── Component ────────────────────────────────────────────────────────────────
@@ -97,6 +101,12 @@ const ViewJobPost = () => {
     };
 
     load().finally(() => setLoading(false));
+
+    const handleApplicationsUpdated = () => {
+      void load();
+    };
+    window.addEventListener("jobApplicationsUpdated", handleApplicationsUpdated);
+    return () => window.removeEventListener("jobApplicationsUpdated", handleApplicationsUpdated);
   }, [id]);
 
   // ── Helpers ────────────────────────────────────────────────────────────────
@@ -329,7 +339,12 @@ const ViewJobPost = () => {
                       className="w-full gap-2 bg-burgundy hover:bg-burgundy/90"
                     >
                       <Users className="h-4 w-4" />
-                      {`View Applications (${job.applicationsCount})`}
+                      <span>{`View Applications (${job.applicationsCount})`}</span>
+                      {job.unviewedApplicationsCount > 0 && (
+                        <span className="min-w-[1.25rem] h-5 px-1.5 rounded-full bg-white text-burgundy text-[10px] font-semibold leading-none inline-flex items-center justify-center">
+                          {formatBadgeCount(job.unviewedApplicationsCount)}
+                        </span>
+                      )}
                     </Button>
                   </div>
                 </div>

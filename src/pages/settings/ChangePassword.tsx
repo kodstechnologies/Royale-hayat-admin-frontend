@@ -249,7 +249,7 @@ const Settings = () => {
               >
                 Change Password
               </Button>
-              <Button
+              {/* <Button
                 type="button"
                 onClick={() => setActiveTab("add-user")}
                 className={
@@ -259,7 +259,7 @@ const Settings = () => {
                 }
               >
                 Add User
-              </Button>
+              </Button> */}
             </div>
 
             {activeTab === "change-password" && (
@@ -356,7 +356,7 @@ const Settings = () => {
               </div>
             )}
 
-            {activeTab === "add-user" && <AddUserForm />}
+            {/* {activeTab === "add-user" && <AddUserForm />} */}
 
             {/* Success Message */}
             {saved && (

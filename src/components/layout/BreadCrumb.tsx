@@ -47,6 +47,8 @@ const pageMap: Record<string, { label: string; icon: any; description?: string }
   "/documents":                 { label: "Documents",                icon: FileText, description: "Upload and manage hospital documents" },
   "/reports":                   { label: "Reports",                  icon: BarChart3, description: "Generate and view analytics reports" },
   "/settings":                  { label: "Settings",                 icon: Settings, description: "Configure system preferences" },
+  "/user-management":           { label: "User Management",          icon: Users, description: "View and manage admin panel users" },
+  "/user-management/create":    { label: "Create User",              icon: Users, description: "Create a new user with role and permissions" },
   "/job-posts":                 { label: "Job Posts",                icon: UserCheck, description: "Manage job postings and track applications" },
   "/jobs":                      { label: "Job Posts",                icon: UserCheck, description: "Manage job postings and track applications" },
   "/achievements":              { label: "Achievements",             icon: Award, description: "Manage employee achievements and recognitions" },
@@ -88,6 +90,7 @@ const nestedDescriptions: Record<string, string> = {
   "/leadership/create": "Add a new leadership team member",
   "/leadership/view": "View leadership member details",
   "/leadership/edit": "Update leadership team member",
+  "/user-management/create": "Create a new admin user with permissions",
 };
 
 const nestedPageLabels: Record<string, { label: string; description: string }> = {

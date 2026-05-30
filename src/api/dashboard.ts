@@ -116,3 +116,20 @@ export const getDoctorsCountByDepartment = async () => {
   );
   return response.data;
 };
+
+export type SidebarCounts = {
+  enquiries: number;
+  doctorFeedbacks: number;
+  hospitalFeedbacks: number;
+  jobApplications: number;
+  medicalRecordRequests: number;
+  appointmentRequests: number;
+  appointmentBookingRecords: number;
+};
+
+export const getSidebarCounts = async () => {
+  const response = await api.get<ApiResponse<SidebarCounts>>(
+    "/api/v1/dashboard/sidebar-counts"
+  );
+  return response.data;
+};

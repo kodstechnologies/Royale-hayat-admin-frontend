@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import AdminLayout from "@/components/layout/AdminLayout";
 import BreadCrumb from "@/components/layout/BreadCrumb";
@@ -36,14 +36,25 @@ import {
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
-const formatDate = (dateString: string) =>
-  new Date(dateString).toLocaleDateString("en-US", {
+const formatBadgeCount = (count: number) => (count > 99 ? "99+" : String(count));
+
+const notifyApplicationsUpdated = () => {
+  window.dispatchEvent(new Event("jobApplicationsUpdated"));
+};
+
+const formatDate = (dateString: string) => {
+  const parsed = new Date(dateString);
+  if (Number.isNaN(parsed.getTime())) {
+    return "—";
+  }
+  return parsed.toLocaleDateString("en-US", {
     year: "numeric",
     month: "long",
     day: "numeric",
     hour: "2-digit",
     minute: "2-digit",
   });
+};
 
 const statusConfig: Record<
   string,
@@ -71,22 +82,44 @@ const StatusBadge = ({ status }: { status: string }) => {
 
 // ── Map API application → local JobApplication shape ─────────────────────────
 
-const mapApiApplication = (app: any): JobApplication => ({
-  _id: app._id,
-  applicationId: app.applicationId ?? app._id,
-  fullName: app.fullName,
-  email: app.email,
-  phone: app.phone ?? "",
-  cvUrl: app.resume ?? "",
-  coverLetter: app.tellusUrself ?? "",
-  jobTitle: app.jobId?.title ?? "",
-  jobId: app.jobId?.jobId ?? app.jobId ?? "",
-  appliedDate: app.appliedDate ?? app.createdAt,
-  status: app.status ?? "pending",
-  experience: undefined,
-  currentCompany: undefined,
-  noticePeriod: undefined,
-});
+const resolveJobRef = (jobRef: unknown) => {
+  if (!jobRef) {
+    return { jobTitle: "", jobId: "" };
+  }
+  if (typeof jobRef === "string") {
+    return { jobTitle: "", jobId: jobRef };
+  }
+  if (typeof jobRef === "object") {
+    const job = jobRef as { title?: string; jobId?: string; _id?: string };
+    return {
+      jobTitle: job.title ?? "",
+      jobId: job.jobId ?? (job._id ? String(job._id) : ""),
+    };
+  }
+  return { jobTitle: "", jobId: String(jobRef) };
+};
+
+const mapApiApplication = (app: any): JobApplication => {
+  const { jobTitle, jobId } = resolveJobRef(app.jobId);
+
+  return {
+    _id: String(app._id ?? ""),
+    applicationId: app.applicationId ?? String(app._id ?? ""),
+    fullName: app.fullName ?? "",
+    email: app.email ?? "",
+    phone: app.phone ?? "",
+    cvUrl: app.resume ?? "",
+    coverLetter: app.coverLetter ?? app.tellusUrself ?? "",
+    jobTitle,
+    jobId,
+    appliedDate: app.appliedDate ?? app.createdAt ?? new Date().toISOString(),
+    status: app.status ?? "pending",
+    isViewed: app.isViewed ?? false,
+    experience: app.experience,
+    currentCompany: app.currentCompany,
+    noticePeriod: app.noticePeriod,
+  };
+};
 
 // ── Application List ──────────────────────────────────────────────────────────
 
@@ -143,7 +176,22 @@ const ApplicationList = ({ jobMongoId, onSelect }: ApplicationListProps) => {
     };
 
     load();
+
+    const handleApplicationsUpdated = () => {
+      void load();
+    };
+    window.addEventListener("jobApplicationsUpdated", handleApplicationsUpdated);
+    return () => window.removeEventListener("jobApplicationsUpdated", handleApplicationsUpdated);
   }, [jobMongoId]);
+
+  const handleSelect = (app: JobApplication) => {
+    onSelect({
+      ...app,
+      isViewed: true,
+    });
+  };
+
+  const unviewedCount = applications.filter((app) => !app.isViewed).length;
 
   return (
     <div className="space-y-6">
@@ -164,11 +212,17 @@ const ApplicationList = ({ jobMongoId, onSelect }: ApplicationListProps) => {
             <div className="flex-1">
               <h2 className="text-2xl font-bold text-slate-800">Job Applications</h2>
               {jobTitle && (
-                <p className="text-sm text-slate-500 mt-1">
-                  {jobTitle} &mdash;{" "}
+                <p className="text-sm text-slate-500 mt-1 flex flex-wrap items-center gap-2">
+                  <span>{jobTitle}</span>
+                  <span className="text-slate-400">&mdash;</span>
                   <span className="font-medium text-burgundy">
                     {applications.length} application{applications.length !== 1 ? "s" : ""}
                   </span>
+                  {/* {unviewedCount > 0 && (
+                    <span className="min-w-[1.375rem] h-5 px-1.5 rounded-full bg-burgundy text-white text-[11px] font-semibold leading-none inline-flex items-center justify-center">
+                      {formatBadgeCount(unviewedCount)} new
+                    </span>
+                  )} */}
                 </p>
               )}
             </div>
@@ -223,22 +277,36 @@ const ApplicationList = ({ jobMongoId, onSelect }: ApplicationListProps) => {
                       className={`border-b border-slate-100 hover:bg-slate-50/80 transition-all duration-200 cursor-pointer ${
                         index % 2 === 0 ? "bg-white" : "bg-slate-50/30"
                       }`}
-                      onClick={() => onSelect(app)}
+                      onClick={() => handleSelect(app)}
                     >
                       <td className="py-3 px-4">
-                        <span className="font-mono text-xs font-semibold text-burgundy bg-burgundy/10 px-2 py-1 rounded-md">
-                          {app.applicationId}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono text-xs font-semibold text-burgundy bg-burgundy/10 px-2 py-1 rounded-md">
+                            {app.applicationId}
+                          </span>
+                          {!app.isViewed && (
+                            <span className="min-w-[1.125rem] h-[1.125rem] px-1 rounded-full bg-burgundy text-white text-[10px] font-semibold leading-none inline-flex items-center justify-center">
+                              1
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="py-3 px-4">
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 rounded-full bg-burgundy/10 flex items-center justify-center shrink-0">
                             <span className="text-burgundy text-sm font-semibold">
-                              {app.fullName.charAt(0)}
+                              {(app.fullName || "?").charAt(0).toUpperCase()}
                             </span>
                           </div>
                           <div>
-                            <p className="font-semibold text-slate-800 text-sm">{app.fullName}</p>
+                            <div className="flex items-center gap-2">
+                              <p className="font-semibold text-slate-800 text-sm">{app.fullName}</p>
+                              {!app.isViewed && (
+                                <span className="text-[10px] font-semibold uppercase tracking-wide text-burgundy">
+                                  New
+                                </span>
+                              )}
+                            </div>
                             {app.currentCompany && (
                               <p className="text-xs text-slate-500">{app.currentCompany}</p>
                             )}
@@ -274,7 +342,7 @@ const ApplicationList = ({ jobMongoId, onSelect }: ApplicationListProps) => {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            onSelect(app);
+                            handleSelect(app);
                           }}
                           className="inline-flex items-center gap-1 text-xs font-medium text-burgundy hover:underline"
                         >
@@ -304,45 +372,47 @@ type ApplicationDetailProps = {
 
 const ApplicationDetail = ({ applicationId, initialData, onBack }: ApplicationDetailProps) => {
   const [application, setApplication] = useState<JobApplication>(initialData);
-  const [loading, setLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const hasMarkedViewedRef = useRef(false);
 
   useEffect(() => {
+    let cancelled = false;
+
     const load = async () => {
-      setLoading(true);
+      setIsRefreshing(true);
       try {
         const res = await getJobApplicationByIdApi(applicationId);
+        if (cancelled) return;
+
         const apiApp = res.data?.data;
         if (apiApp) {
           setApplication(mapApiApplication(apiApp));
+          if (!hasMarkedViewedRef.current) {
+            hasMarkedViewedRef.current = true;
+            notifyApplicationsUpdated();
+          }
           return;
         }
       } catch {
-        // API failed — use the data already passed in from the list
+        if (cancelled) return;
       }
 
-      // Fallback: try dummy data
       const dummy = getDummyApplicationById(applicationId);
-      if (dummy) setApplication(dummy);
-
-      setLoading(false);
+      if (!cancelled && dummy) {
+        setApplication(dummy);
+      }
     };
 
-    load().finally(() => setLoading(false));
-  }, [applicationId]);
+    void load().finally(() => {
+      if (!cancelled) {
+        setIsRefreshing(false);
+      }
+    });
 
-  if (loading) {
-    return (
-      <div className="space-y-6">
-        <BreadCrumb />
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <div className="w-12 h-12 border-4 border-burgundy/30 border-t-burgundy rounded-full animate-spin mx-auto mb-4" />
-            <p className="text-sm text-slate-500">Loading application details...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
+    return () => {
+      cancelled = true;
+    };
+  }, [applicationId]);
 
   return (
     <div className="space-y-6">
@@ -365,6 +435,7 @@ const ApplicationDetail = ({ applicationId, initialData, onBack }: ApplicationDe
                 <h2 className="text-2xl font-bold text-slate-800">Application Details</h2>
                 <p className="text-sm text-slate-500 mt-1">
                   Review applicant information and documents
+                  {isRefreshing ? " — updating…" : ""}
                 </p>
               </div>
             </div>
@@ -507,7 +578,7 @@ const ApplicationDetail = ({ applicationId, initialData, onBack }: ApplicationDe
                     </div>
                     <div>
                       <p className="text-sm font-medium text-slate-700">
-                        {application.fullName.replace(/\s/g, "_")}_CV.pdf
+                        {(application.fullName || "applicant").replace(/\s/g, "_")}_CV.pdf
                       </p>
                       <p className="text-xs text-slate-400">PDF Document</p>
                     </div>
@@ -566,6 +637,12 @@ const ApplicationDetail = ({ applicationId, initialData, onBack }: ApplicationDe
 const ViewJobApplications = () => {
   const { id } = useParams<{ id: string }>();
   const [selected, setSelected] = useState<JobApplication | null>(null);
+  const [listRefreshKey, setListRefreshKey] = useState(0);
+
+  const handleBackToList = useCallback(() => {
+    setSelected(null);
+    setListRefreshKey((key) => key + 1);
+  }, []);
 
   return (
     <AdminLayout title="Job Applications">
@@ -573,10 +650,11 @@ const ViewJobApplications = () => {
         <ApplicationDetail
           applicationId={selected._id}
           initialData={selected}
-          onBack={() => setSelected(null)}
+          onBack={handleBackToList}
         />
       ) : (
         <ApplicationList
+          key={listRefreshKey}
           jobMongoId={id ?? ""}
           onSelect={setSelected}
         />

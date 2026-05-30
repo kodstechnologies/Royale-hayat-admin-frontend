@@ -259,10 +259,7 @@ const Dashboard = () => {
                 >
                   <card.icon size={18} className={card.iconColor} />
                 </div>
-                <span className="text-xs font-medium flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-green-600 bg-green-50">
-                  <TrendingUp size={10} />
-                  Live
-                </span>
+               
               </div>
               <p className="text-2xl font-bold text-slate-800">{card.value}</p>
               <p className="text-xs text-slate-500 mt-1 truncate">{card.title}</p>

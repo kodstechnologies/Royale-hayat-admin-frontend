@@ -3,7 +3,7 @@ import AdminLayout from "@/components/layout/AdminLayout";
 import BreadCrumb from "@/components/layout/BreadCrumb";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Eye, Plus, X, CheckCircle, Briefcase, Pencil, Trash2, FileText, ChevronLeft, ChevronRight, Search } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
@@ -24,10 +24,13 @@ type JobPost = {
   isActive: boolean;
   postedDate: string;
   applicationsCount: number;
+  unviewedApplicationsCount: number;
 };
 
+const formatBadgeCount = (count: number) => (count > 99 ? "99+" : String(count));
+
 const mapApiJob = (job: any): JobPost => ({
-  _id: job._id,
+  _id: job._id ?? job.id,
   jobId: job.jobId ?? "",
   title: job.title,
   classification: job.classification ?? "",
@@ -40,6 +43,7 @@ const mapApiJob = (job: any): JobPost => ({
   isActive: job.isActive ?? true,
   postedDate: job.postedDate ? new Date(job.postedDate).toISOString().split("T")[0] : new Date().toISOString().split("T")[0],
   applicationsCount: job.applicationsCount ?? 0,
+  unviewedApplicationsCount: job.unviewedApplicationsCount ?? 0,
 });
 
 const JobPosts = () => {
@@ -55,7 +59,9 @@ const JobPosts = () => {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [jobToDelete, setJobToDelete] = useState<JobPost | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [totalUnviewedApplications, setTotalUnviewedApplications] = useState(0);
   const navigate = useNavigate();
+  const location = useLocation();
 
   const fetchJobs = async () => {
     setLoading(true);
@@ -63,8 +69,10 @@ const JobPosts = () => {
       const res = await getAllJobs({ limit: 100, sortBy: "postedDate", sortOrder: "desc" });
       const apiJobs: JobPost[] = (res.data?.data ?? []).map(mapApiJob);
       setJobs(apiJobs);
+      setTotalUnviewedApplications(res.data?.meta?.totalUnviewedApplications ?? 0);
     } catch {
       setJobs([]);
+      setTotalUnviewedApplications(0);
     } finally {
       setLoading(false);
     }
@@ -72,13 +80,17 @@ const JobPosts = () => {
 
   useEffect(() => {
     fetchJobs();
-  }, []);
+  }, [location.pathname]);
 
-  // Listen for job created/updated events (from create/edit pages)
+  // Listen for job created/updated and application viewed events
   useEffect(() => {
     const handleJobsUpdate = () => fetchJobs();
     window.addEventListener("jobsUpdated", handleJobsUpdate);
-    return () => window.removeEventListener("jobsUpdated", handleJobsUpdate);
+    window.addEventListener("jobApplicationsUpdated", handleJobsUpdate);
+    return () => {
+      window.removeEventListener("jobsUpdated", handleJobsUpdate);
+      window.removeEventListener("jobApplicationsUpdated", handleJobsUpdate);
+    };
   }, []);
 
   // Filter jobs based on search
@@ -182,7 +194,14 @@ const JobPosts = () => {
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
               <div>
                 <h3 className="text-xl font-bold text-slate-800">Job Posts</h3>
-                <p className="text-sm text-slate-500 mt-1">Manage job postings and track applications</p>
+                <p className="text-sm text-slate-500 mt-1 flex flex-wrap items-center gap-2">
+                  <span>Manage job postings and track applications</span>
+                  {totalUnviewedApplications > 0 && (
+                    <span className="min-w-[1.375rem] h-5 px-1.5 rounded-full bg-burgundy text-white text-[11px] font-semibold leading-none inline-flex items-center justify-center">
+                      {formatBadgeCount(totalUnviewedApplications)} unviewed
+                    </span>
+                  )}
+                </p>
               </div>
 
               <div className="flex gap-3">
@@ -288,7 +307,17 @@ const JobPosts = () => {
                               className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-burgundy/10 text-burgundy text-xs font-medium hover:bg-burgundy/20 transition-colors"
                             >
                               <FileText size={12} />
-                              {job.applicationsCount} Application{job.applicationsCount !== 1 ? "s" : ""}
+                              <span>
+                                {job.applicationsCount} Application{job.applicationsCount !== 1 ? "s" : ""}
+                              </span>
+                              {job.unviewedApplicationsCount > 0 && (
+                                <span
+                                  className="min-w-[1.25rem] h-5 px-1.5 rounded-full bg-burgundy text-white text-[10px] font-semibold leading-none inline-flex items-center justify-center"
+                                  title={`${job.unviewedApplicationsCount} unviewed application${job.unviewedApplicationsCount !== 1 ? "s" : ""}`}
+                                >
+                                  {formatBadgeCount(job.unviewedApplicationsCount)}
+                                </span>
+                              )}
                             </button>
                           </td>
                           <td className="py-3 px-4">{getStatusBadge(job.isActive)}</td>

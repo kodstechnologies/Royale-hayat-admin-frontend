@@ -62,6 +62,8 @@ import EditWorkCulture from "./pages/workCulture/EditWorkCulture";
 import AddWorkCulture from "./pages/workCulture/AddWorkCulture";
 import FeaturedDoctors from "./pages/doctor/FeaturedDoctors";
 import LifeAtRHH from "./pages/workCulture/LifeAtRHH";
+import ViewAllUsers from "./pages/user-management/ViewAllUsers";
+import CreateUser from "./pages/user-management/CreateUser";
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -145,6 +147,8 @@ const App = () => (
               <Route path="/documents" element={<Documents />} />
               <Route path="/reports" element={<Reports />} />
               <Route path="/settings" element={<Settings />} />
+              <Route path="/user-management" element={<ViewAllUsers />} />
+              <Route path="/user-management/create" element={<CreateUser />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
