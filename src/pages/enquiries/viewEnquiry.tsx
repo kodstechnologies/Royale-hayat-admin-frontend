@@ -16,11 +16,13 @@ import {
   Building2,
   Clock,
   AtSign,
+  Trash2,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-
-import { getEnquiryById } from "@/api/enquiries";
+import AlertBox from "@/components/AlertBox";
+import { deleteEnquiry, getEnquiryById } from "@/api/enquiries";
+import { toast } from "sonner";
 
 type Enquiry = {
   _id: string;
@@ -40,6 +42,8 @@ const ViewEnquiry = () => {
   const [loading, setLoading] = useState(true);
   const [enquiry, setEnquiry] = useState<Enquiry | null>(null);
   const [error, setError] = useState("");
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     const fetchEnquiry = async () => {
@@ -65,6 +69,25 @@ const ViewEnquiry = () => {
 
     fetchEnquiry();
   }, [id]);
+
+  const confirmDelete = async () => {
+    if (!enquiry?._id) return;
+
+    setIsDeleting(true);
+    try {
+      await deleteEnquiry(enquiry._id);
+      toast.success("Enquiry deleted successfully");
+      setDeleteOpen(false);
+      navigate("/enquiries");
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { message?: string } } };
+      toast.error(
+        error?.response?.data?.message || "Failed to delete enquiry",
+      );
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return "—";
@@ -324,10 +347,40 @@ const ViewEnquiry = () => {
                 </div>
               </div>
             </div>
+
+            <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => navigate("/enquiries")}
+              >
+                Back to Enquiries
+              </Button>
+              <Button
+                type="button"
+                variant="destructive"
+                className="gap-2"
+                onClick={() => setDeleteOpen(true)}
+              >
+                <Trash2 className="h-4 w-4" />
+                Delete Enquiry
+              </Button>
+            </div>
             {/* End Grid */}
           </div>
         </div>
       </div>
+
+      <AlertBox
+        isOpen={deleteOpen}
+        onClose={() => setDeleteOpen(false)}
+        onConfirm={confirmDelete}
+        title="Delete Enquiry"
+        message={`Are you sure you want to delete the enquiry from "${enquiry.name}" (#${enquiry.enquiryId})? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        isDeleting={isDeleting}
+      />
     </AdminLayout>
   );
 };

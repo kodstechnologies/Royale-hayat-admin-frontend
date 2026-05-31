@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { getJobById as getJobByIdApi } from "@/api/job";
+import { useScrollToTop } from "@/hooks/useScrollToTop";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -80,6 +81,8 @@ const ViewJobPost = () => {
   const [job, setJob] = useState<JobPost | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeLanguage, setActiveLanguage] = useState<"english" | "arabic">("english");
+
+  useScrollToTop(id);
 
   useEffect(() => {
     if (!id) return;
@@ -192,35 +195,40 @@ const ViewJobPost = () => {
 
   return (
     <AdminLayout title="View Job">
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         <BreadCrumb />
 
         <div className="rounded-xl border-2 border-burgundy/30 bg-gradient-to-br from-white via-slate-50/90 to-white shadow-xl backdrop-blur-sm overflow-hidden">
           <div className="h-1 bg-gradient-to-r from-burgundy/40 via-burgundy to-burgundy/40" />
 
-          <div className="p-6">
+          <div className="p-4 sm:p-6">
             {/* Header */}
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-4">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between mb-4 sm:mb-6">
+              <div className="flex items-start gap-3 min-w-0">
                 <button
+                  type="button"
                   onClick={() => navigate("/job-posts")}
-                  className="p-2 rounded-xl hover:bg-slate-100 transition-all duration-200 group"
+                  className="p-2 rounded-xl hover:bg-slate-100 transition-all duration-200 group shrink-0"
+                  aria-label="Back to jobs"
                 >
                   <ArrowLeft className="h-5 w-5 text-slate-500 group-hover:text-burgundy" />
                 </button>
-                <div>
-                  <h2 className="text-2xl font-bold text-slate-800">Job Details</h2>
-                  <p className="text-sm text-slate-500 mt-1">
+                <div className="min-w-0">
+                  <h2 className="text-lg sm:text-2xl font-bold text-slate-800 leading-tight">
+                    Job Details
+                  </h2>
+                  <p className="text-xs sm:text-sm text-slate-500 mt-1">
                     View complete job posting information
                   </p>
                 </div>
               </div>
 
               {/* Language Toggle */}
-              <div className="flex gap-2 p-1 bg-slate-100 rounded-lg border border-slate-200 shadow-sm">
+              <div className="flex gap-2 p-1 bg-slate-100 rounded-lg border border-slate-200 shadow-sm w-full sm:w-auto shrink-0">
                 <button
+                  type="button"
                   onClick={() => setActiveLanguage("english")}
-                  className={`min-w-[96px] px-4 py-1.5 rounded-md text-sm font-medium transition-all duration-200 ${
+                  className={`flex-1 sm:flex-none min-w-0 sm:min-w-[96px] px-3 sm:px-4 py-1.5 rounded-md text-sm font-medium transition-all duration-200 ${
                     activeLanguage === "english"
                       ? "bg-white text-burgundy shadow-sm border border-burgundy/20"
                       : "text-slate-700 hover:text-slate-900 hover:bg-white/70"
@@ -229,8 +237,9 @@ const ViewJobPost = () => {
                   English
                 </button>
                 <button
+                  type="button"
                   onClick={() => setActiveLanguage("arabic")}
-                  className={`min-w-[96px] px-4 py-1.5 rounded-md text-sm font-medium transition-all duration-200 ${
+                  className={`flex-1 sm:flex-none min-w-0 sm:min-w-[96px] px-3 sm:px-4 py-1.5 rounded-md text-sm font-medium transition-all duration-200 ${
                     activeLanguage === "arabic"
                       ? "bg-white text-burgundy shadow-sm border border-burgundy/20"
                       : "text-slate-700 hover:text-slate-900 hover:bg-white/70"
@@ -241,11 +250,11 @@ const ViewJobPost = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
               {/* Left Column */}
-              <div className="lg:col-span-1 space-y-5">
+              <div className="lg:col-span-1 space-y-4 sm:space-y-5">
                 {/* Job Header Card */}
-                <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+                <div className="bg-white rounded-xl border border-slate-200 p-4 sm:p-5 shadow-sm">
                   <div className="flex items-center gap-3 mb-4 pb-3 border-b border-slate-100">
                     <div className="w-12 h-12 rounded-xl bg-burgundy/10 flex items-center justify-center shrink-0">
                       <Briefcase className="h-6 w-6 text-burgundy" />
@@ -259,10 +268,12 @@ const ViewJobPost = () => {
                   </div>
 
                   <div className="space-y-3">
-                    <div className="flex items-center gap-2 text-sm">
-                      <MapPin className="h-4 w-4 text-slate-400 shrink-0" />
-                      <span className="text-slate-600 shrink-0">Location:</span>
-                      <span className={`font-medium text-slate-800 ${arabicValueClass}`}>
+                    <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-2 text-sm">
+                      <div className="flex items-center gap-2 shrink-0">
+                        <MapPin className="h-4 w-4 text-slate-400 shrink-0" />
+                        <span className="text-slate-600">Location:</span>
+                      </div>
+                      <span className={`font-medium text-slate-800 break-words ${arabicValueClass}`}>
                         {job.location}
                       </span>
                     </div>
@@ -406,17 +417,17 @@ const ViewJobPost = () => {
                 </div>
 
                 {/* Action Buttons */}
-                <div className="flex gap-3 pt-4">
+                <div className="flex flex-col-reverse sm:flex-row gap-2 sm:gap-3 pt-2 sm:pt-4">
                   <Button
                     onClick={() => navigate("/job-posts")}
                     variant="outline"
-                    className="flex-1"
+                    className="w-full sm:flex-1"
                   >
                     Back to Jobs
                   </Button>
                   <Button
                     onClick={() => navigate(`/jobs/edit/${job._id}`)}
-                    className="flex-1 gap-2 bg-burgundy hover:bg-burgundy/90"
+                    className="w-full sm:flex-1 gap-2 bg-burgundy hover:bg-burgundy/90"
                   >
                     <Pencil className="h-4 w-4" />
                     Edit Job

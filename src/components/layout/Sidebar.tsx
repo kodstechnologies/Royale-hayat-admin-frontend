@@ -56,8 +56,8 @@ const getBadgeCountForRoute = (to: string, counts: SidebarBadgeCounts | null): n
       return counts.jobApplications;
     case "/enquiries":
       return counts.enquiries;
-    // case "/feedback":
-    //   return counts.feedback;
+    case "/feedback":
+      return counts.feedback;
     default:
       return 0;
   }
@@ -67,6 +67,9 @@ const formatBadgeCount = (count: number) => (count > 99 ? "99+" : String(count))
 
 interface SidebarProps {
   collapsed: boolean;
+  isMobile?: boolean;
+  mobileOpen?: boolean;
+  onMobileClose?: () => void;
 }
 
 type NavItemConfig = {
@@ -210,7 +213,13 @@ const SidebarNavItem = ({
   </button>
 );
 
-const Sidebar = ({ collapsed }: SidebarProps) => {
+const Sidebar = ({
+  collapsed,
+  isMobile = false,
+  mobileOpen = false,
+  onMobileClose,
+}: SidebarProps) => {
+  const effectiveCollapsed = isMobile ? false : collapsed;
   const location = useLocation();
   const navigate = useNavigate();
   const { t, isRTL } = useLanguage();
@@ -269,10 +278,14 @@ const Sidebar = ({ collapsed }: SidebarProps) => {
       void fetchSidebarCounts();
     };
     window.addEventListener("jobApplicationsUpdated", handleCountsRefresh);
+    window.addEventListener("appointmentsUpdated", handleCountsRefresh);
+    window.addEventListener("feedbackUpdated", handleCountsRefresh);
 
     return () => {
       window.clearInterval(interval);
       window.removeEventListener("jobApplicationsUpdated", handleCountsRefresh);
+      window.removeEventListener("appointmentsUpdated", handleCountsRefresh);
+      window.removeEventListener("feedbackUpdated", handleCountsRefresh);
     };
   }, [fetchSidebarCounts, location.pathname]);
 
@@ -379,7 +392,7 @@ const Sidebar = ({ collapsed }: SidebarProps) => {
       window.clearTimeout(t2);
       window.clearTimeout(t3);
     };
-  }, [location.pathname, applySavedNavScroll, collapsed]);
+  }, [location.pathname, applySavedNavScroll, effectiveCollapsed]);
 
   useLayoutEffect(() => {
     const nav = navContainerRef.current;
@@ -430,9 +443,7 @@ const Sidebar = ({ collapsed }: SidebarProps) => {
       icon: CalendarCheck,
       label: "Appointments",
       permissions: [
-        PERMISSIONS.APPOINTMENT_REQUEST_VIEW_ALL,
         PERMISSIONS.APPOINTMENT_REQUEST_VIEW,
-       
         PERMISSIONS.APPOINTMENT_REQUEST_ACCEPT,
         PERMISSIONS.APPOINTMENT_REQUEST_REJECT,
       ],
@@ -447,58 +458,49 @@ const Sidebar = ({ collapsed }: SidebarProps) => {
       to: "/job-posts",
       icon: UserCheck,
       label: "Jobs",
-      permissions: [PERMISSIONS.JOB_VIEW_ALL, PERMISSIONS.JOB_VIEW],
+      permissions: [PERMISSIONS.JOB_VIEW],
     },
     {
       to: "/enquiries",
       icon: Mail,
       label: "Enquiries",
-      permissions: [PERMISSIONS.ENQUIRY_VIEW_ALL, PERMISSIONS.ENQUIRY_VIEW],
+      permissions: [PERMISSIONS.ENQUIRY_VIEW],
     },
     {
       to: "/feedback",
       icon: MessageSquare,
       label: "Feedback & Reviews",
-      permissions: [PERMISSIONS.FEEDBACK_VIEW_ALL, PERMISSIONS.FEEDBACK_VIEW],
+      permissions: [PERMISSIONS.FEEDBACK_VIEW],
     },
     {
       to: "/achievements",
       icon: Sparkles,
       label: "Employee Recognition",
-      permissions: [
-        PERMISSIONS.ACHIEVEMENT_VIEW_ALL,
-        PERMISSIONS.ACHIEVEMENT_VIEW,
-      ],
+      permissions: [PERMISSIONS.ACHIEVEMENT_VIEW],
     },
     {
       to: "/doctors",
       icon: Stethoscope,
       label: "Doctors",
-      permissions: [PERMISSIONS.DOCTOR_VIEW_ALL, PERMISSIONS.DOCTOR_VIEW],
+      permissions: [PERMISSIONS.DOCTOR_VIEW],
     },
     {
       to: "/leadership",
       icon: UserCheck,
       label: "Leadership Team",
-      permissions: [
-        PERMISSIONS.LEADERSHIP_VIEW_ALL,
-        PERMISSIONS.LEADERSHIP_VIEW,
-      ],
+      permissions: [PERMISSIONS.LEADERSHIP_VIEW],
     },
     {
       to: "/csr",
       icon: Globe,
       label: "CSR",
-      permissions: [PERMISSIONS.CSR_VIEW_ALL, PERMISSIONS.CSR_VIEW],
+      permissions: [PERMISSIONS.CSR_VIEW],
     },
     {
       to: "/work-culture",
       icon: BriefcaseBusiness,
       label: "Work Culture",
-      permissions: [
-        PERMISSIONS.WORK_CULTURE_VIEW_ALL,
-        PERMISSIONS.WORK_CULTURE_VIEW,
-      ],
+      permissions: [PERMISSIONS.WORK_CULTURE_VIEW],
     },
   ];
 
@@ -508,13 +510,13 @@ const Sidebar = ({ collapsed }: SidebarProps) => {
       to: "/documents",
       icon: FileText,
       label: "Documents",
-      permissions: [PERMISSIONS.DOCUMENT_VIEW_ALL, PERMISSIONS.DOCUMENT_VIEW],
+      permissions: [PERMISSIONS.DOCUMENT_VIEW],
     },
     {
       to: "/user-management",
       icon: Shield,
       label: "User Management",
-      permissions: [PERMISSIONS.USER_VIEW_ALL, PERMISSIONS.USER_VIEW],
+      permissions: [PERMISSIONS.USER_VIEW],
     },
   ];
 
@@ -523,22 +525,19 @@ const Sidebar = ({ collapsed }: SidebarProps) => {
       to: "/categories",
       icon: Layers,
       label: "Categories",
-      permissions: [PERMISSIONS.CATAGORY_VIEW_ALL, PERMISSIONS.CATAGORY_VIEW],
+      permissions: [PERMISSIONS.CATAGORY_VIEW],
     },
     {
       to: "/departments",
       icon: Building2,
       label: "Departments",
-      permissions: [PERMISSIONS.DEPARTMENT_VIEW_ALL, PERMISSIONS.DEPARTMENT_VIEW],
+      permissions: [PERMISSIONS.DEPARTMENT_VIEW],
     },
     {
       to: "/subspecialities",
       icon: ListTree,
       label: "Subspecialities",
-      permissions: [
-        PERMISSIONS.SUBSPECIALITY_VIEW_ALL,
-        PERMISSIONS.SUBSPECIALITY_VIEW,
-      ],
+      permissions: [PERMISSIONS.SUBSPECIALITY_VIEW],
     },
   ];
 
@@ -550,8 +549,11 @@ const Sidebar = ({ collapsed }: SidebarProps) => {
     (to: string) => {
       persistNavScroll();
       navigate(to, { preventScrollReset: true });
+      if (isMobile) {
+        onMobileClose?.();
+      }
     },
-    [navigate, persistNavScroll],
+    [navigate, persistNavScroll, isMobile, onMobileClose],
   );
 
   const renderNavItem = (
@@ -565,7 +567,7 @@ const Sidebar = ({ collapsed }: SidebarProps) => {
       isActive={isActive}
       showGoldenDot={showGoldenDot}
       badgeCount={getBadgeCountForRoute(item.to, sidebarCounts)}
-      collapsed={collapsed}
+      collapsed={effectiveCollapsed}
       isRTL={isRTL}
       hoveredItem={hoveredItem}
       setHoveredItem={setHoveredItem}
@@ -576,26 +578,49 @@ const Sidebar = ({ collapsed }: SidebarProps) => {
 
   return (
     <>
+      {isMobile && mobileOpen && (
+        <button
+          type="button"
+          aria-label="Close navigation menu"
+          className="fixed inset-0 z-40 bg-slate-900/50 backdrop-blur-[2px] lg:hidden animate-in fade-in duration-200"
+          onClick={onMobileClose}
+        />
+      )}
+
       <aside
         className={`
-          ${collapsed ? "w-[80px]" : "w-[300px]"}
           bg-gradient-to-b from-white/95 via-white/90 to-white/95
           flex flex-col
-          transition-all duration-500 ease-in-out
           shrink-0 fixed
-          ${isRTL ? "right-3" : "left-3"}
-          top-3
-          bottom-3
-          z-30
           shadow-2xl
           backdrop-blur-xl
           border border-white/40
           overflow-hidden
-          rounded-2xl
+          transition-transform duration-300 ease-out
+          ${
+            isMobile
+              ? `
+                top-0 bottom-0 z-50 w-[min(300px,88vw)] max-w-[300px] h-[100dvh]
+                rounded-none
+                ${isRTL ? "right-0 border-l" : "left-0 border-r"}
+                ${mobileOpen ? "translate-x-0" : isRTL ? "translate-x-full" : "-translate-x-full"}
+                ${mobileOpen ? "" : "pointer-events-none"}
+              `
+              : `
+                transition-all duration-500 ease-in-out
+                ${effectiveCollapsed ? "w-[80px]" : "w-[300px]"}
+                ${isRTL ? "right-3" : "left-3"}
+                top-3 bottom-3 z-30 rounded-2xl
+              `
+          }
         `}
       >
         {/* Logo Section */}
-        <div className="relative h-28 flex items-center justify-center border-b border-slate-100 px-2 bg-gradient-to-r from-white to-slate-50/50 shrink-0">
+        <div
+          className={`relative flex items-center justify-center border-b border-slate-100 px-2 bg-gradient-to-r from-white to-slate-50/50 shrink-0 ${
+            isMobile ? "h-20" : "h-28"
+          }`}
+        >
           <div className="relative w-full flex justify-center px-0">
             {/* Glow Effect */}
             <div className="absolute inset-0 bg-burgundy/20 rounded-full blur-xl animate-pulse"></div>
@@ -607,7 +632,7 @@ const Sidebar = ({ collapsed }: SidebarProps) => {
         transition-all duration-300
         object-contain
         relative z-10
-        ${collapsed ? "h-14 w-44 max-w-full" : "h-24 w-full max-w-full"}
+        ${effectiveCollapsed ? "h-14 w-44 max-w-full" : isMobile ? "h-16 w-full max-w-full" : "h-24 w-full max-w-full"}
       `}
             />
           </div>
@@ -632,7 +657,7 @@ const Sidebar = ({ collapsed }: SidebarProps) => {
             </div>
 
             {/* Master Data + Documents — scroll target when dropdown opens */}
-            {showMasterSection && (collapsed ? (
+            {showMasterSection && (effectiveCollapsed ? (
               <div ref={masterBlockRef} className="space-y-0.5 mt-2">
                 {masterItems.map((item) => (
                   <PermissionGate
@@ -721,11 +746,11 @@ const Sidebar = ({ collapsed }: SidebarProps) => {
             {/* Logout Button */}
             <button
               onClick={handleLogout}
-              title={collapsed ? t("Secure Logout") : undefined}
+              title={effectiveCollapsed ? t("Secure Logout") : undefined}
               aria-label={t("Secure Logout")}
               className={`
                 box-border flex w-full max-w-full items-center gap-3 px-3 py-2.5 mb-3 rounded-xl text-sm font-medium transition-all duration-200 text-red-500 hover:bg-red-50 hover:text-red-600 group
-                ${collapsed ? "justify-center px-2" : ""}
+                ${effectiveCollapsed ? "justify-center px-2" : ""}
               `}
             >
               <LogOut
@@ -733,7 +758,7 @@ const Sidebar = ({ collapsed }: SidebarProps) => {
                 className="transition-transform group-hover:translate-x-0.5"
               />
 
-              {!collapsed && <span>{t("Secure Logout")}</span>}
+              {!effectiveCollapsed && <span>{t("Secure Logout")}</span>}
             </button>
           </div>
         </div>

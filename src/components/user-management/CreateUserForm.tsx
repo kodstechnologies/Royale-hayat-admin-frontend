@@ -1,10 +1,12 @@
 import { useMemo, useState } from "react";
-import { CheckCircle2, Eye, EyeOff, Loader2, ShieldCheck, UserPlus } from "lucide-react";
+import { CheckCircle2, Eye, EyeOff, Loader2, UserPlus } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { createSubadmin } from "@/api/auth";
 import { getAllPermissionOptions } from "@/utils/permissionOptions";
+import { applyViewPermissionRules } from "@/utils/permissionSelection";
+import PermissionGroupsPicker from "@/components/user-management/PermissionGroupsPicker";
 
 type CreateUserFormProps = {
   onSuccess?: () => void;
@@ -40,14 +42,10 @@ const CreateUserForm = ({ onSuccess }: CreateUserFormProps) => {
     ],
   );
 
-  const togglePermission = (key: string) => {
-    setSelectedPermissions((prev) =>
-      prev.includes(key) ? prev.filter((p) => p !== key) : [...prev, key],
-    );
-  };
-
   const selectAllPermissions = () => {
-    setSelectedPermissions(permissionOptions.map((p) => p.key));
+    setSelectedPermissions(
+      applyViewPermissionRules(permissionOptions.map((p) => p.key)),
+    );
   };
 
   const clearAllPermissions = () => {
@@ -65,7 +63,7 @@ const CreateUserForm = ({ onSuccess }: CreateUserFormProps) => {
         email: formData.email.trim().toLowerCase(),
         password: formData.password,
         role: formData.role.trim().replace(/\s+/g, "_").toLowerCase(),
-        permissions: selectedPermissions,
+        permissions: applyViewPermissionRules(selectedPermissions),
       });
 
       setFormData({ name: "", email: "", password: "", role: "" });
@@ -174,59 +172,12 @@ const CreateUserForm = ({ onSuccess }: CreateUserFormProps) => {
           </div>
         </div>
 
-        <div className="space-y-3">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <ShieldCheck className="h-4 w-4 text-burgundy" />
-              <h5 className="text-sm font-semibold text-slate-700">Permissions</h5>
-              <span className="text-xs text-slate-500">
-                ({selectedPermissions.length} selected)
-              </span>
-            </div>
-            <div className="flex gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={selectAllPermissions}
-                className="h-8 text-xs"
-              >
-                Select all
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={clearAllPermissions}
-                className="h-8 text-xs"
-              >
-                Clear all
-              </Button>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-[320px] overflow-y-auto pr-1">
-            {permissionOptions.map((permission) => (
-              <label
-                key={permission.key}
-                className="flex items-start gap-3 rounded-lg border border-slate-200 px-3 py-2.5 hover:border-burgundy/30 transition-colors cursor-pointer"
-              >
-                <input
-                  type="checkbox"
-                  checked={selectedPermissions.includes(permission.key)}
-                  onChange={() => togglePermission(permission.key)}
-                  className="h-4 w-4 mt-0.5 accent-burgundy shrink-0"
-                />
-                <span className="text-sm text-slate-700 leading-snug">
-                  {permission.label}
-                  <span className="block text-[11px] text-slate-400 font-mono mt-0.5">
-                    {permission.key}
-                  </span>
-                </span>
-              </label>
-            ))}
-          </div>
-        </div>
+        <PermissionGroupsPicker
+          selectedPermissions={selectedPermissions}
+          onSelectionChange={setSelectedPermissions}
+          onSelectAll={selectAllPermissions}
+          onClearAll={clearAllPermissions}
+        />
 
         <div className="flex justify-end pt-4 border-t border-slate-100">
           <Button

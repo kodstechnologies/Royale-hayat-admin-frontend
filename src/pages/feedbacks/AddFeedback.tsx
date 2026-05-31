@@ -275,15 +275,15 @@ const AddFeedback = ({ onSave }: AddFeedbackProps) => {
 
   return (
     <AdminLayout title="Add Feedback">
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         <BreadCrumb />
         
         {/* Header with Back Button and Language Tabs */}
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center">
           <Button 
             variant="ghost" 
             onClick={() => navigate("/feedback")}
-            className="gap-2"
+            className="gap-2 w-full sm:w-auto justify-center sm:justify-start"
             disabled={isSubmitting}
           >
             <ArrowLeft className="h-4 w-4" />
@@ -291,12 +291,12 @@ const AddFeedback = ({ onSave }: AddFeedbackProps) => {
           </Button>
 
           {/* Language Tabs */}
-          <div className="flex gap-2 p-1 bg-slate-100/80 rounded-lg">
+          <div className="flex gap-2 p-1 bg-slate-100/80 rounded-lg w-full sm:w-auto">
             <button
               onClick={() => setActiveLanguage("english")}
               disabled={isSubmitting}
               className={`
-                flex items-center gap-2 px-4 py-1.5 rounded-md text-sm font-medium transition-all duration-200
+                flex-1 sm:flex-none flex items-center justify-center gap-2 px-3 sm:px-4 py-1.5 rounded-md text-sm font-medium transition-all duration-200
                 ${activeLanguage === "english"
                   ? "bg-white text-burgundy shadow-sm"
                   : "text-slate-600 hover:text-slate-800 hover:bg-white/50"
@@ -311,7 +311,7 @@ const AddFeedback = ({ onSave }: AddFeedbackProps) => {
               onClick={() => setActiveLanguage("arabic")}
               disabled={isSubmitting}
               className={`
-                flex items-center gap-2 px-4 py-1.5 rounded-md text-sm font-medium transition-all duration-200
+                flex-1 sm:flex-none flex items-center justify-center gap-2 px-3 sm:px-4 py-1.5 rounded-md text-sm font-medium transition-all duration-200
                 ${activeLanguage === "arabic"
                   ? "bg-white text-burgundy shadow-sm"
                   : "text-slate-600 hover:text-slate-800 hover:bg-white/50"
@@ -329,11 +329,11 @@ const AddFeedback = ({ onSave }: AddFeedbackProps) => {
         <div className="rounded-xl border-2 border-burgundy/30 bg-gradient-to-br from-white via-slate-50/90 to-white shadow-xl backdrop-blur-sm overflow-hidden">
           <div className="h-1 bg-gradient-to-r from-burgundy/40 via-burgundy to-burgundy/40"></div>
           
-          <div className="p-6">
+          <div className="p-4 sm:p-6">
             {/* Page Title */}
-            <div className="mb-6">
-              <h3 className="text-xl font-bold text-slate-800">{getUIText.pageTitle}</h3>
-              <p className="text-sm text-slate-500 mt-1">{getUIText.pageDescription}</p>
+            <div className="mb-4 sm:mb-6">
+              <h3 className="text-lg sm:text-xl font-bold text-slate-800">{getUIText.pageTitle}</h3>
+              <p className="text-xs sm:text-sm text-slate-500 mt-1">{getUIText.pageDescription}</p>
             </div>
 
             <div className="space-y-6">
@@ -343,14 +343,14 @@ const AddFeedback = ({ onSave }: AddFeedbackProps) => {
                   {getUIText.feedbackType}
                   <span className="text-red-500 ml-1">*</span>
                 </label>
-                <div className="flex gap-3">
+                <div className="flex flex-col sm:flex-row gap-3">
                   <button
                     onClick={() => {
                       setFeedbackType("doctor");
                       setSelectedDoctorId("");
                     }}
                     disabled={isSubmitting}
-                    className={`flex-1 py-3 px-4 rounded-lg border-2 font-medium transition-all ${
+                    className={`flex-1 py-3 px-4 rounded-lg border-2 text-sm sm:text-base font-medium transition-all ${
                       feedbackType === "doctor"
                         ? "border-burgundy bg-burgundy/5 text-burgundy"
                         : "border-slate-200 text-slate-600 hover:border-slate-300"
@@ -364,7 +364,7 @@ const AddFeedback = ({ onSave }: AddFeedbackProps) => {
                   <button
                     onClick={() => setFeedbackType("hospital")}
                     disabled={isSubmitting}
-                    className={`flex-1 py-3 px-4 rounded-lg border-2 font-medium transition-all ${
+                    className={`flex-1 py-3 px-4 rounded-lg border-2 text-sm sm:text-base font-medium transition-all ${
                       feedbackType === "hospital"
                         ? "border-burgundy bg-burgundy/5 text-burgundy"
                         : "border-slate-200 text-slate-600 hover:border-slate-300"
@@ -510,19 +510,19 @@ const AddFeedback = ({ onSave }: AddFeedbackProps) => {
               </div>
 
               {/* Form Actions */}
-              <div className="flex gap-3 pt-4 border-t border-slate-200">
+              <div className="flex flex-col-reverse sm:flex-row gap-3 pt-4 border-t border-slate-200">
                 <Button 
                   variant="outline" 
                   onClick={() => navigate("/feedback")}
                   disabled={isSubmitting}
-                  className="flex-1"
+                  className="w-full sm:flex-1"
                 >
                   {getUIText.cancel}
                 </Button>
                 <Button 
                   onClick={handleSubmit} 
                   disabled={isSubmitting}
-                  className="flex-1 gap-2"
+                  className="w-full sm:flex-1 gap-2"
                 >
                   {isSubmitting ? (
                     <>
@@ -542,7 +542,7 @@ const AddFeedback = ({ onSave }: AddFeedbackProps) => {
         </div>
 
         {/* Info Box */}
-        <div className="bg-amber-50 rounded-xl p-4 border border-amber-200">
+        <div className="bg-amber-50 rounded-xl p-3 sm:p-4 border border-amber-200">
           <div className="flex gap-3">
             <Shield className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
             <div>

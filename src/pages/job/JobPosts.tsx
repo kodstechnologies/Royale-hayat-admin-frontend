@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import AdminLayout from "@/components/layout/AdminLayout";
 import BreadCrumb from "@/components/layout/BreadCrumb";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -51,7 +51,7 @@ const JobPosts = () => {
   const [jobs, setJobs] = useState<JobPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [searchInput, setSearchInput] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [limit] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
@@ -63,62 +63,58 @@ const JobPosts = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const fetchJobs = async () => {
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search.trim());
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  const fetchJobs = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await getAllJobs({ limit: 100, sortBy: "postedDate", sortOrder: "desc" });
+      const effectiveSearch =
+        debouncedSearch.length >= 2 ? debouncedSearch : "";
+      const res = await getAllJobs({
+        page: currentPage,
+        limit,
+        sortBy: "postedDate",
+        sortOrder: "desc",
+        ...(effectiveSearch ? { search: effectiveSearch } : {}),
+      });
       const apiJobs: JobPost[] = (res.data?.data ?? []).map(mapApiJob);
       setJobs(apiJobs);
+      setTotalPages(res.data?.meta?.pages ?? 1);
+      setTotalRecords(res.data?.meta?.total ?? 0);
       setTotalUnviewedApplications(res.data?.meta?.totalUnviewedApplications ?? 0);
     } catch {
       setJobs([]);
+      setTotalPages(1);
+      setTotalRecords(0);
       setTotalUnviewedApplications(0);
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentPage, limit, debouncedSearch]);
 
   useEffect(() => {
-    fetchJobs();
-  }, [location.pathname]);
+    void fetchJobs();
+  }, [fetchJobs, location.pathname]);
 
   // Listen for job created/updated and application viewed events
   useEffect(() => {
-    const handleJobsUpdate = () => fetchJobs();
+    const handleJobsUpdate = () => {
+      void fetchJobs();
+    };
     window.addEventListener("jobsUpdated", handleJobsUpdate);
     window.addEventListener("jobApplicationsUpdated", handleJobsUpdate);
     return () => {
       window.removeEventListener("jobsUpdated", handleJobsUpdate);
       window.removeEventListener("jobApplicationsUpdated", handleJobsUpdate);
     };
-  }, []);
-
-  // Filter jobs based on search
-  const filteredJobs = jobs.filter(job =>
-    job.title.toLowerCase().includes(search.toLowerCase()) ||
-    job.jobId.toLowerCase().includes(search.toLowerCase()) ||
-    job.classification.toLowerCase().includes(search.toLowerCase())
-  );
-
-  // Update pagination when filtered jobs change
-  useEffect(() => {
-    setTotalPages(Math.ceil(filteredJobs.length / limit));
-    setTotalRecords(filteredJobs.length);
-    if (currentPage > Math.ceil(filteredJobs.length / limit) && Math.ceil(filteredJobs.length / limit) > 0) {
-      setCurrentPage(1);
-    }
-  }, [filteredJobs.length, limit, currentPage]);
-
-  // Get current page items
-  const paginatedJobs = filteredJobs.slice((currentPage - 1) * limit, currentPage * limit);
-
-  const applySearch = () => {
-    setSearch(searchInput);
-    setCurrentPage(1);
-  };
+  }, [fetchJobs]);
 
   const clearSearch = () => {
-    setSearchInput("");
     setSearch("");
     setCurrentPage(1);
   };
@@ -182,18 +178,18 @@ const JobPosts = () => {
 
   return (
     <AdminLayout title="Jobs">
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         <BreadCrumb />
 
         {/* Main Card */}
         <div className="rounded-xl border-2 border-burgundy/30 bg-gradient-to-br from-white via-slate-50/90 to-white shadow-xl backdrop-blur-sm overflow-hidden">
           <div className="h-1 bg-gradient-to-r from-burgundy/40 via-burgundy to-burgundy/40"></div>
 
-          <div className="p-6">
+          <div className="p-4 sm:p-6">
             {/* Header with Create Button and Search */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+            <div className="flex flex-col gap-4 mb-4 sm:mb-6">
               <div>
-                <h3 className="text-xl font-bold text-slate-800">Job Posts</h3>
+                <h3 className="text-lg sm:text-xl font-bold text-slate-800">Job Posts</h3>
                 <p className="text-sm text-slate-500 mt-1 flex flex-wrap items-center gap-2">
                   <span>Manage job postings and track applications</span>
                   {totalUnviewedApplications > 0 && (
@@ -204,41 +200,39 @@ const JobPosts = () => {
                 </p>
               </div>
 
-              <div className="flex gap-3">
-                <div className="relative">
+              <div className="flex flex-col min-[480px]:flex-row gap-2 sm:gap-3 w-full">
+                <div className="relative flex-1 min-w-0">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                   <Input
-                    placeholder="Search jobs..."
-                    value={searchInput}
-                    onChange={(e) => setSearchInput(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && applySearch()}
-                    className="pl-9 w-64"
+                    placeholder="Search by Job ID or title..."
+                    value={search}
+                    onChange={(e) => {
+                      setCurrentPage(1);
+                      setSearch(e.target.value);
+                    }}
+                    className="pl-9 w-full"
                   />
                 </div>
-                <Button
-                  variant="secondary"
-                  onClick={applySearch}
-                  size="sm"
-                >
-                  Search
-                </Button>
-                {search && (
+                <div className="flex gap-2 shrink-0">
+                  {search && (
+                    <Button
+                      variant="ghost"
+                      onClick={clearSearch}
+                      size="sm"
+                      className="flex-1 min-[480px]:flex-none"
+                    >
+                      <X className="h-4 w-4" />
+                      <span className="min-[480px]:sr-only">Clear</span>
+                    </Button>
+                  )}
                   <Button
-                    variant="ghost"
-                    onClick={clearSearch}
-                    size="sm"
+                    onClick={() => navigate("/jobs/create")}
+                    className="gap-2 flex-1 min-[480px]:flex-none bg-burgundy hover:bg-burgundy/90 shadow-md hover:shadow-lg transition-all duration-200"
                   >
-                    <X className="h-4 w-4" />
-                    Clear
+                    <Plus className="h-4 w-4 shrink-0" />
+                    <span className="whitespace-nowrap">Create Job</span>
                   </Button>
-                )}
-                <Button
-                  onClick={() => navigate("/jobs/create")}
-                  className="gap-2 bg-burgundy hover:bg-burgundy/90 shadow-md hover:shadow-lg transition-all duration-200"
-                >
-                  <Plus className="h-4 w-4" />
-                  Create Job
-                </Button>
+                </div>
               </div>
             </div>
 
@@ -249,13 +243,17 @@ const JobPosts = () => {
                   <div key={i} className="h-12 rounded-lg bg-slate-100 animate-pulse" />
                 ))}
               </div>
-            ) : paginatedJobs.length === 0 ? (
+            ) : jobs.length === 0 ? (
               <div className="text-center py-16">
                 <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-slate-100 flex items-center justify-center">
                   <Briefcase className="h-10 w-10 text-slate-400" />
                 </div>
                 <p className="text-slate-500 font-medium">No job posts found</p>
-                <p className="text-sm text-slate-400 mt-1">Try adjusting your search or create a new job posting</p>
+                <p className="text-sm text-slate-400 mt-1">
+                  {debouncedSearch.length >= 2
+                    ? "No jobs match your Job ID or title search."
+                    : "Create a new job posting to get started."}
+                </p>
                 <Button
                   onClick={() => navigate("/jobs/create")}
                   className="mt-4 gap-2 bg-burgundy hover:bg-burgundy/90"
@@ -266,8 +264,91 @@ const JobPosts = () => {
               </div>
             ) : (
               <>
-                <div className="overflow-x-auto">
-                  <table className="w-full">
+                {/* Mobile cards */}
+                <div className="md:hidden space-y-3">
+                  {jobs.map((job) => (
+                    <article
+                      key={job._id}
+                      className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
+                    >
+                      <div className="flex items-start justify-between gap-2 mb-2">
+                        <span className="font-mono text-xs font-semibold text-burgundy break-all">
+                          {job.jobId}
+                        </span>
+                        {getStatusBadge(job.isActive)}
+                      </div>
+                      <h4 className="font-semibold text-slate-800 text-sm leading-snug mb-1">
+                        {job.title}
+                      </h4>
+                      <p className="text-xs text-slate-400 line-clamp-2 mb-3">
+                        {job.description?.substring(0, 80)}...
+                      </p>
+                      <div className="grid grid-cols-2 gap-2 text-xs text-slate-500 mb-3">
+                        <div>
+                          <span className="text-slate-400 block">Posted</span>
+                          {formatDate(job.postedDate)}
+                        </div>
+                        <div>
+                          <span className="text-slate-400 block">Closes</span>
+                          <span
+                            className={
+                              isClosingSoon(job.closingDate)
+                                ? "text-red-500 font-medium"
+                                : ""
+                            }
+                          >
+                            {formatDate(job.closingDate)}
+                          </span>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          navigate(`/jobs/view-applications/${job._id}`)
+                        }
+                        className="w-full mb-3 inline-flex items-center justify-center gap-1.5 px-2.5 py-2 rounded-lg bg-burgundy/10 text-burgundy text-xs font-medium hover:bg-burgundy/20 transition-colors"
+                      >
+                        <FileText size={12} />
+                        {job.applicationsCount} Application
+                        {job.applicationsCount !== 1 ? "s" : ""}
+                        {job.unviewedApplicationsCount > 0 && (
+                          <span className="min-w-[1.25rem] h-5 px-1.5 rounded-full bg-burgundy text-white text-[10px] font-semibold leading-none inline-flex items-center justify-center">
+                            {formatBadgeCount(job.unviewedApplicationsCount)}
+                          </span>
+                        )}
+                      </button>
+                      <div className="flex gap-2 pt-3 border-t border-slate-100">
+                        <button
+                          type="button"
+                          onClick={() => navigate(`/jobs/view/${job._id}`)}
+                          className="flex-1 inline-flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm text-burgundy bg-burgundy/10 hover:bg-burgundy/15"
+                        >
+                          <Eye size={16} />
+                          View
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => navigate(`/jobs/edit/${job._id}`)}
+                          className="p-2 rounded-lg text-slate-500 bg-slate-50 hover:bg-slate-100"
+                          aria-label="Edit job"
+                        >
+                          <Pencil size={16} />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteClick(job)}
+                          className="p-2 rounded-lg text-red-600 bg-red-50 hover:bg-red-100"
+                          aria-label="Delete job"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+
+                <div className="hidden md:block overflow-x-auto -mx-1 sm:mx-0">
+                  <table className="w-full min-w-[800px]">
                     <thead>
                       <tr className="border-b border-slate-200 bg-slate-50/50">
                         <th className="text-left py-3 px-4 font-semibold text-slate-600 text-xs uppercase tracking-wider">Job ID</th>
@@ -280,7 +361,7 @@ const JobPosts = () => {
                       </tr>
                     </thead>
                     <tbody>
-                      {paginatedJobs.map((job, index) => (
+                      {jobs.map((job, index) => (
                         <tr
                           key={job._id}
                           className={`border-b border-slate-100 hover:bg-slate-50/50 transition-colors ${index % 2 === 0 ? 'bg-white' : 'bg-slate-50/30'}`}
@@ -355,8 +436,8 @@ const JobPosts = () => {
                 {/* Pagination - Bottom Right */}
                 {totalPages > 1 && (
                   <div className="mt-6 pt-4 border-t border-slate-100">
-                    <div className="flex justify-end">
-                      <div className="flex gap-2">
+                    <div className="flex justify-center sm:justify-end overflow-x-auto">
+                      <div className="flex flex-wrap justify-center sm:justify-end gap-2 min-w-0">
                         <button
                           type="button"
                           onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
@@ -399,7 +480,7 @@ const JobPosts = () => {
                 )}
 
                 {/* Showing entries info */}
-                <div className="mt-4 text-right text-xs text-slate-400">
+                <div className="mt-4 text-center sm:text-right text-xs text-slate-400">
                   Showing {((currentPage - 1) * limit) + 1} to {Math.min(currentPage * limit, totalRecords)} of {totalRecords} entries
                 </div>
               </>

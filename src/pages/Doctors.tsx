@@ -315,27 +315,27 @@ const Doctors = () => {
 
   return (
     <AdminLayout title="Doctors">
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         <BreadCrumb />
 
         {/* Main Card */}
         <div className="rounded-xl border-2 border-burgundy/30 bg-gradient-to-br from-white via-slate-50/90 to-white shadow-xl backdrop-blur-sm overflow-hidden">
           <div className="h-1 bg-gradient-to-r from-burgundy/40 via-burgundy to-burgundy/40"></div>
           
-          <div className="p-6">
+          <div className="p-4 sm:p-6">
             {/* Header with Buttons */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4 sm:mb-6">
               <div>
-                <h3 className="text-xl font-bold text-slate-800">Doctors Management</h3>
-                <p className="text-sm text-slate-500 mt-1">Manage doctor profiles, specialties, and availability</p>
+                <h3 className="text-lg sm:text-xl font-bold text-slate-800">Doctors Management</h3>
+                <p className="text-xs sm:text-sm text-slate-500 mt-1">Manage doctor profiles, specialties, and availability</p>
               </div>
               
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row flex-wrap gap-2 w-full sm:w-auto">
                 {!isFeatureMode ? (
                   <>
                     <Button
                       onClick={handleFeatureDoctorMode}
-                      className="gap-2 bg-amber-600 hover:bg-amber-700 shadow-md hover:shadow-lg transition-all duration-200"
+                      className="gap-2 w-full sm:w-auto bg-amber-600 hover:bg-amber-700 shadow-md hover:shadow-lg transition-all duration-200"
                     >
                       <Star className="h-4 w-4" />
                       Feature Doctors
@@ -343,14 +343,14 @@ const Doctors = () => {
                     <Button
                       onClick={() => navigate("/featured-doctors")}
                       variant="outline"
-                      className="gap-2"
+                      className="gap-2 w-full sm:w-auto"
                     >
                       <Star className="h-4 w-4" />
                       View Featured
                     </Button>
                     <Button
                       onClick={() => navigate("/doctors/create")}
-                      className="gap-2 bg-burgundy hover:bg-burgundy/90 shadow-md hover:shadow-lg transition-all duration-200"
+                      className="gap-2 w-full sm:w-auto bg-burgundy hover:bg-burgundy/90 shadow-md hover:shadow-lg transition-all duration-200"
                     >
                       <Plus className="h-4 w-4" />
                       Create Doctor
@@ -360,7 +360,7 @@ const Doctors = () => {
                   <>
                     <Button
                       onClick={handleSaveFeaturedDoctors}
-                      className="gap-2 bg-green-600 hover:bg-green-700"
+                      className="gap-2 w-full sm:w-auto bg-green-600 hover:bg-green-700"
                     >
                       <CheckCircle className="h-4 w-4" />
                       Save Featured ({selectedDoctors.size})
@@ -368,7 +368,7 @@ const Doctors = () => {
                     <Button
                       onClick={cancelFeatureMode}
                       variant="outline"
-                      className="gap-2"
+                      className="gap-2 w-full sm:w-auto"
                     >
                       <X className="h-4 w-4" />
                       Cancel
@@ -380,16 +380,17 @@ const Doctors = () => {
 
             {/* Feature Mode Banner */}
             {isFeatureMode && (
-              <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Star className="h-5 w-5 text-amber-600" />
+              <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                <div className="flex items-start gap-2 min-w-0">
+                  <Star className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
                   <span className="text-sm text-amber-800">
                     Select doctors to feature on the homepage. Selected: <strong>{selectedDoctors.size}</strong> doctor(s)
                   </span>
                 </div>
                 <button
+                  type="button"
                   onClick={() => setSelectedDoctors(new Set(doctors.map(d => d._id)))}
-                  className="text-xs text-amber-600 hover:text-amber-800 underline"
+                  className="text-xs text-amber-600 hover:text-amber-800 underline shrink-0 self-start sm:self-center"
                 >
                   Select All
                 </button>
@@ -397,8 +398,8 @@ const Doctors = () => {
             )}
 
             {/* Search and Filter Section */}
-            <div className="flex flex-col sm:flex-row gap-3 mb-6">
-              <div className="relative flex-1 max-w-md">
+            <div className="flex flex-col gap-3 mb-4 sm:mb-6">
+              <div className="relative w-full sm:flex-1 sm:max-w-md">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                 <input
                   type="text"
@@ -417,7 +418,7 @@ const Doctors = () => {
                   setCurrentPage(1);
                   setSelectedDepartmentId(e.target.value);
                 }}
-                className="px-4 py-2 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-burgundy/20 focus:border-burgundy transition-all"
+                className="w-full sm:w-auto px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-burgundy/20 focus:border-burgundy transition-all"
               >
                 <option value="all">All Departments</option>
                 {departmentOptions.map((department) => (
@@ -433,7 +434,7 @@ const Doctors = () => {
                     setSearch("");
                     setCurrentPage(1);
                   }}
-                  className="text-slate-500 hover:text-slate-700"
+                  className="text-slate-500 hover:text-slate-700 w-full sm:w-auto"
                 >
                   <X className="h-4 w-4 mr-1" />
                   Clear
@@ -469,7 +470,7 @@ const Doctors = () => {
                 ) : (
                   <>
                     {/* Doctors Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-5">
                       {paginatedDoctors.map((doctor) => (
                         <div
                           key={doctor._id}
@@ -501,8 +502,8 @@ const Doctors = () => {
                                     </div>
                                   )}
                                 </div>
-                                <div>
-                                  <p className="text-base font-semibold text-slate-800">{doctor.name}</p>
+                                <div className="min-w-0">
+                                  <p className="text-base font-semibold text-slate-800 break-words">{doctor.name}</p>
                                   <p className="text-xs text-slate-500">{doctor.specialty || "General"}</p>
                                 </div>
                               </div>
@@ -584,8 +585,8 @@ const Doctors = () => {
                     {/* Pagination - Bottom Right */}
                     {totalPages > 1 && (
                       <div className="mt-6 pt-4 border-t border-slate-100">
-                        <div className="flex justify-end">
-                          <div className="flex gap-2">
+                        <div className="flex flex-wrap justify-center sm:justify-end">
+                          <div className="flex flex-wrap justify-center gap-2">
                             <button
                               type="button"
                               onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}

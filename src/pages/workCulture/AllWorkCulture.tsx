@@ -2,12 +2,11 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import AdminLayout from "@/components/layout/AdminLayout";
 import BreadCrumb from "@/components/layout/BreadCrumb";
-import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
-import { 
-  Plus, Search, Edit, Eye, Trash2, Eye as EyeIcon, 
-  EyeOff, ChevronLeft, ChevronRight, Image as ImageIcon,
-  Building2, Heart, Calendar, Users
+import {
+  Plus, Search, Edit, Eye, Trash2,
+  ChevronLeft, ChevronRight, Image as ImageIcon,
+  Heart, Calendar,
 } from "lucide-react";
 import { toast } from "sonner";
 import { getWorkCulture, deleteWorkCulture } from "@/api/workCulture";
@@ -24,10 +23,34 @@ type WorkCulture = {
   __v?: number;
 };
 
+const uiText = {
+  pageTitle: "Work Culture",
+  pageDescription: "Manage your organization's work culture",
+  lifeAtRHH: "Life at RHH",
+  otherEvents: "Other Events",
+  addEvent: "Add Event",
+  searchPlaceholder: "Search by heading...",
+  heading: "Heading",
+  images: "Images",
+  actions: "Actions",
+  view: "View",
+  edit: "Edit",
+  delete: "Delete",
+  noData: "No events found",
+  adjustFilters: "Try adjusting your search or filters",
+  deleteConfirm: "Are you sure you want to delete this event?",
+  cancel: "Cancel",
+  confirmDelete: "Delete",
+};
+
+const lifeAtRHHTitle = "Life at Royale Hayat Hospital";
+const lifeAtRHHDescription =
+  "At Royale Hayat Hospital, we hold a simple belief: people may forget what we said, but they will never forget how we made them feel as patients, family members, or colleagues.\n\nThat belief guides how we care, how we work, and how we treat one another. Every day, our teams deliver safe, modern, quality care with compassion and comfort-because healing is not only about medicine, but about experience.\n\nHere, professionalism meets kindness. Standards meet empathy. And work carries purpose. If this belief resonates with you, you already belong here.";
+
+const displayHeading = (item: WorkCulture) => item.heading?.trim() || item.headingArabic || "—";
+
 const AllWorkCulture = () => {
   const navigate = useNavigate();
-  const { t, isRTL } = useLanguage();
-  const [activeLanguage, setActiveLanguage] = useState<"english" | "arabic">("english");
   const [activeTab, setActiveTab] = useState<"life" | "events">("events");
   const [workCultureData, setWorkCultureData] = useState<WorkCulture[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -63,11 +86,13 @@ const AllWorkCulture = () => {
     }
   };
 
-  const filteredData = workCultureData.filter(item => {
+  const filteredData = workCultureData.filter((item) => {
     const searchValue = searchTerm.toLowerCase();
-    const heading = activeLanguage === "english" ? item.heading.toLowerCase() : item.headingArabic.toLowerCase();
-    const matchesSearch = searchTerm === "" || heading.includes(searchValue);
-    return matchesSearch;
+    if (!searchValue) return true;
+    return (
+      item.heading.toLowerCase().includes(searchValue) ||
+      item.headingArabic.toLowerCase().includes(searchValue)
+    );
   });
 
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
@@ -78,7 +103,7 @@ const AllWorkCulture = () => {
       await deleteWorkCulture(id);
       await loadWorkCultureData(); // Reload data after deletion
       window.dispatchEvent(new Event("workCultureUpdated"));
-      toast.success(activeLanguage === "english" ? "Event deleted successfully" : "تم حذف الحدث بنجاح");
+      toast.success("Event deleted successfully");
       setShowDeleteConfirm(null);
       
       // Adjust pagination if needed
@@ -92,28 +117,6 @@ const AllWorkCulture = () => {
     }
   };
 
-  const getUIText = {
-    pageTitle: activeLanguage === "english" ? "Work Culture" : "ثقافة العمل",
-    pageDescription: activeLanguage === "english" ? "Manage your organization's work culture" : "إدارة ثقافة العمل في مؤسستك",
-    lifeAtRHH: activeLanguage === "english" ? "Life at RHH" : "الحياة في آر إتش إتش",
-    otherEvents: activeLanguage === "english" ? "Other Events" : "أحداث أخرى",
-    addEvent: activeLanguage === "english" ? "Add Event" : "إضافة حدث",
-    searchPlaceholder: activeLanguage === "english" ? "Search by heading..." : "ابحث بالعنوان...",
-    heading: activeLanguage === "english" ? "Heading" : "العنوان",
-    images: activeLanguage === "english" ? "Images" : "الصور",
-    actions: activeLanguage === "english" ? "Actions" : "الإجراءات",
-    view: activeLanguage === "english" ? "View" : "عرض",
-    edit: activeLanguage === "english" ? "Edit" : "تعديل",
-    delete: activeLanguage === "english" ? "Delete" : "حذف",
-    noData: activeLanguage === "english" ? "No events found" : "لم يتم العثور على أحداث",
-    adjustFilters: activeLanguage === "english" ? "Try adjusting your search or filters" : "حاول تعديل البحث أو الفلاتر",
-    previous: activeLanguage === "english" ? "Previous" : "السابق",
-    next: activeLanguage === "english" ? "Next" : "التالي",
-    deleteConfirm: activeLanguage === "english" ? "Are you sure you want to delete this event?" : "هل أنت متأكد أنك تريد حذف هذا الحدث؟",
-    cancel: activeLanguage === "english" ? "Cancel" : "إلغاء",
-    confirmDelete: activeLanguage === "english" ? "Delete" : "حذف",
-  };
-
   return (
     <AdminLayout title="Work Culture">
       <div className="space-y-6">
@@ -121,40 +124,18 @@ const AllWorkCulture = () => {
 
         {/* Header with Tabs */}
         <div className="flex flex-col gap-4">
-          <div className="flex justify-between items-center flex-wrap gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h2 className="text-2xl font-bold text-slate-800">{getUIText.pageTitle}</h2>
-              <p className="text-sm text-slate-500 mt-1">{getUIText.pageDescription}</p>
+              <h2 className="text-2xl font-bold text-slate-800">{uiText.pageTitle}</h2>
+              <p className="text-sm text-slate-500 mt-1">{uiText.pageDescription}</p>
             </div>
-            
-            <div className="flex gap-3">
-              {/* Language Toggle */}
-              <div className="flex gap-2 p-1 bg-slate-100/80 rounded-lg">
-                <button
-                  onClick={() => setActiveLanguage("english")}
-                  className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${
-                    activeLanguage === "english" ? "bg-white text-burgundy shadow-sm" : "text-slate-600"
-                  }`}
-                >
-                  English
-                </button>
-                <button
-                  onClick={() => setActiveLanguage("arabic")}
-                  className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${
-                    activeLanguage === "arabic" ? "bg-white text-burgundy shadow-sm" : "text-slate-600"
-                  }`}
-                >
-                  العربية
-                </button>
-              </div>
-              
-              {activeTab === "events" && (
-                <Button onClick={() => navigate("/work-culture/create")} className="gap-2">
-                  <Plus className="h-4 w-4" />
-                  {getUIText.addEvent}
-                </Button>
-              )}
-            </div>
+
+            {activeTab === "events" && (
+              <Button onClick={() => navigate("/work-culture/create")} className="gap-2 w-full sm:w-auto">
+                <Plus className="h-4 w-4" />
+                {uiText.addEvent}
+              </Button>
+            )}
           </div>
 
           {/* Tabs */}
@@ -168,7 +149,7 @@ const AllWorkCulture = () => {
               }`}
             >
               <Heart className="h-4 w-4" />
-              {getUIText.lifeAtRHH}
+              {uiText.lifeAtRHH}
             </button>
             <button
               onClick={() => setActiveTab("events")}
@@ -179,7 +160,7 @@ const AllWorkCulture = () => {
               }`}
             >
               <Calendar className="h-4 w-4" />
-              {getUIText.otherEvents}
+              {uiText.otherEvents}
             </button>
           </div>
         </div>
@@ -201,17 +182,14 @@ const AllWorkCulture = () => {
                 <div className="relative rounded-xl overflow-hidden bg-gradient-to-br from-slate-50 to-slate-100 border border-slate-200 min-h-[180px] flex items-end">
                   <div className="relative p-6 md:p-8">
                     <h3 className="text-2xl md:text-4xl font-bold text-slate-800">
-                      {activeLanguage === "english" ? "Life at Royale Hayat Hospital" : "الحياة في مستشفى رويال حياة"}
+                      {lifeAtRHHTitle}
                     </h3>
                   </div>
                 </div>
 
                 <div className="bg-white rounded-xl border border-slate-200 p-6 md:p-8">
                   <div className="prose prose-sm max-w-none">
-                    {(activeLanguage === "english"
-                      ? "At Royale Hayat Hospital, we hold a simple belief: people may forget what we said, but they will never forget how we made them feel as patients, family members, or colleagues.\n\nThat belief guides how we care, how we work, and how we treat one another. Every day, our teams deliver safe, modern, quality care with compassion and comfort-because healing is not only about medicine, but about experience.\n\nHere, professionalism meets kindness. Standards meet empathy. And work carries purpose. If this belief resonates with you, you already belong here."
-                      : "في مستشفى رويال حياة، نحن نتمسك بإيمان بسيط: قد ينسى الناس ما قلناه، لكنهم لن ينسوا أبدًا كيف جعلناهم يشعرون كمرضى أو أفراد عائلة أو زملاء.\n\nهذا الإيمان يوجه كيفية رعايتنا، وكيف نعمل، وكيف نتعامل مع بعضنا البعض. كل يوم، تقدم فرقنا رعاية آمنة وحديثة وعالية الجودة مع الرحمة والراحة - لأن الشفاء لا يتعلق فقط بالطب، بل بالتجربة.\n\nهنا، تلتقي الاحترافية باللطف. تلتقي المعايير بالتعاطف. ويحمل العمل هدفًا. إذا كان هذا الإيمان يتردد صداه معك، فأنت بالفعل تنتمي إلى هنا.")
-                      .split("\n\n")
+                    {lifeAtRHHDescription.split("\n\n")
                       .map((paragraph, idx) => (
                         <p key={idx} className="text-slate-600 leading-relaxed mb-4 text-base">
                           {paragraph}
@@ -228,7 +206,7 @@ const AllWorkCulture = () => {
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                     <input
                       type="text"
-                      placeholder={getUIText.searchPlaceholder}
+                      placeholder={uiText.searchPlaceholder}
                       value={searchTerm}
                       onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
                       className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-burgundy/20"
@@ -249,9 +227,9 @@ const AllWorkCulture = () => {
                         <thead className="bg-slate-50 border-b border-slate-200">
                           <tr>
                             <th className="text-left px-6 py-4 text-xs font-semibold text-slate-500">#</th>
-                            <th className="text-left px-6 py-4 text-xs font-semibold text-slate-500">{getUIText.heading}</th>
-                            <th className="text-left px-6 py-4 text-xs font-semibold text-slate-500">{getUIText.images}</th>
-                            <th className="text-right px-6 py-4 text-xs font-semibold text-slate-500">{getUIText.actions}</th>
+                            <th className="text-left px-6 py-4 text-xs font-semibold text-slate-500">{uiText.heading}</th>
+                            <th className="text-left px-6 py-4 text-xs font-semibold text-slate-500">{uiText.images}</th>
+                            <th className="text-right px-6 py-4 text-xs font-semibold text-slate-500">{uiText.actions}</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100">
@@ -260,14 +238,14 @@ const AllWorkCulture = () => {
                               <td colSpan={4} className="px-6 py-16 text-center">
                                 <div className="flex flex-col items-center">
                                   <Calendar className="h-12 w-12 text-slate-300 mb-3" />
-                                  <p className="text-slate-500 font-medium">{getUIText.noData}</p>
-                                  <p className="text-sm text-slate-400 mt-1">{getUIText.adjustFilters}</p>
+                                  <p className="text-slate-500 font-medium">{uiText.noData}</p>
+                                  <p className="text-sm text-slate-400 mt-1">{uiText.adjustFilters}</p>
                                   <Button
                                     onClick={() => navigate("/work-culture/create")}
                                     className="mt-4 gap-2 bg-burgundy hover:bg-burgundy/90"
                                   >
                                     <Plus className="h-4 w-4" />
-                                    {getUIText.addEvent}
+                                    {uiText.addEvent}
                                   </Button>
                                 </div>
                                </td>
@@ -280,7 +258,7 @@ const AllWorkCulture = () => {
                                 </td>
                                 <td className="px-6 py-4">
                                   <p className="font-medium text-slate-800">
-                                    {activeLanguage === "english" ? item.heading : item.headingArabic}
+                                    {displayHeading(item)}
                                   </p>
                                 </td>
                                 <td className="px-6 py-4">
@@ -360,13 +338,13 @@ const AllWorkCulture = () => {
       {showDeleteConfirm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl max-w-md w-full mx-4 p-6">
-            <h3 className="text-lg font-bold text-slate-800 mb-2">{getUIText.deleteConfirm}</h3>
+            <h3 className="text-lg font-bold text-slate-800 mb-2">{uiText.deleteConfirm}</h3>
             <div className="flex justify-end gap-3 mt-6">
               <Button variant="outline" onClick={() => setShowDeleteConfirm(null)}>
-                {getUIText.cancel}
+                {uiText.cancel}
               </Button>
               <Button variant="destructive" onClick={() => handleDelete(showDeleteConfirm)}>
-                {getUIText.confirmDelete}
+                {uiText.confirmDelete}
               </Button>
             </div>
           </div>

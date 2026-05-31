@@ -289,3 +289,17 @@ export const getFeedbackCounts =
 
         return response.data;
     };
+
+export const markDoctorFeedbackViewed = async (feedbackId: string) => {
+    const response = await api.patch(
+        `/api/v1/doctor-feedback/view/${feedbackId}`,
+    );
+    return response.data;
+};
+
+export const markHospitalFeedbackViewed = async (feedbackId: string) => {
+    const response = await api.patch(
+        `/api/v1/hospital-feedback/view/${feedbackId}`,
+    );
+    return response.data;
+};

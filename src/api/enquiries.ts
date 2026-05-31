@@ -8,3 +8,7 @@ export const getAllEnquiries = async (params: Record<string, string | number | b
 export const getEnquiryById = async (id: string) => {
   return api.get(`${BASE}/${id}`);
 };
+
+export const deleteEnquiry = async (id: string) => {
+  return api.delete(`${BASE}/${id}`);
+};

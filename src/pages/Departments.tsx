@@ -249,18 +249,18 @@ const Departments = () => {
 
   return (
     <AdminLayout title="Departments">
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         <BreadCrumb />
 
         {/* Main Card */}
         <div className="rounded-xl border-2 border-burgundy/30 bg-gradient-to-br from-white via-slate-50/90 to-white shadow-xl backdrop-blur-sm overflow-hidden">
           <div className="h-1 bg-gradient-to-r from-burgundy/40 via-burgundy to-burgundy/40"></div>
           
-          <div className="p-6">
+          <div className="p-4 sm:p-6">
             {/* Header with Create Button */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4 sm:mb-6">
               <div>
-                <h3 className="text-xl font-bold text-slate-800">Departments Management</h3>
+                <h3 className="text-lg sm:text-xl font-bold text-slate-800">Departments Management</h3>
                 <p className="text-sm text-slate-500 mt-1">Manage hospital departments and their details</p>
               </div>
               
@@ -274,26 +274,28 @@ const Departments = () => {
             </div>
 
             {/* Search and Filter Section */}
-            <div className="flex flex-col sm:flex-row gap-3 mb-6">
-              <div className="flex-1 flex gap-2">
-                <div className="relative flex-1 max-w-md">
+            <div className="flex flex-col gap-3 mb-4 sm:mb-6">
+              <div className="flex flex-col min-[400px]:flex-row gap-2">
+                <div className="relative flex-1 min-w-0">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                   <Input
                     placeholder="Search departments..."
                     value={searchInput}
                     onChange={(e) => setSearchInput(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && applySearch()}
-                    className="pl-9 h-10"
+                    className="pl-9 h-10 w-full"
                   />
                 </div>
-                <Button variant="secondary" onClick={applySearch} size="sm">
+                <div className="flex gap-2">
+                <Button variant="secondary" onClick={applySearch} size="sm" className="flex-1 min-[400px]:flex-none">
                   Search
                 </Button>
                 {search && (
-                  <Button variant="ghost" onClick={clearSearch} size="sm">
+                  <Button variant="ghost" onClick={clearSearch} size="sm" className="flex-1 min-[400px]:flex-none">
                     Clear
                   </Button>
                 )}
+                </div>
               </div>
               
               {/* Category Filter */}
@@ -303,7 +305,7 @@ const Departments = () => {
                   setSelectedCategory(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="px-4 py-2 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-burgundy/20 focus:border-burgundy transition-all"
+                className="w-full sm:w-auto px-4 py-2 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-burgundy/20 focus:border-burgundy transition-all"
               >
                 <option value="all">All Categories</option>
                 {categories.map((cat) => (
@@ -416,8 +418,7 @@ const Departments = () => {
                     {/* Pagination - Bottom Right */}
                     {totalPages > 1 && (
                       <div className="mt-6 pt-4 border-t border-slate-100">
-                        <div className="flex justify-end">
-                          <div className="flex gap-2">
+                        <div className="flex flex-wrap justify-center sm:justify-end gap-2">
                             <button
                               type="button"
                               onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
@@ -463,7 +464,6 @@ const Departments = () => {
                             >
                               Next
                             </button>
-                          </div>
                         </div>
                       </div>
                     )}

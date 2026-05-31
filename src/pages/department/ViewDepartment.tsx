@@ -158,36 +158,37 @@ const ViewDepartment = () => {
 
   return (
     <AdminLayout title="View Department">
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         <BreadCrumb />
 
         {/* Main Card */}
         <div className="rounded-xl border-2 border-burgundy/30 bg-gradient-to-br from-white via-slate-50/90 to-white shadow-xl backdrop-blur-sm overflow-hidden">
           <div className="h-1 bg-gradient-to-r from-burgundy/40 via-burgundy to-burgundy/40"></div>
           
-          <div className="p-6">
+          <div className="p-4 sm:p-6">
             {/* Header with Navigation */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-              <div className="flex items-center gap-4">
+            <div className="flex flex-col gap-4 mb-4 sm:mb-6">
+              <div className="flex items-start gap-3 sm:gap-4 min-w-0">
                 <button
                   onClick={() => navigate("/departments")}
                   className="p-2 rounded-xl hover:bg-slate-100 transition-all duration-200 group"
                 >
                   <ArrowLeft className="h-5 w-5 text-slate-500 group-hover:text-burgundy" />
                 </button>
-                <div>
-                  <h2 className="text-2xl font-bold text-slate-800">Department Details</h2>
-                  <p className="text-sm text-slate-500 mt-1">View department information</p>
+                <div className="min-w-0">
+                  <h2 className="text-xl sm:text-2xl font-bold text-slate-800">Department Details</h2>
+                  <p className="text-xs sm:text-sm text-slate-500 mt-1">View department information</p>
                 </div>
               </div>
               
-              <div className="flex gap-3">
+              <div className="flex flex-col sm:flex-row gap-3">
                 {/* Language Toggle */}
-                <div className="flex gap-2 p-1 bg-slate-100/80 rounded-lg">
+                <div className="flex w-full sm:w-auto gap-2 p-1 bg-slate-100/80 rounded-lg">
                   <button
+                    type="button"
                     onClick={() => setActiveLanguage("english")}
                     className={`
-                      flex items-center gap-2 px-4 py-1.5 rounded-md text-sm font-medium transition-all duration-200
+                      flex flex-1 sm:flex-none items-center justify-center gap-2 px-3 sm:px-4 py-1.5 rounded-md text-sm font-medium transition-all duration-200
                       ${activeLanguage === "english"
                         ? "bg-white text-burgundy shadow-sm"
                         : "text-slate-600 hover:text-slate-800 hover:bg-white/50"
@@ -198,9 +199,10 @@ const ViewDepartment = () => {
                     English
                   </button>
                   <button
+                    type="button"
                     onClick={() => setActiveLanguage("arabic")}
                     className={`
-                      flex items-center gap-2 px-4 py-1.5 rounded-md text-sm font-medium transition-all duration-200
+                      flex flex-1 sm:flex-none items-center justify-center gap-2 px-3 sm:px-4 py-1.5 rounded-md text-sm font-medium transition-all duration-200
                       ${activeLanguage === "arabic"
                         ? "bg-white text-burgundy shadow-sm"
                         : "text-slate-600 hover:text-slate-800 hover:bg-white/50"
@@ -323,7 +325,7 @@ const ViewDepartment = () => {
                     <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
                       {activeLanguage === "english" ? "Department Name" : "اسم القسم"}
                     </label>
-                    <h1 className={`text-2xl font-bold text-slate-800 mt-1 ${activeLanguage === "arabic" ? "rtl-text" : ""}`}>
+                    <h1 className={`text-xl sm:text-2xl font-bold text-slate-800 mt-1 ${activeLanguage === "arabic" ? "rtl-text" : ""}`}>
                       {activeLanguage === "english" ? department.name : department.nameAr}
                     </h1>
                   </div>

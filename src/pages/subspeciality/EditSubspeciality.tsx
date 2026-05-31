@@ -8,7 +8,7 @@ const EditSubspeciality = () => {
 
     return (
         <AdminLayout title="Edit Subspeciality">
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
                 <SubspecialityForm mode="edit" subspecialityId={id} />
             </div>
         </AdminLayout>

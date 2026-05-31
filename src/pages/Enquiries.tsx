@@ -1,13 +1,15 @@
 // Enquiries.tsx (List Page)
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import AdminLayout from "@/components/layout/AdminLayout";
 import BreadCrumb from "@/components/layout/BreadCrumb";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Search, Eye, Mail, X, Phone, User, Calendar, MessageSquare, Building2 } from "lucide-react";
-import { getAllEnquiries } from "@/api/enquiries";
+import { Search, Eye, Mail, X, Trash2, Building2 } from "lucide-react";
+import { deleteEnquiry, getAllEnquiries } from "@/api/enquiries";
 import TableSkeletonLoader from "@/components/TableSkeletonLoader";
+import AlertBox from "@/components/AlertBox";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 type ContactMessage = {
   id: string;
@@ -34,6 +36,11 @@ const Enquiries = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [totalRecords, setTotalRecords] = useState(0);
   const [departmentOptions, setDepartmentOptions] = useState<string[]>([]);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [enquiryToDelete, setEnquiryToDelete] = useState<ContactMessage | null>(
+    null,
+  );
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -42,46 +49,91 @@ const Enquiries = () => {
     return () => clearTimeout(timer);
   }, [search]);
 
-  useEffect(() => {
-    const fetchEnquiries = async () => {
-      setLoading(true);
-      try {
-        const effectiveSearch = debouncedSearch.length >= 2 ? debouncedSearch : "";
-        const response = await getAllEnquiries({
-          page: currentPage,
-          limit,
-          sortBy: "createdAt",
-          sortOrder: "desc",
-          ...(effectiveSearch ? { search: effectiveSearch } : {}),
-          ...(departmentFilter !== "all" ? { department: departmentFilter } : {}),
-        });
-        const list = response?.data?.data || [];
-        const mapped: ContactMessage[] = (Array.isArray(list) ? list : []).map((item: any, index: number) => ({
-          id: item?._id || `ENQ-${index + 1}`,
-          enquiryId: item?.enquiryId || `ENQ${String(index + 1).padStart(3, "0")}`,
-          name: item?.name || "-",
-          email: item?.email || "-",
+  const fetchEnquiries = useCallback(async () => {
+    setLoading(true);
+    try {
+      const effectiveSearch = debouncedSearch.length >= 2 ? debouncedSearch : "";
+      const response = await getAllEnquiries({
+        page: currentPage,
+        limit,
+        sortBy: "createdAt",
+        sortOrder: "desc",
+        ...(effectiveSearch ? { search: effectiveSearch } : {}),
+        ...(departmentFilter !== "all" ? { department: departmentFilter } : {}),
+      });
+      const list = response?.data?.data || [];
+      const mapped: ContactMessage[] = (Array.isArray(list) ? list : []).map(
+        (item: Record<string, unknown>, index: number) => ({
+          id: String(item?._id ?? `ENQ-${index + 1}`),
+          enquiryId: String(
+            item?.enquiryId ?? `ENQ${String(index + 1).padStart(3, "0")}`,
+          ),
+          name: String(item?.name ?? "-"),
+          email: String(item?.email ?? "-"),
           phone: item?.phone ? String(item.phone) : "-",
-          department: item?.department || "-",
-          message: item?.message || "-",
-          date: item?.createdAt ? new Date(item.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : "-",
-          createdAt: item?.createdAt,
-        }));
-        setMessages(mapped);
-        setTotalPages(response?.data?.meta?.totalPages || 1);
-        setTotalRecords(response?.data?.meta?.totalRecords || 0);
-        const uniqueDepartments = Array.from(new Set(mapped.map((item) => item.department).filter(Boolean)));
-        setDepartmentOptions((prev) => Array.from(new Set([...prev, ...uniqueDepartments])));
-      } catch {
-        setMessages([]);
-        setTotalPages(1);
-        setTotalRecords(0);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchEnquiries();
+          department: String(item?.department ?? "-"),
+          message: String(item?.message ?? "-"),
+          date: item?.createdAt
+            ? new Date(String(item.createdAt)).toLocaleDateString("en-US", {
+                month: "short",
+                day: "numeric",
+                year: "numeric",
+              })
+            : "-",
+          createdAt: item?.createdAt
+            ? String(item.createdAt)
+            : undefined,
+        }),
+      );
+      setMessages(mapped);
+      setTotalPages(response?.data?.meta?.totalPages || 1);
+      setTotalRecords(response?.data?.meta?.totalRecords || 0);
+      const uniqueDepartments = Array.from(
+        new Set(mapped.map((item) => item.department).filter(Boolean)),
+      );
+      setDepartmentOptions((prev) =>
+        Array.from(new Set([...prev, ...uniqueDepartments])),
+      );
+    } catch {
+      setMessages([]);
+      setTotalPages(1);
+      setTotalRecords(0);
+    } finally {
+      setLoading(false);
+    }
   }, [currentPage, limit, debouncedSearch, departmentFilter]);
+
+  useEffect(() => {
+    void fetchEnquiries();
+  }, [fetchEnquiries]);
+
+  const handleDeleteClick = (enquiry: ContactMessage) => {
+    setEnquiryToDelete(enquiry);
+    setDeleteOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!enquiryToDelete?.id) return;
+
+    setIsDeleting(true);
+    try {
+      await deleteEnquiry(enquiryToDelete.id);
+      toast.success("Enquiry deleted successfully");
+      setDeleteOpen(false);
+      setEnquiryToDelete(null);
+
+      if (messages.length === 1 && currentPage > 1) {
+        setCurrentPage((prev) => prev - 1);
+      } else {
+        await fetchEnquiries();
+      }
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } } };
+      toast.error(err?.response?.data?.message || "Failed to delete enquiry");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   const getPageNumbers = () => {
     const pageNumbers: Array<number | string> = [];
@@ -215,15 +267,30 @@ const Enquiries = () => {
                             </td>
                             <td className="py-3 px-4 hidden sm:table-cell text-xs text-slate-500">{m.date}</td>
                             <td className="py-3 px-4">
-                              <button 
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  navigate(`/enquiries/view/${m.id}`);
-                                }}
-                                className="p-1.5 rounded-lg hover:bg-slate-100 transition-colors"
+                              <div
+                                className="inline-flex items-center gap-1"
+                                onClick={(e) => e.stopPropagation()}
                               >
-                                <Eye size={14} className="text-slate-400 group-hover:text-burgundy transition-colors" />
-                              </button>
+                                <button
+                                  type="button"
+                                  onClick={() => navigate(`/enquiries/view/${m.id}`)}
+                                  className="p-1.5 rounded-lg hover:bg-slate-100 transition-colors"
+                                  title="View"
+                                >
+                                  <Eye
+                                    size={14}
+                                    className="text-slate-400 group-hover:text-burgundy transition-colors"
+                                  />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeleteClick(m)}
+                                  className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                                  title="Delete"
+                                >
+                                  <Trash2 size={14} />
+                                </button>
+                              </div>
                             </td>
                           </tr>
                         ))}
@@ -286,6 +353,20 @@ const Enquiries = () => {
           </div>
         </div>
       </div>
+
+      <AlertBox
+        isOpen={deleteOpen}
+        onClose={() => {
+          setDeleteOpen(false);
+          setEnquiryToDelete(null);
+        }}
+        onConfirm={confirmDelete}
+        title="Delete Enquiry"
+        message={`Are you sure you want to delete the enquiry from "${enquiryToDelete?.name}" (${enquiryToDelete?.enquiryId})? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        isDeleting={isDeleting}
+      />
     </AdminLayout>
   );
 };

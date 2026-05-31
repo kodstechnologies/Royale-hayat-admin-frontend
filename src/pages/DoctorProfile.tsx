@@ -38,9 +38,9 @@ const DoctorProfile = () => {
         <ArrowLeft size={14} /> {t("Back")}
       </button>
 
-      <div className="bg-card rounded-lg shadow-sm border border-border p-6 mb-4">
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-4">
+      <div className="bg-card rounded-lg shadow-sm border border-border p-4 sm:p-6 mb-4">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="flex items-center gap-4 min-w-0">
             <div className="w-20 h-20 rounded-full bg-burgundy/10 flex items-center justify-center">
               <span className="text-burgundy font-serif font-bold text-2xl">{doctor.name.split(" ").pop()?.[0]}</span>
             </div>
@@ -59,7 +59,7 @@ const DoctorProfile = () => {
               </div>
             </div>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2 w-full sm:w-auto">
             {editing ? (
               <>
                 <button onClick={saveChanges} className="flex items-center gap-1 px-3 py-1.5 rounded-md bg-burgundy text-primary-foreground text-xs font-sans font-medium"><Save size={12} /> {t("Save")}</button>
@@ -77,7 +77,7 @@ const DoctorProfile = () => {
           <div className="bg-card rounded-lg shadow-sm border border-border p-5">
             <h3 className="font-serif font-semibold text-foreground mb-3 text-sm">{t("Profile Details")}</h3>
             {editing ? (
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {[
                   { label: t("Name"), key: "name" }, { label: t("Specialty"), key: "specialty" },
                   { label: t("Department"), key: "department" }, { label: t("Qualifications"), key: "qualifications" },
@@ -103,7 +103,7 @@ const DoctorProfile = () => {
               </div>
             ) : (
               <div className="space-y-3">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div className="grid grid-cols-1 min-[400px]:grid-cols-2 md:grid-cols-4 gap-3">
                   {[
                     [t("Name"), doctor.name], [t("Department"), doctor.department], [t("Specialty"), doctor.specialty],
                     [t("Qualifications"), doctor.qualifications], [t("Experience"), `${doctor.experience} years`], [t("Phone"), doctor.phone],

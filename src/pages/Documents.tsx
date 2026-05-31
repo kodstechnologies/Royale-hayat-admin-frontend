@@ -404,23 +404,23 @@ const Documents = () => {
 
   return (
     <AdminLayout title="Documents">
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         <BreadCrumb />
 
         {/* Main Card */}
         <div className="rounded-xl border-2 border-burgundy/30 bg-gradient-to-br from-white via-slate-50/90 to-white shadow-xl backdrop-blur-sm overflow-hidden">
           <div className="h-1 bg-gradient-to-r from-burgundy/40 via-burgundy to-burgundy/40"></div>
 
-          <div className="p-6">
+          <div className="p-4 sm:p-6">
             {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4 sm:mb-6">
               <div>
-                <h3 className="text-xl font-bold text-slate-800">Document Management</h3>
-                <p className="text-sm text-slate-500 mt-1">Upload and manage documents to share with patients</p>
+                <h3 className="text-lg sm:text-xl font-bold text-slate-800">Document Management</h3>
+                <p className="text-xs sm:text-sm text-slate-500 mt-1">Upload and manage documents to share with patients</p>
               </div>
               <Button
                 onClick={() => setShowUpload(!showUpload)}
-                className="gap-2 bg-burgundy hover:bg-burgundy/90 shadow-md hover:shadow-lg transition-all duration-200"
+                className="gap-2 bg-burgundy hover:bg-burgundy/90 shadow-md hover:shadow-lg transition-all duration-200 w-full sm:w-auto"
               >
                 <Upload className="h-4 w-4" />
                 Upload Document
@@ -428,18 +428,19 @@ const Documents = () => {
             </div>
 
             {/* Category Capsules */}
-            <div className="mb-6">
+            <div className="mb-4 sm:mb-6">
               <div className="flex flex-wrap gap-2">
                 {categories.map(c => {
                   const isActive = filterCat === c;
                   return (
                     <button
+                      type="button"
                       key={c}
                       onClick={() => {
                         setFilterCat(c);
                         setCurrentPage(1);
                       }}
-                      className={`relative px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${isActive
+                      className={`relative px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium transition-all duration-300 ${isActive
                           ? "bg-burgundy text-white shadow-md shadow-burgundy/20 scale-105"
                           : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
                         }`}
@@ -455,7 +456,7 @@ const Documents = () => {
             </div>
 
             {/* Search Bar */}
-            <div className="relative mb-6">
+            <div className="relative mb-4 sm:mb-6">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
               <input
                 type="text"
@@ -471,8 +472,8 @@ const Documents = () => {
 
             {/* Upload Form */}
             {showUpload && (
-              <div className="mb-6 p-5 rounded-xl bg-gradient-to-r from-slate-50 to-white border border-slate-200 animate-in fade-in duration-200">
-                <h4 className="text-md font-semibold text-slate-800 mb-4">Upload New Document</h4>
+              <div className="mb-4 sm:mb-6 p-4 sm:p-5 rounded-xl bg-gradient-to-r from-slate-50 to-white border border-slate-200 animate-in fade-in duration-200">
+                <h4 className="text-sm sm:text-md font-semibold text-slate-800 mb-4">Upload New Document</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="text-sm font-semibold text-slate-700 block mb-1.5">Document Title *</label>
@@ -527,9 +528,9 @@ const Documents = () => {
                     </div>
                   </div>
                 </div>
-                <div className="flex justify-end gap-3 mt-4 pt-3 border-t border-slate-100">
-                  <Button variant="outline" onClick={() => setShowUpload(false)}>Cancel</Button>
-                  <Button onClick={handleUpload} disabled={uploadProgress} className="bg-burgundy hover:bg-burgundy/90">
+                <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 mt-4 pt-3 border-t border-slate-100">
+                  <Button variant="outline" onClick={() => setShowUpload(false)} className="w-full sm:w-auto">Cancel</Button>
+                  <Button onClick={handleUpload} disabled={uploadProgress} className="bg-burgundy hover:bg-burgundy/90 w-full sm:w-auto">
                     {uploadProgress ? "Uploading..." : "Upload Document"}
                   </Button>
                 </div>
@@ -566,7 +567,7 @@ const Documents = () => {
               </div>
             ) : (
               <>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
                   {paginatedDocs.map((doc) => {
                     const categoryStyle = getCategoryColor(doc.category);
                     const isSelected = selectedCard === doc.id;
@@ -582,16 +583,16 @@ const Documents = () => {
                           setShowViewModal(doc);
                         }}
                       >
-                        <div className="p-5">
+                        <div className="p-4 sm:p-5">
                           {/* Header */}
-                          <div className="flex items-start justify-between mb-3">
-                            <div className="flex items-center gap-3">
-                              <div className="w-12 h-12 rounded-xl bg-burgundy/10 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-200">
+                          <div className="flex items-start justify-between mb-3 min-w-0">
+                            <div className="flex items-center gap-3 min-w-0 flex-1">
+                              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-burgundy/10 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-200">
                                 {getFileIcon(doc.fileType)}
                               </div>
-                              <div>
-                                <h4 className="font-semibold text-slate-800 line-clamp-1">{doc.title}</h4>
-                                <div className="flex items-center gap-2 mt-1">
+                              <div className="min-w-0 flex-1">
+                                <h4 className="font-semibold text-slate-800 line-clamp-2 sm:line-clamp-1 text-sm sm:text-base">{doc.title}</h4>
+                                <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mt-1">
                                   <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-medium ${categoryStyle.bg} ${categoryStyle.text} border ${categoryStyle.border}`}>
                                     {doc.category}
                                   </span>
@@ -617,28 +618,31 @@ const Documents = () => {
                           </div>
 
                           {/* Action Buttons */}
-                          <div className="flex items-center gap-2 pt-3 border-t border-slate-100">
+                          <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-slate-100">
                             <button
+                              type="button"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 handleDownload(doc);
                               }}
-                              className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 text-xs font-medium hover:bg-burgundy/5 hover:border-burgundy/30 transition-all"
+                              className="flex-1 min-w-[calc(50%-4px)] sm:min-w-0 inline-flex items-center justify-center gap-1.5 px-3 py-2 sm:py-1.5 rounded-lg border border-slate-200 text-slate-600 text-xs font-medium hover:bg-burgundy/5 hover:border-burgundy/30 transition-all"
                             >
                               <Download size={12} />
                               Download
                             </button>
                             <button
+                              type="button"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setShowShareModal(doc);
                               }}
-                              className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 text-xs font-medium hover:bg-burgundy/5 hover:border-burgundy/30 transition-all"
+                              className="flex-1 min-w-[calc(50%-4px)] sm:min-w-0 inline-flex items-center justify-center gap-1.5 px-3 py-2 sm:py-1.5 rounded-lg border border-slate-200 text-slate-600 text-xs font-medium hover:bg-burgundy/5 hover:border-burgundy/30 transition-all"
                             >
                               <Send size={12} />
                               Share
                             </button>
                             <button
+                              type="button"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setEditForm({
@@ -651,18 +655,23 @@ const Documents = () => {
                                 setEditPreviewUrl(doc.fileUrl || "");
                                 setShowEditModal(doc);
                               }}
-                              className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 text-xs font-medium hover:bg-burgundy/5 hover:border-burgundy/30 transition-all"
+                              className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3 py-2 sm:py-1.5 rounded-lg border border-slate-200 text-slate-600 text-xs font-medium hover:bg-burgundy/5 hover:border-burgundy/30 transition-all"
+                              aria-label="Edit document"
                             >
                               <Pencil size={12} />
+                              <span className="sm:hidden">Edit</span>
                             </button>
                             <button
+                              type="button"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setDocToDelete(doc);
                               }}
-                              className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 text-xs font-medium hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition-all"
+                              className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3 py-2 sm:py-1.5 rounded-lg border border-slate-200 text-slate-600 text-xs font-medium hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition-all"
+                              aria-label="Delete document"
                             >
                               <X size={12} />
+                              <span className="sm:hidden">Delete</span>
                             </button>
                           </div>
                         </div>
@@ -674,8 +683,7 @@ const Documents = () => {
                 {/* Pagination */}
                 {totalPages > 1 && (
                   <div className="mt-6 pt-4 border-t border-slate-100">
-                    <div className="flex justify-end">
-                      <div className="flex gap-2">
+                    <div className="flex flex-wrap justify-center sm:justify-end gap-2">
                         <button
                           type="button"
                           onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
@@ -719,7 +727,6 @@ const Documents = () => {
                         >
                           Next
                         </button>
-                      </div>
                     </div>
                   </div>
                 )}
@@ -731,32 +738,32 @@ const Documents = () => {
 
       {/* View Document Modal */}
       {showViewModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50" onClick={() => setShowViewModal(null)}>
-          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-2xl mx-4 overflow-hidden" onClick={e => e.stopPropagation()}>
-            <div className="bg-gradient-to-r from-burgundy/5 to-white border-b border-slate-100 p-5">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-burgundy/10 flex items-center justify-center">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-0 sm:p-4" onClick={() => setShowViewModal(null)}>
+          <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl border border-slate-200 w-full max-w-2xl max-h-[92vh] sm:max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <div className="bg-gradient-to-r from-burgundy/5 to-white border-b border-slate-100 p-4 sm:p-5 sticky top-0 z-10">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center gap-3 min-w-0 flex-1">
+                  <div className="w-10 h-10 rounded-xl bg-burgundy/10 flex items-center justify-center shrink-0">
                     {getFileIcon(showViewModal.fileType)}
                   </div>
-                  <div>
-                    <h3 className="text-lg font-bold text-slate-800">{showViewModal.title}</h3>
+                  <div className="min-w-0">
+                    <h3 className="text-base sm:text-lg font-bold text-slate-800 line-clamp-2">{showViewModal.title}</h3>
                     <p className="text-xs text-slate-500">{showViewModal.category}</p>
                   </div>
                 </div>
-                <button onClick={() => setShowViewModal(null)} className="p-2 rounded-lg hover:bg-slate-100 transition-colors">
+                <button type="button" onClick={() => setShowViewModal(null)} className="p-2 rounded-lg hover:bg-slate-100 transition-colors shrink-0" aria-label="Close">
                   <X size={18} className="text-slate-400" />
                 </button>
               </div>
             </div>
 
-            <div className="p-6">
+            <div className="p-4 sm:p-6">
               <div className="mb-4">
                 <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Description</label>
                 <p className="text-sm text-slate-700 mt-1">{showViewModal.description}</p>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 mb-6">
+              <div className="grid grid-cols-1 min-[400px]:grid-cols-2 gap-4 mb-6">
                 <div>
                   <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Upload Date</label>
                   <p className="text-sm text-slate-700 mt-1">{formatDate(showViewModal.uploadDate)}</p>
@@ -767,7 +774,7 @@ const Documents = () => {
                 </div>
               </div>
 
-              <div className="bg-slate-100 rounded-xl p-8 text-center mb-6">
+              <div className="bg-slate-100 rounded-xl p-6 sm:p-8 text-center mb-6">
                 {showViewModal.fileType === "pdf" ? (
                   <FileText size={48} className="text-red-500 mx-auto mb-3" />
                 ) : showViewModal.fileType === "jpg" || showViewModal.fileType === "jpeg" || showViewModal.fileType === "png" ? (
@@ -778,12 +785,12 @@ const Documents = () => {
                 <p className="text-sm text-slate-500">Preview not available</p>
               </div>
 
-              <div className="flex gap-3">
-                <Button onClick={() => handleDownload(showViewModal)} className="flex-1 gap-2 bg-burgundy hover:bg-burgundy/90">
+              <div className="flex flex-col-reverse sm:flex-row gap-3">
+                <Button onClick={() => handleDownload(showViewModal)} className="w-full sm:flex-1 gap-2 bg-burgundy hover:bg-burgundy/90">
                   <Download className="h-4 w-4" />
                   Download Document
                 </Button>
-                <Button onClick={() => setShowViewModal(null)} variant="outline" className="flex-1">
+                <Button onClick={() => setShowViewModal(null)} variant="outline" className="w-full sm:flex-1">
                   Close
                 </Button>
               </div>
@@ -794,26 +801,26 @@ const Documents = () => {
 
       {/* Edit Document Modal */}
       {showEditModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50" onClick={() => setShowEditModal(null)}>
-          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-md mx-4 overflow-hidden" onClick={e => e.stopPropagation()}>
-            <div className="bg-gradient-to-r from-burgundy/5 to-white border-b border-slate-100 p-5">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-burgundy/10 flex items-center justify-center">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-0 sm:p-4" onClick={() => setShowEditModal(null)}>
+          <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl border border-slate-200 w-full max-w-md max-h-[92vh] sm:max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <div className="bg-gradient-to-r from-burgundy/5 to-white border-b border-slate-100 p-4 sm:p-5 sticky top-0 z-10">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-10 h-10 rounded-xl bg-burgundy/10 flex items-center justify-center shrink-0">
                     <Pencil className="h-5 w-5 text-burgundy" />
                   </div>
-                  <div>
-                    <h3 className="text-lg font-bold text-slate-800">Edit Document</h3>
+                  <div className="min-w-0">
+                    <h3 className="text-base sm:text-lg font-bold text-slate-800">Edit Document</h3>
                     <p className="text-xs text-slate-500">Update document details</p>
                   </div>
                 </div>
-                <button onClick={() => setShowEditModal(null)} className="p-2 rounded-lg hover:bg-slate-100 transition-colors">
+                <button type="button" onClick={() => setShowEditModal(null)} className="p-2 rounded-lg hover:bg-slate-100 transition-colors shrink-0" aria-label="Close">
                   <X size={18} className="text-slate-400" />
                 </button>
               </div>
             </div>
 
-            <div className="p-6">
+            <div className="p-4 sm:p-6">
               <div className="space-y-4">
                 <div>
                   <label className="text-sm font-semibold text-slate-700 block mb-1.5">Document Title *</label>
@@ -873,11 +880,11 @@ const Documents = () => {
                 </div>
               </div>
 
-              <div className="flex gap-3 mt-6 pt-4 border-t border-slate-100">
-                <Button variant="outline" onClick={() => setShowEditModal(null)} className="flex-1">
+              <div className="flex flex-col-reverse sm:flex-row gap-3 mt-6 pt-4 border-t border-slate-100">
+                <Button variant="outline" onClick={() => setShowEditModal(null)} className="w-full sm:flex-1">
                   Cancel
                 </Button>
-                <Button onClick={handleEdit} disabled={editProgress} className="flex-1 bg-burgundy hover:bg-burgundy/90">
+                <Button onClick={handleEdit} disabled={editProgress} className="w-full sm:flex-1 bg-burgundy hover:bg-burgundy/90">
                   {editProgress ? "Saving..." : "Save Changes"}
                 </Button>
               </div>
@@ -888,34 +895,34 @@ const Documents = () => {
 
       {/* Share Modal */}
       {showShareModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50" onClick={() => {
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-0 sm:p-4" onClick={() => {
           setShowShareModal(null);
           setQrCodeDataUrl("");
           setShareMethod(null);
         }}>
-          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-md mx-4 overflow-hidden" onClick={e => e.stopPropagation()}>
-            <div className="bg-gradient-to-r from-burgundy/5 to-white border-b border-slate-100 p-5">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-burgundy/10 flex items-center justify-center">
+          <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl border border-slate-200 w-full max-w-md max-h-[92vh] sm:max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <div className="bg-gradient-to-r from-burgundy/5 to-white border-b border-slate-100 p-4 sm:p-5 sticky top-0 z-10">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center gap-3 min-w-0 flex-1">
+                  <div className="w-10 h-10 rounded-xl bg-burgundy/10 flex items-center justify-center shrink-0">
                     <Send className="h-5 w-5 text-burgundy" />
                   </div>
-                  <div>
-                    <h3 className="text-lg font-bold text-slate-800">Share Document</h3>
-                    <p className="text-xs text-slate-500">{showShareModal.title}</p>
+                  <div className="min-w-0">
+                    <h3 className="text-base sm:text-lg font-bold text-slate-800">Share Document</h3>
+                    <p className="text-xs text-slate-500 line-clamp-2">{showShareModal.title}</p>
                   </div>
                 </div>
-                <button onClick={() => {
+                <button type="button" onClick={() => {
                   setShowShareModal(null);
                   setQrCodeDataUrl("");
                   setShareMethod(null);
-                }} className="p-2 rounded-lg hover:bg-slate-100 transition-colors">
+                }} className="p-2 rounded-lg hover:bg-slate-100 transition-colors shrink-0" aria-label="Close">
                   <X size={18} className="text-slate-400" />
                 </button>
               </div>
             </div>
 
-            <div className="p-6">
+            <div className="p-4 sm:p-6">
               {shareSent ? (
                 <div className="flex flex-col items-center py-8">
                   <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mb-4">
@@ -1010,14 +1017,14 @@ const Documents = () => {
                       </button>
                     )}
                   </div>
-                  <div className="flex gap-3 pt-2">
+                  <div className="flex flex-col-reverse sm:flex-row gap-3 pt-2">
                     <Button 
                       onClick={() => {
                         setShareMethod(null);
                         setQrCodeDataUrl("");
                       }} 
                       variant="outline" 
-                      className="flex-1"
+                      className="w-full sm:flex-1"
                     >
                       Back
                     </Button>
@@ -1028,7 +1035,7 @@ const Documents = () => {
                         setShareMethod(null);
                         toast.success("QR Code generated successfully!");
                       }} 
-                      className="flex-1 bg-purple-600 hover:bg-purple-700"
+                      className="w-full sm:flex-1 bg-purple-600 hover:bg-purple-700"
                       disabled={!qrCodeDataUrl}
                     >
                       Done
@@ -1046,18 +1053,18 @@ const Documents = () => {
                       {showShareModal?.fileUrl || `${window.location.origin}/documents/${showShareModal?.id}`}
                     </p>
                   </div>
-                  <div className="flex gap-3 pt-2">
+                  <div className="flex flex-col-reverse sm:flex-row gap-3 pt-2">
                     <Button 
                       onClick={() => {
                         setShareMethod(null);
                         setQrCodeDataUrl("");
                       }} 
                       variant="outline" 
-                      className="flex-1"
+                      className="w-full sm:flex-1"
                     >
                       Back
                     </Button>
-                    <Button onClick={handleShare} className="flex-1 bg-amber-600 hover:bg-amber-700">
+                    <Button onClick={handleShare} className="w-full sm:flex-1 bg-amber-600 hover:bg-amber-700">
                       Copy Link
                     </Button>
                   </div>
@@ -1084,18 +1091,18 @@ const Documents = () => {
                       className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-burgundy/20 focus:border-burgundy"
                     />
                   </div>
-                  <div className="flex gap-3 pt-2">
+                  <div className="flex flex-col-reverse sm:flex-row gap-3 pt-2">
                     <Button 
                       onClick={() => {
                         setShareMethod(null);
                         setQrCodeDataUrl("");
                       }} 
                       variant="outline" 
-                      className="flex-1"
+                      className="w-full sm:flex-1"
                     >
                       Back
                     </Button>
-                    <Button onClick={handleShare} disabled className="flex-1 bg-burgundy/50 cursor-not-allowed">
+                    <Button onClick={handleShare} disabled className="w-full sm:flex-1 bg-burgundy/50 cursor-not-allowed">
                       Send (Disabled)
                     </Button>
                   </div>
@@ -1109,24 +1116,25 @@ const Documents = () => {
       {/* Delete confirmation */}
       {docToDelete && (
         <div
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-0 sm:p-4"
           onClick={() => !deleting && setDocToDelete(null)}
         >
           <div
-            className="bg-white rounded-xl max-w-md w-full mx-4 p-6 shadow-xl"
+            className="bg-white rounded-t-2xl sm:rounded-xl max-w-md w-full p-4 sm:p-6 shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="text-lg font-bold text-slate-800 mb-2">Delete document?</h3>
+            <h3 className="text-base sm:text-lg font-bold text-slate-800 mb-2">Delete document?</h3>
             <p className="text-sm text-slate-600">
               Are you sure you want to delete{" "}
-              <span className="font-semibold text-slate-800">&quot;{docToDelete.title}&quot;</span>?
+              <span className="font-semibold text-slate-800 break-words">&quot;{docToDelete.title}&quot;</span>?
               This action cannot be undone.
             </p>
-            <div className="flex justify-end gap-3 mt-6">
+            <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 mt-6">
               <Button
                 variant="outline"
                 onClick={() => setDocToDelete(null)}
                 disabled={deleting}
+                className="w-full sm:w-auto"
               >
                 Cancel
               </Button>
@@ -1134,6 +1142,7 @@ const Documents = () => {
                 variant="destructive"
                 onClick={confirmDelete}
                 disabled={deleting}
+                className="w-full sm:w-auto"
               >
                 {deleting ? "Deleting..." : "Delete"}
               </Button>

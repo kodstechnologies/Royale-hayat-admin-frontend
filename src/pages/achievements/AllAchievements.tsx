@@ -35,7 +35,7 @@ import {
 } from "@/data/achievementData";
 
 const StatsCard = ({ title, value, icon: Icon, color }: { title: string; value: number; icon: typeof Award; color: string }) => (
-  <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm hover:shadow-md transition-all duration-200">
+  <div className="bg-white rounded-xl border border-slate-200 p-3.5 sm:p-5 shadow-sm hover:shadow-md transition-all duration-200">
     <div className="flex items-center justify-between">
       <div>
         <p className="text-sm text-slate-500 mb-1">{title}</p>
@@ -270,10 +270,10 @@ const AllAchievements = () => {
 
   return (
     <AdminLayout title="Achievements">
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         <BreadCrumb />
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 min-[400px]:grid-cols-3 gap-3 sm:gap-4">
           <StatsCard title="Total Achievements" value={totalAchievements} icon={Award} color="burgundy" />
           <StatsCard title="Published" value={publishedCount} icon={CheckCircle} color="emerald-500" />
           <StatsCard title="Draft" value={draftCount} icon={FileText} color="amber-500" />
@@ -282,26 +282,26 @@ const AllAchievements = () => {
         <div className="rounded-xl border-2 border-burgundy/30 bg-gradient-to-br from-white via-slate-50/90 to-white shadow-xl backdrop-blur-sm overflow-hidden">
           <div className="h-1 bg-gradient-to-r from-burgundy/40 via-burgundy to-burgundy/40"></div>
 
-          <div className="p-6">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+          <div className="p-4 sm:p-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4 sm:mb-6">
               <div>
-                <h3 className="text-xl font-bold text-slate-800">Employee Recognitions</h3>
-                <p className="text-sm text-slate-500 mt-1">Manage employee achievements and recognitions</p>
+                <h3 className="text-lg sm:text-xl font-bold text-slate-800">Employee Recognitions</h3>
+                <p className="text-xs sm:text-sm text-slate-500 mt-1">Manage employee achievements and recognitions</p>
               </div>
 
-              <div className="flex gap-3">
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
                 <Button
                   onClick={() => setMakeAllDraftOpen(true)}
                   variant="outline"
                   disabled={publishedCount === 0 || isUpdatingAll}
-                  className="gap-2 border-amber-300 text-amber-700 bg-amber-50 hover:bg-amber-100"
+                  className="gap-2 w-full sm:w-auto border-amber-300 text-amber-700 bg-amber-50 hover:bg-amber-100"
                 >
                   <FileText className="h-4 w-4" />
                   Make All Draft
                 </Button>
                 <Button
                   onClick={() => navigate("/achievements/create")}
-                  className="gap-2 bg-burgundy hover:bg-burgundy/90"
+                  className="gap-2 w-full sm:w-auto bg-burgundy hover:bg-burgundy/90"
                 >
                   <Plus className="h-4 w-4" />
                   Add Achievement
@@ -309,27 +309,29 @@ const AllAchievements = () => {
               </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-3 mb-6">
-              <div className="flex-1 flex gap-2">
-                <div className="relative flex-1 max-w-md">
+            <div className="flex flex-col gap-3 mb-4 sm:mb-6">
+              <div className="flex flex-col sm:flex-row gap-2 w-full">
+                <div className="relative flex-1 w-full sm:max-w-md">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                   <Input
                     placeholder="Search by employee name, ID or title..."
                     value={searchInput}
                     onChange={(e) => setSearchInput(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && applySearch()}
-                    className="pl-9 h-10"
+                    className="pl-9 h-10 w-full"
                   />
                 </div>
-                <Button variant="secondary" onClick={applySearch}>
-                  Search
-                </Button>
-                {search && (
-                  <Button variant="ghost" onClick={clearSearch}>
-                    <X className="h-4 w-4 mr-1" />
-                    Clear
+                <div className="flex gap-2">
+                  <Button variant="secondary" onClick={applySearch} className="flex-1 sm:flex-none">
+                    Search
                   </Button>
-                )}
+                  {search && (
+                    <Button variant="ghost" onClick={clearSearch} className="flex-1 sm:flex-none">
+                      <X className="h-4 w-4 mr-1" />
+                      Clear
+                    </Button>
+                  )}
+                </div>
               </div>
 
               <select
@@ -338,7 +340,7 @@ const AllAchievements = () => {
                   setSelectedStatus(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="px-4 py-2 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-burgundy/20 focus:border-burgundy"
+                className="w-full sm:w-auto px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-burgundy/20 focus:border-burgundy"
               >
                 <option value="all">All Status</option>
                 <option value="published">Published</option>
@@ -357,7 +359,92 @@ const AllAchievements = () => {
               </div>
             ) : (
               <>
-                <div className="overflow-x-auto">
+                {/* Mobile card list */}
+                <div className="md:hidden space-y-3">
+                  {paginatedAchievements.map((achievement) => {
+                    const achievementId = getAchievementId(achievement);
+                    return (
+                      <article
+                        key={achievementId}
+                        className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
+                      >
+                        <div className="flex items-start justify-between gap-2 mb-3">
+                          <span className="font-mono text-xs font-semibold text-burgundy bg-burgundy/5 px-2 py-1 rounded break-all">
+                            {achievement.employeeId}
+                          </span>
+                          {getStatusBadge(achievement.status)}
+                        </div>
+                        <div className="space-y-1 mb-3 min-w-0">
+                          <p className="font-medium text-slate-800 text-sm leading-snug break-words">
+                            {achievement.employeeName}
+                          </p>
+                          <p className="text-sm text-slate-600 line-clamp-2 break-words">
+                            {achievement.title}
+                          </p>
+                          <p className="text-xs text-slate-400">{formatDate(achievement.date)}</p>
+                        </div>
+                        <div className="flex flex-wrap items-center justify-end gap-1.5 pt-3 border-t border-slate-100">
+                          <button
+                            type="button"
+                            onClick={() => navigate(`/achievements/view/${achievementId}`)}
+                            className="inline-flex items-center justify-center p-2 rounded-lg text-burgundy bg-burgundy/10 hover:bg-burgundy/15"
+                            title="View"
+                            aria-label="View achievement"
+                          >
+                            <Eye size={16} />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => navigate(`/achievements/edit/${achievementId}`)}
+                            className="inline-flex items-center justify-center p-2 rounded-lg text-slate-600 bg-slate-50 hover:bg-slate-100"
+                            title="Edit"
+                            aria-label="Edit achievement"
+                          >
+                            <Pencil size={16} />
+                          </button>
+                          {achievement.status === "published" ? (
+                            <button
+                              type="button"
+                              onClick={() => handleMarkAsDraft(achievement)}
+                              className="inline-flex items-center justify-center p-2 rounded-lg text-amber-600 bg-amber-50 hover:bg-amber-100"
+                              title="Mark as Draft"
+                              aria-label="Mark as draft"
+                            >
+                              <FileText size={16} />
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => handleMarkAsPublished(achievement)}
+                              className="inline-flex items-center justify-center p-2 rounded-lg text-emerald-600 bg-emerald-50 hover:bg-emerald-100"
+                              title="Publish"
+                              aria-label="Publish achievement"
+                            >
+                              <CheckCircle size={16} />
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteClick(achievement)}
+                            className="inline-flex items-center justify-center p-2 rounded-lg text-red-600 bg-red-50 hover:bg-red-100"
+                            title="Delete"
+                            aria-label="Delete achievement"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </article>
+                    );
+                  })}
+                  {filteredAchievements.length > 0 && (
+                    <p className="text-xs text-slate-400 text-center pt-1">
+                      Showing {paginatedAchievements.length} of {filteredAchievements.length} achievements
+                    </p>
+                  )}
+                </div>
+
+                {/* Desktop table */}
+                <div className="hidden md:block overflow-x-auto">
                   <table className="w-full">
                     <thead>
                       <tr className="border-b border-slate-200 bg-slate-50/50">
@@ -413,7 +500,7 @@ const AllAchievements = () => {
                 </div>
 
                 {totalPages > 1 && (
-                  <div className="mt-6 flex justify-end gap-2">
+                  <div className="mt-6 flex flex-wrap justify-center sm:justify-end items-center gap-2">
                     <button
                       type="button"
                       onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}

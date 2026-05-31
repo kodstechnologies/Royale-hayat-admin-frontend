@@ -32,6 +32,9 @@ import { useLayoutControls } from "./LayoutControlsContext";
 const pageMap: Record<string, { label: string; icon: any; description?: string }> = {
   "/":                          { label: "Dashboard",                icon: LayoutDashboard, description: "Overview of hospital operations and key metrics" },
   "/appointment":      { label: "Appointments",     icon: CalendarCheck, description: "Manage and review patient appointments" },
+  "/appointment/bookings": { label: "Patient Bookings", icon: CalendarCheck, description: "View and filter all patient appointment bookings" },
+  "/appointment/view": { label: "View Request", icon: CalendarCheck, description: "View appointment request details" },
+  "/appointment/bookings/view": { label: "View Booking", icon: CalendarCheck, description: "View patient booking details" },
   "/medical-records-requests":  { label: "Medical Records Requests", icon: ClipboardList, description: "Handle medical record access requests" },
   "/medical-record":            { label: "Medical Records Requests", icon: ClipboardList, description: "Handle medical record access requests" },
   "/international-patients":    { label: "International Patients",   icon: Globe, description: "Manage international patient inquiries and records" },
@@ -91,6 +94,9 @@ const nestedDescriptions: Record<string, string> = {
   "/leadership/view": "View leadership member details",
   "/leadership/edit": "Update leadership team member",
   "/user-management/create": "Create a new admin user with permissions",
+  "/user-management/edit": "Update user details, role, and permissions",
+  "/appointment/view": "View appointment request details",
+  "/appointment/bookings/view": "View patient booking details",
 };
 
 const nestedPageLabels: Record<string, { label: string; description: string }> = {
@@ -107,6 +113,7 @@ const nestedPageLabels: Record<string, { label: string; description: string }> =
   "/jobs/edit": { label: "Edit Job Post", description: "Update job posting details" },
   "/jobs/create": { label: "Create Job Post", description: "Create a new job posting" },
   "/jobs/view-applications": { label: "Job Applications", description: "View job applications" },
+  "/user-management/edit": { label: "Edit User", description: "Update user details, role, and permissions" },
   "/job-posts/view": { label: "View Job Post", description: "View job posting details" },
   "/job-posts/edit": { label: "Edit Job Post", description: "Update job posting details" },
   "/job-posts/create": { label: "Create Job Post", description: "Create a new job posting" },
@@ -195,6 +202,7 @@ const BreadCrumb = ({ lastCrumbLabel }: { lastCrumbLabel?: string } = {}) => {
 
     const specialSegments: Record<string, string> = {
       "appointment-requests": "Appointment Requests",
+      "bookings": "Bookings",
       "medical-records-requests": "Medical Records Requests",
       "medical-record": "Medical Records Requests",
       "international-patients": "International Patients",
@@ -210,6 +218,7 @@ const BreadCrumb = ({ lastCrumbLabel }: { lastCrumbLabel?: string } = {}) => {
       "work-culture": "Work Culture",
       "leadership": "Leadership Team",
       "life-at-rhh": "Life at RHH",
+      "user-management": "User Management",
       "create": "Create New",
       "edit": "Edit",
       "view": "View Details",
@@ -233,17 +242,39 @@ const BreadCrumb = ({ lastCrumbLabel }: { lastCrumbLabel?: string } = {}) => {
         <div className="h-1.5 bg-gradient-to-r from-burgundy/60 via-burgundy to-burgundy/60"></div>
         
         {/* Content */}
-        <div className="px-8 py-6">
+        <div className="px-4 py-4 sm:px-6 sm:py-5 lg:px-8 lg:py-6">
           {/* Breadcrumb navigation */}
           <div className="flex items-center flex-wrap gap-2 mb-4">
             {layoutControls && (
               <button
                 onClick={layoutControls.toggleSidebar}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-burgundy/25 bg-white/90 text-burgundy shadow-sm transition-all duration-200 hover:scale-105 hover:bg-burgundy/10"
-                aria-label={layoutControls.collapsed ? "Expand sidebar" : "Collapse sidebar"}
-                title={layoutControls.collapsed ? "Expand sidebar" : "Collapse sidebar"}
+                className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-burgundy/25 bg-white/90 text-burgundy shadow-sm transition-all duration-200 hover:scale-105 hover:bg-burgundy/10"
+                aria-label={
+                  layoutControls.isMobile
+                    ? layoutControls.mobileOpen
+                      ? "Close menu"
+                      : "Open menu"
+                    : layoutControls.collapsed
+                      ? "Expand sidebar"
+                      : "Collapse sidebar"
+                }
+                title={
+                  layoutControls.isMobile
+                    ? layoutControls.mobileOpen
+                      ? "Close menu"
+                      : "Open menu"
+                    : layoutControls.collapsed
+                      ? "Expand sidebar"
+                      : "Collapse sidebar"
+                }
               >
-                {layoutControls.collapsed ? (
+                {layoutControls.isMobile ? (
+                  layoutControls.mobileOpen ? (
+                    <PanelLeftClose size={16} />
+                  ) : (
+                    <PanelLeftOpen size={16} />
+                  )
+                ) : layoutControls.collapsed ? (
                   <PanelLeftOpen size={16} />
                 ) : (
                   <PanelLeftClose size={16} />

@@ -30,7 +30,11 @@ export const GetMedicalRequestById = async (
 
 
 export const ShareViaMail = async (id: string, emailId: string) => {
-  console.log("email",emailId)
-  const response = await api.post(`${BASE}/share-via-email/${id}`,   { emailId });
+  const response = await api.post(`${BASE}/share-via-email/${id}`, { emailId });
+  return response.data;
+};
+
+export const deleteMedicalRecordRequest = async (id: string) => {
+  const response = await api.delete(`${BASE}/delete/${id}`);
   return response.data;
 };

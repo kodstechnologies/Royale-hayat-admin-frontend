@@ -208,7 +208,7 @@ const Categories = () => {
 
   return (
     <AdminLayout title="Categories">
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         <BreadCrumb />
         
         {/* Form View - Add/Edit Category */}
@@ -216,16 +216,16 @@ const Categories = () => {
           <div className="rounded-xl border-2 border-burgundy/30 bg-gradient-to-br from-white via-slate-50/90 to-white shadow-xl backdrop-blur-sm overflow-hidden">
             <div className="h-1 bg-gradient-to-r from-burgundy/40 via-burgundy to-burgundy/40"></div>
             
-            <div className="p-6">
-              <div className="flex items-center gap-4 mb-6">
+            <div className="p-4 sm:p-6">
+              <div className="flex items-start gap-3 sm:gap-4 mb-6 min-w-0">
                 <button
                   onClick={cancelForm}
                   className="p-2 rounded-xl hover:bg-slate-100 transition-all duration-200 group"
                 >
                   <ArrowLeft className="h-5 w-5 text-slate-500 group-hover:text-burgundy" />
                 </button>
-                <div>
-                  <h2 className="text-2xl font-bold text-slate-800">
+                <div className="min-w-0">
+                  <h2 className="text-xl sm:text-2xl font-bold text-slate-800">
                     {editingItem ? "Edit Category" : "Add New Category"}
                   </h2>
                   <p className="text-sm text-slate-500 mt-1">
@@ -238,12 +238,12 @@ const Categories = () => {
 
               {/* Tabs */}
               <div className="mb-6">
-                <div className="flex gap-4 p-1 bg-slate-100/80 rounded-xl w-fit">
+                <div className="flex w-full sm:w-fit gap-2 sm:gap-4 p-1 bg-slate-100/80 rounded-xl">
                   <button
                     type="button"
                     onClick={() => setActiveTab("english")}
                     className={`
-                      flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-medium transition-all duration-200
+                      flex flex-1 sm:flex-none items-center justify-center gap-2 px-4 sm:px-6 py-2.5 rounded-lg text-sm font-medium transition-all duration-200
                       ${activeTab === "english"
                         ? "bg-white text-burgundy shadow-md"
                         : "text-slate-600 hover:text-slate-800 hover:bg-white/50"
@@ -257,7 +257,7 @@ const Categories = () => {
                     type="button"
                     onClick={() => setActiveTab("arabic")}
                     className={`
-                      flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-medium transition-all duration-200
+                      flex flex-1 sm:flex-none items-center justify-center gap-2 px-4 sm:px-6 py-2.5 rounded-lg text-sm font-medium transition-all duration-200
                       ${activeTab === "arabic"
                         ? "bg-white text-burgundy shadow-md"
                         : "text-slate-600 hover:text-slate-800 hover:bg-white/50"
@@ -302,11 +302,11 @@ const Categories = () => {
                 )}
               </div>
 
-              <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
+              <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-4 border-t border-slate-100">
                 <Button
                   variant="outline"
                   onClick={cancelForm}
-                  className="gap-2"
+                  className="gap-2 w-full sm:w-auto"
                 >
                   <X className="h-4 w-4" />
                   Cancel
@@ -314,7 +314,7 @@ const Categories = () => {
                 <Button
                   onClick={submitForm}
                   disabled={saving}
-                  className="gap-2 bg-burgundy hover:bg-burgundy/90"
+                  className="gap-2 bg-burgundy hover:bg-burgundy/90 w-full sm:w-auto"
                 >
                   <Check className="h-4 w-4" />
                   {saving ? "Saving..." : (editingItem ? "Update Category" : "Create Category")}
@@ -329,31 +329,33 @@ const Categories = () => {
           <div className="rounded-xl border-2 border-burgundy/30 bg-gradient-to-br from-white via-slate-50/90 to-white shadow-xl backdrop-blur-sm overflow-hidden">
             <div className="h-1 bg-gradient-to-r from-burgundy/40 via-burgundy to-burgundy/40"></div>
             
-            <div className="p-6">
+            <div className="p-4 sm:p-6">
               {/* Header */}
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4 sm:mb-6">
                 <div>
-                  <h3 className="text-xl font-bold text-slate-800">Categories Management</h3>
+                  <h3 className="text-lg sm:text-xl font-bold text-slate-800">Categories Management</h3>
                   <p className="text-sm text-slate-500 mt-1">Manage your product categories</p>
                 </div>
                 
-                <div className="flex flex-col sm:flex-row gap-3">
+                <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
                   {/* Search Section */}
-                  <div className="flex gap-2">
-                    <div className="relative">
+                  <div className="flex flex-col min-[400px]:flex-row gap-2 w-full sm:w-auto">
+                    <div className="relative flex-1 min-w-0">
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                       <Input
                         placeholder="Search categories..."
                         value={searchInput}
                         onChange={(e) => setSearchInput(e.target.value)}
                         onKeyDown={(e) => e.key === "Enter" && applySearch()}
-                        className="pl-9 w-64"
+                        className="pl-9 w-full"
                       />
                     </div>
+                    <div className="flex gap-2">
                     <Button
                       variant="secondary"
                       onClick={applySearch}
                       size="sm"
+                      className="flex-1 min-[400px]:flex-none"
                     >
                       Search
                     </Button>
@@ -362,10 +364,12 @@ const Categories = () => {
                         variant="ghost"
                         onClick={clearSearch}
                         size="sm"
+                        className="flex-1 min-[400px]:flex-none"
                       >
                         Clear
                       </Button>
                     )}
+                    </div>
                   </div>
 
                   {/* Add Category Button */}
@@ -398,7 +402,28 @@ const Categories = () => {
                 </div>
               ) : (
                 <>
-                  <div className="overflow-x-auto">
+                  {/* Mobile cards */}
+                  <div className="md:hidden space-y-3">
+                    {paginatedItems.map((item) => (
+                      <article
+                        key={item._id}
+                        className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
+                      >
+                        <p className="font-medium text-slate-800 text-sm leading-snug">
+                          {item.name}
+                        </p>
+                        <p className="text-sm text-slate-600 mt-1" dir="rtl">
+                          {item.arabicName}
+                        </p>
+                        <p className="text-xs text-slate-400 mt-2">
+                          Updated {formatDate(item.updatedAt)}
+                        </p>
+                      </article>
+                    ))}
+                  </div>
+
+                  {/* Desktop table */}
+                  <div className="hidden md:block overflow-x-auto">
                     <table className="w-full">
                       <thead>
                         <tr className="border-b border-slate-200 bg-slate-50/50">
@@ -462,8 +487,8 @@ const Categories = () => {
                   {/* Pagination - Bottom Right */}
                   {totalPages > 1 && (
                     <div className="mt-6 pt-4 border-t border-slate-100">
-                      <div className="flex justify-end">
-                        <div className="flex gap-2">
+                      <div className="flex flex-wrap justify-center sm:justify-end gap-2">
+                        <div className="flex flex-wrap justify-center gap-2">
                           <Button
                             variant="outline"
                             size="sm"

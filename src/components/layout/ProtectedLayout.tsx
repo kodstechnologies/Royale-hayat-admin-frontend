@@ -12,6 +12,7 @@ import {
 } from "react";
 
 import { getMe } from "@/api/auth";
+import { ADMIN_USER_KEY } from "@/utils/PermissionGate";
 import {
   CALL_CENTER_HOME_PATH,
   isCallCenterAllowedPath,
@@ -33,7 +34,11 @@ const ProtectedLayout = () => {
 
       try {
 
-        await getMe();
+        const response = await getMe();
+        const user = response?.data ?? response;
+        if (user && typeof user === "object") {
+          localStorage.setItem(ADMIN_USER_KEY, JSON.stringify(user));
+        }
 
         setAuthenticated(true);
 

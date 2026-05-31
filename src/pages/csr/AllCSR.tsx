@@ -2,12 +2,11 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import AdminLayout from "@/components/layout/AdminLayout";
 import BreadCrumb from "@/components/layout/BreadCrumb";
-import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
-import { 
-  Plus, Search, Edit, Eye, Trash2, Eye as EyeIcon, 
-  EyeOff, ChevronLeft, ChevronRight, User, Image as ImageIcon,
-  Heart, Calendar, Flower2
+import {
+  Plus, Search, Edit, Eye, Trash2,
+  ChevronLeft, ChevronRight, Image as ImageIcon,
+  Heart, Calendar, Flower2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { getCSR, deleteCSR } from "@/api/csr";
@@ -26,10 +25,35 @@ type CSR = {
   createdAt: string;
 };
 
+const uiText = {
+  pageTitle: "CSR Initiatives",
+  pageDescription: "Manage your CSR initiatives",
+  celebratingLife: "Celebrating Life",
+  csrInitiatives: "CSR Initiatives",
+  addCSR: "Add Initiative",
+  searchPlaceholder: "Search by heading or subheading...",
+  heading: "Heading",
+  images: "Images",
+  actions: "Actions",
+  view: "View",
+  edit: "Edit",
+  delete: "Delete",
+  noData: "No CSR initiatives found",
+  adjustFilters: "Try adjusting your search or filters",
+  deleteConfirm: "Are you sure you want to delete this initiative?",
+  cancel: "Cancel",
+  confirmDelete: "Delete",
+};
+
+const celebratingLifeTitle = "Celebrating Life";
+const celebratingLifeDescription =
+  "Inspired by a vision of healing that extends beyond hospital walls, the monument blends art, nature, and contemporary design into a meaningful urban statement.\n\nWith its circular form representing continuity and its blooming flower reflecting growth and vitality, the landmark stands as a tribute to hope, wellness, and community connection. More than a structure, it is a gift to Kuwait - beautifying the cityscape while embodying a lasting commitment to compassion, care, and optimism for generations to come.\n\nRoyale Hayat Hospital ... More than care, A partner for life";
+
+const displayHeading = (item: CSR) => item.heading?.trim() || item.arabicHeading || "—";
+const displaySubheading = (item: CSR) => item.subheading?.trim() || item.subheadingArabic || "";
+
 const AllCSR = () => {
   const navigate = useNavigate();
-  const { t, isRTL } = useLanguage();
-  const [activeLanguage, setActiveLanguage] = useState<"english" | "arabic">("english");
   const [activeTab, setActiveTab] = useState<"celebrating" | "csr">("celebrating");
   const [csrData, setCsrData] = useState<CSR[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -74,14 +98,15 @@ const AllCSR = () => {
     }
   };
 
-  const filteredData = csrData.filter(item => {
+  const filteredData = csrData.filter((item) => {
     const searchValue = searchTerm.toLowerCase();
-    const heading = activeLanguage === "english" ? item.heading.toLowerCase() : item.arabicHeading.toLowerCase();
-    const subheading = activeLanguage === "english"
-      ? (item.subheading || "").toLowerCase()
-      : (item.subheadingArabic || "").toLowerCase();
-    const matchesSearch = searchTerm === "" || heading.includes(searchValue) || subheading.includes(searchValue);
-    return matchesSearch;
+    if (!searchValue) return true;
+    return (
+      item.heading.toLowerCase().includes(searchValue) ||
+      item.arabicHeading.toLowerCase().includes(searchValue) ||
+      (item.subheading || "").toLowerCase().includes(searchValue) ||
+      (item.subheadingArabic || "").toLowerCase().includes(searchValue)
+    );
   });
 
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
@@ -92,7 +117,7 @@ const AllCSR = () => {
       await deleteCSR(id);
       await loadCSRData();
       window.dispatchEvent(new Event("csrUpdated"));
-      toast.success(activeLanguage === "english" ? "CSR initiative deleted successfully" : "تم حذف المبادرة بنجاح");
+      toast.success("CSR initiative deleted successfully");
       setShowDeleteConfirm(null);
       
       const newTotalPages = Math.ceil((filteredData.length - 1) / itemsPerPage);
@@ -105,38 +130,6 @@ const AllCSR = () => {
     }
   };
 
-  // Celebrating Life Content
-  const celebratingLifeContent = {
-    image: "https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=800&h=500&fit=crop",
-    title: activeLanguage === "english" ? "Celebrating Life" : "الاحتفال بالحياة",
-    description: activeLanguage === "english" 
-      ? "Inspired by a vision of healing that extends beyond hospital walls, the monument blends art, nature, and contemporary design into a meaningful urban statement.\n\nWith its circular form representing continuity and its blooming flower reflecting growth and vitality, the landmark stands as a tribute to hope, wellness, and community connection. More than a structure, it is a gift to Kuwait - beautifying the cityscape while embodying a lasting commitment to compassion, care, and optimism for generations to come.\n\nRoyale Hayat Hospital ... More than care, A partner for life"
-      : "مستوحاة من رؤية للشفاء تمتد إلى ما وراء جدران المستشفى، يدمج النصب الفن والطبيعة والتصميم المعاصر في بيان حضري هادف.\n\nبشكله الدائري الذي يمثل الاستمرارية وزهرته المتفتحة التي تعكس النمو والحيوية، يقف المعلم كتكريم للأمل والعافية والتواصل المجتمعي. أكثر من مجرد هيكل، إنها هدية للكويت - تجميل المدينة مع تجسيد التزام دائم بالرحمة والرعاية والتفاؤل للأجيال القادمة.\n\nمستشفى رويال حياة ... أكثر من رعاية، شريك للحياة"
-  };
-
-  const getUIText = {
-    pageTitle: activeLanguage === "english" ? "CSR Initiatives" : "مبادرات المسؤولية الاجتماعية",
-    pageDescription: activeLanguage === "english" ? "Manage your CSR initiatives" : "إدارة مبادرات المسؤولية الاجتماعية",
-    celebratingLife: activeLanguage === "english" ? "Celebrating Life" : "الاحتفال بالحياة",
-    csrInitiatives: activeLanguage === "english" ? "CSR Initiatives" : "مبادرات المسؤولية الاجتماعية",
-    addCSR: activeLanguage === "english" ? "Add Initiative" : "إضافة مبادرة",
-    searchPlaceholder: activeLanguage === "english" ? "Search by heading or subheading..." : "ابحث بالعنوان أو العنوان الفرعي...",
-    heading: activeLanguage === "english" ? "Heading" : "العنوان",
-    images: activeLanguage === "english" ? "Images" : "الصور",
-    actions: activeLanguage === "english" ? "Actions" : "الإجراءات",
-    view: activeLanguage === "english" ? "View" : "عرض",
-    edit: activeLanguage === "english" ? "Edit" : "تعديل",
-    delete: activeLanguage === "english" ? "Delete" : "حذف",
-    noData: activeLanguage === "english" ? "No CSR initiatives found" : "لم يتم العثور على مبادرات",
-    adjustFilters: activeLanguage === "english" ? "Try adjusting your search or filters" : "حاول تعديل البحث أو الفلاتر",
-    previous: activeLanguage === "english" ? "Previous" : "السابق",
-    next: activeLanguage === "english" ? "Next" : "التالي",
-    deleteConfirm: activeLanguage === "english" ? "Are you sure you want to delete this initiative?" : "هل أنت متأكد أنك تريد حذف هذه المبادرة؟",
-    cancel: activeLanguage === "english" ? "Cancel" : "إلغاء",
-    confirmDelete: activeLanguage === "english" ? "Delete" : "حذف",
-  };
-
-  // Celebrating Life Tab Component
   const CelebratingLifeTab = () => (
     <div className="space-y-6">
       {/* Hero Section */}
@@ -144,7 +137,7 @@ const AllCSR = () => {
         <div className="relative p-6 md:p-8">
           <div className="flex items-center gap-2 mb-1">
             <Flower2 className="h-6 w-6 text-slate-700" />
-            <h3 className="text-2xl md:text-4xl font-bold text-slate-800">{celebratingLifeContent.title}</h3>
+            <h3 className="text-2xl md:text-4xl font-bold text-slate-800">{celebratingLifeTitle}</h3>
           </div>
         </div>
       </div>
@@ -152,7 +145,7 @@ const AllCSR = () => {
       {/* Description Section */}
       <div className="bg-white rounded-xl border border-slate-200 p-6 md:p-8">
         <div className="prose prose-sm max-w-none">
-          {celebratingLifeContent.description.split('\n\n').map((paragraph, idx) => (
+          {celebratingLifeDescription.split("\n\n").map((paragraph, idx) => (
             <p key={idx} className="text-slate-600 leading-relaxed mb-4 text-base">
               {paragraph}
             </p>
@@ -171,40 +164,18 @@ const AllCSR = () => {
 
         {/* Header with Tabs */}
         <div className="flex flex-col gap-4">
-          <div className="flex justify-between items-center flex-wrap gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h2 className="text-2xl font-bold text-slate-800">{getUIText.pageTitle}</h2>
-              <p className="text-sm text-slate-500 mt-1">{getUIText.pageDescription}</p>
+              <h2 className="text-2xl font-bold text-slate-800">{uiText.pageTitle}</h2>
+              <p className="text-sm text-slate-500 mt-1">{uiText.pageDescription}</p>
             </div>
-            
-            <div className="flex gap-3">
-              {/* Language Toggle */}
-              <div className="flex gap-2 p-1 bg-slate-100/80 rounded-lg">
-                <button
-                  onClick={() => setActiveLanguage("english")}
-                  className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${
-                    activeLanguage === "english" ? "bg-white text-burgundy shadow-sm" : "text-slate-600"
-                  }`}
-                >
-                  English
-                </button>
-                <button
-                  onClick={() => setActiveLanguage("arabic")}
-                  className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${
-                    activeLanguage === "arabic" ? "bg-white text-burgundy shadow-sm" : "text-slate-600"
-                  }`}
-                >
-                  العربية
-                </button>
-              </div>
-              
-              {activeTab === "csr" && (
-                <Button onClick={() => navigate("/csr/create")} className="gap-2">
-                  <Plus className="h-4 w-4" />
-                  {getUIText.addCSR}
-                </Button>
-              )}
-            </div>
+
+            {activeTab === "csr" && (
+              <Button onClick={() => navigate("/csr/create")} className="gap-2 w-full sm:w-auto">
+                <Plus className="h-4 w-4" />
+                {uiText.addCSR}
+              </Button>
+            )}
           </div>
 
           {/* Tabs */}
@@ -218,7 +189,7 @@ const AllCSR = () => {
               }`}
             >
               <Flower2 className="h-4 w-4" />
-              {getUIText.celebratingLife}
+              {uiText.celebratingLife}
             </button>
             <button
               onClick={() => {
@@ -232,7 +203,7 @@ const AllCSR = () => {
               }`}
             >
               <Heart className="h-4 w-4" />
-              {getUIText.csrInitiatives}
+              {uiText.csrInitiatives}
             </button>
           </div>
         </div>
@@ -255,7 +226,7 @@ const AllCSR = () => {
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                   <input
                     type="text"
-                    placeholder={getUIText.searchPlaceholder}
+                    placeholder={uiText.searchPlaceholder}
                     value={searchTerm}
                     onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
                     className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-burgundy/20"
@@ -287,9 +258,9 @@ const AllCSR = () => {
                       <thead className="bg-slate-50 border-b border-slate-200">
                         <tr>
                           <th className="text-left px-6 py-4 text-xs font-semibold text-slate-500">#</th>
-                          <th className="text-left px-6 py-4 text-xs font-semibold text-slate-500">{getUIText.heading}</th>
-                          <th className="text-left px-6 py-4 text-xs font-semibold text-slate-500">{getUIText.images}</th>
-                          <th className="text-right px-6 py-4 text-xs font-semibold text-slate-500">{getUIText.actions}</th>
+                          <th className="text-left px-6 py-4 text-xs font-semibold text-slate-500">{uiText.heading}</th>
+                          <th className="text-left px-6 py-4 text-xs font-semibold text-slate-500">{uiText.images}</th>
+                          <th className="text-right px-6 py-4 text-xs font-semibold text-slate-500">{uiText.actions}</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100">
@@ -298,14 +269,14 @@ const AllCSR = () => {
                             <td colSpan={4} className="px-6 py-16 text-center">
                               <div className="flex flex-col items-center">
                                 <ImageIcon className="h-12 w-12 text-slate-300 mb-3" />
-                                <p className="text-slate-500 font-medium">{getUIText.noData}</p>
-                                <p className="text-sm text-slate-400 mt-1">{getUIText.adjustFilters}</p>
+                                <p className="text-slate-500 font-medium">{uiText.noData}</p>
+                                <p className="text-sm text-slate-400 mt-1">{uiText.adjustFilters}</p>
                                 <Button
                                   onClick={() => navigate("/csr/create")}
                                   className="mt-4 gap-2 bg-burgundy hover:bg-burgundy/90"
                                 >
                                   <Plus className="h-4 w-4" />
-                                  {getUIText.addCSR}
+                                  {uiText.addCSR}
                                 </Button>
                               </div>
                             </td>
@@ -318,10 +289,10 @@ const AllCSR = () => {
                               </td>
                               <td className="px-6 py-4">
                                 <p className="font-medium text-slate-800">
-                                  {activeLanguage === "english" ? item.heading : item.arabicHeading}
-                                  {(activeLanguage === "english" ? item.subheading : item.subheadingArabic) && (
+                                  {displayHeading(item)}
+                                  {displaySubheading(item) && (
                                     <span className="block text-xs text-slate-500 mt-1">
-                                      {activeLanguage === "english" ? item.subheading : item.subheadingArabic}
+                                      {displaySubheading(item)}
                                     </span>
                                   )}
                                 </p>
@@ -402,13 +373,13 @@ const AllCSR = () => {
       {showDeleteConfirm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl max-w-md w-full mx-4 p-6">
-            <h3 className="text-lg font-bold text-slate-800 mb-2">{getUIText.deleteConfirm}</h3>
+            <h3 className="text-lg font-bold text-slate-800 mb-2">{uiText.deleteConfirm}</h3>
             <div className="flex justify-end gap-3 mt-6">
               <Button variant="outline" onClick={() => setShowDeleteConfirm(null)}>
-                {getUIText.cancel}
+                {uiText.cancel}
               </Button>
               <Button variant="destructive" onClick={() => handleDelete(showDeleteConfirm)}>
-                {getUIText.confirmDelete}
+                {uiText.confirmDelete}
               </Button>
             </div>
           </div>

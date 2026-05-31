@@ -7,6 +7,9 @@ import { LanguageProvider } from "@/contexts/LanguageContext";
 import Login from "./pages/login/Login";
 import Dashboard from "./pages/Dashboard";
 import AppointmentRequests from "./pages/appointment/AppointmentRequests";
+import Bookings from "./pages/appointment/Bookings";
+import ViewAppointmentRequest from "./pages/appointment/ViewAppointmentRequest";
+import ViewBookings from "./pages/appointment/ViewBookings";
 import MedicalRecordsRequests from "./pages/medical-record-requests/MedicalRecordsRequests";
 import InternationalPatients from "./pages/InternationalPatients";
 import AlSafwaEnrollments from "./pages/AlSafwaEnrollments";
@@ -47,6 +50,7 @@ import EditAchievements from "./pages/achievements/EditAchievements";
 import ViewAchievement from "./pages/achievements/ViewAchievement";
 import ViewSubspeciality from "./pages/subspeciality/ViewSubspeciality";
 import ProtectedLayout from "./components/layout/ProtectedLayout";
+import PermissionProtectedRoute from "./components/routing/PermissionProtectedRoute";
 import AddFeedback from "./pages/feedbacks/AddFeedback";
 import AllLeadership from "./pages/leadership/AllLeadership";
 import ViewLeadership from "./pages/leadership/ViewLeadership";
@@ -64,6 +68,7 @@ import FeaturedDoctors from "./pages/doctor/FeaturedDoctors";
 import LifeAtRHH from "./pages/workCulture/LifeAtRHH";
 import ViewAllUsers from "./pages/user-management/ViewAllUsers";
 import CreateUser from "./pages/user-management/CreateUser";
+import EditUser from "./pages/user-management/EditUser";
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -78,8 +83,12 @@ const App = () => (
             <Route path="/otp" element={<OtpScreen />} />
 
             <Route element={<ProtectedLayout />}>
+              <Route element={<PermissionProtectedRoute />}>
               <Route path="/" element={<Dashboard />} />
               <Route path="/appointment" element={<AppointmentRequests />} />
+              <Route path="/appointment/view/:id" element={<ViewAppointmentRequest />} />
+              <Route path="/appointment/bookings" element={<Bookings />} />
+              <Route path="/appointment/bookings/view/:id" element={<ViewBookings />} />
               <Route path="/medical-records-requests" element={<MedicalRecordsRequests />} />
               <Route path="/medical-record/view/:id" element={<ViewRequest />} />
 
@@ -149,6 +158,8 @@ const App = () => (
               <Route path="/settings" element={<Settings />} />
               <Route path="/user-management" element={<ViewAllUsers />} />
               <Route path="/user-management/create" element={<CreateUser />} />
+              <Route path="/user-management/edit/:id" element={<EditUser />} />
+              </Route>
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>

@@ -13,7 +13,17 @@ export type AppointmentCounts = {
   total: number;
   appointmentBookings: number;
   appointmentRequests: number;
+  doctorUnavailabilityRequests?: number;
+  firstTimeVisitorRequests?: number;
 };
+
+export const APPOINTMENT_REQUEST_TYPE = {
+  DOCTOR_UNAVAILABILITY: "doctor unavailability request",
+  FIRST_TIME_VISITOR: "first time visitor request",
+} as const;
+
+export type AppointmentRequestType =
+  (typeof APPOINTMENT_REQUEST_TYPE)[keyof typeof APPOINTMENT_REQUEST_TYPE];
 
 export type AppointmentListFilters = {
   page?: number;
@@ -26,6 +36,7 @@ export type AppointmentListFilters = {
   doctor?: string;
   /** `pending` maps to API `received`; use `all` to fetch every status */
   status?: "pending" | "received" | "accepted" | "cancelled" | "all";
+  requestType?: AppointmentRequestType;
 };
 
 const buildListParams = (
@@ -42,6 +53,7 @@ const buildListParams = (
   if (filters.department) params.department = filters.department;
   if (filters.doctor) params.doctor = filters.doctor;
   if (filters.status) params.status = filters.status;
+  if (filters.requestType) params.requestType = filters.requestType;
 
   return params;
 };
@@ -77,7 +89,18 @@ export const getAppointmentBookings = async (
 // ================= GET APPOINTMENT REQUEST BY ID =================
 
 export const getAppointmentRequestById = async (id: string) => {
-  const response = await api.get(`${REQUESTS_BASE}/${id}`);
+  const response = await api.get<ApiResponse<Record<string, unknown>>>(
+    `${REQUESTS_BASE}/${id}`,
+  );
+  return response.data;
+};
+
+// ================= GET APPOINTMENT BOOKING BY ID =================
+
+export const getAppointmentBookingRecordById = async (id: string) => {
+  const response = await api.get<ApiResponse<Record<string, unknown>>>(
+    `${BOOKINGS_BASE}/${id}`,
+  );
   return response.data;
 };
 

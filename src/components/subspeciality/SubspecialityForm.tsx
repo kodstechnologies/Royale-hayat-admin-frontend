@@ -331,15 +331,15 @@ const SubspecialityForm = ({ mode, subspecialityId }: Props) => {
     }
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
             <BreadCrumb />
 
             <div className="rounded-xl border-2 border-burgundy/30 bg-gradient-to-br from-white via-slate-50/90 to-white shadow-xl backdrop-blur-sm overflow-hidden">
                 <div className="h-1 bg-gradient-to-r from-burgundy/40 via-burgundy to-burgundy/40"></div>
 
-                <div className="p-6">
+                <div className="p-4 sm:p-6">
                     {/* Header with Back Button */}
-                    <div className="flex items-center gap-4 mb-6">
+                    <div className="flex items-start gap-3 sm:gap-4 mb-6 min-w-0">
                         <button
                             onClick={() => navigate("/subspecialities")}
                             className="p-2 rounded-xl hover:bg-slate-100 transition-all duration-200 group"
@@ -347,7 +347,7 @@ const SubspecialityForm = ({ mode, subspecialityId }: Props) => {
                             <ArrowLeft className="h-5 w-5 text-slate-500 group-hover:text-burgundy" />
                         </button>
                         <div>
-                            <h2 className="text-2xl font-bold text-slate-800">
+                            <h2 className="text-xl sm:text-2xl font-bold text-slate-800">
                                 {mode === "create" ? "Create Subspeciality" : "Edit Subspeciality"}
                             </h2>
                             <p className="text-sm text-slate-500 mt-1">
@@ -360,12 +360,12 @@ const SubspecialityForm = ({ mode, subspecialityId }: Props) => {
 
                     {/* Tabs */}
                     <div className="mb-8">
-                        <div className="flex gap-4 p-1 bg-slate-100/80 rounded-xl w-fit">
+                        <div className="flex w-full sm:w-fit gap-2 sm:gap-4 p-1 bg-slate-100/80 rounded-xl">
                             <button
                                 type="button"
                                 onClick={() => setActiveTab("english")}
                                 className={`
-                                    flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-medium transition-all duration-200
+                                    flex flex-1 sm:flex-none items-center justify-center gap-2 px-4 sm:px-6 py-2.5 rounded-lg text-sm font-medium transition-all duration-200
                                     ${activeTab === "english"
                                         ? "bg-white text-burgundy shadow-md"
                                         : "text-slate-600 hover:text-slate-800 hover:bg-white/50"
@@ -379,7 +379,7 @@ const SubspecialityForm = ({ mode, subspecialityId }: Props) => {
                                 type="button"
                                 onClick={() => setActiveTab("arabic")}
                                 className={`
-                                    flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-medium transition-all duration-200
+                                    flex flex-1 sm:flex-none items-center justify-center gap-2 px-4 sm:px-6 py-2.5 rounded-lg text-sm font-medium transition-all duration-200
                                     ${activeTab === "arabic"
                                         ? "bg-white text-burgundy shadow-md"
                                         : "text-slate-600 hover:text-slate-800 hover:bg-white/50"
@@ -685,12 +685,12 @@ const SubspecialityForm = ({ mode, subspecialityId }: Props) => {
                     )}
 
                     {/* Action Buttons */}
-                    <div className="flex justify-end gap-3 pt-6 mt-6 border-t border-slate-100">
-                        <Button variant="outline" onClick={() => navigate("/subspecialities")} className="gap-2">
+                    <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-6 mt-6 border-t border-slate-100">
+                        <Button variant="outline" onClick={() => navigate("/subspecialities")} className="gap-2 w-full sm:w-auto">
                             <X className="h-4 w-4" />
                             Cancel
                         </Button>
-                        <Button onClick={submit} disabled={saving} className="gap-2 bg-burgundy hover:bg-burgundy/90">
+                        <Button onClick={submit} disabled={saving} className="gap-2 bg-burgundy hover:bg-burgundy/90 w-full sm:w-auto">
                             <Save className="h-4 w-4" />
                             {saving ? "Saving..." : mode === "create" ? "Create Subspeciality" : "Update Subspeciality"}
                         </Button>

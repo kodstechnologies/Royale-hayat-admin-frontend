@@ -10,11 +10,13 @@ import {
   Upload,
   AlertTriangle,
   Settings,
+  Menu,
 } from "lucide-react";
 
 import { notifications as notifData, Notification } from "@/data/mockDatabase";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { isCallCenterUser } from "@/lib/userRole";
+import { useLayoutControls } from "./LayoutControlsContext";
 
 interface HeaderProps {
   title: string;
@@ -45,6 +47,7 @@ const Header = ({ title }: HeaderProps) => {
   const navigate = useNavigate();
   const { t, isRTL } = useLanguage();
   const isCallCenter = isCallCenterUser();
+  const layoutControls = useLayoutControls();
 
   const unreadCount = notifs.filter((n) => !n.read).length;
 
@@ -71,15 +74,36 @@ const Header = ({ title }: HeaderProps) => {
     <div
       className={`
         fixed top-3 z-40
-        ${isRTL ? "left-3" : "right-3"}
-        flex items-center gap-2
+        ${isRTL ? "right-3 left-3 sm:left-auto" : "left-3 right-3 sm:right-3 sm:left-auto"}
+        flex items-center justify-between sm:justify-end gap-2
         px-3 py-2
         bg-white/90 backdrop-blur-2xl
         border border-white/30
         rounded-[32px]
         shadow-lg
+        max-w-[calc(100vw-1.5rem)]
       `}
     >
+      {layoutControls?.isMobile && (
+        <button
+          type="button"
+          onClick={layoutControls.toggleSidebar}
+          className="
+            p-2.5 rounded-2xl
+            bg-white/70
+            border border-border/40
+            hover:border-burgundy/30
+            hover:bg-burgundy/5
+            transition-all duration-300
+            shadow-sm
+          "
+          aria-label={layoutControls.mobileOpen ? "Close menu" : "Open menu"}
+        >
+          <Menu size={18} className="text-burgundy" />
+        </button>
+      )}
+
+      <div className="flex items-center gap-2 ms-auto">
       {/* SETTINGS */}
       <button
         onClick={() => navigate("/settings")}
@@ -136,7 +160,7 @@ const Header = ({ title }: HeaderProps) => {
             className={`
               absolute ${isRTL ? "left-0" : "right-0"}
               top-full mt-3
-              w-[420px]
+              w-[min(420px,calc(100vw-2rem))]
               bg-white/90 backdrop-blur-xl
               rounded-3xl shadow-2xl
               border border-border/40
@@ -211,6 +235,7 @@ const Header = ({ title }: HeaderProps) => {
             </div>
           </div>
         )}
+      </div>
       </div>
     </div>
   );

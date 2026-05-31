@@ -14,7 +14,6 @@ import {
   IdCard,
   FileCheck,
   Download,
-  Printer,
   CheckCircle,
   XCircle,
   Clock,
@@ -22,11 +21,12 @@ import {
 } from "lucide-react";
 import { GetMedicalRequestById, ShareViaMail } from "@/api/medicalRecordRequest";
 import { toast } from "sonner";
+import { useScrollToTop } from "@/hooks/useScrollToTop";
 
 type MedicalRequest = {
   id: string;
   mongoId: string;
-  status: "pending" | "approved" | "rejected" | "completed";
+  status: "pending" | "received" | "approved" | "rejected" | "completed";
   requestedDate: string;
   requestId: string;
   // Patient Info
@@ -49,32 +49,6 @@ type MedicalRequest = {
   patientNameConfirmation?: string;
 };
 
-// Function to generate MRR ID from MongoDB ID
-const generateMRRId = (mongoId: string, index?: number): string => {
-  if (mongoId && mongoId.startsWith("MRR-")) {
-    return mongoId;
-  }
-
-  let num = 1;
-  if (mongoId) {
-    const hash = mongoId.split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0);
-    num = (hash % 1000) + 1;
-  } else if (index) {
-    num = index + 1;
-  }
-
-  return `MRR-${num.toString().padStart(3, '0')}`;
-};
-
-// Function to generate sequential MRR ID
-const generateSequentialMRRId = (): string => {
-  const storedId = localStorage.getItem('lastMRRId');
-  let lastNumber = storedId ? parseInt(storedId) : 0;
-  const nextNumber = lastNumber + 1;
-  localStorage.setItem('lastMRRId', nextNumber.toString());
-  return `MRR-${nextNumber.toString().padStart(3, '0')}`;
-};
-
 const ViewRequest = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -84,6 +58,8 @@ const ViewRequest = () => {
   const [shareEmail, setShareEmail] = useState("");
   const [isSharing, setIsSharing] = useState(false);
 
+  useScrollToTop(id);
+
   useEffect(() => {
     if (!id) return;
     setLoading(true);
@@ -91,20 +67,14 @@ const ViewRequest = () => {
       .then((res) => {
         const d = res?.data ?? res;
 
-        let frontendId = d.requestId;
-        if (!frontendId || !frontendId.startsWith("MRR-")) {
-          frontendId = generateMRRId(d._id);
-          if (!frontendId.startsWith("MRR-")) {
-            frontendId = generateSequentialMRRId();
-          }
-        }
+        const mrrId = d.mrrId ? String(d.mrrId) : "—";
 
         setRequest({
-          id: frontendId,
+          id: mrrId,
           mongoId: d._id ?? d.id ?? id,
-          status: d.status ?? "pending",
+          status: d.isViewed === true ? "received" : "pending",
           requestedDate: d.createdAt ?? new Date().toISOString(),
-          requestId: frontendId,
+          requestId: mrrId,
           patientFullName: d.patientFullName ?? "—",
           civilId: d.civilId ?? "—",
           passportOrGovernmentId: d.passportOrGovernmentId,
@@ -191,6 +161,7 @@ const ViewRequest = () => {
   const getStatusBadge = (status: string) => {
     const statusConfig = {
       pending: { icon: Clock, color: "bg-amber-100 text-amber-700", label: "Pending" },
+      received: { icon: CheckCircle, color: "bg-green-100 text-green-700", label: "Viewed" },
       approved: { icon: CheckCircle, color: "bg-green-100 text-green-700", label: "Approved" },
       rejected: { icon: XCircle, color: "bg-red-100 text-red-700", label: "Rejected" },
       completed: { icon: CheckCircle, color: "bg-blue-100 text-blue-700", label: "Completed" }
@@ -237,9 +208,9 @@ const ViewRequest = () => {
   if (loading) {
     return (
       <AdminLayout title="View Request">
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           <BreadCrumb />
-          <div className="flex items-center justify-center min-h-[400px]">
+          <div className="flex items-center justify-center min-h-[50vh] sm:min-h-[400px]">
             <div className="text-center">
               <div className="w-12 h-12 border-4 border-burgundy/30 border-t-burgundy rounded-full animate-spin mx-auto mb-4"></div>
               <p className="text-sm text-slate-500">Loading request details...</p>
@@ -257,7 +228,7 @@ const ViewRequest = () => {
           <BreadCrumb />
           <div className="rounded-xl border-2 border-burgundy/30 bg-gradient-to-br from-white via-slate-50/90 to-white shadow-xl backdrop-blur-sm overflow-hidden">
             <div className="h-1 bg-gradient-to-r from-burgundy/40 via-burgundy to-burgundy/40"></div>
-            <div className="p-6 text-center py-16">
+            <div className="p-4 sm:p-6 text-center py-12 sm:py-16">
               <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-slate-100 flex items-center justify-center">
                 <FileText className="h-10 w-10 text-slate-400" />
               </div>
@@ -278,43 +249,49 @@ const ViewRequest = () => {
 
   return (
     <AdminLayout title="View Request">
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         <BreadCrumb lastCrumbLabel={request.requestId} />
 
         {/* Main Card */}
         <div className="rounded-xl border-2 border-burgundy/30 bg-gradient-to-br from-white via-slate-50/90 to-white shadow-xl backdrop-blur-sm overflow-hidden">
           <div className="h-1 bg-gradient-to-r from-burgundy/40 via-burgundy to-burgundy/40"></div>
 
-          <div className="p-6">
+          <div className="p-4 sm:p-6">
             {/* Header with Back Button */}
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between mb-4 sm:mb-6">
+              <div className="flex items-start gap-3 min-w-0">
                 <button
+                  type="button"
                   onClick={() => navigate("/medical-records-requests")}
-                  className="p-2 rounded-xl hover:bg-slate-100 transition-all duration-200 group"
+                  className="p-2 rounded-xl hover:bg-slate-100 transition-all duration-200 group shrink-0"
+                  aria-label="Back to requests"
                 >
                   <ArrowLeft className="h-5 w-5 text-slate-500 group-hover:text-burgundy" />
                 </button>
-                <div>
-                  <h2 className="text-2xl font-bold text-slate-800">Medical Records Request</h2>
-                  <div className="flex items-center gap-2 mt-1">
-                    <p className="text-sm text-slate-500">ID:</p>
-                    <p className="text-sm font-mono font-semibold text-burgundy">{request.requestId}</p>
+                <div className="min-w-0">
+                  <h2 className="text-lg sm:text-2xl font-bold text-slate-800 leading-tight">
+                    Medical Records Request
+                  </h2>
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1">
+                    <p className="text-xs sm:text-sm text-slate-500">ID:</p>
+                    <p className="text-xs sm:text-sm font-mono font-semibold text-burgundy break-all">
+                      {request.requestId}
+                    </p>
                   </div>
                 </div>
               </div>
-              <div>
+              <div className="shrink-0 sm:pt-1">
                 {getStatusBadge(request.status)}
               </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
               {/* Left Column */}
-              <div className="space-y-5">
+              <div className="space-y-4 sm:space-y-5">
                 {/* Patient Information Section */}
-                <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+                <div className="bg-white rounded-xl border border-slate-200 p-4 sm:p-5 shadow-sm">
                   <div className="flex items-center gap-3 mb-4 pb-3 border-b border-slate-100">
-                    <div className="w-10 h-10 rounded-xl bg-burgundy/10 flex items-center justify-center">
+                    <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-burgundy/10 flex items-center justify-center shrink-0">
                       <User className="h-5 w-5 text-burgundy" />
                     </div>
                     <div>
@@ -362,7 +339,7 @@ const ViewRequest = () => {
                                     `Passport_${request.patientFullName}`
                                   )
                                 }
-                                className="gap-2 bg-burgundy hover:bg-burgundy/90"
+                                className="gap-2 bg-burgundy hover:bg-burgundy/90 w-full sm:w-auto"
                                 size="sm"
                               >
                                 <Download size={14} />
@@ -375,14 +352,14 @@ const ViewRequest = () => {
                         )}
                       </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 min-[400px]:grid-cols-2 gap-3">
                       <div>
                         <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Patient File No. (URN)</label>
-                        <p className="text-sm font-mono text-slate-700 mt-1">{request.patientFileNo}</p>
+                        <p className="text-sm font-mono text-slate-700 mt-1 break-all">{request.patientFileNo}</p>
                       </div>
                       <div>
                         <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1">
-                          <Calendar className="h-3 w-3" /> Date of Birth
+                          <Calendar className="h-3 w-3 shrink-0" /> Date of Birth
                         </label>
                         <p className="text-sm text-slate-700 mt-1">{request.dateOfBirth ? formatDateOnly(request.dateOfBirth) : "—"}</p>
                       </div>
@@ -391,9 +368,9 @@ const ViewRequest = () => {
                 </div>
 
                 {/* Requested By Section */}
-                <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+                <div className="bg-white rounded-xl border border-slate-200 p-4 sm:p-5 shadow-sm">
                   <div className="flex items-center gap-3 mb-4 pb-3 border-b border-slate-100">
-                    <div className="w-10 h-10 rounded-xl bg-burgundy/10 flex items-center justify-center">
+                    <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-burgundy/10 flex items-center justify-center shrink-0">
                       <UserCheck className="h-5 w-5 text-burgundy" />
                     </div>
                     <div>
@@ -418,11 +395,11 @@ const ViewRequest = () => {
               </div>
 
               {/* Right Column */}
-              <div className="space-y-5">
+              <div className="space-y-4 sm:space-y-5">
                 {/* Specific Information Section */}
-                <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+                <div className="bg-white rounded-xl border border-slate-200 p-4 sm:p-5 shadow-sm">
                   <div className="flex items-center gap-3 mb-4 pb-3 border-b border-slate-100">
-                    <div className="w-10 h-10 rounded-xl bg-burgundy/10 flex items-center justify-center">
+                    <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-burgundy/10 flex items-center justify-center shrink-0">
                       <FileCheck className="h-5 w-5 text-burgundy" />
                     </div>
                     <div>
@@ -451,9 +428,9 @@ const ViewRequest = () => {
                 </div>
 
                 {/* Recipient Information Section */}
-                <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+                <div className="bg-white rounded-xl border border-slate-200 p-4 sm:p-5 shadow-sm">
                   <div className="flex items-center gap-3 mb-4 pb-3 border-b border-slate-100">
-                    <div className="w-10 h-10 rounded-xl bg-burgundy/10 flex items-center justify-center">
+                    <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-burgundy/10 flex items-center justify-center shrink-0">
                       <Building2 className="h-5 w-5 text-burgundy" />
                     </div>
                     <div>
@@ -467,18 +444,18 @@ const ViewRequest = () => {
                       <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Recipient Name</label>
                       <p className="text-sm font-medium text-slate-800 mt-1">{request.recipientName}</p>
                     </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
+                    <div className="grid grid-cols-1 min-[400px]:grid-cols-2 gap-3">
+                      <div className="min-w-0">
                         <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1">
-                          <Mail className="h-3 w-3" /> Email Address
+                          <Mail className="h-3 w-3 shrink-0" /> Email Address
                         </label>
-                        <p className="text-sm text-slate-700 mt-1">{request.recipientEmailAddress}</p>
+                        <p className="text-sm text-slate-700 mt-1 break-all">{request.recipientEmailAddress}</p>
                       </div>
                       <div>
                         <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1">
-                          <Phone className="h-3 w-3" /> Contact Number
+                          <Phone className="h-3 w-3 shrink-0" /> Contact Number
                         </label>
-                        <p className="text-sm text-slate-700 mt-1">{request.recipientContactNumber}</p>
+                        <p className="text-sm text-slate-700 mt-1 break-all">{request.recipientContactNumber}</p>
                       </div>
                     </div>
                     <div>
@@ -496,9 +473,9 @@ const ViewRequest = () => {
                 </div>
 
                 {/* Request Metadata */}
-                <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+                <div className="bg-white rounded-xl border border-slate-200 p-4 sm:p-5 shadow-sm">
                   <div className="flex items-center gap-3 mb-4 pb-3 border-b border-slate-100">
-                    <div className="w-10 h-10 rounded-xl bg-burgundy/10 flex items-center justify-center">
+                    <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-burgundy/10 flex items-center justify-center shrink-0">
                       <Calendar className="h-5 w-5 text-burgundy" />
                     </div>
                     <div>
@@ -522,27 +499,26 @@ const ViewRequest = () => {
             </div>
 
             {/* Action Buttons */}
-            <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-slate-100">
-              <Button
-                onClick={() => setIsShareModalOpen(true)}
-                className="gap-2"
-              >
-                Share via Mail
-              </Button>
-
+            <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 sm:gap-3 mt-4 sm:mt-6 pt-4 border-t border-slate-100">
               <Button
                 onClick={() => navigate("/medical-records-requests")}
                 variant="outline"
-                className="gap-2"
+                className="gap-2 w-full sm:w-auto"
               >
                 Back to Requests
+              </Button>
+              <Button
+                onClick={() => setIsShareModalOpen(true)}
+                className="gap-2 w-full sm:w-auto bg-burgundy hover:bg-burgundy/90"
+              >
+                Share via Mail
               </Button>
             </div>
 
             {/* Share Email Modal */}
             {isShareModalOpen && (
-              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-                <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6">
+              <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 p-0 sm:p-4">
+                <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-xl w-full max-w-md p-5 sm:p-6 max-h-[90dvh] overflow-y-auto">
                   <h2 className="text-xl font-semibold text-slate-800 mb-4">
                     Share Medical Record
                   </h2>
@@ -565,9 +541,10 @@ const ViewRequest = () => {
                     </p>
                   </div>
 
-                  <div className="flex justify-end gap-3 mt-6">
+                  <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 sm:gap-3 mt-6">
                     <Button
                       variant="outline"
+                      className="w-full sm:w-auto"
                       onClick={() => {
                         setIsShareModalOpen(false);
                         setShareEmail("");
@@ -579,6 +556,7 @@ const ViewRequest = () => {
                     <Button
                       onClick={handleShareViaEmail}
                       disabled={isSharing}
+                      className="w-full sm:w-auto bg-burgundy hover:bg-burgundy/90"
                     >
                       {isSharing ? "Sending..." : "Send"}
                     </Button>

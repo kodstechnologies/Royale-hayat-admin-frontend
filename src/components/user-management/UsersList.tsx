@@ -14,7 +14,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import AlertBox from "@/components/AlertBox";
-import EditUserDialog from "@/components/user-management/EditUserDialog";
 import {
   deleteUser,
   getAllUsers,
@@ -32,7 +31,6 @@ const UsersList = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [statusUpdatingId, setStatusUpdatingId] = useState<string | null>(null);
-  const [editUser, setEditUser] = useState<AdminUser | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<AdminUser | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -208,7 +206,7 @@ const UsersList = () => {
                         <div className="flex items-center justify-end gap-1">
                           <button
                             type="button"
-                            onClick={() => setEditUser(user)}
+                            onClick={() => navigate(`/user-management/edit/${user._id}`)}
                             className="p-1.5 rounded-lg text-slate-400 hover:text-burgundy hover:bg-burgundy/10"
                             title="Edit user"
                           >
@@ -251,13 +249,6 @@ const UsersList = () => {
           </div>
         )}
       </div>
-
-      <EditUserDialog
-        user={editUser}
-        open={Boolean(editUser)}
-        onClose={() => setEditUser(null)}
-        onSuccess={() => void fetchUsers()}
-      />
 
       <AlertBox
         isOpen={Boolean(deleteTarget)}

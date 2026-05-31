@@ -28,6 +28,7 @@ export interface UpdateJobPayload extends Partial<CreateJobPayload> {
 export interface GetJobsParams {
   page?: number;
   limit?: number;
+  search?: string;
   classification?: string;
   location?: string;
   type?: string;
@@ -73,12 +74,29 @@ export const getTypes = async () => {
 
 const APP_BASE = "/api/v1/job-applications";
 
-export const getApplicationsByJobId = async (jobId: string) => {
-  return api.get(`${APP_BASE}/job/${jobId}`);
+export type JobApplicationStatus = "pending" | "reviewed";
+export type JobApplicationStatusFilter = JobApplicationStatus | "all";
+
+export const getApplicationsByJobId = async (
+  jobId: string,
+  params?: { status?: JobApplicationStatus },
+) => {
+  return api.get(`${APP_BASE}/job/${jobId}`, { params });
 };
 
 export const getJobApplicationById = async (id: string) => {
   return api.get(`${APP_BASE}/${id}`);
+};
+
+export const deleteJobApplication = async (id: string) => {
+  return api.delete(`${APP_BASE}/${id}`);
+};
+
+export const updateJobApplication = async (
+  id: string,
+  payload: { status: JobApplicationStatus },
+) => {
+  return api.put(`${APP_BASE}/${id}`, payload);
 };
 
 export const applyForJob = async (formData: FormData) => {

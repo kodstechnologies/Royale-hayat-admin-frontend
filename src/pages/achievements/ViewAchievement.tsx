@@ -115,67 +115,70 @@ const ViewAchievement = () => {
 
   return (
     <AdminLayout title="View Achievement">
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         <BreadCrumb />
 
         {/* Main Card */}
         <div className="rounded-xl border-2 border-burgundy/30 bg-gradient-to-br from-white via-slate-50/90 to-white shadow-xl backdrop-blur-sm overflow-hidden">
           <div className="h-1 bg-gradient-to-r from-burgundy/40 via-burgundy to-burgundy/40"></div>
 
-          <div className="p-6">
+          <div className="p-4 sm:p-6">
             {/* Header with Back Button and Language Toggle */}
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-4">
+            <div className="flex flex-col gap-4 mb-4 sm:mb-6">
+              <div className="flex items-start gap-3 min-w-0">
                 <button
+                  type="button"
                   onClick={() => navigate("/achievements")}
-                  className="p-2 rounded-xl hover:bg-slate-100 transition-all duration-200 group"
+                  className="p-2 rounded-xl hover:bg-slate-100 transition-all duration-200 group shrink-0"
+                  aria-label="Back to achievements"
                 >
                   <ArrowLeft className="h-5 w-5 text-slate-500 group-hover:text-burgundy" />
                 </button>
-                <div>
-                  <h2 className="text-2xl font-bold text-slate-800">
+                <div className="min-w-0">
+                  <h2 className="text-xl sm:text-2xl font-bold text-slate-800">
                     Achievement Details
                   </h2>
-                  <p className="text-sm text-slate-500 mt-1">
+                  <p className="text-xs sm:text-sm text-slate-500 mt-1">
                     View complete achievement information
                   </p>
                 </div>
               </div>
 
-              <div className="flex gap-3">
-                {/* Language Toggle */}
-                <div className="flex gap-2 p-1 bg-slate-100/80 rounded-lg">
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full">
+                <div className="flex gap-2 p-1 bg-slate-100/80 rounded-lg w-full sm:w-auto">
                   <button
+                    type="button"
                     onClick={() => setActiveLanguage("english")}
                     className={`
-                      flex items-center gap-2 px-4 py-1.5 rounded-md text-sm font-medium transition-all duration-200
+                      flex-1 sm:flex-none flex items-center justify-center gap-2 px-3 sm:px-4 py-1.5 rounded-md text-sm font-medium transition-all duration-200
                       ${activeLanguage === "english"
                         ? "bg-white text-burgundy shadow-sm"
                         : "text-slate-600 hover:text-slate-800 hover:bg-white/50"
                       }
                     `}
                   >
-                    <Globe className="h-3.5 w-3.5" />
+                    <Globe className="h-3.5 w-3.5 shrink-0" />
                     English
                   </button>
                   <button
+                    type="button"
                     onClick={() => setActiveLanguage("arabic")}
                     className={`
-                      flex items-center gap-2 px-4 py-1.5 rounded-md text-sm font-medium transition-all duration-200
+                      flex-1 sm:flex-none flex items-center justify-center gap-2 px-3 sm:px-4 py-1.5 rounded-md text-sm font-medium transition-all duration-200
                       ${activeLanguage === "arabic"
                         ? "bg-white text-burgundy shadow-sm"
                         : "text-slate-600 hover:text-slate-800 hover:bg-white/50"
                       }
                     `}
                   >
-                    <Languages className="h-3.5 w-3.5" />
+                    <Languages className="h-3.5 w-3.5 shrink-0" />
                     العربية
                   </button>
                 </div>
 
                 <Button
                   onClick={() => navigate(`/achievements/edit/${achievement.id}`)}
-                  className="gap-2 bg-burgundy hover:bg-burgundy/90 shadow-md hover:shadow-lg transition-all duration-200"
+                  className="gap-2 w-full sm:w-auto bg-burgundy hover:bg-burgundy/90 shadow-md hover:shadow-lg transition-all duration-200"
                 >
                   <Pencil className="h-4 w-4" />
                   Edit
@@ -183,12 +186,12 @@ const ViewAchievement = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
               {/* Left Column - Image & Basic Info */}
               <div className="lg:col-span-1 space-y-4">
                 {/* Image Card */}
                 <div className="rounded-xl border border-slate-200 bg-white overflow-hidden shadow-sm">
-                  <div className="h-64 bg-gradient-to-br from-slate-100 to-slate-50 flex items-center justify-center">
+                  <div className="h-48 sm:h-64 bg-gradient-to-br from-slate-100 to-slate-50 flex items-center justify-center">
                     {achievement.image ? (
                       <img
                         src={achievement.image}
@@ -207,7 +210,7 @@ const ViewAchievement = () => {
                 </div>
 
                 {/* Status Card */}
-                <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-5 shadow-sm">
                   <div className="flex items-center gap-2 pb-2 border-b border-slate-100 mb-3">
                     <FileText className="h-4 w-4 text-burgundy" />
                     <h3 className="text-sm font-semibold text-slate-800">
@@ -215,20 +218,20 @@ const ViewAchievement = () => {
                     </h3>
                   </div>
                   <div className="space-y-3">
-                    <div className="flex justify-between items-center">
+                    <div className="flex flex-col gap-1 sm:flex-row sm:justify-between sm:items-center">
                       <span className="text-sm text-slate-600">
                         Status
                       </span>
                       {getStatusBadge(achievement.status)}
                     </div>
-                    <div className="flex justify-between items-center">
+                    <div className="flex flex-col gap-0.5 sm:flex-row sm:justify-between sm:items-center">
                       <span className="text-sm text-slate-600">
                         Created At
                       </span>
                       <span className="text-sm text-slate-700">{formatDate(achievement.createdAt)}</span>
                     </div>
                     {achievement.updatedAt && (
-                      <div className="flex justify-between items-center">
+                      <div className="flex flex-col gap-0.5 sm:flex-row sm:justify-between sm:items-center">
                         <span className="text-sm text-slate-600">
                           Last Updated
                         </span>
@@ -242,14 +245,14 @@ const ViewAchievement = () => {
               {/* Right Column - Details */}
               <div className="lg:col-span-2 space-y-4">
                 {/* Title Card */}
-                <div className={`rounded-xl border border-slate-200 bg-white p-5 shadow-sm ${activeLanguage === "arabic" ? "text-right" : ""}`}>
+                <div className={`rounded-xl border border-slate-200 bg-white p-4 sm:p-5 shadow-sm ${activeLanguage === "arabic" ? "text-right" : ""}`}>
                   <div className="flex items-center gap-2 pb-2 border-b border-slate-100 mb-3">
                     <Award className="h-4 w-4 text-burgundy" />
                     <h3 className="text-sm font-semibold text-slate-800">
                       Achievement Title
                     </h3>
                   </div>
-                  <h1 className={`text-xl font-bold text-slate-800 ${activeLanguage === "arabic" ? "rtl-text" : ""}`}>
+                  <h1 className={`text-lg sm:text-xl font-bold text-slate-800 break-words ${activeLanguage === "arabic" ? "rtl-text" : ""}`}>
                     {activeLanguage === "english"
                       ? achievement.title
                       : achievement.arabicTitle || achievement.title}
@@ -257,7 +260,7 @@ const ViewAchievement = () => {
                 </div>
 
                 {/* Employee Information Card */}
-                <div className={`rounded-xl border border-slate-200 bg-white p-5 shadow-sm ${activeLanguage === "arabic" ? "text-right" : ""}`}>
+                <div className={`rounded-xl border border-slate-200 bg-white p-4 sm:p-5 shadow-sm ${activeLanguage === "arabic" ? "text-right" : ""}`}>
                   <div className="flex items-center gap-2 pb-2 border-b border-slate-100 mb-3">
                     <User className="h-4 w-4 text-burgundy" />
                     <h3 className="text-sm font-semibold text-slate-800">
@@ -317,14 +320,14 @@ const ViewAchievement = () => {
                 </div>
 
                 {/* Description Card */}
-                <div className={`rounded-xl border border-slate-200 bg-white p-5 shadow-sm ${activeLanguage === "arabic" ? "rtl-text" : ""}`}>
+                <div className={`rounded-xl border border-slate-200 bg-white p-4 sm:p-5 shadow-sm ${activeLanguage === "arabic" ? "rtl-text" : ""}`}>
                   <div className="flex items-center gap-2 pb-2 border-b border-slate-100 mb-3">
                     <FileText className="h-4 w-4 text-burgundy" />
                     <h3 className="text-sm font-semibold text-slate-800">
                       Achievement Description
                     </h3>
                   </div>
-                  <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">
+                  <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap break-words">
                     {activeLanguage === "english"
                       ? achievement.description
                       : achievement.arabicDescription || achievement.description}
@@ -332,17 +335,17 @@ const ViewAchievement = () => {
                 </div>
 
                 {/* Action Buttons */}
-                <div className="flex gap-3 pt-2">
+                <div className="flex flex-col-reverse sm:flex-row gap-3 pt-2">
                   <Button
                     onClick={() => navigate("/achievements")}
                     variant="outline"
-                    className="flex-1"
+                    className="w-full sm:flex-1"
                   >
                     Back to Employee Recognition
                   </Button>
                   <Button
                     onClick={() => navigate(`/achievements/edit/${achievement.id}`)}
-                    className="flex-1 gap-2 bg-burgundy hover:bg-burgundy/90"
+                    className="w-full sm:flex-1 gap-2 bg-burgundy hover:bg-burgundy/90"
                   >
                     <Pencil className="h-4 w-4" />
                     Edit Achievement

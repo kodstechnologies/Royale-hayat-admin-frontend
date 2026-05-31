@@ -129,37 +129,40 @@ const ViewLeadership = () => {
 
   return (
     <AdminLayout title="View Leadership">
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         <BreadCrumb />
 
         {/* Header */}
-        <div className="flex justify-between items-center">
-          <div className="flex items-center gap-4">
+        <div className="flex flex-col gap-4">
+          <div className="flex items-start gap-3 min-w-0">
             <button
+              type="button"
               onClick={() => navigate("/leadership")}
-              className="p-2 rounded-xl hover:bg-slate-100 transition-all duration-200 group"
+              className="p-2 rounded-xl hover:bg-slate-100 transition-all duration-200 group shrink-0"
+              aria-label="Back to leadership"
             >
               <ArrowLeft className="h-5 w-5 text-slate-500 group-hover:text-burgundy" />
             </button>
-            <div>
-              <h2 className="text-2xl font-bold text-slate-800">{uiText.viewLeadership}</h2>
-              <p className="text-sm text-slate-500 mt-1">{uiText.subtitle}</p>
+            <div className="min-w-0">
+              <h2 className="text-xl sm:text-2xl font-bold text-slate-800">{uiText.viewLeadership}</h2>
+              <p className="text-xs sm:text-sm text-slate-500 mt-1">{uiText.subtitle}</p>
             </div>
           </div>
 
-          {/* Language Toggle */}
-          <div className="flex gap-2 p-1 bg-slate-100/80 rounded-lg">
+          <div className="flex gap-2 p-1 bg-slate-100/80 rounded-lg w-full sm:w-auto">
             <button
+              type="button"
               onClick={() => setActiveLanguage("english")}
-              className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${
+              className={`flex-1 sm:flex-none px-3 sm:px-4 py-1.5 rounded-md text-sm font-medium transition-all ${
                 activeLanguage === "english" ? "bg-white text-burgundy shadow-sm" : "text-slate-600"
               }`}
             >
               English
             </button>
             <button
+              type="button"
               onClick={() => setActiveLanguage("arabic")}
-              className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${
+              className={`flex-1 sm:flex-none px-3 sm:px-4 py-1.5 rounded-md text-sm font-medium transition-all ${
                 activeLanguage === "arabic" ? "bg-white text-burgundy shadow-sm" : "text-slate-600"
               }`}
             >
@@ -172,23 +175,23 @@ const ViewLeadership = () => {
         <div className="rounded-xl border-2 border-burgundy/30 bg-gradient-to-br from-white via-slate-50/90 to-white shadow-xl backdrop-blur-sm overflow-hidden">
           <div className="h-1 bg-gradient-to-r from-burgundy/40 via-burgundy to-burgundy/40"></div>
 
-          <div className="p-6">
+          <div className="p-4 sm:p-6">
             {/* Action Buttons */}
-            <div className="flex justify-end gap-3 mb-6 pb-4 border-b border-slate-100">
+            <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 mb-4 sm:mb-6 pb-4 border-b border-slate-100">
               <Button
                 onClick={() => navigate(`/leadership/edit/${id}`)}
-                className="gap-2 bg-blue-600 hover:bg-blue-700"
+                className="gap-2 w-full sm:w-auto bg-blue-600 hover:bg-blue-700"
               >
                 <Edit className="h-4 w-4" />
                 {uiText.edit}
               </Button>
-              <Button onClick={() => setShowDeleteConfirm(true)} variant="destructive" className="gap-2" disabled={isDeleting}>
+              <Button onClick={() => setShowDeleteConfirm(true)} variant="destructive" className="gap-2 w-full sm:w-auto" disabled={isDeleting}>
                 <Trash2 className="h-4 w-4" />
                 {isDeleting ? "Deleting..." : uiText.delete}
               </Button>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
               {/* Image Section */}
               <div className="lg:col-span-1">
                 <div className="bg-white rounded-xl border border-slate-200 p-4">
@@ -206,10 +209,10 @@ const ViewLeadership = () => {
               {/* Details Section */}
               <div className="lg:col-span-2 space-y-6">
                 {/* Personal Information */}
-                <div className="bg-white rounded-xl border border-slate-200 p-5">
+                <div className="bg-white rounded-xl border border-slate-200 p-4 sm:p-5">
                   <div className="flex items-center gap-2 pb-3 border-b border-slate-100 mb-4">
-                    <User className="h-5 w-5 text-burgundy" />
-                    <h3 className="text-lg font-semibold text-slate-800">{uiText.personalInfo}</h3>
+                    <User className="h-5 w-5 text-burgundy shrink-0" />
+                    <h3 className="text-base sm:text-lg font-semibold text-slate-800">{uiText.personalInfo}</h3>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -245,13 +248,13 @@ const ViewLeadership = () => {
                 </div>
 
                 {/* Description */}
-                <div className="bg-white rounded-xl border border-slate-200 p-5">
+                <div className="bg-white rounded-xl border border-slate-200 p-4 sm:p-5">
                   <div className="flex items-center gap-2 pb-3 border-b border-slate-100 mb-4">
-                    <FileText className="h-5 w-5 text-burgundy" />
-                    <h3 className="text-lg font-semibold text-slate-800">{uiText.description}</h3>
+                    <FileText className="h-5 w-5 text-burgundy shrink-0" />
+                    <h3 className="text-base sm:text-lg font-semibold text-slate-800">{uiText.description}</h3>
                   </div>
                   <p
-                    className="text-sm text-slate-600 leading-relaxed"
+                    className="text-sm text-slate-600 leading-relaxed break-words"
                     dir={activeLanguage === "arabic" ? "rtl" : "ltr"}
                   >
                     {activeLanguage === "english" ? leadership.description : leadership.descriptionArabic}
@@ -259,10 +262,10 @@ const ViewLeadership = () => {
                 </div>
 
                 {/* Additional Information */}
-                <div className="bg-white rounded-xl border border-slate-200 p-5">
+                <div className="bg-white rounded-xl border border-slate-200 p-4 sm:p-5">
                   <div className="flex items-center gap-2 pb-3 border-b border-slate-100 mb-4">
-                    <Briefcase className="h-5 w-5 text-burgundy" />
-                    <h3 className="text-lg font-semibold text-slate-800">{uiText.additionalInfo}</h3>
+                    <Briefcase className="h-5 w-5 text-burgundy shrink-0" />
+                    <h3 className="text-base sm:text-lg font-semibold text-slate-800">{uiText.additionalInfo}</h3>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -286,14 +289,14 @@ const ViewLeadership = () => {
 
       {/* Delete Confirmation Modal */}
       {showDeleteConfirm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl max-w-md w-full mx-4 p-6">
-            <h3 className="text-lg font-bold text-slate-800 mb-2">{uiText.deleteConfirm}</h3>
-            <div className="flex justify-end gap-3 mt-6">
-              <Button variant="outline" onClick={() => setShowDeleteConfirm(false)}>
+        <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
+          <div className="bg-white rounded-t-2xl sm:rounded-xl max-w-md w-full p-4 sm:p-6">
+            <h3 className="text-base sm:text-lg font-bold text-slate-800 mb-2">{uiText.deleteConfirm}</h3>
+            <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 mt-6">
+              <Button variant="outline" onClick={() => setShowDeleteConfirm(false)} className="w-full sm:w-auto">
                 {uiText.cancel}
               </Button>
-              <Button variant="destructive" onClick={handleDelete} disabled={isDeleting}>
+              <Button variant="destructive" onClick={handleDelete} disabled={isDeleting} className="w-full sm:w-auto">
                 {isDeleting ? "Deleting..." : uiText.confirmDelete}
               </Button>
             </div>

@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
-import { Eye, EyeOff, Loader2, ShieldCheck, X } from "lucide-react";
+import { Eye, EyeOff, Loader2, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { updateUser, type AdminUser } from "@/api/auth";
 import { getAllPermissionOptions } from "@/utils/permissionOptions";
+import { applyViewPermissionRules } from "@/utils/permissionSelection";
+import PermissionGroupsPicker from "@/components/user-management/PermissionGroupsPicker";
 
 type EditUserDialogProps = {
   user: AdminUser | null;
@@ -34,7 +36,7 @@ const EditUserDialog = ({ user, open, onClose, onSuccess }: EditUserDialogProps)
       password: "",
       role: user.role,
     });
-    setSelectedPermissions(user.permissions ?? []);
+    setSelectedPermissions(applyViewPermissionRules(user.permissions ?? []));
     setShowPassword(false);
   }, [user, open]);
 
@@ -47,10 +49,14 @@ const EditUserDialog = ({ user, open, onClose, onSuccess }: EditUserDialogProps)
     [formData.name, formData.email, formData.role, selectedPermissions.length],
   );
 
-  const togglePermission = (key: string) => {
-    setSelectedPermissions((prev) =>
-      prev.includes(key) ? prev.filter((p) => p !== key) : [...prev, key],
+  const selectAllPermissions = () => {
+    setSelectedPermissions(
+      applyViewPermissionRules(permissionOptions.map((p) => p.key)),
     );
+  };
+
+  const clearAllPermissions = () => {
+    setSelectedPermissions([]);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -63,7 +69,7 @@ const EditUserDialog = ({ user, open, onClose, onSuccess }: EditUserDialogProps)
         name: formData.name.trim(),
         email: formData.email.trim().toLowerCase(),
         role: formData.role.trim().replace(/\s+/g, "_").toLowerCase(),
-        permissions: selectedPermissions,
+        permissions: applyViewPermissionRules(selectedPermissions),
       };
 
       if (formData.password.trim()) {
@@ -167,28 +173,12 @@ const EditUserDialog = ({ user, open, onClose, onSuccess }: EditUserDialogProps)
             </div>
           </div>
 
-          <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <ShieldCheck className="h-4 w-4 text-burgundy" />
-              <h5 className="text-sm font-semibold text-slate-700">Permissions</h5>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[240px] overflow-y-auto pr-1">
-              {permissionOptions.map((permission) => (
-                <label
-                  key={permission.key}
-                  className="flex items-start gap-3 rounded-lg border border-slate-200 px-3 py-2 cursor-pointer hover:border-burgundy/30"
-                >
-                  <input
-                    type="checkbox"
-                    checked={selectedPermissions.includes(permission.key)}
-                    onChange={() => togglePermission(permission.key)}
-                    className="h-4 w-4 mt-0.5 accent-burgundy shrink-0"
-                  />
-                  <span className="text-sm text-slate-700">{permission.label}</span>
-                </label>
-              ))}
-            </div>
-          </div>
+          <PermissionGroupsPicker
+            selectedPermissions={selectedPermissions}
+            onSelectionChange={setSelectedPermissions}
+            onSelectAll={selectAllPermissions}
+            onClearAll={clearAllPermissions}
+          />
 
           <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
             <Button type="button" variant="outline" onClick={onClose}>

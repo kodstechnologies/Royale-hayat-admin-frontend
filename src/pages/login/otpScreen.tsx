@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import logo from "@/assets/rhh-logo.png";
 import { ShieldCheck, ChevronLeft, RefreshCw, Clock } from "lucide-react";
 import { sendOtp, verifyOtp } from "@/api/auth";
-import { getHomePathForUser } from "@/lib/userRole";
+import { getFirstAllowedRoutePath } from "@/config/routePermissions";
 
 const OTP_DURATION_SECONDS = 5 * 60; // 5 minutes
 
@@ -129,7 +129,7 @@ const OtpScreen = () => {
       localStorage.setItem("rhh_admin_auth", "true");
       localStorage.setItem("rhh_admin_user", JSON.stringify(user || {}));
 
-      navigate(getHomePathForUser(user));
+      navigate(getFirstAllowedRoutePath());
     } catch (err: any) {
       setError(err?.response?.data?.message || "OTP verification failed.");
     } finally {

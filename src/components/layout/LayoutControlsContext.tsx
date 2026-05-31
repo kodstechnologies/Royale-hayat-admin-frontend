@@ -1,11 +1,17 @@
 import { createContext, useContext } from "react";
 
-type LayoutControlsContextValue = {
+export type LayoutControlsContextValue = {
   collapsed: boolean;
   toggleSidebar: () => void;
+  isMobile: boolean;
+  mobileOpen: boolean;
+  setMobileOpen: (open: boolean) => void;
+  closeMobileSidebar: () => void;
 };
 
-const LayoutControlsContext = createContext<LayoutControlsContextValue | null>(null);
+const LayoutControlsContext = createContext<LayoutControlsContextValue | null>(
+  null,
+);
 
 export const LayoutControlsProvider = LayoutControlsContext.Provider;
 

@@ -19,8 +19,19 @@ import {
   getAllHospitalFeedbacks,
   deleteHospitalFeedback,
   updateHospitalFeedback,
+  markDoctorFeedbackViewed,
+  markHospitalFeedbackViewed,
   type FeedbackPayload
 } from "@/api/feedback";
+
+const notifyFeedbackUpdated = () => {
+  window.dispatchEvent(new Event("feedbackUpdated"));
+};
+
+const formatBadgeCount = (count: number) => (count > 99 ? "99+" : String(count));
+
+const isNewPatientFeedback = (isViewed?: boolean, addedByAdmin?: boolean) =>
+  !isViewed && !addedByAdmin;
 
 type DoctorFeedback = {
   id: string;
@@ -39,6 +50,7 @@ type DoctorFeedback = {
   date: string;
   showOnWebsite: boolean;
   addedByAdmin?: boolean;
+  isViewed?: boolean;
 };
 
 type HospitalFeedback = {
@@ -52,6 +64,7 @@ type HospitalFeedback = {
   date: string;
   showOnWebsite: boolean;
   addedByAdmin?: boolean;
+  isViewed?: boolean;
 };
 
 const hasText = (value?: string) => Boolean(value?.trim());
@@ -157,7 +170,8 @@ const FeedbackReviews = () => {
           commentAr: fb.arabicFeedback || "",
           date: fb.createdAt ? new Date(fb.createdAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
           showOnWebsite: fb.shownOnWebsite ?? true,
-          addedByAdmin: fb.addedBy === "admin"
+          addedByAdmin: fb.addedBy === "admin",
+          isViewed: fb.isViewed ?? false,
         };
       });
       
@@ -184,7 +198,8 @@ const FeedbackReviews = () => {
         commentAr: fb.arabicFeedback || "",
         date: fb.createdAt ? new Date(fb.createdAt).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
         showOnWebsite: fb.shownOnWebsite ?? true,
-        addedByAdmin: fb.addedBy === "admin"
+        addedByAdmin: fb.addedBy === "admin",
+        isViewed: fb.isViewed ?? false,
       }));
       
       setHospitalFeedbacks(mappedFeedbacks);
@@ -207,8 +222,48 @@ const FeedbackReviews = () => {
     loadData();
   }, [fetchDoctorFeedbacks, fetchHospitalFeedbacks]);
 
+  const markFeedbackAsViewed = async (
+    id: string,
+    type: "doctor" | "hospital",
+  ) => {
+    const list = type === "doctor" ? doctorFeedbacks : hospitalFeedbacks;
+    const feedback = list.find((item) => item.id === id);
+    if (!feedback || !isNewPatientFeedback(feedback.isViewed, feedback.addedByAdmin)) {
+      return;
+    }
+
+    try {
+      if (type === "doctor") {
+        await markDoctorFeedbackViewed(id);
+        setDoctorFeedbacks((prev) =>
+          prev.map((item) =>
+            item.id === id ? { ...item, isViewed: true } : item,
+          ),
+        );
+      } else {
+        await markHospitalFeedbackViewed(id);
+        setHospitalFeedbacks((prev) =>
+          prev.map((item) =>
+            item.id === id ? { ...item, isViewed: true } : item,
+          ),
+        );
+      }
+      notifyFeedbackUpdated();
+    } catch (error) {
+      console.error("Error marking feedback as viewed:", error);
+    }
+  };
+
+  const doctorNewCount = doctorFeedbacks.filter((fb) =>
+    isNewPatientFeedback(fb.isViewed, fb.addedByAdmin),
+  ).length;
+  const hospitalNewCount = hospitalFeedbacks.filter((fb) =>
+    isNewPatientFeedback(fb.isViewed, fb.addedByAdmin),
+  ).length;
+
   // Toggle show on website
   const toggleShowOnWebsite = async (id: string, type: "doctor" | "hospital") => {
+    void markFeedbackAsViewed(id, type);
     try {
       if (type === "doctor") {
         const feedback = doctorFeedbacks.find(fb => fb.id === id);
@@ -235,7 +290,11 @@ const FeedbackReviews = () => {
             fb.id === id ? { ...fb, showOnWebsite: !fb.showOnWebsite } : fb
           )
         );
-        toast.success(showArabicContent ? "تم تحديث ظهور الموقع" : "Website visibility updated");
+        toast.success(
+          !feedback.showOnWebsite
+            ? "Feedback is now shown on the website"
+            : "Feedback is now hidden from the website",
+        );
       } else {
         const feedback = hospitalFeedbacks.find(fb => fb.id === id);
         if (!feedback) return;
@@ -259,11 +318,15 @@ const FeedbackReviews = () => {
             fb.id === id ? { ...fb, showOnWebsite: !fb.showOnWebsite } : fb
           )
         );
-        toast.success(showArabicContent ? "تم تحديث ظهور الموقع" : "Website visibility updated");
+        toast.success(
+          !feedback.showOnWebsite
+            ? "Feedback is now shown on the website"
+            : "Feedback is now hidden from the website",
+        );
       }
     } catch (error) {
       console.error("Error toggling visibility:", error);
-      toast.error(showArabicContent ? "فشل في تحديث ظهور الموقع" : "Failed to update visibility");
+      toast.error("Failed to update website visibility");
     }
   };
 
@@ -285,6 +348,7 @@ const FeedbackReviews = () => {
         setHospitalFeedbacks(prev => prev.filter(fb => fb.id !== id));
         toast.success(showArabicContent ? "تم حذف ملاحظة المستشفى بنجاح" : "Hospital feedback deleted successfully");
       }
+      notifyFeedbackUpdated();
     } catch (error) {
       console.error("Error deleting feedback:", error);
       toast.error(showArabicContent ? "فشل في حذف الملاحظة" : "Failed to delete feedback");
@@ -293,6 +357,7 @@ const FeedbackReviews = () => {
 
   // Open edit modal
   const openEditModal = (feedback: DoctorFeedback | HospitalFeedback, type: "doctor" | "hospital") => {
+    void markFeedbackAsViewed(feedback.id, type);
     setEditingFeedback(feedback);
     setEditFormData({
       patientName: feedback.patientName,
@@ -416,12 +481,14 @@ const FeedbackReviews = () => {
     );
   };
 
-  const formatDate = (dateString: string, useArabicLocale = false) => {
+  const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    if (useArabicLocale) {
-      return date.toLocaleDateString('ar-SA', { month: 'long', day: 'numeric', year: 'numeric' });
-    }
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    if (Number.isNaN(date.getTime())) return "—";
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
   };
 
   const getInitials = (name: string) => {
@@ -534,6 +601,7 @@ const FeedbackReviews = () => {
     adminAdded: "Added by Admin",
     userAdded: "User Feedback",
     addedByAdminBadge: "Added by Admin",
+    new: "New",
     edit: "Edit",
     delete: "Delete",
     cancel: "Cancel",
@@ -560,26 +628,26 @@ const FeedbackReviews = () => {
 
   return (
     <AdminLayout title="Feedback & Reviews">
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         <BreadCrumb />
 
         {/* Header with Add Button */}
-        <div className="flex items-center justify-between">
-          <div className="flex gap-2 p-1 bg-slate-100/80 rounded-lg">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex gap-2 p-1 bg-slate-100/80 rounded-lg w-full sm:w-auto">
             <button
               onClick={() => {
                 setShowArabicContent(false);
                 setCurrentPage(1);
               }}
               className={`
-                flex items-center gap-2 px-4 py-1.5 rounded-md text-sm font-medium transition-all duration-200
+                flex-1 sm:flex-none flex items-center justify-center gap-2 px-3 sm:px-4 py-1.5 rounded-md text-sm font-medium transition-all duration-200
                 ${!showArabicContent
                   ? "bg-white text-burgundy shadow-sm"
                   : "text-slate-600 hover:text-slate-800 hover:bg-white/50"
                 }
               `}
             >
-              <Globe className="h-3.5 w-3.5" />
+              <Globe className="h-3.5 w-3.5 shrink-0" />
               English
             </button>
             <button
@@ -588,30 +656,30 @@ const FeedbackReviews = () => {
                 setCurrentPage(1);
               }}
               className={`
-                flex items-center gap-2 px-4 py-1.5 rounded-md text-sm font-medium transition-all duration-200
+                flex-1 sm:flex-none flex items-center justify-center gap-2 px-3 sm:px-4 py-1.5 rounded-md text-sm font-medium transition-all duration-200
                 ${showArabicContent
                   ? "bg-white text-burgundy shadow-sm"
                   : "text-slate-600 hover:text-slate-800 hover:bg-white/50"
                 }
               `}
             >
-              <Languages className="h-3.5 w-3.5" />
+              <Languages className="h-3.5 w-3.5 shrink-0" />
               العربية
             </button>
           </div>
 
-          <Button onClick={() => navigate("/add-feedback")} className="gap-2">
+          <Button onClick={() => navigate("/add-feedback")} className="gap-2 w-full sm:w-auto">
             <Plus className="h-4 w-4" />
             {uiText.addFeedback}
           </Button>
         </div>
 
         {/* Tabs */}
-        <div className="flex flex-wrap gap-2 p-1 bg-slate-100/80 rounded-xl w-fit">
+        <div className="flex gap-2 p-1 bg-slate-100/80 rounded-xl w-full sm:w-fit">
           <button
             onClick={() => { setActiveTab("doctor"); setCurrentPage(1); }}
             className={`
-              flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-medium transition-all duration-200
+              flex-1 sm:flex-none flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200
               ${activeTab === "doctor"
                 ? "bg-white text-burgundy shadow-md"
                 : "text-slate-600 hover:text-slate-800 hover:bg-white/50"
@@ -621,11 +689,16 @@ const FeedbackReviews = () => {
             <User className="h-4 w-4" />
             {uiText.doctorFeedback}
             <span className="ml-1 px-1.5 py-0.5 text-xs bg-slate-100 rounded-full">{doctorFeedbacks.length}</span>
+            {doctorNewCount > 0 && (
+              <span className="min-w-[1.25rem] h-5 px-1.5 rounded-full bg-burgundy text-white text-[10px] font-semibold leading-none inline-flex items-center justify-center">
+                {formatBadgeCount(doctorNewCount)}
+              </span>
+            )}
           </button>
           <button
             onClick={() => { setActiveTab("hospital"); setCurrentPage(1); }}
             className={`
-              flex items-center gap-2 px-5 py-2 rounded-lg text-sm font-medium transition-all duration-200
+              flex-1 sm:flex-none flex items-center justify-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200
               ${activeTab === "hospital"
                 ? "bg-white text-burgundy shadow-md"
                 : "text-slate-600 hover:text-slate-800 hover:bg-white/50"
@@ -635,12 +708,17 @@ const FeedbackReviews = () => {
             <Building2 className="h-4 w-4" />
             {uiText.hospitalFeedback}
             <span className="ml-1 px-1.5 py-0.5 text-xs bg-slate-100 rounded-full">{hospitalFeedbacks.length}</span>
+            {hospitalNewCount > 0 && (
+              <span className="min-w-[1.25rem] h-5 px-1.5 rounded-full bg-burgundy text-white text-[10px] font-semibold leading-none inline-flex items-center justify-center">
+                {formatBadgeCount(hospitalNewCount)}
+              </span>
+            )}
           </button>
         </div>
 
         {/* Filters */}
-        <div className="flex flex-wrap gap-3">
-          <div className="relative flex-1 min-w-[200px]">
+        <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3">
+          <div className="relative w-full sm:flex-1 sm:min-w-[200px]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
             <input
               type="text"
@@ -654,7 +732,7 @@ const FeedbackReviews = () => {
           <select
             value={ratingFilter}
             onChange={(e) => { setRatingFilter(e.target.value === "all" ? "all" : Number(e.target.value)); setCurrentPage(1); }}
-            className="px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-burgundy/20 focus:border-burgundy transition-all"
+            className="w-full sm:w-auto px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-burgundy/20 focus:border-burgundy transition-all"
           >
             <option value="all">{uiText.allRatings}</option>
             <option value="5">5 Stars</option>
@@ -666,7 +744,7 @@ const FeedbackReviews = () => {
           <select
             value={websiteFilter}
             onChange={(e) => { setWebsiteFilter(e.target.value as "all" | "shown" | "hidden"); setCurrentPage(1); }}
-            className="px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-burgundy/20 focus:border-burgundy transition-all"
+            className="w-full sm:w-auto px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-burgundy/20 focus:border-burgundy transition-all"
           >
             <option value="all">{uiText.allFeedback}</option>
             <option value="shown">{uiText.shown}</option>
@@ -675,7 +753,7 @@ const FeedbackReviews = () => {
           <select
             value={adminFilter}
             onChange={(e) => { setAdminFilter(e.target.value as "all" | "admin" | "user"); setCurrentPage(1); }}
-            className="px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-burgundy/20 focus:border-burgundy transition-all"
+            className="w-full sm:w-auto px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-burgundy/20 focus:border-burgundy transition-all"
           >
             <option value="all">{uiText.allFeedbackSource}</option>
             <option value="admin">{uiText.adminAdded}</option>
@@ -691,7 +769,7 @@ const FeedbackReviews = () => {
                 setAdminFilter("all");
                 setCurrentPage(1);
               }}
-              className="gap-1 text-slate-500 hover:text-slate-700"
+              className="gap-1 text-slate-500 hover:text-slate-700 w-full sm:w-auto"
             >
               <X className="h-4 w-4" />
               {uiText.clear}
@@ -714,65 +792,90 @@ const FeedbackReviews = () => {
               <>
                 {currentDoctorItems.map((fb) => {
                   const useArabic = showArabicContent;
+                  const isNew = isNewPatientFeedback(fb.isViewed, fb.addedByAdmin);
                   return (
-                  <div key={fb.id} className="group bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5">
-                    <div className="p-5">
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-burgundy/20 to-burgundy/5 flex items-center justify-center border-2 border-burgundy/20 group-hover:scale-110 transition-transform duration-300">
-                            <span className="text-burgundy font-bold text-base">{fb.doctorInitials || getInitials(pickLocalizedText(fb.doctorName, fb.doctorNameAr, useArabic))}</span>
+                  <div
+                    key={fb.id}
+                    onClick={() => void markFeedbackAsViewed(fb.id, "doctor")}
+                    className={`group bg-white rounded-xl border overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5 cursor-pointer ${
+                      isNew ? "border-burgundy/40 ring-1 ring-burgundy/10" : "border-slate-200"
+                    }`}
+                  >
+                    <div className="p-4 sm:p-5">
+                      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-4">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="w-10 h-10 sm:w-12 sm:h-12 shrink-0 rounded-full bg-gradient-to-br from-burgundy/20 to-burgundy/5 flex items-center justify-center border-2 border-burgundy/20 group-hover:scale-110 transition-transform duration-300">
+                            <span className="text-burgundy font-bold text-sm sm:text-base">{fb.doctorInitials || getInitials(pickLocalizedText(fb.doctorName, fb.doctorNameAr, useArabic))}</span>
                           </div>
-                          <div>
+                          <div className="min-w-0">
                             <div className="flex items-center gap-2 flex-wrap">
-                              <p className={`font-semibold text-slate-800 text-lg ${useArabic ? "rtl-text" : ""}`}>
+                              <p className={`font-semibold text-slate-800 text-base sm:text-lg break-words ${useArabic ? "rtl-text" : ""}`}>
                                 {pickLocalizedText(fb.doctorName, fb.doctorNameAr, useArabic)}
                               </p>
-                              {/* Added by Admin Capsule */}
                               {fb.addedByAdmin && (
-                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700 border border-amber-200">
-                                  <Shield className="h-3 w-3" />
-                                  {uiText.addedByAdminBadge}
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-medium bg-amber-100 text-amber-700 border border-amber-200">
+                                  <Shield className="h-3 w-3 shrink-0" />
+                                  <span className="hidden min-[400px]:inline">{uiText.addedByAdminBadge}</span>
+                                  <span className="min-[400px]:hidden">Admin</span>
                                 </span>
                               )}
                             </div>
-                            <p className={`text-xs text-slate-500 ${useArabic ? "rtl-text" : ""}`}>
+                            <p className={`text-xs text-slate-500 break-words ${useArabic ? "rtl-text" : ""}`}>
                               {pickLocalizedText(fb.doctorDepartment, fb.doctorDepartmentAr, useArabic)}
                             </p>
+                            <div className="mt-2 sm:hidden">{renderStars(fb.rating)}</div>
                           </div>
                         </div>
-                        <div className="flex flex-col items-end gap-2">
-                          {renderStars(fb.rating)}
-                          <div className="flex items-center gap-2">
+                        <div className="flex flex-col gap-2 w-full sm:w-auto sm:items-end shrink-0">
+                          <div className="hidden sm:block">{renderStars(fb.rating)}</div>
+                          <div
+                            className="flex flex-wrap items-center gap-2 w-full sm:justify-end pt-2 sm:pt-0 border-t border-slate-100 sm:border-0"
+                            onClick={(e) => e.stopPropagation()}
+                          >
                             <button
-                              onClick={() => toggleShowOnWebsite(fb.id, "doctor")}
-                              className={`flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium transition-all duration-200 ${fb.showOnWebsite
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                void toggleShowOnWebsite(fb.id, "doctor");
+                              }}
+                              className={`flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-2 py-2 sm:py-1 rounded-lg sm:rounded-full text-xs font-medium transition-all duration-200 ${fb.showOnWebsite
                                 ? "bg-green-100 text-green-700 hover:bg-green-200"
                                 : "bg-slate-100 text-slate-500 hover:bg-slate-200"
                                 }`}
                             >
                               {fb.showOnWebsite ? (
                                 <>
-                                  <Eye className="h-3 w-3" />
-                                  {uiText.shown}
+                                  <Eye className="h-3.5 w-3.5 shrink-0" />
+                                  <span className="truncate">{uiText.shown}</span>
                                 </>
                               ) : (
                                 <>
-                                  <EyeOff className="h-3 w-3" />
-                                  {uiText.hiddenText}
+                                  <EyeOff className="h-3.5 w-3.5 shrink-0" />
+                                  <span className="truncate">{uiText.hiddenText}</span>
                                 </>
                               )}
                             </button>
                             {fb.addedByAdmin && (
                               <button
-                                onClick={() => openEditModal(fb, "doctor")}
-                                className="p-1.5 rounded-lg text-slate-500 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  openEditModal(fb, "doctor");
+                                }}
+                                className="inline-flex items-center justify-center p-2 rounded-lg text-slate-500 bg-slate-50 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                                aria-label={uiText.edit}
                               >
                                 <Edit className="h-4 w-4" />
                               </button>
                             )}
                             <button
-                              onClick={() => handleDelete(fb.id, "doctor")}
-                              className="p-1.5 rounded-lg text-slate-500 hover:bg-red-50 hover:text-red-600 transition-colors"
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                void handleDelete(fb.id, "doctor");
+                              }}
+                              className="inline-flex items-center justify-center p-2 rounded-lg text-red-600 bg-red-50 hover:bg-red-100 transition-colors"
+                              aria-label={uiText.delete}
                             >
                               <Trash2 className="h-4 w-4" />
                             </button>
@@ -780,23 +883,28 @@ const FeedbackReviews = () => {
                         </div>
                       </div>
 
-                      <div className="mb-4">
-                        <div className="flex items-center gap-2 mb-3">
+                      <div className="mb-2 sm:mb-4">
+                        <div className="flex flex-wrap items-center gap-2 mb-3">
                           <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-slate-100">
                             <User className="h-3 w-3 text-slate-400" />
                             <span className={`text-xs text-slate-600 ${useArabic ? "rtl-text" : ""}`}>
                               {pickLocalizedText(fb.patientName, fb.patientNameAr, useArabic)}
                             </span>
                           </div>
+                          {isNew && (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide bg-burgundy text-white">
+                              {uiText.new}
+                            </span>
+                          )}
                           <div className="w-1 h-1 rounded-full bg-slate-300"></div>
                           <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-slate-100">
                             <Calendar className="h-3 w-3 text-slate-400" />
-                            <span className="text-xs text-slate-600">{formatDate(fb.date, useArabic)}</span>
+                            <span className="text-xs text-slate-600">{formatDate(fb.date)}</span>
                           </div>
                         </div>
-                        <div className="bg-slate-50/50 rounded-xl p-4 border border-slate-100 relative">
+                        <div className="bg-slate-50/50 rounded-xl p-3 sm:p-4 border border-slate-100 relative">
                           <Quote className="absolute -top-2 -left-2 h-5 w-5 text-burgundy/20" />
-                          <p className={`text-sm text-slate-600 leading-relaxed pl-3 ${useArabic ? "rtl-text" : ""}`}>
+                          <p className={`text-sm text-slate-600 leading-relaxed pl-3 break-words ${useArabic ? "rtl-text" : ""}`}>
                             {pickLocalizedText(fb.comment, fb.commentAr, useArabic)}
                           </p>
                         </div>
@@ -808,7 +916,7 @@ const FeedbackReviews = () => {
 
                 {/* Pagination for Doctor Feedback */}
                 {doctorTotalPages > 1 && (
-                  <div className="flex justify-center gap-2 pt-4">
+                  <div className="flex flex-wrap justify-center items-center gap-2 pt-4 px-1">
                     <button
                       type="button"
                       onClick={() => handlePageChange(currentPage - 1)}
@@ -865,63 +973,88 @@ const FeedbackReviews = () => {
               <>
                 {currentHospitalItems.map((fb) => {
                   const useArabic = showArabicContent;
+                  const isNew = isNewPatientFeedback(fb.isViewed, fb.addedByAdmin);
                   return (
-                  <div key={fb.id} className="group bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5">
-                    <div className="p-5">
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-burgundy/20 to-burgundy/5 flex items-center justify-center border-2 border-burgundy/20 group-hover:scale-110 transition-transform duration-300">
-                            <span className="text-burgundy font-bold text-base">{getInitials(pickLocalizedText(fb.patientName, fb.patientNameAr, useArabic))}</span>
+                  <div
+                    key={fb.id}
+                    onClick={() => void markFeedbackAsViewed(fb.id, "hospital")}
+                    className={`group bg-white rounded-xl border overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5 cursor-pointer ${
+                      isNew ? "border-burgundy/40 ring-1 ring-burgundy/10" : "border-slate-200"
+                    }`}
+                  >
+                    <div className="p-4 sm:p-5">
+                      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-4">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="w-10 h-10 sm:w-12 sm:h-12 shrink-0 rounded-full bg-gradient-to-br from-burgundy/20 to-burgundy/5 flex items-center justify-center border-2 border-burgundy/20 group-hover:scale-110 transition-transform duration-300">
+                            <span className="text-burgundy font-bold text-sm sm:text-base">{getInitials(pickLocalizedText(fb.patientName, fb.patientNameAr, useArabic))}</span>
                           </div>
-                          <div>
+                          <div className="min-w-0">
                             <div className="flex items-center gap-2 flex-wrap">
-                              <p className={`font-semibold text-slate-800 text-lg ${useArabic ? "rtl-text" : ""}`}>
+                              <p className={`font-semibold text-slate-800 text-base sm:text-lg break-words ${useArabic ? "rtl-text" : ""}`}>
                                 {pickLocalizedText(fb.patientName, fb.patientNameAr, useArabic)}
                               </p>
-                              {/* Added by Admin Capsule */}
                               {fb.addedByAdmin && (
-                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700 border border-amber-200">
-                                  <Shield className="h-3 w-3" />
-                                  {uiText.addedByAdminBadge}
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-medium bg-amber-100 text-amber-700 border border-amber-200">
+                                  <Shield className="h-3 w-3 shrink-0" />
+                                  <span className="hidden min-[400px]:inline">{uiText.addedByAdminBadge}</span>
+                                  <span className="min-[400px]:hidden">Admin</span>
                                 </span>
                               )}
                             </div>
                             <p className="text-xs text-slate-500">{uiText.patientFeedback}</p>
+                            <div className="mt-2 sm:hidden">{renderStars(fb.rating)}</div>
                           </div>
                         </div>
-                        <div className="flex flex-col items-end gap-2">
-                          {renderStars(fb.rating)}
-                          <div className="flex items-center gap-2">
+                        <div className="flex flex-col gap-2 w-full sm:w-auto sm:items-end shrink-0">
+                          <div className="hidden sm:block">{renderStars(fb.rating)}</div>
+                          <div
+                            className="flex flex-wrap items-center gap-2 w-full sm:justify-end pt-2 sm:pt-0 border-t border-slate-100 sm:border-0"
+                            onClick={(e) => e.stopPropagation()}
+                          >
                             <button
-                              onClick={() => toggleShowOnWebsite(fb.id, "hospital")}
-                              className={`flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium transition-all duration-200 ${fb.showOnWebsite
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                void toggleShowOnWebsite(fb.id, "hospital");
+                              }}
+                              className={`flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-2 py-2 sm:py-1 rounded-lg sm:rounded-full text-xs font-medium transition-all duration-200 ${fb.showOnWebsite
                                 ? "bg-green-100 text-green-700 hover:bg-green-200"
                                 : "bg-slate-100 text-slate-500 hover:bg-slate-200"
                                 }`}
                             >
                               {fb.showOnWebsite ? (
                                 <>
-                                  <Eye className="h-3 w-3" />
-                                  {uiText.shown}
+                                  <Eye className="h-3.5 w-3.5 shrink-0" />
+                                  <span className="truncate">{uiText.shown}</span>
                                 </>
                               ) : (
                                 <>
-                                  <EyeOff className="h-3 w-3" />
-                                  {uiText.hiddenText}
+                                  <EyeOff className="h-3.5 w-3.5 shrink-0" />
+                                  <span className="truncate">{uiText.hiddenText}</span>
                                 </>
                               )}
                             </button>
                             {fb.addedByAdmin && (
                               <button
-                                onClick={() => openEditModal(fb, "hospital")}
-                                className="p-1.5 rounded-lg text-slate-500 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  openEditModal(fb, "hospital");
+                                }}
+                                className="inline-flex items-center justify-center p-2 rounded-lg text-slate-500 bg-slate-50 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                                aria-label={uiText.edit}
                               >
                                 <Edit className="h-4 w-4" />
                               </button>
                             )}
                             <button
-                              onClick={() => handleDelete(fb.id, "hospital")}
-                              className="p-1.5 rounded-lg text-slate-500 hover:bg-red-50 hover:text-red-600 transition-colors"
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                void handleDelete(fb.id, "hospital");
+                              }}
+                              className="inline-flex items-center justify-center p-2 rounded-lg text-red-600 bg-red-50 hover:bg-red-100 transition-colors"
+                              aria-label={uiText.delete}
                             >
                               <Trash2 className="h-4 w-4" />
                             </button>
@@ -929,16 +1062,21 @@ const FeedbackReviews = () => {
                         </div>
                       </div>
 
-                      <div className="mb-4">
-                        <div className="flex items-center gap-2 mb-3">
+                      <div className="mb-2 sm:mb-4">
+                        <div className="flex flex-wrap items-center gap-2 mb-3">
                           <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-slate-100">
                             <Calendar className="h-3 w-3 text-slate-400" />
-                            <span className="text-xs text-slate-600">{formatDate(fb.date, useArabic)}</span>
+                            <span className="text-xs text-slate-600">{formatDate(fb.date)}</span>
                           </div>
+                          {isNew && (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wide bg-burgundy text-white">
+                              {uiText.new}
+                            </span>
+                          )}
                         </div>
-                        <div className="bg-slate-50/50 rounded-xl p-4 border border-slate-100 relative">
+                        <div className="bg-slate-50/50 rounded-xl p-3 sm:p-4 border border-slate-100 relative">
                           <Quote className="absolute -top-2 -left-2 h-5 w-5 text-burgundy/20" />
-                          <p className={`text-sm text-slate-600 leading-relaxed pl-3 ${useArabic ? "rtl-text" : ""}`}>
+                          <p className={`text-sm text-slate-600 leading-relaxed pl-3 break-words ${useArabic ? "rtl-text" : ""}`}>
                             {pickLocalizedText(fb.comment, fb.commentAr, useArabic)}
                           </p>
                         </div>
@@ -950,7 +1088,7 @@ const FeedbackReviews = () => {
 
                 {/* Pagination for Hospital Feedback */}
                 {hospitalTotalPages > 1 && (
-                  <div className="flex justify-center gap-2 pt-4">
+                  <div className="flex flex-wrap justify-center items-center gap-2 pt-4 px-1">
                     <button
                       type="button"
                       onClick={() => handlePageChange(currentPage - 1)}
@@ -995,26 +1133,26 @@ const FeedbackReviews = () => {
 
       {/* Edit Modal */}
       {editingFeedback && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50" onClick={() => setEditingFeedback(null)}>
-          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-            <div className="bg-gradient-to-r from-burgundy/5 to-white border-b border-slate-100 p-5 sticky top-0 bg-white z-10">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-burgundy/10 flex items-center justify-center">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-0 sm:p-4" onClick={() => setEditingFeedback(null)}>
+          <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl border border-slate-200 w-full max-w-2xl max-h-[92vh] sm:max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <div className="bg-gradient-to-r from-burgundy/5 to-white border-b border-slate-100 p-4 sm:p-5 sticky top-0 bg-white z-10">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-9 h-9 sm:w-10 sm:h-10 shrink-0 rounded-xl bg-burgundy/10 flex items-center justify-center">
                     <Edit className="h-5 w-5 text-burgundy" />
                   </div>
-                  <div>
-                    <h3 className="text-lg font-bold text-slate-800">{uiText.editFeedback}</h3>
+                  <div className="min-w-0">
+                    <h3 className="text-base sm:text-lg font-bold text-slate-800">{uiText.editFeedback}</h3>
                     <p className="text-xs text-slate-500">Update feedback details</p>
                   </div>
                 </div>
-                <button onClick={() => setEditingFeedback(null)} className="p-2 rounded-lg hover:bg-slate-100 transition-colors">
+                <button type="button" onClick={() => setEditingFeedback(null)} className="p-2 rounded-lg hover:bg-slate-100 transition-colors shrink-0" aria-label={uiText.cancel}>
                   <X size={18} className="text-slate-400" />
                 </button>
               </div>
             </div>
 
-            <div className="p-6 space-y-5">
+            <div className="p-4 sm:p-6 space-y-5">
               {/* Rating */}
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">Rating</label>
@@ -1149,11 +1287,11 @@ const FeedbackReviews = () => {
               </div>
 
               {/* Form Actions */}
-              <div className="flex gap-3 pt-4 border-t border-slate-200">
-                <Button variant="outline" onClick={() => setEditingFeedback(null)} className="flex-1">
+              <div className="flex flex-col-reverse sm:flex-row gap-3 pt-4 border-t border-slate-200">
+                <Button variant="outline" onClick={() => setEditingFeedback(null)} className="w-full sm:flex-1">
                   {uiText.cancel}
                 </Button>
-                <Button onClick={saveEdit} disabled={isSubmitting} className="flex-1 gap-2">
+                <Button onClick={saveEdit} disabled={isSubmitting} className="w-full sm:flex-1 gap-2">
                   {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                   {uiText.save}
                 </Button>

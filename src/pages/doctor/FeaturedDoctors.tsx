@@ -171,31 +171,34 @@ const FeaturedDoctors = () => {
 
   return (
     <AdminLayout title="Featured Doctors">
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         <BreadCrumb />
 
-        <div className="flex justify-between items-center flex-wrap gap-4">
-          <div className="flex items-center gap-4">
+        <div className="flex flex-col gap-4">
+          <div className="flex items-start gap-3 min-w-0">
             <button
+              type="button"
               onClick={() => navigate("/doctors")}
-              className="p-2 rounded-xl hover:bg-slate-100 transition-all duration-200 group"
+              className="p-2 rounded-xl hover:bg-slate-100 transition-all duration-200 group shrink-0"
+              aria-label="Back to doctors"
             >
               <ArrowLeft className="h-5 w-5 text-slate-500 group-hover:text-burgundy" />
             </button>
-            <div>
-              <div className="flex items-center gap-2">
-                <Star className="h-6 w-6 text-amber-500 fill-amber-500" />
-                <h2 className="text-2xl font-bold text-slate-800">{getUIText.pageTitle}</h2>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <Star className="h-6 w-6 text-amber-500 fill-amber-500 shrink-0" />
+                <h2 className="text-xl sm:text-2xl font-bold text-slate-800">{getUIText.pageTitle}</h2>
               </div>
-              <p className="text-sm text-slate-500 mt-1">{getUIText.pageDescription}</p>
+              <p className="text-xs sm:text-sm text-slate-500 mt-1">{getUIText.pageDescription}</p>
             </div>
           </div>
 
-          <div className="flex gap-3">
-            <div className="flex gap-2 p-1 bg-slate-100/80 rounded-lg">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full">
+            <div className="flex gap-2 p-1 bg-slate-100/80 rounded-lg w-full sm:w-auto">
               <button
+                type="button"
                 onClick={() => setActiveLanguage("english")}
-                className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${
+                className={`flex-1 sm:flex-none px-3 sm:px-4 py-1.5 rounded-md text-sm font-medium transition-all ${
                   activeLanguage === "english"
                     ? "bg-white text-burgundy shadow-sm"
                     : "text-slate-600 hover:text-slate-800"
@@ -204,8 +207,9 @@ const FeaturedDoctors = () => {
                 English
               </button>
               <button
+                type="button"
                 onClick={() => setActiveLanguage("arabic")}
-                className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${
+                className={`flex-1 sm:flex-none px-3 sm:px-4 py-1.5 rounded-md text-sm font-medium transition-all ${
                   activeLanguage === "arabic"
                     ? "bg-white text-burgundy shadow-sm"
                     : "text-slate-600 hover:text-slate-800"
@@ -246,7 +250,7 @@ const FeaturedDoctors = () => {
                 </Button>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
                 {featuredDoctors.map((doctor) => (
                   <div
                     key={doctor._id}

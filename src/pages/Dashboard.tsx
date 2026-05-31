@@ -4,7 +4,6 @@ import AdminLayout from "@/components/layout/AdminLayout";
 import BreadCrumb from "@/components/layout/BreadCrumb";
 import { useLanguage } from "@/contexts/LanguageContext";
 import {
-  TrendingUp,
   Calendar,
   Stethoscope,
   MessageSquare,
@@ -162,6 +161,8 @@ const Dashboard = () => {
 
   const chartColor = "#8B1E3F";
 
+  const formatDayLabel = (day: string) => day.slice(0, 3);
+
   const handleExportToExcel = () => {
     exportDashboardDataToExcel({
       stats,
@@ -219,204 +220,239 @@ const Dashboard = () => {
 
   return (
     <AdminLayout title="Dashboard">
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6 -mx-1 sm:mx-0">
         <BreadCrumb />
 
-        <div className="bg-gradient-to-r from-burgundy/5 via-white to-burgundy/3 rounded-xl border border-slate-100 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-2xl font-bold text-slate-800">Welcome back, Admin</h2>
-              <p className="text-sm text-slate-500 mt-1">
+        <div className="bg-gradient-to-r from-burgundy/5 via-white to-burgundy/3 rounded-xl border border-slate-100 p-4 sm:p-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="min-w-0">
+              <h2 className="text-xl sm:text-2xl font-bold text-slate-800 leading-tight">
+                Welcome back, Admin
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-500 mt-1">
                 Here&apos;s what&apos;s happening with your hospital today
               </p>
             </div>
-            <div className="hidden md:flex items-center gap-4">
+            <div className="flex flex-col min-[420px]:flex-row items-stretch sm:items-center gap-2 sm:gap-4 shrink-0">
               <button
+                type="button"
                 onClick={handleExportToExcel}
-                className="flex items-center gap-2 px-4 py-2 bg-burgundy hover:bg-burgundy/90 text-white rounded-lg transition-all duration-200 shadow-md hover:shadow-lg"
+                className="flex items-center justify-center gap-2 px-4 py-2.5 sm:py-2 bg-burgundy hover:bg-burgundy/90 text-white text-sm rounded-lg transition-all duration-200 shadow-md hover:shadow-lg w-full sm:w-auto"
               >
-                <Download size={18} />
-                Export to Excel
+                <Download size={18} className="shrink-0" />
+                <span className="whitespace-nowrap">Export to Excel</span>
               </button>
-              <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-slate-200 shadow-sm">
-                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                <span className="text-xs text-slate-600">All systems operational</span>
+              <div className="flex items-center justify-center gap-2 px-4 py-2.5 sm:py-2 rounded-lg sm:rounded-full bg-white border border-slate-200 shadow-sm">
+                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse shrink-0" />
+                <span className="text-xs text-slate-600 whitespace-nowrap">
+                  All systems operational
+                </span>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 min-[420px]:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4">
           {statsCards.map((card) => (
             <div
               key={card.title}
               onClick={() => navigate(card.link)}
-              className="group bg-white rounded-xl p-4 shadow-sm border border-slate-100 cursor-pointer hover:shadow-lg hover:border-burgundy/20 transition-all duration-200 hover:-translate-y-0.5"
+              className="group bg-white rounded-xl p-3.5 sm:p-4 shadow-sm border border-slate-100 cursor-pointer hover:shadow-lg hover:border-burgundy/20 transition-all duration-200 active:scale-[0.99] sm:hover:-translate-y-0.5"
             >
-              <div className="flex items-start justify-between mb-3">
+              <div className="flex items-center gap-3 sm:block sm:mb-3">
                 <div
-                  className={`w-10 h-10 rounded-xl bg-gradient-to-br ${card.color} flex items-center justify-center group-hover:scale-110 transition-transform duration-200`}
+                  className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br ${card.color} flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-200`}
                 >
                   <card.icon size={18} className={card.iconColor} />
                 </div>
-               
+                <div className="min-w-0 flex-1 sm:mt-0">
+                  <p className="text-xl sm:text-2xl font-bold text-slate-800 leading-none">
+                    {card.value}
+                  </p>
+                  <p className="text-xs text-slate-500 mt-1 line-clamp-2 sm:truncate">
+                    {card.title}
+                  </p>
+                </div>
               </div>
-              <p className="text-2xl font-bold text-slate-800">{card.value}</p>
-              <p className="text-xs text-slate-500 mt-1 truncate">{card.title}</p>
             </div>
           ))}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
-            <div className="px-5 py-4 border-b border-slate-100 bg-gradient-to-r from-slate-50/50 to-white">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-md font-semibold text-slate-800">Weekly Requests</h3>
-                  <p className="text-xs text-slate-500 mt-0.5">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+          <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden min-w-0">
+            <div className="px-4 sm:px-5 py-3 sm:py-4 border-b border-slate-100 bg-gradient-to-r from-slate-50/50 to-white">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                <div className="min-w-0">
+                  <h3 className="text-sm sm:text-base font-semibold text-slate-800">
+                    Weekly Requests
+                  </h3>
+                  <p className="text-xs text-slate-500 mt-0.5 line-clamp-2">
                     Appointment request trends for the current week
                   </p>
                 </div>
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-1.5 shrink-0">
                   <div className="w-2.5 h-2.5 rounded-full bg-burgundy" />
                   <span className="text-xs text-slate-600">Requests</span>
                 </div>
               </div>
             </div>
-            <div className="p-5">
-              <ResponsiveContainer width="100%" height={260}>
-                <BarChart data={weeklyRequestsData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                  <XAxis
-                    dataKey="day"
-                    tick={{ fontSize: 11, fill: "#64748b" }}
-                    axisLine={false}
-                    tickLine={false}
-                  />
-                  <YAxis
-                    tick={{ fontSize: 11, fill: "#64748b" }}
-                    axisLine={false}
-                    tickLine={false}
-                    allowDecimals={false}
-                  />
-                  <Tooltip content={<CustomTooltip />} />
-                  <Bar
-                    dataKey="requests"
-                    fill={chartColor}
-                    radius={[4, 4, 0, 0]}
-                    barSize={40}
-                    name="Requests"
-                  />
-                </BarChart>
-              </ResponsiveContainer>
+            <div className="p-3 sm:p-5 -ml-1 sm:ml-0">
+              <div className="h-[220px] sm:h-[260px] w-full min-w-0">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={weeklyRequestsData} margin={{ left: -12, right: 4, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                    <XAxis
+                      dataKey="day"
+                      tick={{ fontSize: 10, fill: "#64748b" }}
+                      tickFormatter={formatDayLabel}
+                      interval={0}
+                      axisLine={false}
+                      tickLine={false}
+                    />
+                    <YAxis
+                      tick={{ fontSize: 10, fill: "#64748b" }}
+                      width={28}
+                      axisLine={false}
+                      tickLine={false}
+                      allowDecimals={false}
+                    />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Bar
+                      dataKey="requests"
+                      fill={chartColor}
+                      radius={[4, 4, 0, 0]}
+                      maxBarSize={32}
+                      name="Requests"
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
-            <div className="px-5 py-4 border-b border-slate-100 bg-gradient-to-r from-slate-50/50 to-white">
-              <h3 className="text-md font-semibold text-slate-800">Monthly Trends</h3>
+          <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden min-w-0">
+            <div className="px-4 sm:px-5 py-3 sm:py-4 border-b border-slate-100 bg-gradient-to-r from-slate-50/50 to-white">
+              <h3 className="text-sm sm:text-base font-semibold text-slate-800">
+                Monthly Trends
+              </h3>
               <p className="text-xs text-slate-500 mt-0.5">Monthly appointment requests</p>
             </div>
-            <div className="p-5">
-              <ResponsiveContainer width="100%" height={260}>
-                <AreaChart data={monthlyRequestsData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                  <XAxis
-                    dataKey="month"
-                    tick={{ fontSize: 11, fill: "#64748b" }}
-                    axisLine={false}
-                    tickLine={false}
-                  />
-                  <YAxis
-                    tick={{ fontSize: 11, fill: "#64748b" }}
-                    axisLine={false}
-                    tickLine={false}
-                    allowDecimals={false}
-                  />
-                  <Tooltip content={<CustomTooltip />} />
-                  <Area
-                    type="monotone"
-                    dataKey="requests"
-                    stroke={chartColor}
-                    fill={chartColor}
-                    fillOpacity={0.1}
-                    strokeWidth={2}
-                    name="Requests"
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
+            <div className="p-3 sm:p-5 -ml-1 sm:ml-0">
+              <div className="h-[220px] sm:h-[260px] w-full min-w-0">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={monthlyRequestsData} margin={{ left: -12, right: 4 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                    <XAxis
+                      dataKey="month"
+                      tick={{ fontSize: 10, fill: "#64748b" }}
+                      axisLine={false}
+                      tickLine={false}
+                      interval="preserveStartEnd"
+                    />
+                    <YAxis
+                      tick={{ fontSize: 10, fill: "#64748b" }}
+                      width={28}
+                      axisLine={false}
+                      tickLine={false}
+                      allowDecimals={false}
+                    />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Area
+                      type="monotone"
+                      dataKey="requests"
+                      stroke={chartColor}
+                      fill={chartColor}
+                      fillOpacity={0.1}
+                      strokeWidth={2}
+                      name="Requests"
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
-            <div className="px-5 py-4 border-b border-slate-100 bg-gradient-to-r from-slate-50/50 to-white">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-md font-semibold text-slate-800">Feedback by Rating</h3>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+          <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden min-w-0">
+            <div className="px-4 sm:px-5 py-3 sm:py-4 border-b border-slate-100 bg-gradient-to-r from-slate-50/50 to-white">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <div className="min-w-0">
+                  <h3 className="text-sm sm:text-base font-semibold text-slate-800">
+                    Feedback by Rating
+                  </h3>
                   <p className="text-xs text-slate-500 mt-0.5">
                     Patient satisfaction distribution
                   </p>
                 </div>
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1 shrink-0">
                   <Star className="h-4 w-4 text-amber-400 fill-amber-400" />
                   <span className="text-sm font-bold text-slate-800">{avgRating}</span>
                   <span className="text-xs text-slate-500">/ 5</span>
                 </div>
               </div>
             </div>
-            <div className="p-5">
-              <ResponsiveContainer width="100%" height={260}>
-                <BarChart data={feedbackByRating} layout="vertical">
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                  <XAxis
-                    type="number"
-                    tick={{ fontSize: 11, fill: "#64748b" }}
-                    axisLine={false}
-                    tickLine={false}
-                    allowDecimals={false}
-                  />
-                  <YAxis
-                    type="category"
-                    dataKey="rating"
-                    tick={{ fontSize: 11, fill: "#64748b" }}
-                    width={65}
-                    axisLine={false}
-                    tickLine={false}
-                  />
-                  <Tooltip content={<CustomTooltip />} />
-                  <Bar dataKey="count" radius={[0, 4, 4, 0]} barSize={32} name="Count">
-                    {feedbackByRating.map((entry, index) => (
-                      <Cell
-                        key={`cell-${index}`}
-                        fill={getFeedbackBarColor(entry.rating)}
-                      />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
+            <div className="p-3 sm:p-5">
+              <div className="h-[240px] sm:h-[260px] w-full min-w-0">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={feedbackByRating}
+                    layout="vertical"
+                    margin={{ left: 4, right: 8 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                    <XAxis
+                      type="number"
+                      tick={{ fontSize: 10, fill: "#64748b" }}
+                      axisLine={false}
+                      tickLine={false}
+                      allowDecimals={false}
+                    />
+                    <YAxis
+                      type="category"
+                      dataKey="rating"
+                      tick={{ fontSize: 10, fill: "#64748b" }}
+                      width={52}
+                      axisLine={false}
+                      tickLine={false}
+                    />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Bar dataKey="count" radius={[0, 4, 4, 0]} maxBarSize={28} name="Count">
+                      {feedbackByRating.map((entry, index) => (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={getFeedbackBarColor(entry.rating)}
+                        />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
-            <div className="px-5 py-4 border-b border-slate-100 bg-gradient-to-r from-slate-50/50 to-white">
-              <div className="flex items-center gap-2">
-                <Stethoscope className="h-4 w-4 text-burgundy" />
-                <h3 className="text-md font-semibold text-slate-800">Doctors by Department</h3>
+          <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden min-w-0">
+            <div className="px-4 sm:px-5 py-3 sm:py-4 border-b border-slate-100 bg-gradient-to-r from-slate-50/50 to-white">
+              <div className="flex items-center gap-2 min-w-0">
+                <Stethoscope className="h-4 w-4 text-burgundy shrink-0" />
+                <h3 className="text-sm sm:text-base font-semibold text-slate-800 truncate">
+                  Doctors by Department
+                </h3>
               </div>
               <p className="text-xs text-slate-500 mt-0.5">Number of doctors per department</p>
             </div>
-            <div className="p-5">
+            <div className="p-4 sm:p-5">
               {doctorsByDepartment.length === 0 ? (
                 <p className="text-sm text-slate-500 text-center py-8">No doctors found</p>
               ) : (
-                <div className="space-y-4 max-h-[260px] overflow-y-auto pr-1">
+                <div className="space-y-4 max-h-[220px] sm:max-h-[260px] overflow-y-auto pr-1">
                   {doctorsByDepartment.map((dept) => (
                     <div key={dept.departmentId ?? dept.dept}>
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-xs font-medium text-slate-700">{dept.dept}</span>
-                        <div className="flex items-center gap-2">
+                      <div className="flex flex-col gap-1 min-[380px]:flex-row min-[380px]:items-center min-[380px]:justify-between mb-1.5">
+                        <span className="text-xs font-medium text-slate-700 break-words">
+                          {dept.dept}
+                        </span>
+                        <div className="flex items-center gap-2 shrink-0">
                           <span className="text-xs font-semibold text-burgundy">
                             {dept.doctors} doctors
                           </span>
@@ -434,7 +470,7 @@ const Dashboard = () => {
                 </div>
               )}
               <div className="mt-4 pt-3 border-t border-slate-100">
-                <div className="flex justify-between items-center">
+                <div className="flex justify-between items-center gap-2">
                   <span className="text-xs text-slate-500">Total Doctors</span>
                   <span className="text-sm font-bold text-slate-800">{totalDoctors}</span>
                 </div>
