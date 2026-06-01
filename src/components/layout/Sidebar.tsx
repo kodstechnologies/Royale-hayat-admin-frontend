@@ -44,6 +44,7 @@ type SidebarBadgeCounts = {
   enquiries: number;
   feedback: number;
   alSafwaEnrollments: number;
+  internationalPatientEnquiries: number;
 };
 
 const getBadgeCountForRoute = (to: string, counts: SidebarBadgeCounts | null): number => {
@@ -62,6 +63,8 @@ const getBadgeCountForRoute = (to: string, counts: SidebarBadgeCounts | null): n
       return counts.feedback;
     case "/al-safwa-enrollments":
       return counts.alSafwaEnrollments;
+    case "/international-patients":
+      return counts.internationalPatientEnquiries;
     default:
       return 0;
   }
@@ -250,6 +253,7 @@ const Sidebar = ({
           enquiries: prev?.enquiries ?? 0,
           feedback: prev?.feedback ?? 0,
           alSafwaEnrollments: prev?.alSafwaEnrollments ?? 0,
+          internationalPatientEnquiries: prev?.internationalPatientEnquiries ?? 0,
         };
 
         if (sidebarResult.status === "fulfilled" && sidebarResult.value.success) {
@@ -258,6 +262,7 @@ const Sidebar = ({
           next.jobApplications = data.jobApplications;
           next.enquiries = data.enquiries;
           next.alSafwaEnrollments = data.alSafwaEnrollments ?? 0;
+          next.internationalPatientEnquiries = data.internationalPatientEnquiries ?? 0;
         }
 
         if (appointmentResult.status === "fulfilled" && appointmentResult.value.success) {
@@ -287,6 +292,7 @@ const Sidebar = ({
     window.addEventListener("appointmentsUpdated", handleCountsRefresh);
     window.addEventListener("feedbackUpdated", handleCountsRefresh);
     window.addEventListener("alSafwaUpdated", handleCountsRefresh);
+    window.addEventListener("internationalPatientUpdated", handleCountsRefresh);
 
     return () => {
       window.clearInterval(interval);
@@ -294,6 +300,7 @@ const Sidebar = ({
       window.removeEventListener("appointmentsUpdated", handleCountsRefresh);
       window.removeEventListener("feedbackUpdated", handleCountsRefresh);
       window.removeEventListener("alSafwaUpdated", handleCountsRefresh);
+      window.removeEventListener("internationalPatientUpdated", handleCountsRefresh);
     };
   }, [fetchSidebarCounts, location.pathname]);
 
@@ -479,6 +486,12 @@ const Sidebar = ({
       icon: Shield,
       label: "Al Safwa Enrollments",
       permissions: [PERMISSIONS.AL_SAFWA_VIEW],
+    },
+    {
+      to: "/international-patients",
+      icon: Globe,
+      label: "International Patients",
+      permissions: [PERMISSIONS.INTERNATIONAL_PATIENT_VIEW],
     },
     {
       to: "/feedback",

@@ -117,6 +117,16 @@ const PERMISSION_GROUP_DEFS: {
     ],
   },
   {
+    id: "international-patient",
+    title: "International Patients",
+    permissionKeys: [
+      "INTERNATIONAL_PATIENT_VIEW",
+      "INTERNATIONAL_PATIENT_CREATE",
+      "INTERNATIONAL_PATIENT_UPDATE",
+      "INTERNATIONAL_PATIENT_DELETE",
+    ],
+  },
+  {
     id: "jobs",
     title: "Jobs",
     permissionKeys: [

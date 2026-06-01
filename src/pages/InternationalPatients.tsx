@@ -1,172 +1,364 @@
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import AdminLayout from "@/components/layout/AdminLayout";
+import BreadCrumb from "@/components/layout/BreadCrumb";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Globe, Download, Search, Eye } from "lucide-react";
-import { exportToExcel } from "@/data/mockDatabase";
+import { Search, Eye, Globe, X, Loader2 } from "lucide-react";
+import {
+  getAllInternationalPatientEnquiries,
+  getInternationalPatientEnquiryById,
+  type InternationalPatientEnquiry,
+} from "@/api/internationalPatients";
+import TableSkeletonLoader from "@/components/TableSkeletonLoader";
+import { toast } from "sonner";
 
-type IntlEnquiry = {
-  id: number; name: string; country: string; treatment: string; language: string;
-  phone: string; email: string; enquiryDate: string;
-  status: "new" | "contacted" | "scheduled" | "closed";
-  message: string; source: string;
-};
-
-const enquiries: IntlEnquiry[] = [
-  { id: 1, name: "James Wilson", country: "United Kingdom", treatment: "Cardiac Surgery", language: "English", phone: "+44 7700 900123", email: "james.w@email.com", enquiryDate: "2026-04-12", status: "new", message: "I am looking for cardiac bypass surgery. Would like to know the cost and recovery time.", source: "Website" },
-  { id: 2, name: "Maria Garcia", country: "Spain", treatment: "Pediatric Care", language: "Spanish/English", phone: "+34 612 345 678", email: "maria.g@email.com", enquiryDate: "2026-04-11", status: "contacted", message: "My 4-year-old needs specialized pediatric evaluation. We are interested in visiting Kuwait.", source: "Email" },
-  { id: 3, name: "Chen Wei", country: "China", treatment: "Orthopedic Surgery", language: "Mandarin", phone: "+86 138 0013 8000", email: "chen.w@email.com", enquiryDate: "2026-04-10", status: "scheduled", message: "Need knee replacement surgery. Interested in VIP package with full hospitality.", source: "Agent" },
-  { id: 4, name: "Anna Müller", country: "Germany", treatment: "Dermatology Consultation", language: "German/English", phone: "+49 170 1234567", email: "anna.m@email.com", enquiryDate: "2026-04-09", status: "closed", message: "Completed dermatology consultation. Very satisfied with the care provided.", source: "Website" },
-  { id: 5, name: "Raj Patel", country: "India", treatment: "Cardiac Bypass", language: "Hindi/English", phone: "+91 98765 43210", email: "raj.p@email.com", enquiryDate: "2026-04-08", status: "new", message: "Complex cardiac history. Family of 3 will be accompanying. Need visa letter from hospital.", source: "Phone" },
-  { id: 6, name: "Yuki Tanaka", country: "Japan", treatment: "IVF Treatment", language: "Japanese/English", phone: "+81 90 1234 5678", email: "yuki.t@email.com", enquiryDate: "2026-04-07", status: "contacted", message: "Multiple IVF treatment cycles planned. Need long-term stay arrangement and Japanese interpreter.", source: "Agent" },
-  { id: 7, name: "Ahmed Al-Farsi", country: "Oman", treatment: "Bariatric Surgery", language: "Arabic/English", phone: "+968 9123 4567", email: "ahmed.f@email.com", enquiryDate: "2026-04-06", status: "new", message: "Interested in gastric sleeve surgery. Would like to know about the bariatric center of excellence.", source: "Website" },
-  { id: 8, name: "Sophie Dubois", country: "France", treatment: "Cosmetic Surgery", language: "French/English", phone: "+33 6 12 34 56 78", email: "sophie.d@email.com", enquiryDate: "2026-04-05", status: "contacted", message: "Looking for rhinoplasty and facial rejuvenation treatments.", source: "Social Media" },
-  { id: 9, name: "Ali Hassan", country: "Iraq", treatment: "ENT Surgery", language: "Arabic", phone: "+964 770 123 4567", email: "ali.h@email.com", enquiryDate: "2026-04-04", status: "scheduled", message: "Need tonsillectomy for my son. Looking for pediatric ENT care.", source: "Referral" },
-  { id: 10, name: "Elena Ivanova", country: "Russia", treatment: "Reproductive Medicine", language: "Russian/English", phone: "+7 916 123 4567", email: "elena.i@email.com", enquiryDate: "2026-04-03", status: "new", message: "Interested in IVF treatment. Need information about success rates and costs.", source: "Website" },
-  { id: 11, name: "Hassan Mohammed", country: "Saudi Arabia", treatment: "Pain Management", language: "Arabic", phone: "+966 50 123 4567", email: "hassan.m@email.com", enquiryDate: "2026-04-02", status: "contacted", message: "Chronic back pain. Interested in CT-guided spine injection therapy.", source: "Phone" },
-  { id: 12, name: "Jennifer Adams", country: "USA", treatment: "Health Check Package", language: "English", phone: "+1 555 123 4567", email: "jennifer.a@email.com", enquiryDate: "2026-04-01", status: "new", message: "Executive health checkup for my husband and myself. Al Safwa program.", source: "Website" },
-];
-
-const statusStyles: Record<string, string> = {
-  new: "bg-info/10 text-info", contacted: "bg-warning/10 text-warning",
-  scheduled: "bg-success/10 text-success", closed: "bg-muted text-muted-foreground",
+type EnquiryRow = InternationalPatientEnquiry & {
+  id: string;
+  date: string;
+  fullName: string;
 };
 
 const InternationalPatients = () => {
-  const [data] = useState(enquiries);
-  const [search, setSearch] = useState("");
-  const [filterStatus, setFilterStatus] = useState("All");
-  const [selectedEnquiry, setSelectedEnquiry] = useState<IntlEnquiry | null>(null);
   const { t } = useLanguage();
+  const [enquiries, setEnquiries] = useState<EnquiryRow[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [filter, setFilter] = useState<"all" | "new" | "viewed">("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [limit] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [unviewedCount, setUnviewedCount] = useState(0);
+  const [selected, setSelected] = useState<EnquiryRow | null>(null);
 
-  const statuses = ["All", "new", "contacted", "scheduled", "closed"];
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(search.trim()), 300);
+    return () => clearTimeout(timer);
+  }, [search]);
 
-  const filtered = data.filter(e => {
-    const matchSearch = e.name.toLowerCase().includes(search.toLowerCase()) || e.country.toLowerCase().includes(search.toLowerCase()) || e.treatment.toLowerCase().includes(search.toLowerCase());
-    const matchStatus = filterStatus === "All" || e.status === filterStatus;
-    return matchSearch && matchStatus;
-  });
+  const fetchEnquiries = useCallback(async () => {
+    setLoading(true);
+    try {
+      const effectiveSearch =
+        debouncedSearch.length >= 2 ? debouncedSearch : undefined;
+      const params: Record<string, string | number | boolean> = {
+        page: currentPage,
+        limit,
+        sortBy: "createdAt",
+        sortOrder: "desc",
+      };
+      if (effectiveSearch) params.search = effectiveSearch;
+      if (filter === "new") params.isViewed = false;
+      if (filter === "viewed") params.isViewed = true;
 
-  const statusCounts = {
-    new: data.filter(e => e.status === "new").length,
-    contacted: data.filter(e => e.status === "contacted").length,
-    scheduled: data.filter(e => e.status === "scheduled").length,
-    closed: data.filter(e => e.status === "closed").length,
+      const response = await getAllInternationalPatientEnquiries(params);
+      const list = response?.data?.data || [];
+      const mapped: EnquiryRow[] = (Array.isArray(list) ? list : []).map(
+        (item: InternationalPatientEnquiry) => ({
+          ...item,
+          id: String(item._id),
+          fullName: `${item.firstName} ${item.lastName}`.trim(),
+          date: item.createdAt
+            ? new Date(item.createdAt).toLocaleDateString("en-US", {
+                month: "short",
+                day: "numeric",
+                year: "numeric",
+              })
+            : "-",
+        })
+      );
+      setEnquiries(mapped);
+      setTotalPages(response?.data?.meta?.totalPages || 1);
+      setUnviewedCount(response?.data?.meta?.unviewedCount ?? 0);
+    } catch {
+      setEnquiries([]);
+      setTotalPages(1);
+      toast.error("Failed to load international patient enquiries");
+    } finally {
+      setLoading(false);
+    }
+  }, [currentPage, limit, debouncedSearch, filter]);
+
+  useEffect(() => {
+    void fetchEnquiries();
+  }, [fetchEnquiries]);
+
+  const openDetail = async (row: EnquiryRow) => {
+    setSelected(row);
+    setDetailLoading(true);
+    try {
+      const response = await getInternationalPatientEnquiryById(row.id);
+      const data = response?.data?.data;
+      if (data) {
+        setSelected({
+          ...data,
+          id: String(data._id),
+          fullName: `${data.firstName} ${data.lastName}`.trim(),
+          date: data.createdAt
+            ? new Date(data.createdAt).toLocaleDateString("en-US", {
+                month: "short",
+                day: "numeric",
+                year: "numeric",
+              })
+            : "-",
+        });
+        setEnquiries((prev) =>
+          prev.map((e) => (e.id === row.id ? { ...e, isViewed: true } : e))
+        );
+        if (!row.isViewed) {
+          setUnviewedCount((c) => Math.max(0, c - 1));
+        }
+        window.dispatchEvent(new Event("internationalPatientUpdated"));
+      }
+    } catch {
+      toast.error("Failed to load enquiry details");
+    } finally {
+      setDetailLoading(false);
+    }
   };
 
-  if (selectedEnquiry) {
-    return (
-      <AdminLayout title="International Patients">
-        <button onClick={() => setSelectedEnquiry(null)}
-          className="flex items-center gap-1 text-sm font-sans text-burgundy hover:text-burgundy-deep mb-4">
-          ← {t("Back")}
-        </button>
-        <div className="bg-card rounded-lg shadow-sm border border-border p-6">
-          <div className="flex items-start justify-between mb-6">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-full bg-gold/10 flex items-center justify-center">
-                <Globe size={20} className="text-gold" />
-              </div>
-              <div>
-                <h2 className="text-lg font-serif font-semibold text-foreground">{selectedEnquiry.name}</h2>
-                <p className="text-sm font-sans text-muted-foreground">{selectedEnquiry.country} · {selectedEnquiry.language}</p>
-              </div>
-            </div>
-            <span className={`px-3 py-1 rounded-full text-xs font-sans font-medium ${statusStyles[selectedEnquiry.status]}`}>
-              {selectedEnquiry.status}
-            </span>
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
-            {[
-              [t("Treatment"), selectedEnquiry.treatment],
-              [t("Phone"), selectedEnquiry.phone],
-              [t("Email"), selectedEnquiry.email],
-              [t("Enquiry Date"), selectedEnquiry.enquiryDate],
-              [t("Source"), selectedEnquiry.source],
-              [t("Status"), selectedEnquiry.status],
-            ].map(([label, val]) => (
-              <div key={label as string} className="bg-section-bg rounded-lg p-3">
-                <p className="text-xs font-sans text-muted-foreground">{label}</p>
-                <p className="text-sm font-sans font-medium text-foreground">{val}</p>
-              </div>
-            ))}
-          </div>
-
-          <div className="bg-section-bg rounded-lg p-4">
-            <p className="text-xs font-sans text-muted-foreground mb-2">{t("Message")}</p>
-            <p className="text-sm font-sans text-foreground">{selectedEnquiry.message}</p>
-          </div>
-        </div>
-      </AdminLayout>
+  const viewedBadge = (isViewed?: boolean) =>
+    isViewed ? (
+      <span className="px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-100 text-emerald-700">
+        {t("Viewed")}
+      </span>
+    ) : (
+      <span className="px-2 py-0.5 rounded-full text-[11px] font-medium bg-amber-100 text-amber-700">
+        {t("New")}
+      </span>
     );
-  }
 
   return (
     <AdminLayout title="International Patients">
-      {/* Summary Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
-        {[
-          { label: t("New Enquiries"), value: statusCounts.new, color: "bg-info/10 text-info" },
-          { label: t("Contacted"), value: statusCounts.contacted, color: "bg-warning/10 text-warning" },
-          { label: t("Scheduled"), value: statusCounts.scheduled, color: "bg-success/10 text-success" },
-          { label: t("Closed"), value: statusCounts.closed, color: "bg-muted text-muted-foreground" },
-        ].map(c => (
-          <div key={c.label} className="bg-card rounded-lg p-4 shadow-sm border border-border">
-            <p className="text-2xl font-serif font-bold text-foreground">{c.value}</p>
-            <p className="text-xs font-sans text-muted-foreground">{c.label}</p>
-          </div>
-        ))}
-      </div>
+      <div className="space-y-4 sm:space-y-6">
+        <BreadCrumb />
 
-      <div className="flex flex-wrap items-center gap-3 mb-4">
-        <div className="relative flex-1 max-w-xs">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-          <input type="text" placeholder={t("Search...")} value={search} onChange={e => setSearch(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 rounded-lg bg-card border border-border text-sm font-sans focus:outline-none focus:ring-1 focus:ring-gold" />
-        </div>
-        <div className="flex gap-1 flex-wrap">
-          {statuses.map(s => (
-            <button key={s} onClick={() => setFilterStatus(s)}
-              className={`px-3 py-1.5 rounded-md text-xs font-sans font-medium capitalize transition-colors
-                ${filterStatus === s ? "bg-burgundy text-primary-foreground" : "bg-card border border-border text-muted-foreground hover:bg-section-bg"}`}>
-              {s === "All" ? t("All") : s}
-            </button>
-          ))}
-        </div>
-        <button onClick={() => exportToExcel(filtered.map(e => ({ Name: e.name, Country: e.country, Treatment: e.treatment, Status: e.status, Date: e.enquiryDate, Source: e.source })), "international-enquiries")}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-success/10 text-success text-xs font-sans font-medium hover:bg-success/20">
-          <Download size={13} /> {t("Export")}
-        </button>
-      </div>
-
-      <div className="space-y-3">
-        {filtered.map(enquiry => (
-          <div key={enquiry.id} className="bg-card rounded-lg shadow-sm border border-border p-4 hover:shadow-md transition-shadow cursor-pointer"
-            onClick={() => setSelectedEnquiry(enquiry)}>
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-3">
-                <Globe size={18} className="text-gold" />
-                <div>
-                  <p className="text-sm font-sans font-medium text-foreground">{enquiry.name}</p>
-                  <p className="text-xs font-sans text-muted-foreground">{enquiry.country} · {enquiry.language}</p>
-                </div>
+        <div className="rounded-xl border-2 border-burgundy/30 bg-gradient-to-br from-white via-slate-50/90 to-white shadow-xl overflow-hidden">
+          <div className="h-1 bg-gradient-to-r from-burgundy/40 via-burgundy to-burgundy/40" />
+          <div className="p-4 sm:p-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+              <div>
+                <h3 className="text-lg sm:text-xl font-bold text-slate-800">
+                  {t("International Patients")}
+                </h3>
+                <p className="text-xs sm:text-sm text-slate-500 mt-1">
+                  {t("View enquiries submitted from the international patient center.")}
+                </p>
               </div>
-              <div className="flex items-center gap-2">
-                <span className={`px-2 py-1 rounded-full text-xs font-sans font-medium ${statusStyles[enquiry.status]}`}>
-                  {enquiry.status}
+              {unviewedCount > 0 && (
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-burgundy/10 text-burgundy">
+                  {unviewedCount} {t("new")}
                 </span>
+              )}
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3 mb-4">
+              <div className="relative flex-1 min-w-[200px] max-w-md">
+                <Search
+                  size={14}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                />
+                <input
+                  value={search}
+                  onChange={(e) => {
+                    setSearch(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  placeholder={t("Search by name, email, or country...")}
+                  className="w-full pl-9 pr-3 py-2.5 text-sm border border-slate-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-burgundy/20"
+                />
               </div>
+              {(["all", "new", "viewed"] as const).map((f) => (
+                <button
+                  key={f}
+                  type="button"
+                  onClick={() => {
+                    setFilter(f);
+                    setCurrentPage(1);
+                  }}
+                  className={`px-3 py-1.5 text-xs rounded-full border transition-colors ${
+                    filter === f
+                      ? "bg-burgundy text-white border-burgundy"
+                      : "border-slate-200 text-slate-600 hover:border-burgundy"
+                  }`}
+                >
+                  {t(f === "all" ? "All" : f === "new" ? "New" : "Viewed")}
+                </button>
+              ))}
             </div>
-            <div className="grid grid-cols-4 gap-2 text-xs font-sans">
-              <div><span className="text-muted-foreground">{t("Treatment")}:</span> <span className="text-foreground">{enquiry.treatment}</span></div>
-              <div><span className="text-muted-foreground">{t("Source")}:</span> <span className="text-foreground">{enquiry.source}</span></div>
-              <div><span className="text-muted-foreground">{t("Date")}:</span> <span className="text-foreground">{enquiry.enquiryDate}</span></div>
-              <div><span className="text-muted-foreground">{t("Phone")}:</span> <span className="text-foreground">{enquiry.phone}</span></div>
-            </div>
-            <p className="text-xs font-sans text-muted-foreground mt-2 line-clamp-1 italic">{enquiry.message}</p>
+
+            {loading ? (
+              <TableSkeletonLoader columns={7} rows={6} />
+            ) : enquiries.length === 0 ? (
+              <div className="text-center py-16 text-slate-500">
+                <Globe className="h-10 w-10 mx-auto mb-3 text-slate-300" />
+                <p className="font-medium">{t("No enquiries found")}</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto rounded-lg border border-slate-200">
+                <table className="w-full text-sm">
+                  <thead className="bg-slate-50 text-slate-500 text-[11px] uppercase">
+                    <tr>
+                      <th className="text-left px-4 py-2.5">{t("Name")}</th>
+                      <th className="text-left px-4 py-2.5">{t("Country")}</th>
+                      <th className="text-left px-4 py-2.5">{t("Phone")}</th>
+                      <th className="text-left px-4 py-2.5">{t("Email")}</th>
+                      <th className="text-left px-4 py-2.5">{t("Date")}</th>
+                      <th className="text-left px-4 py-2.5">{t("Status")}</th>
+                      <th className="text-right px-4 py-2.5">{t("Actions")}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {enquiries.map((e) => (
+                      <tr
+                        key={e.id}
+                        className={`border-t border-slate-100 hover:bg-slate-50/80 ${
+                          !e.isViewed ? "bg-burgundy/[0.02]" : ""
+                        }`}
+                      >
+                        <td className="px-4 py-2.5">
+                          <div className="font-medium text-slate-800">{e.fullName}</div>
+                        </td>
+                        <td className="px-4 py-2.5 text-slate-600">
+                          {e.country || "—"}
+                        </td>
+                        <td className="px-4 py-2.5 text-slate-600">{e.phone}</td>
+                        <td className="px-4 py-2.5 text-slate-600 break-all">
+                          {e.email}
+                        </td>
+                        <td className="px-4 py-2.5 text-slate-500">{e.date}</td>
+                        <td className="px-4 py-2.5">{viewedBadge(e.isViewed)}</td>
+                        <td className="px-4 py-2.5 text-right">
+                          <button
+                            type="button"
+                            onClick={() => void openDetail(e)}
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-burgundy hover:bg-burgundy/10"
+                            aria-label={t("View")}
+                          >
+                            <Eye size={16} />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {totalPages > 1 && (
+              <div className="flex flex-wrap justify-center gap-2 mt-4">
+                <button
+                  type="button"
+                  disabled={currentPage <= 1}
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  className="px-3 py-1.5 rounded-lg border border-slate-200 text-xs disabled:opacity-50"
+                >
+                  {t("Previous")}
+                </button>
+                <span className="px-3 py-1.5 text-xs text-slate-600">
+                  {t("Page")} {currentPage} / {totalPages}
+                </span>
+                <button
+                  type="button"
+                  disabled={currentPage >= totalPages}
+                  onClick={() => setCurrentPage((p) => p + 1)}
+                  className="px-3 py-1.5 rounded-lg border border-slate-200 text-xs disabled:opacity-50"
+                >
+                  {t("Next")}
+                </button>
+              </div>
+            )}
           </div>
-        ))}
+        </div>
       </div>
+
+      {selected && (
+        <div
+          className="fixed inset-0 bg-black/40 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+          onClick={() => setSelected(null)}
+        >
+          <div
+            className="bg-white rounded-t-2xl sm:rounded-xl shadow-2xl max-w-lg w-full p-5 sm:p-6 max-h-[90vh] overflow-y-auto"
+            onClick={(ev) => ev.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2 min-w-0">
+                <Globe className="h-5 w-5 text-burgundy shrink-0" />
+                <h3 className="font-semibold text-slate-800 truncate">
+                  {t("International Patient Enquiry")}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelected(null)}
+                className="p-2 rounded-lg hover:bg-slate-100"
+                aria-label={t("Close")}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {detailLoading ? (
+              <div className="flex justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-burgundy" />
+              </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm mb-4">
+                  <div>
+                    <span className="text-slate-500">{t("First Name")}:</span>{" "}
+                    <span className="font-medium">{selected.firstName}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-500">{t("Last Name")}:</span>{" "}
+                    <span className="font-medium">{selected.lastName}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-500">{t("Email")}:</span>{" "}
+                    <span className="font-medium break-all">{selected.email}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-500">{t("Phone")}:</span>{" "}
+                    <span className="font-medium">{selected.phone}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-500">{t("Country")}:</span>{" "}
+                    <span className="font-medium">{selected.country || "—"}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-500">{t("Date")}:</span>{" "}
+                    <span className="font-medium">{selected.date}</span>
+                  </div>
+                  <div className="sm:col-span-2">
+                    <span className="text-slate-500">{t("Address")}:</span>{" "}
+                    <span className="font-medium">{selected.address || "—"}</span>
+                  </div>
+                  <div className="sm:col-span-2">
+                    <span className="text-slate-500">{t("Status")}:</span>{" "}
+                    {viewedBadge(selected.isViewed)}
+                  </div>
+                </div>
+                <div className="text-sm rounded-lg bg-slate-50 p-3 border border-slate-100">
+                  <span className="text-slate-500 block mb-1">{t("Comments")}</span>
+                  <p className="text-slate-700 whitespace-pre-wrap">
+                    {selected.comments || "—"}
+                  </p>
+                </div>
+              </>
+            )}
+
+            <div className="flex justify-end mt-4">
+              <button
+                type="button"
+                onClick={() => setSelected(null)}
+                className="px-4 py-2 text-sm border border-slate-200 rounded-lg hover:bg-slate-50"
+              >
+                {t("Close")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </AdminLayout>
   );
 };
