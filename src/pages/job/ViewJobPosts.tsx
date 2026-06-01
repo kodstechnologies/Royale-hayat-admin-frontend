@@ -117,7 +117,7 @@ const ViewJobPost = () => {
     ) : (
       <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
         <XCircle className="h-3 w-3" />
-        Closed
+        Inactive
       </span>
     );
 
