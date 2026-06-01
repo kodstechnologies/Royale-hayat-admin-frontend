@@ -212,7 +212,11 @@ const UsersList = () => {
                           <PermissionGate permission={PERMISSIONS.USER_UPDATE}>
                             <button
                               type="button"
-                              onClick={() => navigate(`/user-management/edit/${user._id}`)}
+                              onClick={() =>
+                                navigate(`/user-management/edit/${user._id}`, {
+                                  state: { user },
+                                })
+                              }
                               className="p-1.5 rounded-lg text-slate-400 hover:text-burgundy hover:bg-burgundy/10"
                               title="Edit user"
                             >

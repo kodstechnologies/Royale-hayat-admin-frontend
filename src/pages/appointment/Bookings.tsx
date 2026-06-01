@@ -1,12 +1,9 @@
 import AdminLayout from "@/components/layout/AdminLayout";
 import BreadCrumb from "@/components/layout/BreadCrumb";
-import { useLanguage } from "@/contexts/LanguageContext";
 import AppointmentBookingsTab from "@/components/appointment/AppointmentBookingsTab";
 import AppointmentSectionNav from "@/components/appointment/AppointmentSectionNav";
 
 const Bookings = () => {
-  useLanguage();
-
   return (
     <AdminLayout title="Patient Bookings">
       <div className="space-y-6">

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef, type SetStateAction } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef, type SetStateAction } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Calendar,
@@ -123,12 +123,16 @@ const AppointmentRequestsTab = ({
     name: "",
   });
 
-  const departments = [
-    ...new Set(requests.map((r) => r.department).filter(Boolean)),
-  ] as string[];
-  const doctors = [
-    ...new Set(requests.map((r) => r.doctorName).filter(Boolean)),
-  ] as string[];
+  const departments = useMemo(
+    () =>
+      [...new Set(requests.map((r) => r.department).filter(Boolean))] as string[],
+    [requests],
+  );
+  const doctors = useMemo(
+    () =>
+      [...new Set(requests.map((r) => r.doctorName).filter(Boolean))] as string[],
+    [requests],
+  );
   const statuses: AppointmentRequestItem["status"][] = [
     "pending",
     "confirmed",

@@ -1,7 +1,6 @@
 import { useState, useCallback, useMemo, useEffect } from "react";
 import AdminLayout from "@/components/layout/AdminLayout";
 import BreadCrumb from "@/components/layout/BreadCrumb";
-import { useLanguage } from "@/contexts/LanguageContext";
 import {
   CheckCircle,
   Clock,
@@ -58,7 +57,6 @@ const REQUEST_CATEGORIES: {
 ];
 
 const AppointmentRequests = () => {
-  useLanguage();
   const [requestSubTab, setRequestSubTab] =
     useState<RequestSubTab>("doctor_unavailability");
   const [countsBySubTab, setCountsBySubTab] = useState<

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import AdminLayout from "@/components/layout/AdminLayout";
 import BreadCrumb from "@/components/layout/BreadCrumb";
@@ -10,12 +10,21 @@ import { toast } from "sonner";
 
 const EditUser = () => {
   const { id } = useParams<{ id: string }>();
+  const location = useLocation();
   const navigate = useNavigate();
-  const [user, setUser] = useState<AdminUser | null>(null);
-  const [loading, setLoading] = useState(true);
+  const userFromNav = (location.state as { user?: AdminUser } | null)?.user;
+  const [user, setUser] = useState<AdminUser | null>(
+    userFromNav?._id === id ? userFromNav : null,
+  );
+  const [loading, setLoading] = useState(!user);
 
   const fetchUser = useCallback(async () => {
     if (!id) return;
+    if (userFromNav?._id === id) {
+      setUser(userFromNav);
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     try {
       const response = await getAllUsers();
@@ -32,7 +41,7 @@ const EditUser = () => {
     } finally {
       setLoading(false);
     }
-  }, [id]);
+  }, [id, userFromNav]);
 
   useEffect(() => {
     void fetchUser();

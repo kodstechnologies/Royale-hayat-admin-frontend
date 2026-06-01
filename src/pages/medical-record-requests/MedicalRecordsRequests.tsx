@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import AdminLayout from "@/components/layout/AdminLayout";
 import BreadCrumb from "@/components/layout/BreadCrumb";
-import { useLanguage } from "@/contexts/LanguageContext";
 import { Search, Eye, Trash2, FileText, Clock, CheckCircle } from "lucide-react";
 import {
   deleteMedicalRecordRequest,
@@ -39,7 +38,6 @@ const mapApiRequest = (row: Record<string, unknown>): MedicalRequest => {
 };
 
 const MedicalRecordsRequests = () => {
-  useLanguage();
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [requests, setRequests] = useState<MedicalRequest[]>([]);
