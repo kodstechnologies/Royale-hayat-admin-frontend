@@ -33,21 +33,6 @@ type AdminDoc = {
   status: "Active" | "Draft";
 };
 
-const initialDocs: AdminDoc[] = [
-  { id: "doc-1", title: "Patient Welcome Guide", category: "Brochure", description: "Comprehensive guide for new patients including hospital map, amenities, and contact information.", uploadDate: "2026-04-10", fileSize: "3.2 MB", fileType: "pdf", uploadedBy: "Admin", sharedVia: ["SMS", "WhatsApp", "QR Code"], timesShared: 245, status: "Active" },
-  { id: "doc-2", title: "Insurance Claim Form", category: "Form", description: "Standard form for submitting insurance claims. Compatible with all 13 accepted insurance providers.", uploadDate: "2026-04-08", fileSize: "0.5 MB", fileType: "pdf", uploadedBy: "Finance", sharedVia: ["WhatsApp", "QR Code"], timesShared: 189, status: "Active" },
-  { id: "doc-3", title: "Pre-Surgery Instructions", category: "Guide", description: "Patient preparation guidelines for all surgical procedures including fasting and medication instructions.", uploadDate: "2026-04-05", fileSize: "1.1 MB", fileType: "pdf", uploadedBy: "Nursing", sharedVia: ["SMS", "WhatsApp"], timesShared: 156, status: "Active" },
-  { id: "doc-4", title: "Discharge Summary Template", category: "Form", description: "Template for patient discharge summaries including medication, follow-up, and care instructions.", uploadDate: "2026-04-03", fileSize: "0.8 MB", fileType: "pdf", uploadedBy: "Medical Records", sharedVia: ["SMS", "WhatsApp"], timesShared: 312, status: "Active" },
-  { id: "doc-5", title: "Al Safwa Health Program", category: "Brochure", description: "Exclusive executive health screening program brochure for VIP patients.", uploadDate: "2026-04-01", fileSize: "4.5 MB", fileType: "pdf", uploadedBy: "Marketing", sharedVia: ["WhatsApp", "QR Code"], timesShared: 89, status: "Active" },
-  { id: "doc-6", title: "International Patient Package", category: "Guide", description: "Complete information package for international patients including visa assistance, accommodation, and transport.", uploadDate: "2026-03-28", fileSize: "2.8 MB", fileType: "pdf", uploadedBy: "International Dept", sharedVia: ["SMS", "WhatsApp", "QR Code"], timesShared: 67, status: "Active" },
-  { id: "doc-7", title: "Vaccination Schedule - Pediatric", category: "Guide", description: "Age-appropriate vaccination schedule for infants and children as per MOH guidelines.", uploadDate: "2026-03-25", fileSize: "0.6 MB", fileType: "pdf", uploadedBy: "Pediatrics", sharedVia: ["SMS", "WhatsApp"], timesShared: 198, status: "Active" },
-  { id: "doc-8", title: "Maternity Care Brochure", category: "Brochure", description: "Comprehensive maternity services overview including birthing suites, prenatal classes, and postnatal care.", uploadDate: "2026-03-20", fileSize: "5.1 MB", fileType: "pdf", uploadedBy: "Marketing", sharedVia: ["WhatsApp", "QR Code"], timesShared: 134, status: "Active" },
-  { id: "doc-9", title: "Patient Rights & Responsibilities", category: "Policy", description: "Official document outlining patient rights and responsibilities during their stay.", uploadDate: "2026-03-15", fileSize: "0.4 MB", fileType: "pdf", uploadedBy: "Legal", sharedVia: ["QR Code"], timesShared: 56, status: "Active" },
-  { id: "doc-10", title: "Post-Bariatric Surgery Nutrition Guide", category: "Guide", description: "Detailed nutrition and dietary guidelines for patients post-bariatric surgery.", uploadDate: "2026-03-10", fileSize: "1.8 MB", fileType: "pdf", uploadedBy: "Nutrition", sharedVia: ["SMS", "WhatsApp"], timesShared: 78, status: "Active" },
-  { id: "doc-11", title: "Lab Results Interpretation Guide", category: "Guide", description: "Patient-friendly guide to understanding common laboratory test results.", uploadDate: "2026-03-05", fileSize: "1.2 MB", fileType: "pdf", uploadedBy: "Laboratory", sharedVia: ["WhatsApp"], timesShared: 45, status: "Draft" },
-  { id: "doc-12", title: "Pain Management Patient Guide", category: "Guide", description: "Information about pain management options including CT-guided procedures.", uploadDate: "2026-03-01", fileSize: "0.9 MB", fileType: "pdf", uploadedBy: "Pain Management", sharedVia: ["SMS"], timesShared: 34, status: "Active" },
-];
-
 const catStyles: Record<string, { bg: string; text: string; border: string; hoverBg: string }> = {
   Brochure: { bg: "bg-rose-50", text: "text-rose-700", border: "border-rose-200", hoverBg: "hover:bg-rose-100" },
   Form: { bg: "bg-blue-50", text: "text-blue-700", border: "border-blue-200", hoverBg: "hover:bg-blue-100" },
@@ -69,7 +54,7 @@ const getFileIcon = (fileType: string) => {
 };
 
 const Documents = () => {
-  const [docs, setDocs] = useState<AdminDoc[]>(initialDocs);
+  const [docs, setDocs] = useState<AdminDoc[]>([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
   const [filterCat, setFilterCat] = useState("All");
@@ -94,29 +79,39 @@ const Documents = () => {
   const [deleting, setDeleting] = useState(false);
   const { t } = useLanguage();
 
-  const mapApiDoc = (d: any): AdminDoc => ({
-    id: d._id ?? d.id,
-    title: d.title,
-    category: d.catagory ?? d.category,
-    description: d.description ?? "",
-    uploadDate: d.createdAt ? d.createdAt.split("T")[0] : new Date().toISOString().split("T")[0],
-    fileSize: d.fileSize ?? "—",
-    fileType: (d.fileUrl ?? d.file ?? "").split(".").pop()?.toLowerCase() ?? "pdf",
-    fileUrl: d.fileUrl ?? d.file,
-    uploadedBy: d.uploadedBy ?? "Admin",
-    sharedVia: d.sharedVia ?? [],
-    timesShared: d.timesShared ?? 0,
-    status: d.status === "active" ? "Active" : "Draft",
-  });
+  const mapApiDoc = (d: Record<string, unknown>): AdminDoc => {
+    const fileUrl = String(d.file ?? d.fileUrl ?? "");
+    const pathPart = fileUrl.split("?")[0];
+    const fileType = pathPart.split(".").pop()?.toLowerCase() ?? "pdf";
+
+    return {
+      id: String(d._id ?? d.id ?? ""),
+      title: String(d.title ?? ""),
+      category: String(d.catagory ?? d.category ?? "Brochure"),
+      description: String(d.description ?? ""),
+      uploadDate: d.createdAt
+        ? String(d.createdAt).split("T")[0]
+        : new Date().toISOString().split("T")[0],
+      fileSize: d.fileSize ? String(d.fileSize) : "—",
+      fileType,
+      fileUrl,
+      uploadedBy: String(d.uploadedBy ?? "Admin"),
+      sharedVia: (d.sharedVia as AdminDoc["sharedVia"]) ?? [],
+      timesShared: Number(d.timesShared ?? 0),
+      status: d.status === "inactive" ? "Draft" : "Active",
+    };
+  };
 
   const fetchDocs = useCallback(async () => {
     setLoading(true);
     try {
       const res = await getAllDocuments();
-      const apiDocs: AdminDoc[] = (res?.data ?? res ?? []).map(mapApiDoc);
-      setDocs(apiDocs.length > 0 ? apiDocs : initialDocs);
+      const list = Array.isArray(res?.data) ? res.data : Array.isArray(res) ? res : [];
+      setDocs(list.map((item: Record<string, unknown>) => mapApiDoc(item)));
     } catch (error) {
       console.error("Failed to fetch documents:", error);
+      toast.error("Failed to load documents");
+      setDocs([]);
     } finally {
       setLoading(false);
     }
@@ -183,40 +178,20 @@ const Documents = () => {
 
     setUploadProgress(true);
     try {
-      const res = await createDocument({
+      await createDocument({
         title: uploadForm.title,
         catagory: uploadForm.category as "Brochure" | "Form" | "Guide" | "Policy",
-        description: uploadForm.description,
+        description: uploadForm.description || uploadForm.title,
         status: "active",
         file: uploadForm.file,
       });
-      const created = mapApiDoc(res?.data ?? res);
-      setDocs(prev => [created, ...prev]);
       setUploadForm({ title: "", category: "Brochure", description: "", file: null });
       setShowUpload(false);
+      await fetchDocs();
       toast.success("Document uploaded successfully!");
     } catch (error) {
       console.error("Upload failed:", error);
-      const fileSize = (uploadForm.file.size / (1024 * 1024)).toFixed(1);
-      const fileExtension = uploadForm.file.name.split(".").pop()?.toLowerCase() ?? "pdf";
-      const newDoc: AdminDoc = {
-        id: `doc-${Date.now()}`,
-        title: uploadForm.title,
-        category: uploadForm.category,
-        description: uploadForm.description,
-        uploadDate: new Date().toISOString().split("T")[0],
-        fileSize: `${fileSize} MB`,
-        fileType: fileExtension,
-        fileUrl: URL.createObjectURL(uploadForm.file),
-        uploadedBy: "Admin",
-        sharedVia: [],
-        timesShared: 0,
-        status: "Active",
-      };
-      setDocs(prev => [newDoc, ...prev]);
-      setUploadForm({ title: "", category: "Brochure", description: "", file: null });
-      setShowUpload(false);
-      toast.success("Document uploaded successfully!");
+      toast.error("Failed to upload document");
     } finally {
       setUploadProgress(false);
     }
@@ -238,49 +213,14 @@ const Documents = () => {
 
       await updateDocument(showEditModal.id, payload);
 
-      setDocs(prev => prev.map(doc => {
-        if (doc.id !== showEditModal.id) return doc;
-        const fileSize = editForm.file ? (editForm.file.size / (1024 * 1024)).toFixed(1) : doc.fileSize;
-        const fileExtension = editForm.file ? editForm.file.name.split(".").pop()?.toLowerCase() ?? doc.fileType : doc.fileType;
-        const newFileUrl = editForm.file ? URL.createObjectURL(editForm.file) : doc.fileUrl;
-
-        return {
-          ...doc,
-          title: editForm.title,
-          category: editForm.category,
-          description: editForm.description,
-          fileSize: editForm.file ? `${fileSize} MB` : doc.fileSize,
-          fileType: fileExtension,
-          fileUrl: newFileUrl,
-        };
-      }));
-
       toast.success("Document updated successfully!");
       setShowEditModal(null);
       setEditForm({ title: "", category: "", description: "", file: null, existingFileUrl: "" });
       setEditPreviewUrl("");
+      await fetchDocs();
     } catch (error) {
       console.error("Update failed:", error);
-      setDocs(prev => prev.map(doc => {
-        if (doc.id !== showEditModal.id) return doc;
-        const fileSize = editForm.file ? (editForm.file.size / (1024 * 1024)).toFixed(1) : doc.fileSize;
-        const fileExtension = editForm.file ? editForm.file.name.split(".").pop()?.toLowerCase() ?? doc.fileType : doc.fileType;
-        const newFileUrl = editForm.file ? URL.createObjectURL(editForm.file) : doc.fileUrl;
-
-        return {
-          ...doc,
-          title: editForm.title,
-          category: editForm.category,
-          description: editForm.description,
-          fileSize: editForm.file ? `${fileSize} MB` : doc.fileSize,
-          fileType: fileExtension,
-          fileUrl: newFileUrl,
-        };
-      }));
-      toast.success("Document updated successfully!");
-      setShowEditModal(null);
-      setEditForm({ title: "", category: "", description: "", file: null, existingFileUrl: "" });
-      setEditPreviewUrl("");
+      toast.error("Failed to update document");
     } finally {
       setEditProgress(false);
     }
