@@ -10,10 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Deploy to EC2 via SSH
+      - name: Deploy to EC2
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
@@ -22,9 +19,15 @@ jobs:
           script: |
             cd ~/Royale-hayat-admin-frontend
 
-            git pull origin main
+            echo "Current Branch:"
+            git branch
 
-            # Create .env from GitHub Secret
+            echo "Fetching Latest Code..."
+            git fetch origin
+
+            echo "Force Sync With GitHub"
+            git reset --hard origin/main
+
             echo "${{ secrets.ENV_FILE }}" > .env
 
             npm install
@@ -32,3 +35,5 @@ jobs:
             NODE_OPTIONS="--max-old-space-size=4096" npm run build
 
             sudo systemctl reload nginx
+
+            echo "Deployment Completed"

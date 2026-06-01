@@ -121,7 +121,7 @@ const Login = () => {
 
             <div className="text-center mb-8">
               <h1 className="text-3xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">
-                Admin Portalll
+                Admin Portal
               </h1>
               <p className="text-sm text-slate-500 mt-2 font-medium">
                 Secure access to hospital management system
