@@ -6,7 +6,6 @@ const api = axios.create({
     withCredentials: true,
 });
 
-/** 401 on these routes is expected (wrong OTP/password) — do not force logout redirect */
 const AUTH_PATHS_NO_SESSION_REDIRECT = [
     "/api/v1/auth/login",
     "/api/v1/auth/send-otp",

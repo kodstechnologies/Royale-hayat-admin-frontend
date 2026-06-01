@@ -58,7 +58,6 @@ const AllLeadership = () => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Load data from API on mount and listen for updates
   useEffect(() => {
     loadLeadershipData();
     
@@ -104,7 +103,6 @@ const AllLeadership = () => {
     );
   });
 
-  // Pagination
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
   const paginatedData = filteredData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 

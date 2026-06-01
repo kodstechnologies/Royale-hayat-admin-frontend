@@ -1,6 +1,5 @@
 // Auto-generated — do not edit manually.
 // Source: RoyalHayat/src/data/doctors.ts
-// Arabic fields removed. providerCode = doctorId, clinicCode = external clinic code.
 
 export interface DoctorSeed {
   id: string;
@@ -1421,7 +1420,6 @@ export const doctors: DoctorSeed[] = [
     initials: 'FA', color: 'bg-accent/80',
     symptoms: [],
 
-
   },
   {
     id: 'dr-omar-alkandari',
@@ -2648,42 +2646,7 @@ export const doctors: DoctorSeed[] = [
     symptoms: [],
     availableOnline: false,
   },
-  // {
-  //   id: 'dr-mohammad-h-jaragh',
-  //   image: '/images/doctors/mohamad-jaragh.png',
 
-  //   name: 'Dr. Mohammad H. Jaragh', nameAr: 'د. محمد جراغ',
-  //   specialty: 'Laboratory', specialtyAr: 'المختبر',
-  //   department: 'Laboratory', departmentAr: 'المختبر',
-  //   title: 'Laboratory Consultant (Pathology)',
-  //   titleAr: 'إستشاري مختبرات (باثولوجى)',
-  //   bio: 'Dr. Mohammad H. Jaragh is a specialist in the Laboratory department at Royale Hayat Hospital.',
-  //   bioAr: 'د. محمد جراغ متخصص في قسم المختبر في مستشفى رويال حياة.',
-  //   qualifications: [
-  //     'Graduate of Kuwait university faculty of medicine',
-  //     'Fellow of Royale colleague of physicians of Canada',
-  //     'Fellow of the international academy of cytology',
-  //   ],
-  //   qualificationsAr: [
-  //     'خريج كلية الطب جامعة الكويت',
-  //     'زميل كلية رويال للأطباء في كندا',
-  //     'زميل الأكاديمية الدولية لعلم الخلايا',
-  //   ],
-  //   expertise: [
-  //     'Fine needle aspiration of tumors',
-  //     'Microscopic diagnosis of tissue',
-  //     'Microscopic diagnosis of cells',
-  //     'Microscopic diagnosis of Tumors',
-  //   ],
-  //   expertiseAr: [
-  //     'شفط الأورام بإبرة رفيعة',
-  //     'التشخيص المجهري للأنسجة',
-  //     'التشخيص المجهري للخلايا',
-  //     'التشخيص المجهري للأورام',
-  //   ],
-  //   languages: ['English', 'Arabic'], languagesAr: ['الإنجليزية', 'العربية'],
-  //   initials: 'MJ', color: 'bg-accent',
-  //   symptoms: [],
   // },
   {
     id: 'dr-salah-al-wuhaib',
@@ -2718,7 +2681,6 @@ export const doctors: DoctorSeed[] = [
     languages: ['English', 'Arabic'], languagesAr: ['الإنجليزية', 'العربية'],
     initials: 'SA', color: 'bg-primary/90',
     symptoms: [],
-    //   clinicCode:"R002PED",
     // providerCode:"PT036"
   },
   {
@@ -2951,45 +2913,9 @@ export const doctors: DoctorSeed[] = [
     initials: 'MA', color: 'bg-primary',
     symptoms: [],
   },
-  // {
-  //   id: 'dr-hartmut-meyer',
-  //   image: '/images/doctors/',
 
-  //   name: 'Dr. Hartmut Meyer', nameAr: 'د. هارتموت ماير',
-  //   specialty: 'La Cosmetique', specialtyAr: 'التجميل',
-  //   department: 'La Cosmetique', departmentAr: 'التجميل',
-  //   title: 'Consultant Plastic Surgeon',
-  //   titleAr: 'استشاري جراحة التجميل',
-  //   bio: 'Dr. Hartmut Meyer is a consultant plastic surgeon at Royale Hayat Hospital.',
-  //   bioAr: 'د. هارتموت ماير استشاري جراحة التجميل في مستشفى رويال حياة.',
-  //   qualifications: [],
-  //   qualificationsAr: [],
-  //   expertise: [],
-  //   expertiseAr: [],
-  //   languages: ['English', 'Arabic', 'German'], languagesAr: ['الإنجليزية', 'العربية', 'الألمانية'],
-  //   initials: 'HM', color: 'bg-accent/70',
-  //   symptoms: [],
-  //   availableOnline: false,
   // },
-  // {
-  //   id: 'dr-salman-al-sabah',
-  //   image: '/images/doctors/salman.png',
 
-  //   name: 'Dr. Salman Al Sabah', nameAr: 'د. سلمان الصباح',
-  //   specialty: 'General Surgery', specialtyAr: 'الجراحة العامة',
-  //   department: 'General Surgery', departmentAr: 'الجراحة العامة',
-  //   title: 'Consultant General Surgery',
-  //   titleAr: 'استشاري جراحة عامة',
-  //   bio: 'Dr. Salman Al Sabah is a consultant general surgeon at Royale Hayat Hospital.',
-  //   bioAr: 'د. سلمان الصباح استشاري جراحة عامة في مستشفى رويال حياة.',
-  //   qualifications: [],
-  //   qualificationsAr: [],
-  //   expertise: [],
-  //   expertiseAr: [],
-  //   languages: ['English', 'Arabic'], languagesAr: ['الإنجليزية', 'العربية'],
-  //   initials: 'SS', color: 'bg-primary/80',
-  //   symptoms: [],
-  //   availableOnline: false,
   // },
 ];
 

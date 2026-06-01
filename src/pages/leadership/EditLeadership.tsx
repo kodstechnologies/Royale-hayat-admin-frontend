@@ -63,7 +63,6 @@ const EditLeadership = () => {
     existingImage: "",
   });
 
-  // Load leadership data from API
   useEffect(() => {
     if (!id) {
       navigate("/leadership");
@@ -220,7 +219,6 @@ const EditLeadership = () => {
     setSaving(true);
     
     try {
-      // Create FormData for file upload
       const formDataToSend = new FormData();
       formDataToSend.append("initials", formData.initials);
       formDataToSend.append("initialsArabic", formData.initialsArabic);

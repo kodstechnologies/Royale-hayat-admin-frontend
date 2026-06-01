@@ -12,7 +12,6 @@ import { ArrowLeft, Plus, Globe, Languages, Trash2 } from "lucide-react";
 import { createJob } from "@/api/job";
 
 type JobForm = {
-  // English fields
   title: string;
   description: string;
   responsibilities: string[];

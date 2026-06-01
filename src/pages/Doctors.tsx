@@ -97,13 +97,11 @@ const convertUserDoctorToDoctor = (userDoctor: any): Doctor => {
   };
 };
 
-// Get merged doctors (user doctors + static doctors)
 const getMergedDoctors = (): Doctor[] => {
   const userDoctors = loadUserDoctors();
   const convertedUserDoctors = userDoctors.map(convertUserDoctorToDoctor);
   const staticDoctors = adminDoctors.map((doctor, index) => convertToDoctor(doctor, index));
   
-  // Create a Set of existing doctor IDs from user doctors
   const existingDoctorIds = new Set(convertedUserDoctors.map(doc => doc.doctorId));
   // Filter out static doctors that have the same doctorId as user doctors
   const newStaticDoctors = staticDoctors.filter(doc => !existingDoctorIds.has(doc.doctorId));
@@ -133,7 +131,6 @@ const Doctors = () => {
   
   const navigate = useNavigate();
 
-  // Load merged doctors on mount
   useEffect(() => {
     loadDoctors();
   }, []);
@@ -196,7 +193,6 @@ const Doctors = () => {
     return matchesSearch && matchesDepartment;
   });
 
-  // Pagination
   const paginatedDoctors = filteredDoctors.slice((currentPage - 1) * limit, currentPage * limit);
   const totalFilteredPages = Math.ceil(filteredDoctors.length / limit);
 

@@ -25,11 +25,9 @@ const OtpScreen = () => {
   
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-  // Calculate OTP progress (number of digits entered)
   const filledDigits = otp.filter(digit => digit !== "").length;
   const otpProgress = (filledDigits / 6) * 100;
 
-  // Timer countdown
   useEffect(() => {
     if (!isTimerActive || timeLeft <= 0) {
       if (timeLeft <= 0) {
@@ -45,7 +43,6 @@ const OtpScreen = () => {
     return () => clearInterval(timer);
   }, [isTimerActive, timeLeft]);
 
-  // Format time as MM:SS
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;

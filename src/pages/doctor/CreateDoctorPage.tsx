@@ -12,7 +12,6 @@ import { adminDepartments } from "@/data/departments";
 import { getSubspecialitiesByDepartmentId } from "@/data/subspeciality";
 
 type FormDataType = {
-  // English fields
   doctorId: string;
   name: string;
   title: string;
@@ -20,7 +19,6 @@ type FormDataType = {
   languages: string;
   expertise: string;
   qualifications: string;
-  // Arabic fields
   arabicName: string;
   arabicTitle: string;
   arabicLanguages: string;
@@ -107,7 +105,6 @@ const CreateDoctorPage = () => {
   const [languageInput, setLanguageInput] = useState("");
   const [arabicLanguageInput, setArabicLanguageInput] = useState("");
 
-  // Load departments from adminDepartments
   useEffect(() => {
     const deptOptions = adminDepartments.map(dept => ({
       _id: dept.id,
@@ -122,7 +119,6 @@ const CreateDoctorPage = () => {
       setDeptSubspecialities([]);
       return;
     }
-    // Load from real subspeciality data, also merge any user-created ones from localStorage
     const staticSubs = getSubspecialitiesByDepartmentId(departmentId).map((sub) => ({
       _id: sub.id,
       name: sub.name,
@@ -167,12 +163,10 @@ const CreateDoctorPage = () => {
     }
   };
 
-  // Get display name for subspeciality based on active tab
   const getSubspecialityDisplayName = (sub: typeof deptSubspecialities[0]) => {
     return activeTab === "arabic" ? sub.arabicName : sub.name;
   };
 
-  // Get display name for department based on active tab
   const getDepartmentDisplayName = (dept: typeof departments[0]) => {
     return activeTab === "arabic" ? dept.arabicName : dept.name;
   };
@@ -431,8 +425,6 @@ const CreateDoctorPage = () => {
                         </div>
                       </div>
 
-
-
                       {/* Qualifications Section */}
                       <div className="bg-white rounded-xl border border-slate-200 p-5 space-y-4">
                         <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
@@ -487,7 +479,6 @@ const CreateDoctorPage = () => {
                           Add qualification
                         </Button>
                       </div>
-
 
                       {/* Expertise Section */}
                       <div className="bg-white rounded-xl border border-slate-200 p-5 space-y-4">
@@ -696,7 +687,6 @@ const CreateDoctorPage = () => {
                       </div>
                       
 
-
                       {/* Expertise (Arabic) Section */}
                       <div className="bg-white rounded-xl border border-slate-200 p-5 space-y-4">
                         <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
@@ -752,7 +742,6 @@ const CreateDoctorPage = () => {
                           أضف خبرة
                         </Button>
                       </div>
-
 
                     </div>
                   )}

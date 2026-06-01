@@ -81,7 +81,6 @@ export const deleteSubspeciality = async (id: string) => {
   return api.delete(`${BASE}/${id}`);
 };
 
-/** Loads every subspeciality (paginates with limit 100 — backend Joi max per request). */
 export const fetchAllSubspecialities = async (): Promise<Subspeciality[]> => {
   const limit = 100;
   const aggregated: Subspeciality[] = [];

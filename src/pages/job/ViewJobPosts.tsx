@@ -49,7 +49,6 @@ const formatBadgeCount = (count: number) => (count > 99 ? "99+" : String(count))
 
 // ── Mappers ──────────────────────────────────────────────────────────────────
 
-/** Map a raw API response to JobPost */
 const mapApiJob = (job: any, applicationsCount = 0): JobPost => ({
   _id: job._id,
   jobId: job.jobId ?? "",

@@ -29,7 +29,6 @@ const CreateCSR = () => {
     descriptionArabic: "",
   });
 
-  // Cleanup preview URLs on unmount
   useEffect(() => {
     return () => {
       imagePreviews.forEach(preview => URL.revokeObjectURL(preview));
@@ -99,7 +98,6 @@ const CreateCSR = () => {
     setImageFiles(prev => [...prev, ...validFiles]);
     setImageError(""); // Clear error when valid images are added
 
-    // Create preview URLs
     const newPreviews = validFiles.map(file => URL.createObjectURL(file));
     setImagePreviews(prev => [...prev, ...newPreviews]);
   };
@@ -157,7 +155,6 @@ const CreateCSR = () => {
     setSaving(true);
     
     try {
-      // Create FormData for file upload
       const formDataToSend = new FormData();
       formDataToSend.append("heading", formData.heading);
       formDataToSend.append("headingArabic", formData.headingArabic);

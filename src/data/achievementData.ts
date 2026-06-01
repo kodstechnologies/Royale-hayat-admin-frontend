@@ -1,6 +1,5 @@
 import type { ApiAchievement } from "@/api/achievement";
 
-/** Static seed data (reference / fallback display shape). */
 export const achievementData = [
   {
     id: 1,

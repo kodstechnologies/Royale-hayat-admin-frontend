@@ -2,7 +2,6 @@ import api from "./axiosInstance";
 
 const BASE = "/api/v1/medical-record-requests";
 
-
 // ================= GET ALL MEDICAL REQUESTS =================
 
 export const getAllMedicalRequests = async () => {
@@ -13,7 +12,6 @@ export const getAllMedicalRequests = async () => {
 
   return response.data;
 };
-
 
 // ================= GET MEDICAL REQUEST BY ID =================
 
@@ -27,7 +25,6 @@ export const GetMedicalRequestById = async (
 
   return response.data;
 };
-
 
 export const ShareViaMail = async (id: string, emailId: string) => {
   const response = await api.post(`${BASE}/share-via-email/${id}`, { emailId });

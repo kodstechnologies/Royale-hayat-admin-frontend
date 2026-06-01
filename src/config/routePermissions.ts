@@ -23,11 +23,7 @@ export type RoutePermissionRule = {
   excludeRoles?: string[];
 };
 
-/**
- * Most specific patterns first so dynamic segments do not swallow nested routes.
- */
 export const ROUTE_PERMISSION_RULES: RoutePermissionRule[] = [
-  // Appointments
   {
     pattern: "/appointment/view/:id",
     permissions: [PERMISSIONS.APPOINTMENT_REQUEST_VIEW],
@@ -45,7 +41,6 @@ export const ROUTE_PERMISSION_RULES: RoutePermissionRule[] = [
     permissions: [PERMISSIONS.APPOINTMENT_REQUEST_VIEW],
   },
 
-  // Medical record requests
   {
     pattern: "/medical-record/view/:id",
     permissions: [PERMISSIONS.MRR_VIEW],
@@ -55,7 +50,6 @@ export const ROUTE_PERMISSION_RULES: RoutePermissionRule[] = [
     permissions: [PERMISSIONS.MRR_VIEW],
   },
 
-  // Enquiries
   {
     pattern: "/enquiries/view/:id",
     permissions: [PERMISSIONS.ENQUIRY_VIEW],
@@ -63,7 +57,6 @@ export const ROUTE_PERMISSION_RULES: RoutePermissionRule[] = [
   { pattern: "/enquiries", permissions: [PERMISSIONS.ENQUIRY_VIEW] },
   { pattern: "/al-safwa-enrollments", permissions: [PERMISSIONS.AL_SAFWA_VIEW] },
 
-  // Jobs
   {
     pattern: "/jobs/view-applications/:id",
     permissions: [
@@ -77,14 +70,12 @@ export const ROUTE_PERMISSION_RULES: RoutePermissionRule[] = [
   { pattern: "/jobs/view/:id", permissions: [PERMISSIONS.JOB_VIEW] },
   { pattern: "/job-posts", permissions: [PERMISSIONS.JOB_VIEW] },
 
-  // Feedback
   {
     pattern: "/add-feedback",
     permissions: [PERMISSIONS.FEEDBACK_ADD, PERMISSIONS.FEEDBACK_VIEW],
   },
   { pattern: "/feedback", permissions: [PERMISSIONS.FEEDBACK_VIEW] },
 
-  // Doctors
   { pattern: "/doctors/create", permissions: [PERMISSIONS.DOCTOR_CREATE] },
   { pattern: "/doctors/edit/:id", permissions: [PERMISSIONS.DOCTOR_UPDATE] },
   { pattern: "/doctors/view/:id", permissions: [PERMISSIONS.DOCTOR_VIEW] },
@@ -92,10 +83,8 @@ export const ROUTE_PERMISSION_RULES: RoutePermissionRule[] = [
   { pattern: "/doctors/:id", permissions: [PERMISSIONS.DOCTOR_VIEW] },
   { pattern: "/doctors", permissions: [PERMISSIONS.DOCTOR_VIEW] },
 
-  // Categories
   { pattern: "/categories", permissions: [PERMISSIONS.CATAGORY_VIEW] },
 
-  // Subspecialities
   {
     pattern: "/subspecialities/create",
     permissions: [PERMISSIONS.SUBSPECIALITY],
@@ -113,7 +102,6 @@ export const ROUTE_PERMISSION_RULES: RoutePermissionRule[] = [
     permissions: [PERMISSIONS.SUBSPECIALITY_VIEW],
   },
 
-  // Departments
   {
     pattern: "/departments/create",
     permissions: [PERMISSIONS.DEPARTMENT],
@@ -128,7 +116,6 @@ export const ROUTE_PERMISSION_RULES: RoutePermissionRule[] = [
   },
   { pattern: "/departments", permissions: [PERMISSIONS.DEPARTMENT_VIEW] },
 
-  // Achievements
   {
     pattern: "/achievements/create",
     permissions: [PERMISSIONS.ACHIEVEMENT_CREATE],
@@ -143,7 +130,6 @@ export const ROUTE_PERMISSION_RULES: RoutePermissionRule[] = [
   },
   { pattern: "/achievements", permissions: [PERMISSIONS.ACHIEVEMENT_VIEW] },
 
-  // Leadership
   {
     pattern: "/leadership/create",
     permissions: [PERMISSIONS.LEADERSHIP_CREATE],
@@ -158,7 +144,6 @@ export const ROUTE_PERMISSION_RULES: RoutePermissionRule[] = [
   },
   { pattern: "/leadership", permissions: [PERMISSIONS.LEADERSHIP_VIEW] },
 
-  // Work culture
   {
     pattern: "/work-culture/create",
     permissions: [PERMISSIONS.WORK_CULTURE_CREATE],
@@ -174,13 +159,11 @@ export const ROUTE_PERMISSION_RULES: RoutePermissionRule[] = [
   { pattern: "/life-at-rhh", permissions: [PERMISSIONS.WORK_CULTURE_VIEW] },
   { pattern: "/work-culture", permissions: [PERMISSIONS.WORK_CULTURE_VIEW] },
 
-  // CSR
   { pattern: "/csr/create", permissions: [PERMISSIONS.CSR_CREATE] },
   { pattern: "/csr/edit/:id", permissions: [PERMISSIONS.CSR_UPDATE] },
   { pattern: "/csr/view/:id", permissions: [PERMISSIONS.CSR_VIEW] },
   { pattern: "/csr", permissions: [PERMISSIONS.CSR_VIEW] },
 
-  // Documents & user management
   { pattern: "/documents", permissions: [PERMISSIONS.DOCUMENT_VIEW] },
   {
     pattern: "/user-management/create",
@@ -195,7 +178,6 @@ export const ROUTE_PERMISSION_RULES: RoutePermissionRule[] = [
     permissions: [PERMISSIONS.USER_VIEW],
   },
 
-  // Authenticated-only (no module permission required)
   { pattern: "/settings", permissions: [] },
   { pattern: "/international-patients", permissions: [PERMISSIONS.INTERNATIONAL_PATIENT_VIEW] },
   { pattern: "/al-safwa-enrollments", permissions: [PERMISSIONS.AL_SAFWA_VIEW] },
@@ -208,7 +190,6 @@ export const ROUTE_PERMISSION_RULES: RoutePermissionRule[] = [
   },
 ];
 
-/** First path to try after login or when access is denied (sidebar order). */
 export const NAV_LANDING_ROUTES: RoutePermissionRule[] = [
   { pattern: "/appointment", permissions: [PERMISSIONS.APPOINTMENT_REQUEST_VIEW] },
   {
@@ -270,7 +251,6 @@ const isRuleAllowedForCurrentUser = (rule: RoutePermissionRule): boolean => {
   return hasAnyPermission(rule.permissions);
 };
 
-/** Whether the current user may open this pathname. */
 export const isRouteAllowed = (pathname: string): boolean => {
   const user = getStoredAdminUser();
   if (!user || user.isActive === false) return false;
@@ -289,10 +269,6 @@ export const isRouteAllowed = (pathname: string): boolean => {
   return isRuleAllowedForCurrentUser(rule);
 };
 
-/**
- * Best redirect target after login or when a route is denied.
- * Skips `deniedPath` so we do not redirect to the same URL.
- */
 export const getFirstAllowedRoutePath = (deniedPath?: string): string => {
   const user = getStoredAdminUser();
   const role = normalizeUserRole(String(user?.role || ""));

@@ -19,7 +19,6 @@ type AchievementFormData = {
   achievements: string;
   status: "show" | "hide";
   imageFile: File | null;
-  // Arabic fields
   arabicEmployeeName: string;
   arabicTitle: string;
   arabicAchievements: string;

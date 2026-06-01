@@ -26,7 +26,6 @@ const AddWorkCulture = () => {
     descriptionArabic: "",
   });
 
-  // Cleanup preview URLs on unmount
   useEffect(() => {
     return () => {
       imagePreviews.forEach(preview => URL.revokeObjectURL(preview));
@@ -74,7 +73,6 @@ const AddWorkCulture = () => {
 
     setImageFiles(prev => [...prev, ...imageFilesList]);
 
-    // Create preview URLs
     const newPreviews = imageFilesList.map(file => URL.createObjectURL(file));
     setImagePreviews(prev => [...prev, ...newPreviews]);
     
@@ -119,7 +117,6 @@ const AddWorkCulture = () => {
     setSaving(true);
     
     try {
-      // Create FormData for file upload
       const formDataToSend = new FormData();
       formDataToSend.append("heading", formData.heading);
       formDataToSend.append("headingArabic", formData.headingArabic);

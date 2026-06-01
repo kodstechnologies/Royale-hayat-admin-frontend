@@ -99,7 +99,6 @@ const AppointmentRequests = () => {
         });
       }
     } catch {
-      // keep existing counts on failure
     }
   }, []);
 

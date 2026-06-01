@@ -13,11 +13,9 @@ import { ArrowLeft, Upload, X, Globe, Languages, Plus, Trash2 } from "lucide-rea
 import { adminDepartments } from "@/data/departments";
 
 type DepartmentFormData = {
-  // English fields
   departmentId: string;
   name: string;
   description: string;
-  // Arabic fields
   arabicName: string;
   arabicDescription: string;
   catagoryId: string;
@@ -82,7 +80,6 @@ const EditDepartmentPage = () => {
   const [originalImage, setOriginalImage] = useState("");
 
   useEffect(() => {
-    // Load department data
     setTimeout(() => {
       let foundDepartment = null;
       let isUserCreated = false;
@@ -275,7 +272,6 @@ const EditDepartmentPage = () => {
       };
 
       if (isUserDepartment) {
-        // Update user department in localStorage
         const userDepartments = getStoredDepartments();
         const updatedDepartments = userDepartments.map((dept: any) =>
           dept._id === id ? updatedDepartment : dept
@@ -289,11 +285,9 @@ const EditDepartmentPage = () => {
         const existingIndex = userDepartments.findIndex((dept: any) => dept.departmentId === departmentId);
         
         if (existingIndex !== -1) {
-          // Update existing edited copy
           userDepartments[existingIndex] = { ...updatedDepartment, createdAt: userDepartments[existingIndex].createdAt };
           saveDepartmentsToStorage(userDepartments);
         } else {
-          // Create new edited copy
           updatedDepartment.createdAt = new Date().toISOString();
           saveDepartmentsToStorage([updatedDepartment, ...userDepartments]);
         }

@@ -1,4 +1,3 @@
-// CreateSubspeciality.tsx
 import AdminLayout from "@/components/layout/AdminLayout";
 import SubspecialityForm from "../../components/subspeciality/SubspecialityForm";
 

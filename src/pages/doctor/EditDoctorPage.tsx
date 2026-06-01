@@ -12,7 +12,6 @@ import { adminDoctors } from "@/data/adminDoctors";
 import { adminDepartments } from "@/data/departments";
 
 type FormDataType = {
-  // English fields
   doctorId: string;
   name: string;
   title: string;
@@ -20,7 +19,6 @@ type FormDataType = {
   languages: string;
   expertise: string;
   qualifications: string;
-  // Arabic fields
   arabicName: string;
   arabicTitle: string;
   arabicLanguages: string;
@@ -135,7 +133,6 @@ const EditDoctorPage = () => {
     imageFile: null,
   });
 
-  // Load departments from static data
   useEffect(() => {
     const deptOptions = adminDepartments.map(dept => ({
       _id: dept.id,
@@ -179,7 +176,6 @@ const EditDoctorPage = () => {
         if (foundDoctor) {
           originalImage = foundDoctor.image || "";
 
-          // Get department ID from department name
           const deptObj = departments.find(d => d.name === foundDoctor.department);
           const deptId = deptObj?._id || "";
 
@@ -243,12 +239,10 @@ const EditDoctorPage = () => {
     }
   };
 
-  // Get display name for subspeciality based on active tab
   const getSubspecialityDisplayName = (sub: typeof deptSubspecialities[0]) => {
     return activeTab === "arabic" ? sub.arabicName || sub.name : sub.name;
   };
 
-  // Get display name for department based on active tab
   const getDepartmentDisplayName = (dept: typeof departments[0]) => {
     return activeTab === "arabic" ? dept.arabicName || dept.name : dept.name;
   };
@@ -364,7 +358,6 @@ const EditDoctorPage = () => {
                   };
 
                   if (isUserDoctor) {
-                    // Update user doctor in localStorage
                     const userDoctors = getStoredDoctors();
                     const updatedDoctors = userDoctors.map((doc: any) =>
                       doc.id === id ? updatedDoctor : doc
@@ -378,11 +371,9 @@ const EditDoctorPage = () => {
                     const existingIndex = userDoctors.findIndex((doc: any) => doc.doctorId === values.doctorId);
 
                     if (existingIndex !== -1) {
-                      // Update existing edited copy
                       userDoctors[existingIndex] = { ...updatedDoctor, createdAt: userDoctors[existingIndex].createdAt };
                       saveDoctorsToStorage(userDoctors);
                     } else {
-                      // Create new edited copy
                       updatedDoctor.createdAt = new Date().toISOString();
                       saveDoctorsToStorage([updatedDoctor, ...userDoctors]);
                     }
@@ -626,7 +617,6 @@ const EditDoctorPage = () => {
                           Add expertise
                         </Button>
                       </div>
-
 
                     </div>
                   )}

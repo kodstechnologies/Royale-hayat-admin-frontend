@@ -119,7 +119,6 @@ const nestedPageLabels: Record<string, { label: string; description: string }> =
   "/job-posts/create": { label: "Create Job Post", description: "Create a new job posting" },
 };
 
-/** When nested routes use a different prefix than the list page (e.g. /jobs/* → /job-posts) */
 const breadcrumbLinkOverrides: Record<string, string> = {
   jobs: "/job-posts",
 };
@@ -129,7 +128,6 @@ const BreadCrumb = ({ lastCrumbLabel }: { lastCrumbLabel?: string } = {}) => {
   const { t } = useLanguage();
   const layoutControls = useLayoutControls();
 
-  // Get current path segments
   const pathnames = location.pathname.split("/").filter((x) => x);
 
   const nestedKey = Object.keys(nestedPageLabels)

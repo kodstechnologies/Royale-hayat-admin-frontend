@@ -137,12 +137,10 @@ const ViewDepartment = () => {
     });
   };
 
-  // Get category display name
   const getCategoryDisplayName = (category: string) => {
     return getCategoryDisplayNameForDept(category, activeLanguage === "arabic");
   };
 
-  // Get category badge color
   const getCategoryColor = (category: string) => {
     switch (category) {
       case "Clinical Speciality":

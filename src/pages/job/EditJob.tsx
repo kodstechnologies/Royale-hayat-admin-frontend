@@ -12,13 +12,11 @@ import { ArrowLeft, Plus, X, Globe, Languages, Trash2 } from "lucide-react";
 import { getJobById, updateJob } from "@/api/job";
 
 type JobForm = {
-  // English fields
   jobId: string;
   title: string;
   description: string;
   responsibilities: string[];
   requirements: string[];
-  // Arabic fields
   arabicTitle: string;
   arabicDescription: string;
   arabicResponsibilities: string[];

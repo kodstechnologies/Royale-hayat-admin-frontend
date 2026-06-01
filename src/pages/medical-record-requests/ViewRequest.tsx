@@ -116,7 +116,6 @@ const ViewRequest = () => {
       return;
     }
 
-    // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(shareEmail)) {
       toast.error("Please enter a valid email address");

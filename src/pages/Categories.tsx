@@ -72,7 +72,6 @@ const Categories = () => {
     item.arabicName.toLowerCase().includes(search.toLowerCase())
   );
 
-  // Pagination
   const paginatedItems = filteredItems.slice((currentPage - 1) * limit, currentPage * limit);
   const totalFilteredPages = Math.ceil(filteredItems.length / limit);
 
@@ -125,7 +124,6 @@ const Categories = () => {
 
     setTimeout(() => {
       if (editingItem) {
-        // Update existing category
         const updatedItems = items.map(item =>
           item._id === editingItem._id
             ? { ...item, name, arabicName, updatedAt: new Date().toISOString() }
@@ -134,7 +132,6 @@ const Categories = () => {
         setItems(updatedItems);
         toast.success("Category updated successfully");
       } else {
-        // Create new category
         const newCategory: Category = {
           _id: Date.now().toString(),
           name,

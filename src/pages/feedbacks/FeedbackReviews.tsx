@@ -1,4 +1,3 @@
-// FeedbackReviews.tsx
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import AdminLayout from "@/components/layout/AdminLayout";
@@ -94,7 +93,6 @@ const FeedbackReviews = () => {
   const [websiteFilter, setWebsiteFilter] = useState<"all" | "shown" | "hidden">("all");
   const [adminFilter, setAdminFilter] = useState<"all" | "admin" | "user">("all");
 
-  // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(5);
 
@@ -211,7 +209,6 @@ const FeedbackReviews = () => {
     }
   }, [showArabicContent]);
 
-  // Load all data
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
@@ -333,7 +330,6 @@ const FeedbackReviews = () => {
     }
   };
 
-  // Delete feedback
   const handleDelete = async (id: string, type: "doctor" | "hospital") => {
     if (!confirm(showArabicContent ? "هل أنت متأكد من حذف هذه الملاحظة؟" : "Are you sure you want to delete this feedback?")) {
       return;
@@ -401,7 +397,6 @@ const FeedbackReviews = () => {
           data: payload,
         });
         
-        // Update local state
         setDoctorFeedbacks(prev =>
           prev.map(fb =>
             fb.id === editingFeedback.id
@@ -436,7 +431,6 @@ const FeedbackReviews = () => {
           data: payload,
         });
         
-        // Update local state
         setHospitalFeedbacks(prev =>
           prev.map(fb =>
             fb.id === editingFeedback.id
@@ -545,7 +539,6 @@ const FeedbackReviews = () => {
     return matchesSearch && matchesRating && matchesWebsite && matchesAdmin;
   });
 
-  // Pagination logic
   const getPaginatedItems = (items: any[]) => {
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;

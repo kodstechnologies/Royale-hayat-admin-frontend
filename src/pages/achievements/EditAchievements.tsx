@@ -20,7 +20,6 @@ type AchievementFormData = {
   status: "show" | "hide";
   imageFile: File | null;
   imageUrl: string;
-  // Arabic fields
   arabicEmployeeName: string;
   arabicTitle: string;
   arabicAchievements: string;

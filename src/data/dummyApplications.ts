@@ -183,10 +183,8 @@ export const dummyApplications: JobApplication[] = [
   },
 ];
 
-// Helper: get applications for a specific job
 export const getApplicationsByJobId = (jobId: string): JobApplication[] =>
   dummyApplications.filter(a => a.jobId === jobId);
 
-// Helper: get a single application by its _id
 export const getApplicationById = (id: string): JobApplication | undefined =>
   dummyApplications.find(a => a._id === id);

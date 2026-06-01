@@ -127,10 +127,8 @@ const Departments = () => {
   const [searchInput, setSearchInput] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
 
-  // Get unique categories from departments
   const categories = Array.from(new Set(departments.map(dept => dept.category)));
 
-  // Load departments on mount and listen for updates
   useEffect(() => {
     const mergedDepartments = loadDepartmentsFromStorage();
     setDepartments(mergedDepartments);
@@ -169,7 +167,6 @@ const Departments = () => {
     return matchesSearch && matchesCategory;
   });
 
-  // Pagination
   const paginatedDepartments = filteredDepartments.slice((currentPage - 1) * limit, currentPage * limit);
   const totalFilteredPages = Math.ceil(filteredDepartments.length / limit);
 

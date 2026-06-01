@@ -1,6 +1,5 @@
 import { Plus, Trash2 } from "lucide-react";
 
-/** One department content block (matches backend `CustomExplainantion`). */
 export type DepartmentCustomExplanationBlock = {
     subHeading: string;
     explaination: string[];
@@ -19,7 +18,6 @@ type RichFieldsProps = {
     setFieldValue: (field: string, value: DepartmentCustomExplanationBlock[] | string) => void;
 };
 
-/** One input per row; add/remove lines. Empty state shows one blank row to type into. */
 function AddableLinesField({
     label,
     optional,
@@ -123,7 +121,6 @@ function FieldTextInput({
     );
 }
 
-/** Repeatable sections (sub-heading + bullet lines) for create & edit department modals */
 export function DepartmentRichFields({ values, setFieldValue }: RichFieldsProps) {
     const blocks = values.customExplainantions;
 
@@ -198,7 +195,6 @@ export function DepartmentRichFields({ values, setFieldValue }: RichFieldsProps)
     );
 }
 
-/** Append rich content to multipart body (JSON for customExplainantions). */
 export function appendDepartmentRichContentToFormData(
     formPayload: FormData,
     content: DepartmentRichContentValues,
@@ -212,7 +208,6 @@ export function appendDepartmentRichContentToFormData(
     formPayload.append("customExplainantions", JSON.stringify(normalized));
 }
 
-/** Map API department document to rich content initial values */
 export function richContentFromApi(dept: Record<string, unknown> | null | undefined): DepartmentRichContentValues {
     if (!dept) return { ...richContentInitialValues };
 

@@ -179,7 +179,6 @@ const translations: Record<string, Record<Language, string>> = {
   "Shortlist": { en: "Shortlist", ar: "قائمة مختصرة" }, "Shortlisted": { en: "Shortlisted", ar: "في القائمة المختصرة" },
   "Interview": { en: "Interview", ar: "مقابلة" }, "Job Application": { en: "Job Application", ar: "طلب توظيف" },
   "ID": { en: "ID", ar: "الرقم" }, "Actions": { en: "Actions", ar: "الإجراءات" },
-  // New translations
   "Personal Details": { en: "Personal Details", ar: "البيانات الشخصية" },
   "Professional Details": { en: "Professional Details", ar: "البيانات المهنية" },
   "Applied": { en: "Applied", ar: "تقدم بتاريخ" },

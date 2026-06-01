@@ -2,7 +2,6 @@ import { PERMISSIONS } from "@/constants/permissions";
 
 const ALL_PERMISSION_VALUES = new Set(Object.values(PERMISSIONS));
 
-/** Actions that require the module's view permission when selected */
 const ACTIONS_REQUIRING_VIEW = new Set([
   "create",
   "update",
@@ -18,7 +17,6 @@ const isViewPermission = (key: string): boolean => {
   return false;
 };
 
-/** Resolve the view permission string for a given permission key, if one exists */
 export const getRequiredViewPermission = (
   permissionKey: string,
 ): string | null => {
@@ -39,7 +37,6 @@ export const getRequiredViewPermission = (
   return ALL_PERMISSION_VALUES.has(viewKey) ? viewKey : null;
 };
 
-/** Add view permissions required by any selected update/delete/create (etc.) */
 export const applyViewPermissionRules = (permissions: string[]): string[] => {
   const next = new Set(permissions);
 
@@ -59,7 +56,6 @@ const hasDependentPermissions = (
     (key) => key !== viewKey && getRequiredViewPermission(key) === viewKey,
   );
 
-/** Toggle one permission; auto-add view when selecting edit/delete; block removing view while dependents remain */
 export const togglePermissionSelection = (
   current: string[],
   key: string,
@@ -76,13 +72,11 @@ export const togglePermissionSelection = (
   return applyViewPermissionRules([...current, key]);
 };
 
-/** Merge a set of keys into the current selection (e.g. select whole section) */
 export const mergePermissionSelection = (
   current: string[],
   keysToAdd: string[],
 ): string[] => applyViewPermissionRules([...new Set([...current, ...keysToAdd])]);
 
-/** Remove a set of keys from the current selection */
 export const removePermissionSelection = (
   current: string[],
   keysToRemove: string[],

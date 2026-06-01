@@ -13,11 +13,9 @@ const Login = () => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Email validation states
   const [emailTouched, setEmailTouched] = useState(false);
   const [emailValid, setEmailValid] = useState(false);
 
-  // Real-time email validation
   useEffect(() => {
     if (!emailTouched && email === "") return;
 
@@ -65,7 +63,6 @@ const Login = () => {
     }
   };
 
-  // Custom Loader Component
   const CustomLoader = () => (
     <div className="flex items-center justify-center gap-2">
       <div className="relative w-5 h-5">
@@ -76,7 +73,6 @@ const Login = () => {
     </div>
   );
 
-  // Get email validation icon and color
   const getEmailValidationIcon = () => {
     if (!emailTouched || email === "") return null;
     if (emailValid) {

@@ -94,7 +94,6 @@ const Documents = () => {
   const [deleting, setDeleting] = useState(false);
   const { t } = useLanguage();
 
-  // Helper: map API response shape → AdminDoc
   const mapApiDoc = (d: any): AdminDoc => ({
     id: d._id ?? d.id,
     title: d.title,
@@ -110,7 +109,6 @@ const Documents = () => {
     status: d.status === "active" ? "Active" : "Draft",
   });
 
-  // Load documents on mount
   const fetchDocs = useCallback(async () => {
     setLoading(true);
     try {
@@ -127,7 +125,6 @@ const Documents = () => {
 
   useEffect(() => { fetchDocs(); }, [fetchDocs]);
 
-  // Get unique categories from actual docs state
   const categories = ["All", ...Array.from(new Set(docs.map(d => d.category)))];
 
   const filtered = docs.filter(d => {
@@ -136,7 +133,6 @@ const Documents = () => {
     return matchSearch && matchCat;
   });
 
-  // Pagination
   const totalPages = Math.ceil(filtered.length / itemsPerPage);
   const paginatedDocs = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
@@ -202,7 +198,6 @@ const Documents = () => {
       toast.success("Document uploaded successfully!");
     } catch (error) {
       console.error("Upload failed:", error);
-      // Optimistic fallback so UI still feels responsive
       const fileSize = (uploadForm.file.size / (1024 * 1024)).toFixed(1);
       const fileExtension = uploadForm.file.name.split(".").pop()?.toLowerCase() ?? "pdf";
       const newDoc: AdminDoc = {
@@ -244,7 +239,6 @@ const Documents = () => {
 
       await updateDocument(showEditModal.id, payload);
 
-      // Update local state
       setDocs(prev => prev.map(doc => {
         if (doc.id !== showEditModal.id) return doc;
         const fileSize = editForm.file ? (editForm.file.size / (1024 * 1024)).toFixed(1) : doc.fileSize;
@@ -268,7 +262,6 @@ const Documents = () => {
       setEditPreviewUrl("");
     } catch (error) {
       console.error("Update failed:", error);
-      // Apply update locally even if API fails
       setDocs(prev => prev.map(doc => {
         if (doc.id !== showEditModal.id) return doc;
         const fileSize = editForm.file ? (editForm.file.size / (1024 * 1024)).toFixed(1) : doc.fileSize;
@@ -335,7 +328,6 @@ const Documents = () => {
 
   const handleShare = async () => {
     if (shareMethod === "link") {
-      // Copy link to clipboard
       const link = showShareModal?.fileUrl || window.location.href;
       navigator.clipboard.writeText(link);
       toast.success("Link copied to clipboard!");
@@ -353,7 +345,6 @@ const Documents = () => {
       return;
     }
 
-    // SMS and WhatsApp are disabled
     if (shareMethod === "sms" || shareMethod === "whatsapp") {
       toast.info("SMS and WhatsApp sharing are currently disabled");
       return;
@@ -376,7 +367,6 @@ const Documents = () => {
       return;
     }
 
-    // open file in new browser tab
     window.open(doc.fileUrl, "_blank");
   };
 
@@ -394,10 +384,8 @@ const Documents = () => {
     setTimeout(() => setSelectedCard(null), 300);
   };
 
-  // Cleanup object URLs on unmount
   useEffect(() => {
     return () => {
-      // Cleanup any object URLs
       docs.forEach(doc => {
         if (doc.fileUrl?.startsWith('blob:')) {
           URL.revokeObjectURL(doc.fileUrl);

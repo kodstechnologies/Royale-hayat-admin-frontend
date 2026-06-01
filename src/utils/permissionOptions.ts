@@ -11,7 +11,6 @@ export type PermissionGroup = {
   permissions: PermissionOption[];
 };
 
-/** Human-readable label from permission string e.g. `doctor.create` → `Doctor Create` */
 export const formatPermissionLabel = (permissionKey: string): string =>
   permissionKey
     .split(".")
@@ -207,7 +206,6 @@ const PERMISSION_GROUP_DEFS: {
   },
 ];
 
-/** Permissions not shown in user-management create/edit pickers */
 const UNASSIGNABLE_PERMISSION_KEYS = new Set<string>([
   PERMISSIONS.APPOINTMENT_REQUEST_CREATE,
   PERMISSIONS.ENQUIRY_UPDATE,
@@ -216,13 +214,11 @@ const UNASSIGNABLE_PERMISSION_KEYS = new Set<string>([
 export const filterAssignablePermissions = (permissions: string[]): string[] =>
   permissions.filter((key) => !UNASSIGNABLE_PERMISSION_KEYS.has(key));
 
-/** All permissions from constants — flat list (excludes unassignable) */
 export const getAllPermissionOptions = (): PermissionOption[] =>
   Object.values(PERMISSIONS)
     .filter((key) => !UNASSIGNABLE_PERMISSION_KEYS.has(key))
     .map((key) => toOption(key));
 
-/** Permissions grouped by module for user-management UI */
 export const getGroupedPermissionOptions = (): PermissionGroup[] => {
   const allKeys = new Set(Object.values(PERMISSIONS));
   const assigned = new Set<string>();

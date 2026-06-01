@@ -276,7 +276,6 @@ const Sidebar = ({
         return next;
       });
     } catch {
-      // keep previous counts on failure
     }
   }, []);
 
@@ -350,7 +349,6 @@ const Sidebar = ({
       (masterPath) => path === masterPath || path.startsWith(`${masterPath}/`)
     );
 
-  // Start open only if the current page is already a master path
   const [masterOpen, setMasterOpen] = useState(() =>
     isMasterPath(window.location.pathname)
   );
@@ -436,7 +434,6 @@ const Sidebar = ({
     try {
       await logout();
     } catch (error) {
-      // ignore
     } finally {
       localStorage.removeItem("rhh_admin_auth");
       localStorage.removeItem("rhh_admin_access_token");
@@ -445,7 +442,6 @@ const Sidebar = ({
     }
   };
 
-  // Top-level nav items (in order)
   const mainNavItems: NavItemConfig[] = [
     {
       to: "/",
@@ -531,7 +527,6 @@ const Sidebar = ({
     },
   ];
 
-  // Other management items
   const managementNavItems: NavItemConfig[] = [
     {
       to: "/documents",
@@ -548,10 +543,6 @@ const Sidebar = ({
   ];
 
   const footerNavItems: NavItemConfig[] = [
-    // {
-    //   to: "/notifications",
-    //   icon: Bell,
-    //   label: "Notifications",
     // },
     {
       to: "/settings",

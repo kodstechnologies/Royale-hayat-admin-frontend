@@ -43,7 +43,6 @@ export const getCatagories = async (params: ListCatagoriesParams = {}) => {
   return api.get(BASE, { params });
 };
 
-/** Loads every category (paginates with limit 100 — backend Joi max per request). */
 export const fetchAllCatagories = async (): Promise<Catagory[]> => {
   const limit = 100;
   const aggregated: Catagory[] = [];

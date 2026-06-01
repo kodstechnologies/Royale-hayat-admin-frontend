@@ -155,7 +155,6 @@ const SubspecialityForm = ({ mode, subspecialityId }: Props) => {
             return;
         }
 
-        // Load data for edit mode
         setLoading(true);
         setTimeout(() => {
             // First check if this is a user-created subspeciality from localStorage
@@ -317,7 +316,6 @@ const SubspecialityForm = ({ mode, subspecialityId }: Props) => {
         setCustomBlocks((prev) => prev.filter((x) => x.key !== key));
     };
 
-    // Get department display name based on active tab
     const getDepartmentDisplayName = (dept: typeof dummyDepartments[0]) => {
         return activeTab === "arabic" ? dept.arabicName : dept.name;
     };

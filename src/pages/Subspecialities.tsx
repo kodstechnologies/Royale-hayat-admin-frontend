@@ -129,7 +129,6 @@ const Subspecialities = () => {
   const [toDelete, setToDelete] = useState<Subspeciality | null>(null);
   const [deleting, setDeleting] = useState(false);
 
-  // Load subspecialities from localStorage on mount
   useEffect(() => {
     const mergedSubs = loadSubspecialitiesFromStorage();
     setItems(mergedSubs);
@@ -154,7 +153,6 @@ const Subspecialities = () => {
     };
   }, [currentPage, limit]);
 
-  // Get unique departments for filter
   const departments = Array.from(new Set(items.map(item => item.departmentName))).filter(Boolean);
 
   // Filter items based on search and department
@@ -169,7 +167,6 @@ const Subspecialities = () => {
     return matchesSearch && matchesDepartment;
   });
 
-  // Pagination
   const paginatedItems = filteredItems.slice((currentPage - 1) * limit, currentPage * limit);
   const totalFilteredPages = Math.ceil(filteredItems.length / limit);
 

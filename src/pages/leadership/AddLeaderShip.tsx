@@ -133,7 +133,6 @@ const AddLeadership = () => {
     setSaving(true);
     
     try {
-      // Create FormData for file upload
       const formDataToSend = new FormData();
       formDataToSend.append("initials", formData.initials);
       formDataToSend.append("initialsArabic", formData.initialsArabic);

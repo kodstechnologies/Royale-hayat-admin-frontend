@@ -12,11 +12,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft, Upload, X, Plus, Trash2, Globe, Languages } from "lucide-react";
 
 export type CreateDepartmentFormData = {
-  // English fields
   departmentId: string;
   name: string;
   description: string;
-  // Arabic fields
   arabicName: string;
   arabicDescription: string;
   catagoryId: string;
@@ -163,7 +161,6 @@ const CreateDepartmentPage = () => {
 
     setSaving(true);
 
-    // Get category name from ID for display
     const selectedCategory = categories.find(c => c._id === values.catagoryId);
     const categoryName = selectedCategory ? selectedCategory.name : "General";
 
@@ -203,7 +200,6 @@ const CreateDepartmentPage = () => {
     }, 500);
   };
 
-  // Get display name for category based on active tab
   const getCategoryDisplayName = (category: typeof dummyCategories[0]) => {
     return activeTab === "arabic" ? category.arabicName : category.name;
   };

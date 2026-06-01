@@ -1,6 +1,5 @@
 import api from "./axiosInstance";
 
-
 // ======================================================
 // TYPES
 // ======================================================
@@ -51,11 +50,9 @@ export type FeedbackCounts = {
     hospitalFeedbacks: number;
 };
 
-
 // ======================================================
 // DOCTOR FEEDBACK APIs
 // ======================================================
-
 
 // ==============================
 // CREATE DOCTOR FEEDBACK
@@ -95,7 +92,6 @@ export const createDoctorFeedback =
         return response.data;
     };
 
-
 // ==============================
 // GET ALL DOCTOR FEEDBACKS
 // ==============================
@@ -109,7 +105,6 @@ export const getAllDoctorFeedbacks =
 
         return response.data;
     };
-
 
 // ==============================
 // GET DOCTOR FEEDBACKS BY doctorId (business id, not MongoDB _id)
@@ -125,9 +120,7 @@ export const getDoctorFeedbacksByDoctorId =
         return response.data;
     };
 
-/** @deprecated Use getDoctorFeedbacksByDoctorId */
 export const getDoctorFeedbackById = getDoctorFeedbacksByDoctorId;
-
 
 // ==============================
 // UPDATE DOCTOR FEEDBACK
@@ -148,7 +141,6 @@ export const updateDoctorFeedback =
         return response.data;
     };
 
-
 // ==============================
 // DELETE DOCTOR FEEDBACK
 // ==============================
@@ -164,14 +156,9 @@ export const deleteDoctorFeedback =
         return response.data;
     };
 
-
-
-
-
 // ======================================================
 // HOSPITAL FEEDBACK APIs
 // ======================================================
-
 
 // ==============================
 // CREATE HOSPITAL FEEDBACK
@@ -211,7 +198,6 @@ export const createHospitalFeedback =
         return response.data;
     };
 
-
 // ==============================
 // GET ALL HOSPITAL FEEDBACKS
 // ==============================
@@ -226,7 +212,6 @@ export const getAllHospitalFeedbacks =
         return response.data;
     };
 
-
 // ==============================
 // GET HOSPITAL FEEDBACK BY feedbackId (MongoDB _id)
 // ==============================
@@ -240,7 +225,6 @@ export const getHospitalFeedbackById =
 
         return response.data;
     };
-
 
 // ==============================
 // UPDATE HOSPITAL FEEDBACK
@@ -260,7 +244,6 @@ export const updateHospitalFeedback =
         return response.data;
     };
 
-
 // ==============================
 // DELETE HOSPITAL FEEDBACK
 // ==============================
@@ -274,7 +257,6 @@ export const deleteHospitalFeedback =
 
         return response.data;
     };
-
 
 // ==============================
 // GET UNVIEWED FEEDBACK COUNTS
