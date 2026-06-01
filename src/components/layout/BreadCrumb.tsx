@@ -120,6 +120,7 @@ const nestedPageLabels: Record<string, { label: string; description: string }> =
 
 const breadcrumbLinkOverrides: Record<string, string> = {
   jobs: "/job-posts",
+  "medical-record": "/medical-records-requests",
 };
 
 const BreadCrumb = ({ lastCrumbLabel }: { lastCrumbLabel?: string } = {}) => {
