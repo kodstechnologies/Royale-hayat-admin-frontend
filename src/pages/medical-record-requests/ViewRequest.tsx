@@ -25,6 +25,11 @@ import { useScrollToTop } from "@/hooks/useScrollToTop";
 import { PERMISSIONS } from "@/constants/permissions";
 import PermissionGate, { hasPermission } from "@/utils/PermissionGate";
 
+const DEFAULT_SHARE_EMAILS =
+  "medicalrecords@royalehayat.com,marketing@royalehayat.com";
+
+type ShareLanguage = "en" | "ar";
+
 type MedicalRequest = {
   id: string;
   mongoId: string;
@@ -53,7 +58,9 @@ const ViewRequest = () => {
   const [request, setRequest] = useState<MedicalRequest | null>(null);
   const [loading, setLoading] = useState(true);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
-  const [shareEmail, setShareEmail] = useState("");
+  const [shareEmail, setShareEmail] = useState(DEFAULT_SHARE_EMAILS);
+  const [shareEnglish, setShareEnglish] = useState(true);
+  const [shareArabic, setShareArabic] = useState(true);
   const [isSharing, setIsSharing] = useState(false);
 
   useScrollToTop(id);
@@ -103,7 +110,12 @@ const ViewRequest = () => {
       return;
     }
     if (!shareEmail.trim()) {
-      toast.error("Please enter an email address");
+      toast.error("Please enter at least one email address");
+      return;
+    }
+
+    if (!shareEnglish && !shareArabic) {
+      toast.error("Select at least one email language (English or Arabic)");
       return;
     }
 
@@ -112,24 +124,43 @@ const ViewRequest = () => {
       return;
     }
 
+    const recipients = shareEmail
+      .split(",")
+      .map((email) => email.trim())
+      .filter(Boolean);
+
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(shareEmail)) {
-      toast.error("Please enter a valid email address");
+    const invalidEmail = recipients.find((email) => !emailRegex.test(email));
+
+    if (recipients.length === 0) {
+      toast.error("Please enter at least one valid email address");
       return;
     }
 
+    if (invalidEmail) {
+      toast.error(`Invalid email address: ${invalidEmail}`);
+      return;
+    }
+
+    const languages: ShareLanguage[] = [];
+    if (shareEnglish) languages.push("en");
+    if (shareArabic) languages.push("ar");
+
     setIsSharing(true);
     try {
-  
-  
-      const response = await ShareViaMail(
-        id,
-        shareEmail
-      );
+      const response = await ShareViaMail(id, {
+        emailId: recipients.join(","),
+        languages,
+      });
 
-      toast.success(response?.message || `Medical record shared successfully to ${shareEmail}`);
+      toast.success(
+        response?.message ||
+          `Medical record shared successfully to ${recipients.join(", ")}`,
+      );
       setIsShareModalOpen(false);
-      setShareEmail("");
+      setShareEmail(DEFAULT_SHARE_EMAILS);
+      setShareEnglish(true);
+      setShareArabic(true);
     } catch (error: any) {
       console.error("Failed to share via email:", error);
 
@@ -508,7 +539,12 @@ const ViewRequest = () => {
               </Button>
               <PermissionGate permission={PERMISSIONS.MRR_SHARE_VIA_EMAIL}>
                 <Button
-                  onClick={() => setIsShareModalOpen(true)}
+                  onClick={() => {
+                    setShareEmail(DEFAULT_SHARE_EMAILS);
+                    setShareEnglish(true);
+                    setShareArabic(true);
+                    setIsShareModalOpen(true);
+                  }}
                   className="gap-2 w-full sm:w-auto bg-burgundy hover:bg-burgundy/90"
                 >
                   Share via Mail
@@ -524,22 +560,53 @@ const ViewRequest = () => {
                     Share Medical Record
                   </h2>
 
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-slate-600">
-                      Enter Email ID <span className="text-red-500">*</span>
-                    </label>
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-slate-600">
+                        Recipient email(s) <span className="text-red-500">*</span>
+                      </label>
 
-                    <input
-                      type="email"
-                      value={shareEmail}
-                      onChange={(e) => setShareEmail(e.target.value)}
-                      placeholder="example@gmail.com"
-                      className="w-full border border-slate-300 rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-blue-500"
-                      autoFocus
-                    />
-                    <p className="text-xs text-slate-400">
-                      The medical record will be shared to this email address
-                    </p>
+                      <textarea
+                        value={shareEmail}
+                        onChange={(e) => setShareEmail(e.target.value)}
+                        placeholder="email1@example.com, email2@example.com"
+                        rows={2}
+                        className="w-full border border-slate-300 rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-burgundy/30 resize-y min-h-[72px]"
+                        autoFocus
+                      />
+                      <p className="text-xs text-slate-400">
+                        Separate multiple addresses with commas
+                      </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-slate-600">
+                        Email language <span className="text-red-500">*</span>
+                      </label>
+                      <div className="flex flex-wrap gap-4">
+                        <label className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={shareEnglish}
+                            onChange={(e) => setShareEnglish(e.target.checked)}
+                            className="h-4 w-4 rounded border-slate-300 text-burgundy focus:ring-burgundy"
+                          />
+                          English
+                        </label>
+                        <label className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={shareArabic}
+                            onChange={(e) => setShareArabic(e.target.checked)}
+                            className="h-4 w-4 rounded border-slate-300 text-burgundy focus:ring-burgundy"
+                          />
+                          Arabic
+                        </label>
+                      </div>
+                      <p className="text-xs text-slate-400">
+                        Select one or both. Both includes English and Arabic sections in one email.
+                      </p>
+                    </div>
                   </div>
 
                   <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 sm:gap-3 mt-6">
@@ -548,7 +615,9 @@ const ViewRequest = () => {
                       className="w-full sm:w-auto"
                       onClick={() => {
                         setIsShareModalOpen(false);
-                        setShareEmail("");
+                        setShareEmail(DEFAULT_SHARE_EMAILS);
+                        setShareEnglish(true);
+                        setShareArabic(true);
                       }}
                     >
                       Cancel

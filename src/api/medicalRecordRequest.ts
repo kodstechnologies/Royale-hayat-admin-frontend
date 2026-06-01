@@ -22,8 +22,13 @@ export const GetMedicalRequestById = async (
   return response.data;
 };
 
-export const ShareViaMail = async (id: string, emailId: string) => {
-  const response = await api.post(`${BASE}/share-via-email/${id}`, { emailId });
+export type ShareViaMailPayload = {
+  emailId: string;
+  languages: ("en" | "ar")[];
+};
+
+export const ShareViaMail = async (id: string, payload: ShareViaMailPayload) => {
+  const response = await api.post(`${BASE}/share-via-email/${id}`, payload);
   return response.data;
 };
 
