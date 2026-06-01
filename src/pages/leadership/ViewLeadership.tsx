@@ -134,7 +134,7 @@ const ViewLeadership = () => {
       <div className="space-y-4 sm:space-y-6">
         <BreadCrumb />
 
-        {/* Header */}
+        
         <div className="flex flex-col gap-4">
           <div className="flex items-start gap-3 min-w-0">
             <button
@@ -173,12 +173,12 @@ const ViewLeadership = () => {
           </div>
         </div>
 
-        {/* Main Card */}
+        
         <div className="rounded-xl border-2 border-burgundy/30 bg-gradient-to-br from-white via-slate-50/90 to-white shadow-xl backdrop-blur-sm overflow-hidden">
           <div className="h-1 bg-gradient-to-r from-burgundy/40 via-burgundy to-burgundy/40"></div>
 
           <div className="p-4 sm:p-6">
-            {/* Action Buttons */}
+            
             <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 mb-4 sm:mb-6 pb-4 border-b border-slate-100">
               <PermissionGate permission={PERMISSIONS.LEADERSHIP_UPDATE}>
                 <Button
@@ -198,7 +198,7 @@ const ViewLeadership = () => {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-              {/* Image Section */}
+              
               <div className="lg:col-span-1">
                 <div className="bg-white rounded-xl border border-slate-200 p-4">
                   <img
@@ -212,9 +212,9 @@ const ViewLeadership = () => {
                 </div>
               </div>
 
-              {/* Details Section */}
+              
               <div className="lg:col-span-2 space-y-6">
-                {/* Personal Information */}
+                
                 <div className="bg-white rounded-xl border border-slate-200 p-4 sm:p-5">
                   <div className="flex items-center gap-2 pb-3 border-b border-slate-100 mb-4">
                     <User className="h-5 w-5 text-burgundy shrink-0" />
@@ -253,7 +253,7 @@ const ViewLeadership = () => {
                   </div>
                 </div>
 
-                {/* Description */}
+                
                 <div className="bg-white rounded-xl border border-slate-200 p-4 sm:p-5">
                   <div className="flex items-center gap-2 pb-3 border-b border-slate-100 mb-4">
                     <FileText className="h-5 w-5 text-burgundy shrink-0" />
@@ -267,7 +267,7 @@ const ViewLeadership = () => {
                   </p>
                 </div>
 
-                {/* Additional Information */}
+                
                 <div className="bg-white rounded-xl border border-slate-200 p-4 sm:p-5">
                   <div className="flex items-center gap-2 pb-3 border-b border-slate-100 mb-4">
                     <Briefcase className="h-5 w-5 text-burgundy shrink-0" />
@@ -293,7 +293,7 @@ const ViewLeadership = () => {
         </div>
       </div>
 
-      {/* Delete Confirmation Modal */}
+      
       {showDeleteConfirm && (
         <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
           <div className="bg-white rounded-t-2xl sm:rounded-xl max-w-md w-full p-4 sm:p-6">

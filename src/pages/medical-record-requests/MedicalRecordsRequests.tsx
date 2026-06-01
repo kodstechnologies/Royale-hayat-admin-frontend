@@ -252,7 +252,7 @@ const MedicalRecordsRequests = () => {
               </div>
             ) : (
               <>
-              {/* Mobile card list */}
+              
               <div className="md:hidden space-y-3">
                 {filtered.map((request) => (
                   <article
@@ -321,7 +321,7 @@ const MedicalRecordsRequests = () => {
                 )}
               </div>
 
-              {/* Desktop table */}
+              
               <div className="hidden md:block overflow-x-auto -mx-1 sm:mx-0">
                 <table className="w-full min-w-[640px]">
                   <thead>

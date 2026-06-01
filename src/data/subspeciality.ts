@@ -1,4 +1,3 @@
-// adminSubspeciality.ts
 
 export type AdminSubspeciality = {
   id: string;
@@ -11,7 +10,6 @@ export type AdminSubspeciality = {
 };
 
 export const adminSubspecialities: AdminSubspeciality[] = [
-  // Obstetrics & Gynecology (Department ID: 1)
   {
     id: "1",
     departmentId: "1",
@@ -67,7 +65,6 @@ export const adminSubspecialities: AdminSubspeciality[] = [
     updatedAt: "2024-01-15T10:30:00Z",
   },
 
-  // General & Laparoscopic Surgery (Department ID: 6)
   {
     id: "7",
     departmentId: "6",
@@ -105,7 +102,6 @@ export const adminSubspecialities: AdminSubspeciality[] = [
     updatedAt: "2024-01-18T13:30:00Z",
   },
 
-  // Internal Medicine (Department ID: 5)
   {
     id: "11",
     departmentId: "5",
@@ -162,12 +158,10 @@ export const adminSubspecialities: AdminSubspeciality[] = [
   },
 ];
 
-// Helper function to get subspecialities by department ID
 export const getSubspecialitiesByDepartmentId = (departmentId: string): AdminSubspeciality[] => {
   return adminSubspecialities.filter(sub => sub.departmentId === departmentId);
 };
 
-// Helper function to get subspecialities by department name
 export const getSubspecialitiesByDepartmentName = (departmentName: string): AdminSubspeciality[] => {
   return adminSubspecialities.filter(sub => sub.departmentName === departmentName);
 };

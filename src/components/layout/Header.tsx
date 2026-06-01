@@ -20,7 +20,6 @@ const Header = ({ title }: HeaderProps) => {
   }
 
   return (
-    /* Fixed pill — top-right corner, only icons visible */
     <div
       className={`
         fixed top-3 z-40

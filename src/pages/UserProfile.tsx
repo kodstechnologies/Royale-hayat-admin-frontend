@@ -53,7 +53,7 @@ const UserProfile = () => {
   return (
     <AdminLayout title={`User Profile – ${user.name}`}>
       <div className="max-w-4xl">
-        {/* Top bar */}
+        
         <div className="flex items-center justify-between mb-5">
           <button onClick={() => navigate("/users")} className="flex items-center gap-1.5 text-sm font-sans text-muted-foreground hover:text-foreground transition-colors">
             <ArrowLeft size={15} /> Back to Users
@@ -75,7 +75,7 @@ const UserProfile = () => {
           </div>
         </div>
 
-        {/* Profile Header */}
+        
         <div className="bg-card rounded-lg shadow-sm border border-border p-5 mb-5">
           <div className="flex items-center gap-4">
             <div className="w-16 h-16 rounded-full bg-burgundy/10 flex items-center justify-center text-burgundy text-xl font-serif font-bold">
@@ -92,9 +92,9 @@ const UserProfile = () => {
           </div>
         </div>
 
-        {/* Details Grid */}
+        
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          {/* Personal Info */}
+          
           <div className="bg-card rounded-lg shadow-sm border border-border p-5">
             <h3 className="text-sm font-serif font-semibold text-foreground mb-4 flex items-center gap-2"><Mail size={14} /> Personal Information</h3>
             <div className="space-y-3">
@@ -107,7 +107,7 @@ const UserProfile = () => {
             </div>
           </div>
 
-          {/* Official Info */}
+          
           <div className="bg-card rounded-lg shadow-sm border border-border p-5">
             <h3 className="text-sm font-serif font-semibold text-foreground mb-4 flex items-center gap-2"><Building2 size={14} /> Official Details</h3>
             <div className="space-y-3">
@@ -120,7 +120,7 @@ const UserProfile = () => {
             </div>
           </div>
 
-          {/* Permissions */}
+          
           <div className="bg-card rounded-lg shadow-sm border border-border p-5">
             <h3 className="text-sm font-serif font-semibold text-foreground mb-4 flex items-center gap-2"><Shield size={14} /> Access & Permissions</h3>
             <div className="flex flex-wrap gap-1.5">
@@ -133,7 +133,7 @@ const UserProfile = () => {
             )}
           </div>
 
-          {/* Notes */}
+          
           <div className="bg-card rounded-lg shadow-sm border border-border p-5">
             <h3 className="text-sm font-serif font-semibold text-foreground mb-4 flex items-center gap-2"><Clock size={14} /> Notes & Actions</h3>
             <div className="space-y-3">

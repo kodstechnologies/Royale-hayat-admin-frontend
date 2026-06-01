@@ -34,7 +34,6 @@ export type AppointmentListFilters = {
   toTime?: string;
   department?: string;
   doctor?: string;
-  /** `pending` maps to API `received`; use `all` to fetch every status */
   status?: "pending" | "received" | "accepted" | "cancelled" | "all";
   requestType?: AppointmentRequestType;
 };
@@ -58,8 +57,6 @@ const buildListParams = (
   return params;
 };
 
-// ================= GET APPOINTMENT REQUESTS =================
-
 export const getAppointmentRequests = async (
   page = 1,
   limit = 10,
@@ -71,8 +68,6 @@ export const getAppointmentRequests = async (
 
   return response.data;
 };
-
-// ================= GET APPOINTMENT BOOKINGS =================
 
 export const getAppointmentBookings = async (
   page = 1,
@@ -86,16 +81,12 @@ export const getAppointmentBookings = async (
   return response.data;
 };
 
-// ================= GET APPOINTMENT REQUEST BY ID =================
-
 export const getAppointmentRequestById = async (id: string) => {
   const response = await api.get<ApiResponse<Record<string, unknown>>>(
     `${REQUESTS_BASE}/${id}`,
   );
   return response.data;
 };
-
-// ================= GET APPOINTMENT BOOKING BY ID =================
 
 export const getAppointmentBookingRecordById = async (id: string) => {
   const response = await api.get<ApiResponse<Record<string, unknown>>>(
@@ -104,8 +95,6 @@ export const getAppointmentBookingRecordById = async (id: string) => {
   return response.data;
 };
 
-// ================= ACCEPT REQUEST =================
-
 export const acceptRequest = async (id: string, note?: string) => {
   const response = await api.patch(`${REQUESTS_BASE}/accept/${id}`, {
     note: note?.trim() || undefined,
@@ -113,16 +102,12 @@ export const acceptRequest = async (id: string, note?: string) => {
   return response.data;
 };
 
-// ================= CANCEL REQUEST =================
-
 export const cancelRequest = async (id: string, note?: string) => {
   const response = await api.patch(`${REQUESTS_BASE}/cancel/${id}`, {
     note: note?.trim() || undefined,
   });
   return response.data;
 };
-
-// ================= GET UNVIEWED APPOINTMENT COUNTS =================
 
 export const getAppointmentCounts = async () => {
   const response = await api.get<ApiResponse<AppointmentCounts>>(

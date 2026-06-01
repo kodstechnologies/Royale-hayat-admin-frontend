@@ -178,7 +178,7 @@ const ViewCSR = () => {
           <div className="h-1 bg-gradient-to-r from-burgundy/40 via-burgundy to-burgundy/40"></div>
           <div className="p-6">
             <div className="space-y-6">
-              {/* Heading */}
+              
               <div className="grid grid-cols-1 gap-6">
                 <div>
                   <label className="text-xs text-slate-500 uppercase tracking-wider font-semibold">{uiText.heading}</label>
@@ -191,7 +191,7 @@ const ViewCSR = () => {
                 </div>
               </div>
 
-              {/* Description */}
+              
               <div>
                 <label className="text-xs text-slate-500 uppercase tracking-wider font-semibold block mb-2">{uiText.subheading}</label>
                 <div className="bg-slate-50 rounded-lg p-4">
@@ -204,7 +204,7 @@ const ViewCSR = () => {
                 </div>
               </div>
 
-              {/* Description */}
+              
               <div>
                 <label className="text-xs text-slate-500 uppercase tracking-wider font-semibold block mb-2">{uiText.description}</label>
                 <div className="bg-slate-50 rounded-lg p-4">
@@ -217,7 +217,7 @@ const ViewCSR = () => {
                 </div>
               </div>
 
-              {/* Images */}
+              
               <div>
                 <label className="text-xs text-slate-500 uppercase tracking-wider font-semibold block mb-3">{uiText.images} ({record.images?.length || 0})</label>
                 {record.images && record.images.length > 0 ? (
@@ -247,7 +247,7 @@ const ViewCSR = () => {
                 )}
               </div>
 
-              {/* Additional Info */}
+              
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-slate-200">
                 <div>
                   <label className="text-xs text-slate-500 uppercase tracking-wider font-semibold block mb-2">{uiText.createdDate}</label>
@@ -265,7 +265,7 @@ const ViewCSR = () => {
         </div>
       </div>
 
-      {/* Image Modal */}
+      
       {selectedImage && (
         <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50" onClick={() => setSelectedImage(null)}>
           <div className="relative max-w-5xl max-h-[90vh] p-4">
@@ -280,7 +280,7 @@ const ViewCSR = () => {
         </div>
       )}
 
-      {/* Delete Confirmation Modal */}
+      
       {showDeleteConfirm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl max-w-md w-full mx-4 p-6">

@@ -135,7 +135,7 @@ const AllCSR = () => {
 
   const CelebratingLifeTab = () => (
     <div className="space-y-6">
-      {/* Hero Section */}
+      
       <div className="relative rounded-xl overflow-hidden bg-gradient-to-br from-slate-50 to-slate-100 border border-slate-200 min-h-[180px] flex items-end">
         <div className="relative p-6 md:p-8">
           <div className="flex items-center gap-2 mb-1">
@@ -145,7 +145,7 @@ const AllCSR = () => {
         </div>
       </div>
 
-      {/* Description Section */}
+      
       <div className="bg-white rounded-xl border border-slate-200 p-6 md:p-8">
         <div className="prose prose-sm max-w-none">
           {celebratingLifeDescription.split("\n\n").map((paragraph, idx) => (
@@ -165,7 +165,7 @@ const AllCSR = () => {
       <div className="space-y-6">
         <BreadCrumb />
 
-        {/* Header with Tabs */}
+        
         <div className="flex flex-col gap-4">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
@@ -183,7 +183,7 @@ const AllCSR = () => {
             )}
           </div>
 
-          {/* Tabs */}
+          
           <div className="flex gap-1 p-1 bg-slate-100/80 rounded-xl w-fit">
             <button
               onClick={() => setActiveTab("celebrating")}
@@ -213,7 +213,7 @@ const AllCSR = () => {
           </div>
         </div>
 
-        {/* Tab Content */}
+        
         {activeTab === "celebrating" ? (
           <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
             <div className="p-6">
@@ -221,11 +221,10 @@ const AllCSR = () => {
             </div>
           </div>
         ) : (
-          /* CSR Tab Content */
           <div className="rounded-xl border-2 border-burgundy/30 bg-gradient-to-br from-white via-slate-50/90 to-white shadow-xl backdrop-blur-sm overflow-hidden">
             <div className="h-1 bg-gradient-to-r from-burgundy/40 via-burgundy to-burgundy/40"></div>
             <div className="p-6">
-              {/* Search Section */}
+              
               <div className="flex flex-wrap gap-3 mb-6">
                 <div className="relative flex-1 min-w-[250px]">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -251,7 +250,7 @@ const AllCSR = () => {
                 )}
               </div>
 
-              {/* Loading State */}
+              
               {loading ? (
                 <div className="flex justify-center items-center py-12">
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-burgundy"></div>
@@ -343,7 +342,7 @@ const AllCSR = () => {
                     </table>
                   </div>
 
-                  {/* Pagination */}
+                  
                   {totalPages > 1 && (
                     <div className="flex justify-center gap-2 py-4 border-t border-slate-100">
                       <button
@@ -380,7 +379,7 @@ const AllCSR = () => {
         )}
       </div>
 
-      {/* Delete Confirmation Modal */}
+      
       {showDeleteConfirm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl max-w-md w-full mx-4 p-6">

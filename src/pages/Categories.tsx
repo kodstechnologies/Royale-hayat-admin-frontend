@@ -16,7 +16,6 @@ type Category = {
   updatedAt: string;
 };
 
-// Initial categories data
 const initialCategories: Category[] = [
   {
     _id: "1",
@@ -66,7 +65,6 @@ const Categories = () => {
   const [toDelete, setToDelete] = useState<Category | null>(null);
   const [deleting, setDeleting] = useState(false);
 
-  // Filter items based on search
   const filteredItems = items.filter(item => 
     item.name.toLowerCase().includes(search.toLowerCase()) ||
     item.arabicName.toLowerCase().includes(search.toLowerCase())
@@ -173,7 +171,6 @@ const Categories = () => {
       setToDelete(null);
       setDeleting(false);
 
-      // Adjust pagination if needed
       const newTotalPages = Math.ceil(updatedItems.length / limit);
       if (currentPage > newTotalPages && newTotalPages > 0) {
         setCurrentPage(newTotalPages);
@@ -208,7 +205,7 @@ const Categories = () => {
       <div className="space-y-4 sm:space-y-6">
         <BreadCrumb />
         
-        {/* Form View - Add/Edit Category */}
+        
         {isFormVisible && (
           <div className="rounded-xl border-2 border-burgundy/30 bg-gradient-to-br from-white via-slate-50/90 to-white shadow-xl backdrop-blur-sm overflow-hidden">
             <div className="h-1 bg-gradient-to-r from-burgundy/40 via-burgundy to-burgundy/40"></div>
@@ -233,7 +230,7 @@ const Categories = () => {
                 </div>
               </div>
 
-              {/* Tabs */}
+              
               <div className="mb-6">
                 <div className="flex w-full sm:w-fit gap-2 sm:gap-4 p-1 bg-slate-100/80 rounded-xl">
                   <button
@@ -321,13 +318,13 @@ const Categories = () => {
           </div>
         )}
 
-        {/* Main Card - Search, Add Button & Table */}
+        
         {!isFormVisible && (
           <div className="rounded-xl border-2 border-burgundy/30 bg-gradient-to-br from-white via-slate-50/90 to-white shadow-xl backdrop-blur-sm overflow-hidden">
             <div className="h-1 bg-gradient-to-r from-burgundy/40 via-burgundy to-burgundy/40"></div>
             
             <div className="p-4 sm:p-6">
-              {/* Header */}
+              
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4 sm:mb-6">
                 <div>
                   <h3 className="text-lg sm:text-xl font-bold text-slate-800">Categories Management</h3>
@@ -335,7 +332,7 @@ const Categories = () => {
                 </div>
                 
                 <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-                  {/* Search Section */}
+                  
                   <div className="flex flex-col min-[400px]:flex-row gap-2 w-full sm:w-auto">
                     <div className="relative flex-1 min-w-0">
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -369,18 +366,12 @@ const Categories = () => {
                     </div>
                   </div>
 
-                  {/* Add Category Button */}
-                  {/* <Button
-                    onClick={openCreateForm}
-                    className="gap-2 bg-burgundy hover:bg-burgundy/90"
-                  >
-                    <Plus className="h-4 w-4" />
-                    Add Category
-                  </Button> */}
+                  
+                  
                 </div>
               </div>
 
-              {/* Table Section */}
+              
               {paginatedItems.length === 0 ? (
                 <div className="text-center py-16">
                   <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-slate-100 flex items-center justify-center">
@@ -399,7 +390,7 @@ const Categories = () => {
                 </div>
               ) : (
                 <>
-                  {/* Mobile cards */}
+                  
                   <div className="md:hidden space-y-3">
                     {paginatedItems.map((item) => (
                       <article
@@ -419,7 +410,7 @@ const Categories = () => {
                     ))}
                   </div>
 
-                  {/* Desktop table */}
+                  
                   <div className="hidden md:block overflow-x-auto">
                     <table className="w-full">
                       <thead>
@@ -433,9 +424,7 @@ const Categories = () => {
                           <th className="text-left py-3 px-4 font-semibold text-slate-600 text-xs uppercase tracking-wider hidden md:table-cell">
                             Last Updated
                           </th>
-                          {/* <th className="text-right py-3 px-4 font-semibold text-slate-600 text-xs uppercase tracking-wider w-[100px]">
-                            Actions
-                          </th> */}
+                          
                         </tr>
                       </thead>
                       <tbody>
@@ -455,33 +444,14 @@ const Categories = () => {
                             <td className="py-3 px-4 text-slate-500 text-sm hidden md:table-cell">
                               {formatDate(item.updatedAt)}
                             </td>
-                            {/* <td className="py-3 px-4 text-right">
-                              <div className="flex items-center justify-end gap-1">
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8 text-slate-500 hover:text-burgundy hover:bg-burgundy/10"
-                                  onClick={() => openEditForm(item)}
-                                >
-                                  <Pencil className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8 text-slate-500 hover:text-red-600 hover:bg-red-50"
-                                  onClick={() => confirmDelete(item)}
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            </td> */}
+                            
                           </tr>
                         ))}
                       </tbody>
                     </table>
                   </div>
 
-                  {/* Pagination - Bottom Right */}
+                  
                   {totalPages > 1 && (
                     <div className="mt-6 pt-4 border-t border-slate-100">
                       <div className="flex flex-wrap justify-center sm:justify-end gap-2">
@@ -547,7 +517,7 @@ const Categories = () => {
         )}
       </div>
 
-      {/* DELETE ALERT */}
+      
       <AlertBox
         isOpen={deleteOpen}
         title="Delete Category"

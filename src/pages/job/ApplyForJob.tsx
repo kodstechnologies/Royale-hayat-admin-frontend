@@ -23,8 +23,6 @@ import {
 import { getJobById as getJobByIdApi, applyForJob } from "@/api/job";
 import { adminJobs } from "@/data/adminJobs";
 
-// ── Types ────────────────────────────────────────────────────────────────────
-
 type JobSummary = {
   _id: string;
   jobId: string;
@@ -41,8 +39,6 @@ type ApplicationForm = {
   tellusUrself: string;
 };
 
-// ── Validation ────────────────────────────────────────────────────────────────
-
 const validationSchema = Yup.object({
   fullName: Yup.string().trim().min(2, "Name must be at least 2 characters").max(100).required("Full name is required"),
   email: Yup.string().email("Enter a valid email").max(100).required("Email is required"),
@@ -57,8 +53,6 @@ const initialValues: ApplicationForm = {
   tellusUrself: "",
 };
 
-// ── Component ─────────────────────────────────────────────────────────────────
-
 const ApplyForJob = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -69,7 +63,6 @@ const ApplyForJob = () => {
   const [resumeError, setResumeError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // ── Load job details ────────────────────────────────────────────────────────
   useEffect(() => {
     if (!id) return;
 
@@ -90,7 +83,6 @@ const ApplyForJob = () => {
           return;
         }
       } catch {
-        // Fallback to dummy data
       }
 
       const dummy = adminJobs.find((j) => j.id === id);
@@ -111,7 +103,6 @@ const ApplyForJob = () => {
     load().finally(() => setJobLoading(false));
   }, [id]);
 
-  // ── File handling ───────────────────────────────────────────────────────────
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -139,7 +130,6 @@ const ApplyForJob = () => {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  // ── Submit ──────────────────────────────────────────────────────────────────
   const handleSubmit = async (
     values: ApplicationForm,
     { setSubmitting }: { setSubmitting: (v: boolean) => void }
@@ -171,7 +161,6 @@ const ApplyForJob = () => {
     }
   };
 
-  // ── Loading ─────────────────────────────────────────────────────────────────
   if (jobLoading) {
     return (
       <AdminLayout title="Apply for Job">
@@ -205,7 +194,6 @@ const ApplyForJob = () => {
     );
   }
 
-  // ── Render ──────────────────────────────────────────────────────────────────
   return (
     <AdminLayout title="Apply for Job">
       <div className="space-y-6">
@@ -215,7 +203,7 @@ const ApplyForJob = () => {
           <div className="h-1 bg-gradient-to-r from-burgundy/40 via-burgundy to-burgundy/40" />
 
           <div className="p-6">
-            {/* Header */}
+            
             <div className="flex items-center gap-4 mb-6">
               <button
                 onClick={() => navigate(`/jobs/view/${job._id}`)}
@@ -232,7 +220,7 @@ const ApplyForJob = () => {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Left — Job Summary */}
+              
               <div className="lg:col-span-1">
                 <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm sticky top-6">
                   <div className="flex items-center gap-3 mb-4 pb-3 border-b border-slate-100">
@@ -278,7 +266,7 @@ const ApplyForJob = () => {
                 </div>
               </div>
 
-              {/* Right — Application Form */}
+              
               <div className="lg:col-span-2">
                 <Formik
                   initialValues={initialValues}
@@ -287,7 +275,7 @@ const ApplyForJob = () => {
                 >
                   {({ values, setFieldValue, isSubmitting }) => (
                     <Form className="space-y-5">
-                      {/* Personal Information */}
+                      
                       <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm space-y-5">
                         <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
                           <User className="h-5 w-5 text-burgundy" />
@@ -296,7 +284,7 @@ const ApplyForJob = () => {
                           </h3>
                         </div>
 
-                        {/* Full Name */}
+                        
                         <div className="space-y-1.5">
                           <label className="text-sm font-semibold text-slate-700">
                             Full Name <span className="text-red-500">*</span>
@@ -317,7 +305,7 @@ const ApplyForJob = () => {
                           />
                         </div>
 
-                        {/* Email */}
+                        
                         <div className="space-y-1.5">
                           <label className="text-sm font-semibold text-slate-700">
                             Email Address <span className="text-red-500">*</span>
@@ -339,7 +327,7 @@ const ApplyForJob = () => {
                           />
                         </div>
 
-                        {/* Phone */}
+                        
                         <div className="space-y-1.5">
                           <label className="text-sm font-semibold text-slate-700">
                             Phone Number
@@ -362,7 +350,7 @@ const ApplyForJob = () => {
                         </div>
                       </div>
 
-                      {/* Resume Upload */}
+                      
                       <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm space-y-4">
                         <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
                           <FileText className="h-5 w-5 text-burgundy" />
@@ -372,7 +360,6 @@ const ApplyForJob = () => {
                         </div>
 
                         {resumeFile ? (
-                          /* File selected — show preview */
                           <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border border-slate-200">
                             <div className="flex items-center gap-3">
                               <div className="w-10 h-10 rounded-lg bg-burgundy/10 flex items-center justify-center shrink-0">
@@ -396,7 +383,6 @@ const ApplyForJob = () => {
                             </button>
                           </div>
                         ) : (
-                          /* Drop zone */
                           <div
                             onClick={() => fileInputRef.current?.click()}
                             className="border-2 border-dashed border-slate-200 rounded-xl p-8 text-center cursor-pointer hover:border-burgundy/40 hover:bg-burgundy/5 transition-all duration-200 group"
@@ -424,7 +410,7 @@ const ApplyForJob = () => {
                         )}
                       </div>
 
-                      {/* Tell Us About Yourself */}
+                      
                       <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm space-y-4">
                         <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
                           <Mail className="h-5 w-5 text-burgundy" />
@@ -454,7 +440,7 @@ const ApplyForJob = () => {
                         </div>
                       </div>
 
-                      {/* Actions */}
+                      
                       <div className="flex justify-end gap-3 pt-2">
                         <Button
                           type="button"

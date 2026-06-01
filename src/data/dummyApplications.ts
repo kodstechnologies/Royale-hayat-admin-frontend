@@ -1,4 +1,3 @@
-// dummyApplications.ts
 
 export type JobApplication = {
   _id: string;
@@ -19,7 +18,6 @@ export type JobApplication = {
 };
 
 export const dummyApplications: JobApplication[] = [
-  // JA-001 – Registrar Plastic Surgeon
   {
     _id: "app-1",
     applicationId: "APP-001",
@@ -55,7 +53,6 @@ export const dummyApplications: JobApplication[] = [
     noticePeriod: "60 days",
   },
 
-  // JA-002 – Floor Coordinator
   {
     _id: "app-3",
     applicationId: "APP-003",
@@ -74,7 +71,6 @@ export const dummyApplications: JobApplication[] = [
     noticePeriod: "15 days",
   },
 
-  // JA-005 – Registered Nurse Labor & Delivery
   {
     _id: "app-4",
     applicationId: "APP-004",
@@ -110,7 +106,6 @@ export const dummyApplications: JobApplication[] = [
     noticePeriod: "45 days",
   },
 
-  // JA-009 – Consultant Pediatrician
   {
     _id: "app-6",
     applicationId: "APP-006",
@@ -163,7 +158,6 @@ export const dummyApplications: JobApplication[] = [
     noticePeriod: "30 days",
   },
 
-  // JA-012 – Brand Manager
   {
     _id: "app-9",
     applicationId: "APP-009",

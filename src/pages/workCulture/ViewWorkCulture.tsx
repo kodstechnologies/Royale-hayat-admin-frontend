@@ -47,7 +47,6 @@ const ViewWorkCulture = () => {
   const loadWorkCultureData = async () => {
     setLoading(true);
     try {
-      // Pass the ID as is (no parseInt for MongoDB ObjectId)
       const response = await getWorkCultureById(id);
       const raw = response.data ?? response;
       const data = raw?.data ?? raw;
@@ -143,7 +142,7 @@ const ViewWorkCulture = () => {
           </div>
 
           <div className="flex gap-3">
-            {/* Language Toggle */}
+            
             <div className="flex gap-2 p-1 bg-slate-100/80 rounded-lg">
               <button
                 onClick={() => setActiveLanguage("english")}
@@ -179,7 +178,7 @@ const ViewWorkCulture = () => {
           <div className="h-1 bg-gradient-to-r from-burgundy/40 via-burgundy to-burgundy/40"></div>
           <div className="p-6">
             <div className="space-y-6">
-              {/* Heading */}
+              
               <div>
                 <label className="text-xs text-slate-500 uppercase font-semibold">{uiText.heading}</label>
                 <p
@@ -190,7 +189,7 @@ const ViewWorkCulture = () => {
                 </p>
               </div>
 
-              {/* Description */}
+              
               <div>
                 <label className="text-xs text-slate-500 uppercase font-semibold block mb-2">{uiText.description}</label>
                 <div className="bg-slate-50 rounded-lg p-4">
@@ -203,7 +202,7 @@ const ViewWorkCulture = () => {
                 </div>
               </div>
 
-              {/* Images */}
+              
               <div>
                 <label className="text-xs text-slate-500 uppercase font-semibold block mb-3">{uiText.images} ({record.images?.length || 0})</label>
                 {record.images && record.images.length > 0 ? (
@@ -229,7 +228,7 @@ const ViewWorkCulture = () => {
                 )}
               </div>
 
-              {/* Created Date */}
+              
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-slate-200">
                 <div>
                   <label className="text-xs text-slate-500 uppercase font-semibold block mb-2">{uiText.createdDate}</label>
@@ -247,7 +246,7 @@ const ViewWorkCulture = () => {
         </div>
       </div>
 
-      {/* Image Modal */}
+      
       {selectedImage && (
         <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50" onClick={() => setSelectedImage(null)}>
           <div className="relative max-w-5xl max-h-[90vh] p-4">
@@ -262,7 +261,7 @@ const ViewWorkCulture = () => {
         </div>
       )}
 
-      {/* Delete Modal */}
+      
       {showDeleteConfirm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl max-w-md w-full mx-4 p-6">

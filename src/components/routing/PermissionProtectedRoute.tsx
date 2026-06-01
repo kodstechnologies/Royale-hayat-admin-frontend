@@ -6,10 +6,6 @@ import {
   isRouteAllowed,
 } from "@/config/routePermissions";
 
-/**
- * Layout guard: allows child routes only when the logged-in user's
- * permissions array (from user-management) includes the required access.
- */
 const PermissionProtectedRoute = () => {
   const location = useLocation();
   const pathname = location.pathname;

@@ -34,7 +34,6 @@ type Subspeciality = {
   updatedAt: string;
 };
 
-// Convert adminSubspecialities to the format expected by the component
 const convertToSubspeciality = (sub: AdminSubspeciality): Subspeciality => {
   return {
     id: sub.id,
@@ -51,7 +50,6 @@ const convertToSubspeciality = (sub: AdminSubspeciality): Subspeciality => {
 
 const initialSubspecialities: Subspeciality[] = adminSubspecialities.map(convertToSubspeciality);
 
-// Department name mapping for category IDs
 const departmentNameMap: Record<string, string> = {
   "dept1": "Cardiology",
   "dept2": "Neurology",
@@ -65,12 +63,10 @@ const departmentNameMap: Record<string, string> = {
   "dept10": "Radiology",
 };
 
-// Function to load subspecialities from localStorage and merge with initial subspecialities
 const loadSubspecialitiesFromStorage = () => {
   const stored = localStorage.getItem("rhh_subspecialities");
   if (stored) {
     const storedSubs = JSON.parse(stored);
-    // Convert stored subspecialities to Subspeciality format
     const formattedStoredSubs = storedSubs.map((sub: any) => ({
       id: sub.id,
       name: sub.name,
@@ -83,17 +79,14 @@ const loadSubspecialitiesFromStorage = () => {
       updatedAt: sub.updatedAt || new Date().toISOString(),
     }));
 
-    // Merge stored subs with initial subs, avoiding duplicates by id
     const existingSubIds = new Set(formattedStoredSubs.map((sub: Subspeciality) => sub.id));
     const newSubsFromInitial = initialSubspecialities.filter(sub => !existingSubIds.has(sub.id));
 
-    // Return stored subs first (newest first), then remaining initial subs
     return [...formattedStoredSubs, ...newSubsFromInitial];
   }
   return initialSubspecialities;
 };
 
-// Function to save user-created subspecialities to localStorage
 const saveUserSubspecialitiesToStorage = (allSubspecialities: Subspeciality[]) => {
   const initialSubIds = new Set(initialSubspecialities.map(sub => sub.id));
   const userCreatedSubs = allSubspecialities.filter(sub => !initialSubIds.has(sub.id));
@@ -135,7 +128,6 @@ const Subspecialities = () => {
     setTotalPages(Math.ceil(mergedSubs.length / limit));
   }, []);
 
-  // Listen for subspeciality updates from create/edit page
   useEffect(() => {
     const handleSubspecialitiesUpdate = () => {
       const updatedSubs = loadSubspecialitiesFromStorage();
@@ -155,7 +147,6 @@ const Subspecialities = () => {
 
   const departments = Array.from(new Set(items.map(item => item.departmentName))).filter(Boolean);
 
-  // Filter items based on search and department
   const filteredItems = items.filter(item => {
     const matchesSearch = search === "" ||
       item.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -192,17 +183,14 @@ const Subspecialities = () => {
 
       let updatedItems;
       if (isUserCreated) {
-        // Remove user-created subspeciality completely
         updatedItems = items.filter(item => item.id !== toDelete.id);
       } else {
-        // For initial subspecialities, just mark as inactive (remove from view)
         updatedItems = items.filter(item => item.id !== toDelete.id);
       }
 
       setItems(updatedItems);
       saveUserSubspecialitiesToStorage(updatedItems);
 
-      // Dispatch event to notify other components
       window.dispatchEvent(new Event("subspecialitiesUpdated"));
 
       toast.success("Subspeciality deleted successfully");
@@ -210,7 +198,6 @@ const Subspecialities = () => {
       setToDelete(null);
       setDeleting(false);
 
-      // Adjust pagination if needed
       const newTotalPages = Math.ceil(updatedItems.length / limit);
       if (currentPage > newTotalPages && newTotalPages > 0) {
         setCurrentPage(newTotalPages);
@@ -244,15 +231,15 @@ const Subspecialities = () => {
   return (
     <AdminLayout title="Subspecialities">
       <div className="space-y-4 sm:space-y-6">
-        {/* Breadcrumb */}
+        
         <BreadCrumb />
 
-        {/* Main Card */}
+        
         <div className="rounded-xl border-2 border-burgundy/30 bg-gradient-to-br from-white via-slate-50/90 to-white shadow-xl backdrop-blur-sm overflow-hidden">
           <div className="h-1 bg-gradient-to-r from-burgundy/40 via-burgundy to-burgundy/40"></div>
 
           <div className="p-4 sm:p-6">
-            {/* Header */}
+            
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4 sm:mb-6">
               <div>
                 <h3 className="text-lg sm:text-xl font-bold text-slate-800">Subspecialities Management</h3>
@@ -260,7 +247,7 @@ const Subspecialities = () => {
               </div>
             </div>
 
-            {/* Search and Filter Section */}
+            
             <div className="flex flex-col gap-3 mb-4 sm:mb-6">
               <div className="flex flex-col min-[400px]:flex-row gap-2">
                 <div className="relative flex-1 min-w-0">
@@ -294,7 +281,7 @@ const Subspecialities = () => {
                 </div>
               </div>
 
-              {/* Department Filter */}
+              
               <select
                 value={selectedDepartment}
                 onChange={(e) => {
@@ -311,16 +298,11 @@ const Subspecialities = () => {
                 ))}
               </select>
 
-              {/* Add Button */}
-              {/* <Button asChild className="gap-2 bg-burgundy hover:bg-burgundy/90 shadow-md hover:shadow-lg transition-all duration-200 shrink-0">
-                <Link to="/subspecialities/create">
-                  <Plus className="h-4 w-4" />
-                  Add Subspeciality
-                </Link>
-              </Button> */}
+              
+              
             </div>
 
-            {/* Table Section */}
+            
             {loading ? (
               <div className="p-8 flex justify-center">
                 <Loader2 className="h-8 w-8 animate-spin text-burgundy" />
@@ -343,7 +325,7 @@ const Subspecialities = () => {
                   </div>
                 ) : (
                   <>
-                    {/* Mobile cards */}
+                    
                     <div className="md:hidden space-y-3">
                       {paginatedItems.map((row) => (
                         <article
@@ -391,32 +373,32 @@ const Subspecialities = () => {
                       ))}
                     </div>
 
-                    {/* Desktop table */}
+                    
                     <div className="hidden md:block overflow-x-auto">
                       <table className="w-full">
                         <thead>
                           <tr className="border-b border-slate-200 bg-slate-50/50">
                             <th className="text-left py-3 px-4 font-semibold text-slate-600 text-xs uppercase tracking-wider">
                               <div className="flex items-center gap-2">
-                                {/* <span>📚</span> */}
+                                
                                 Name
                               </div>
                             </th>
                             <th className="text-left py-3 px-4 font-semibold text-slate-600 text-xs uppercase tracking-wider">
                               <div className="flex items-center gap-2">
-                                {/* <span>🇸🇦</span> */}
+                                
                                 Arabic Name
                               </div>
                             </th>
                             <th className="text-left py-3 px-4 font-semibold text-slate-600 text-xs uppercase tracking-wider hidden md:table-cell">
                               <div className="flex items-center gap-2">
-                                {/* <span>🏥</span> */}
+                                
                                 Department
                               </div>
                             </th>
                             <th className="text-left py-3 px-4 font-semibold text-slate-600 text-xs uppercase tracking-wider hidden lg:table-cell">
                               <div className="flex items-center gap-2">
-                                {/* <Calendar className="h-4 w-4" /> */}
+                                
                                 Last Updated
                               </div>
                             </th>
@@ -468,24 +450,8 @@ const Subspecialities = () => {
                                       <Eye className="h-4 w-4" />
                                     </Link>
                                   </Button>
-                                  {/* <Button
-                                    asChild
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-8 w-8 text-slate-500 hover:text-burgundy hover:bg-burgundy/10 transition-all duration-200"
-                                  >
-                                    <Link to={`/subspecialities/edit/${row.id}`}>
-                                      <Pencil className="h-4 w-4" />
-                                    </Link>
-                                  </Button> */}
-                                  {/* <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-8 w-8 text-slate-500 hover:text-red-600 hover:bg-red-50 transition-all duration-200"
-                                    onClick={() => confirmDelete(row)}
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button> */}
+                                  
+                                  
                                 </div>
                               </td>
                             </tr>
@@ -494,7 +460,7 @@ const Subspecialities = () => {
                       </table>
                     </div>
 
-                    {/* Pagination - Bottom Right */}
+                    
                     {totalPages > 1 && (
                       <div className="mt-6 pt-4 border-t border-slate-100">
                         <div className="flex flex-wrap justify-center sm:justify-end gap-2">
@@ -558,7 +524,7 @@ const Subspecialities = () => {
         </div>
       </div>
 
-      {/* DELETE ALERT */}
+      
       <AlertBox
         isOpen={deleteOpen}
         title="Delete Subspeciality"

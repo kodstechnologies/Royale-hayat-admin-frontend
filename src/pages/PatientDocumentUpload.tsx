@@ -89,7 +89,7 @@ const PatientDocumentUpload = () => {
         </div>
       )}
 
-      {/* Links Table */}
+      
       <div className="bg-card rounded-lg shadow-sm border border-border">
         <div className="p-4 border-b border-border">
           <h3 className="font-serif font-semibold text-foreground">Generated Upload Links</h3>
@@ -162,7 +162,7 @@ const PatientDocumentUpload = () => {
         </div>
       </div>
 
-      {/* Send Modal */}
+      
       {sendModal.open && (
         <div className="fixed inset-0 bg-foreground/30 flex items-center justify-center z-50" onClick={() => setSendModal({ ...sendModal, open: false })}>
           <div className="bg-card rounded-lg shadow-lg border border-border p-6 w-96 animate-fade-in" onClick={e => e.stopPropagation()}>

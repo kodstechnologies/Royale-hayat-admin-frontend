@@ -1,5 +1,3 @@
-// Auto-generated — do not edit manually.
-// Source: RoyalHayat/src/data/doctors.ts
 
 export interface DoctorSeed {
   id: string;
@@ -2647,7 +2645,6 @@ export const doctors: DoctorSeed[] = [
     availableOnline: false,
   },
 
-  // },
   {
     id: 'dr-salah-al-wuhaib',
     image: '/images/doctors/salah-al-wuhaib.png',
@@ -2681,7 +2678,6 @@ export const doctors: DoctorSeed[] = [
     languages: ['English', 'Arabic'], languagesAr: ['الإنجليزية', 'العربية'],
     initials: 'SA', color: 'bg-primary/90',
     symptoms: [],
-    // providerCode:"PT036"
   },
   {
     id: 'dr-alaa-abdullah',
@@ -2914,19 +2910,14 @@ export const doctors: DoctorSeed[] = [
     symptoms: [],
   },
 
-  // },
-
-  // },
 ];
 
-// Helper functions
 export function getDoctorsByDepartment(): Record<string, Doctor[]> {
   const grouped: Record<string, Doctor[]> = {};
   for (const doc of doctors) {
     if (!grouped[doc.department]) grouped[doc.department] = [];
     grouped[doc.department].push(doc);
   }
-  // Sort each department's doctors alphabetically by name
   for (const dept in grouped) {
     grouped[dept].sort((a, b) => a.name.localeCompare(b.name));
   }

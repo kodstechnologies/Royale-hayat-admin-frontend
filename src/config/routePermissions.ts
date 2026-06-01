@@ -16,9 +16,7 @@ const isCallCenterUser = (): boolean => {
 };
 
 export type RoutePermissionRule = {
-  /** React Router path pattern (supports :params) */
   pattern: string;
-  /** User needs at least one of these permissions. Empty = any authenticated user. */
   permissions?: string[];
   excludeRoles?: string[];
 };

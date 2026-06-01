@@ -1,4 +1,3 @@
-// adminDoctors.ts
 
 export type AdminDoctor = {
   id: string;
@@ -23,7 +22,6 @@ export type AdminDoctor = {
 };
 
 export const adminDoctors: AdminDoctor[] = [
-  // Mustafa Alfiki
   {
     id: "1",
     doctorId: "",
@@ -90,7 +88,6 @@ export const adminDoctors: AdminDoctor[] = [
     createdAt: "2024-01-15T10:30:00Z",
     updatedAt: "2024-01-15T10:30:00Z",
   },
-  // Abdulaziz Ramadhan
   {
     id: "2",
     doctorId: "E3195",
@@ -145,7 +142,6 @@ export const adminDoctors: AdminDoctor[] = [
     createdAt: "2024-01-16T11:30:00Z",
     updatedAt: "2024-01-16T11:30:00Z",
   },
-  // Mohammad Mohammad Hasan Alkandari
   {
     id: "3",
     doctorId: "PT076",
@@ -205,7 +201,6 @@ export const adminDoctors: AdminDoctor[] = [
     createdAt: "2024-01-17T12:30:00Z",
     updatedAt: "2024-01-17T12:30:00Z",
   },
-  // Ahmed Al Qallaf
   {
     id: "4",
     doctorId: "PT043",
@@ -271,7 +266,6 @@ export const adminDoctors: AdminDoctor[] = [
     createdAt: "2024-01-18T13:30:00Z",
     updatedAt: "2024-01-18T13:30:00Z",
   },
-  // Dherar M. Alroudhan
   {
     id: "5",
     doctorId: "PT064",
@@ -326,7 +320,6 @@ export const adminDoctors: AdminDoctor[] = [
     createdAt: "2024-01-19T14:30:00Z",
     updatedAt: "2024-01-19T14:30:00Z",
   },
-  // Mohammad Alturki
   {
     id: "6",
     doctorId: "PT070",
@@ -380,7 +373,6 @@ export const adminDoctors: AdminDoctor[] = [
     createdAt: "2024-01-20T15:30:00Z",
     updatedAt: "2024-01-20T15:30:00Z",
   },
-  // Raed Al Swait
   {
     id: "7",
     doctorId: "",
@@ -442,7 +434,6 @@ export const adminDoctors: AdminDoctor[] = [
     createdAt: "2024-01-21T16:30:00Z",
     updatedAt: "2024-01-21T16:30:00Z",
   },
-  // Wadha Abdulaziz Al-jaser
   {
     id: "8",
     doctorId: "PT066",
@@ -494,7 +485,6 @@ export const adminDoctors: AdminDoctor[] = [
     createdAt: "2024-01-22T17:30:00Z",
     updatedAt: "2024-01-22T17:30:00Z",
   },
-  // Alia Ali Ibrahim
   {
     id: "9",
     doctorId: "PT053",
@@ -563,7 +553,6 @@ export const adminDoctors: AdminDoctor[] = [
     createdAt: "2024-01-23T18:30:00Z",
     updatedAt: "2024-01-23T18:30:00Z",
   },
-  // Yassmin Othman
   {
     id: "10",
     doctorId: "PT084",
@@ -618,7 +607,6 @@ export const adminDoctors: AdminDoctor[] = [
     createdAt: "2024-01-24T19:30:00Z",
     updatedAt: "2024-01-24T19:30:00Z",
   },
-  // Ali Ibrahim Aldei
   {
     id: "11",
     doctorId: "PT060",
@@ -666,7 +654,6 @@ export const adminDoctors: AdminDoctor[] = [
     createdAt: "2024-01-25T20:30:00Z",
     updatedAt: "2024-01-25T20:30:00Z",
   },
-  // Said Ahmed Ooda
   {
     id: "12",
     doctorId: "E2607",
@@ -720,7 +707,6 @@ export const adminDoctors: AdminDoctor[] = [
     createdAt: "2024-01-26T21:30:00Z",
     updatedAt: "2024-01-26T21:30:00Z",
   },
-  // Ahmed Al Mulla
   {
     id: "13",
     doctorId: "E2196",
@@ -789,7 +775,6 @@ export const adminDoctors: AdminDoctor[] = [
     createdAt: "2024-01-27T10:30:00Z",
     updatedAt: "2024-01-27T10:30:00Z",
   },
-  // Humoud Alrasheedi
   {
     id: "14",
     doctorId: "PT061",
@@ -862,7 +847,6 @@ export const adminDoctors: AdminDoctor[] = [
     createdAt: "2024-01-28T10:30:00Z",
     updatedAt: "2024-01-28T10:30:00Z",
   },
-  // Hussein Faour
   {
     id: "15",
     doctorId: "E1224",
@@ -937,7 +921,6 @@ export const adminDoctors: AdminDoctor[] = [
     createdAt: "2024-01-29T10:30:00Z",
     updatedAt: "2024-01-29T10:30:00Z",
   },
-  // Sulaiman Almazeedi
   {
     id: "16",
     doctorId: "PT054",
@@ -997,7 +980,6 @@ export const adminDoctors: AdminDoctor[] = [
     createdAt: "2024-01-30T10:30:00Z",
     updatedAt: "2024-01-30T10:30:00Z",
   },
-  // Noha Alsaleh
   {
     id: "17",
     doctorId: "E2237",
@@ -1053,7 +1035,6 @@ export const adminDoctors: AdminDoctor[] = [
     createdAt: "2024-01-31T10:30:00Z",
     updatedAt: "2024-01-31T10:30:00Z",
   },
-  // Anny Qaisser
   {
     id: "18",
     doctorId: "E2562",
@@ -1118,7 +1099,6 @@ export const adminDoctors: AdminDoctor[] = [
     createdAt: "2024-02-01T10:30:00Z",
     updatedAt: "2024-02-01T10:30:00Z",
   },
-  // Rabee Harb
   {
     id: "19",
     doctorId: "E2561",
@@ -1189,7 +1169,6 @@ export const adminDoctors: AdminDoctor[] = [
     createdAt: "2024-02-02T10:30:00Z",
     updatedAt: "2024-02-02T10:30:00Z",
   },
-  // Musheera M. Ali
   {
     id: "20",
     doctorId: "CE121",
@@ -1248,7 +1227,6 @@ export const adminDoctors: AdminDoctor[] = [
     createdAt: "2024-02-03T10:30:00Z",
     updatedAt: "2024-02-03T10:30:00Z",
   },
-  // Suraj V. Davis
   {
     id: "21",
     doctorId: "CE118",
@@ -1308,7 +1286,6 @@ export const adminDoctors: AdminDoctor[] = [
     createdAt: "2024-02-04T10:30:00Z",
     updatedAt: "2024-02-04T10:30:00Z",
   },
-  // Brook Assefa Ayele
   {
     id: "22",
     doctorId: "E3195",
@@ -1378,7 +1355,6 @@ export const adminDoctors: AdminDoctor[] = [
     createdAt: "2024-02-05T10:30:00Z",
     updatedAt: "2024-02-05T10:30:00Z",
   },
-  // Fatemah Faras
   {
     id: "23",
     doctorId: "PT085",
@@ -1454,7 +1430,6 @@ export const adminDoctors: AdminDoctor[] = [
     createdAt: "2024-02-06T10:30:00Z",
     updatedAt: "2024-02-06T10:30:00Z",
   },
-  // Gie Vandehult
   {
     id: "24",
     doctorId: "CE050",
@@ -1506,7 +1481,6 @@ export const adminDoctors: AdminDoctor[] = [
     createdAt: "2024-02-07T10:30:00Z",
     updatedAt: "2024-02-07T10:30:00Z",
   },
-  // Helen Kamil Alkaabi
   {
     id: "25",
     doctorId: "E2936",
@@ -1568,7 +1542,6 @@ export const adminDoctors: AdminDoctor[] = [
     createdAt: "2024-02-08T10:30:00Z",
     updatedAt: "2024-02-08T10:30:00Z",
   },
-  // Husain Alqattan
   {
     id: "26",
     doctorId: "PT079",
@@ -1637,7 +1610,6 @@ export const adminDoctors: AdminDoctor[] = [
     createdAt: "2024-02-09T10:30:00Z",
     updatedAt: "2024-02-09T10:30:00Z",
   },
-  // Mohammad Razzak
   {
     id: "27",
     doctorId: "CE055",
@@ -1690,7 +1662,6 @@ export const adminDoctors: AdminDoctor[] = [
     createdAt: "2024-02-10T10:30:00Z",
     updatedAt: "2024-02-10T10:30:00Z",
   },
-  // Sarah Al Youha
   {
     id: "28",
     doctorId: "PT062",
@@ -1803,7 +1774,6 @@ export const adminDoctors: AdminDoctor[] = [
     createdAt: "2024-02-12T10:30:00Z",
     updatedAt: "2024-02-12T10:30:00Z",
   },
-  // Hamid Ghaderi
   {
     id: "30",
     doctorId: "E1076",
@@ -1862,7 +1832,6 @@ export const adminDoctors: AdminDoctor[] = [
     createdAt: "2024-02-13T10:30:00Z",
     updatedAt: "2024-02-13T10:30:00Z",
   },
-  // Yasser Haggag
   {
     id: "31",
     doctorId: "E1461",
@@ -1914,7 +1883,6 @@ export const adminDoctors: AdminDoctor[] = [
     createdAt: "2024-02-14T10:30:00Z",
     updatedAt: "2024-02-14T10:30:00Z",
   },
-  // Ahmad Abdulrahman Al Mulla
   {
     id: "32",
     doctorId: "PT036",
@@ -1958,7 +1926,6 @@ export const adminDoctors: AdminDoctor[] = [
     createdAt: "2024-02-15T10:30:00Z",
     updatedAt: "2024-02-15T10:30:00Z",
   },
-  // Ahmad Al Mosawi
   {
     id: "33",
     doctorId: "PT042",
@@ -2005,7 +1972,6 @@ export const adminDoctors: AdminDoctor[] = [
     createdAt: "2024-02-16T10:30:00Z",
     updatedAt: "2024-02-16T10:30:00Z",
   },
-  // Mohammad Ebrahim
   {
     id: "34",
     doctorId: "PT071",
@@ -2059,7 +2025,6 @@ export const adminDoctors: AdminDoctor[] = [
     createdAt: "2024-02-17T10:30:00Z",
     updatedAt: "2024-02-17T10:30:00Z",
   },
-  // Rajendra C. Mishra
   {
     id: "35",
     doctorId: "E1890",
@@ -2112,7 +2077,6 @@ export const adminDoctors: AdminDoctor[] = [
     createdAt: "2024-02-18T10:30:00Z",
     updatedAt: "2024-02-18T10:30:00Z",
   },
-  // Wasmi Al Fadhli
   {
     id: "36",
     doctorId: "PT038",
@@ -2171,7 +2135,6 @@ export const adminDoctors: AdminDoctor[] = [
     createdAt: "2024-02-19T10:30:00Z",
     updatedAt: "2024-02-19T10:30:00Z",
   },
-  // Ehab Atteya
   {
     id: "37",
     doctorId: "E0723",
@@ -2218,7 +2181,6 @@ export const adminDoctors: AdminDoctor[] = [
     createdAt: "2024-02-20T10:30:00Z",
     updatedAt: "2024-02-20T10:30:00Z",
   },
-  // Fahed Abdulaziz Aljaser
   {
     id: "38",
     doctorId: "PT069",
@@ -2271,7 +2233,6 @@ export const adminDoctors: AdminDoctor[] = [
     createdAt: "2024-02-21T10:30:00Z",
     updatedAt: "2024-02-21T10:30:00Z",
   },
-  // Omar Alkandari
   {
     id: "39",
     doctorId: "PT047",
@@ -2315,7 +2276,6 @@ export const adminDoctors: AdminDoctor[] = [
     createdAt: "2024-02-22T10:30:00Z",
     updatedAt: "2024-02-22T10:30:00Z",
   },
-  // Roland Waked
   {
     id: "40",
     doctorId: "E1095",
@@ -2367,7 +2327,6 @@ export const adminDoctors: AdminDoctor[] = [
     createdAt: "2024-02-23T10:30:00Z",
     updatedAt: "2024-02-23T10:30:00Z",
   },
-  // Adel Al-ali
   {
     id: "41",
     doctorId: "PT033",
@@ -2426,7 +2385,6 @@ export const adminDoctors: AdminDoctor[] = [
     createdAt: "2024-02-24T10:30:00Z",
     updatedAt: "2024-02-24T10:30:00Z",
   },
-  // Osama Al Saeed
   {
     id: "42",
     doctorId: "PT011",
@@ -2476,7 +2434,6 @@ export const adminDoctors: AdminDoctor[] = [
     createdAt: "2024-02-25T10:30:00Z",
     updatedAt: "2024-02-25T10:30:00Z",
   },
-  // Yomna Abdelaal Husseiny
   {
     id: "43",
     doctorId: "E2616",
@@ -2530,7 +2487,6 @@ export const adminDoctors: AdminDoctor[] = [
     createdAt: "2024-02-26T10:30:00Z",
     updatedAt: "2024-02-26T10:30:00Z",
   },
-  // Farah Hachem
   {
     id: "44",
     doctorId: "E2395",
@@ -2578,7 +2534,6 @@ export const adminDoctors: AdminDoctor[] = [
     createdAt: "2024-02-27T10:30:00Z",
     updatedAt: "2024-02-27T10:30:00Z",
   },
-  // Fatme Khreis
   {
     id: "45",
     doctorId: "6015",
@@ -2625,11 +2580,8 @@ export const adminDoctors: AdminDoctor[] = [
     updatedAt: "2024-02-28T10:30:00Z",
   },
 
-  // Continue with remaining doctors from doctors.ts...
-  // (Due to length limitations, I'll continue in the next response)
 ];
 
-// Helper functions
 export const getDoctorsByDepartment = (department: string): AdminDoctor[] => {
   return adminDoctors.filter(doctor => doctor.department === department);
 };

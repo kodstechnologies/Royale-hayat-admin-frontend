@@ -168,7 +168,7 @@ const CreateJobPage = () => {
               </div>
             </div>
 
-            {/* Language Tabs */}
+            
             <div className="mb-6 sm:mb-8">
               <div className="flex gap-2 sm:gap-4 p-1 bg-slate-100/80 rounded-xl w-full sm:w-fit">
                 <button
@@ -210,7 +210,7 @@ const CreateJobPage = () => {
               {({ values, setFieldValue }) => (
                 <Form className="space-y-6">
 
-                  {/* ENGLISH TAB */}
+                  
                   {activeTab === "english" && (
                     <div className="space-y-6 animate-in fade-in duration-200">
                       <div className="bg-white rounded-xl border border-slate-200 p-5 space-y-5">
@@ -252,7 +252,7 @@ const CreateJobPage = () => {
                           />
                         </div>
 
-                        {/* Responsibilities */}
+                        
                         <div className="space-y-3">
                           <div className="flex items-center justify-between">
                             <label className="text-sm font-semibold text-slate-700">
@@ -309,7 +309,7 @@ const CreateJobPage = () => {
                           </div>
                         </div>
 
-                        {/* Requirements */}
+                        
                         <div className="space-y-3">
                           <div className="flex items-center justify-between">
                             <label className="text-sm font-semibold text-slate-700">
@@ -369,7 +369,7 @@ const CreateJobPage = () => {
                     </div>
                   )}
 
-                  {/* ARABIC TAB */}
+                  
                   {activeTab === "arabic" && (
                     <div className="space-y-6 animate-in fade-in duration-200">
                       <div className="bg-white rounded-xl border border-slate-200 p-5 space-y-5">
@@ -417,7 +417,7 @@ const CreateJobPage = () => {
                           />
                         </div>
 
-                        {/* Arabic Responsibilities */}
+                        
                         <div className="space-y-3">
                           <div className="flex items-center justify-between">
                             <label className="text-sm font-semibold text-slate-700">
@@ -479,7 +479,7 @@ const CreateJobPage = () => {
                           </div>
                         </div>
 
-                        {/* Arabic Requirements */}
+                        
                         <div className="space-y-3">
                           <div className="flex items-center justify-between">
                             <label className="text-sm font-semibold text-slate-700">
@@ -544,7 +544,7 @@ const CreateJobPage = () => {
                     </div>
                   )}
 
-                  {/* Common Fields */}
+                  
                   <div className="bg-white rounded-xl border border-slate-200 p-5 space-y-5">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                       <div className="space-y-2">

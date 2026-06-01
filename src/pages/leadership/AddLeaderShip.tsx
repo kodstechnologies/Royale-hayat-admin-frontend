@@ -59,7 +59,6 @@ const AddLeadership = () => {
     setDragActive(false);
     const file = e.dataTransfer.files?.[0] || null;
     if (file && file.type.startsWith("image/")) {
-      // Check file size (5MB limit)
       if (file.size > 5 * 1024 * 1024) {
         toast.error("Image exceeds 5MB limit");
         setImageError("Image size exceeds 5MB limit");
@@ -77,7 +76,6 @@ const AddLeadership = () => {
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
     if (file && file.type.startsWith("image/")) {
-      // Check file size (5MB limit)
       if (file.size > 5 * 1024 * 1024) {
         toast.error("Image exceeds 5MB limit");
         setImageError("Image size exceeds 5MB limit");
@@ -93,7 +91,6 @@ const AddLeadership = () => {
   };
 
   const handleSubmit = async () => {
-    // Validation
     if (!formData.name.trim()) {
       toast.error("Please enter name (English)");
       setActiveTab("english");
@@ -146,7 +143,6 @@ const AddLeadership = () => {
 
       const response = await createLeadership(formDataToSend);
       
-      // Dispatch event to notify list page
       window.dispatchEvent(new Event("leadershipUpdated"));
       
       toast.success(response?.message || "Leadership added successfully!");
@@ -154,7 +150,6 @@ const AddLeadership = () => {
     } catch (error: any) {
       console.error("Error adding leadership:", error);
       
-      // Handle validation errors
       if (error?.response?.data?.message) {
         toast.error(error.response.data.message);
       } else if (error?.response?.data?.meta) {
@@ -168,7 +163,6 @@ const AddLeadership = () => {
     }
   };
 
-  // Labels remain in English regardless of activeTab
   const getUIText = {
     pageTitle: "Add Leadership",
     pageDescription: "Add a new leadership team member",
@@ -190,7 +184,7 @@ const AddLeadership = () => {
           <div className="h-1 bg-gradient-to-r from-burgundy/40 via-burgundy to-burgundy/40"></div>
 
           <div className="p-4 sm:p-6">
-            {/* Header */}
+            
             <div className="flex flex-col gap-4 mb-4 sm:mb-6">
               <div className="flex items-start gap-3 min-w-0">
                 <button
@@ -235,9 +229,9 @@ const AddLeadership = () => {
               </div>
             </div>
 
-            {/* Form */}
+            
             <div className="space-y-6">
-              {/* Basic Information */}
+              
               <div className="bg-white rounded-xl border border-slate-200 p-4 sm:p-5 space-y-5">
                 <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
                   <User className="h-5 w-5 text-burgundy shrink-0" />
@@ -245,7 +239,7 @@ const AddLeadership = () => {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  {/* Initials */}
+                  
                   <div className="space-y-2">
                     <label className="text-sm font-semibold text-slate-700">
                       {getUIText.initials} <span className="text-slate-400 text-xs">(Optional)</span>
@@ -267,7 +261,7 @@ const AddLeadership = () => {
                     />
                   </div>
 
-                  {/* Name */}
+                  
                   <div className="space-y-2 md:col-span-2">
                     <label className="text-sm font-semibold text-slate-700">
                       {getUIText.name} <span className="text-red-500">*</span>
@@ -288,7 +282,7 @@ const AddLeadership = () => {
                     />
                   </div>
 
-                  {/* Title */}
+                  
                   <div className="space-y-2 md:col-span-2">
                     <label className="text-sm font-semibold text-slate-700">
                       {getUIText.title} <span className="text-red-500">*</span>
@@ -311,7 +305,7 @@ const AddLeadership = () => {
                 </div>
               </div>
 
-              {/* Description */}
+              
               <div className="bg-white rounded-xl border border-slate-200 p-4 sm:p-5 space-y-5">
                 <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
                   <FileText className="h-5 w-5 text-burgundy shrink-0" />
@@ -340,7 +334,7 @@ const AddLeadership = () => {
                 </div>
               </div>
 
-              {/* Image Upload */}
+              
               <div className="bg-white rounded-xl border border-slate-200 p-4 sm:p-5 space-y-5">
                 <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
                   <Upload className="h-5 w-5 text-burgundy shrink-0" />
@@ -394,7 +388,7 @@ const AddLeadership = () => {
                   </div>
                 </div>
 
-                {/* Error Message */}
+                
                 {imageError && (
                   <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded-lg">
                     <p className="text-sm text-red-600">{imageError}</p>
@@ -402,7 +396,7 @@ const AddLeadership = () => {
                 )}
               </div>
 
-              {/* Submit Button */}
+              
               <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-4 border-t border-slate-100">
                 <Button variant="outline" onClick={() => navigate("/leadership")} className="gap-2 w-full sm:w-auto">
                   <X className="h-4 w-4" />
@@ -414,7 +408,7 @@ const AddLeadership = () => {
                 </Button>
               </div>
 
-              {/* Hint message */}
+              
               {!formData.imageFile && (
                 <p className="text-xs text-amber-600 text-center">
                   {activeTab === "english" 

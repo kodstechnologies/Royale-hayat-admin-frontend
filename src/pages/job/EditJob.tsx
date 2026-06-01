@@ -235,7 +235,7 @@ const EditJobPage = () => {
               </div>
             </div>
 
-            {/* Tabs */}
+            
             <div className="mb-6 sm:mb-8">
               <div className="flex gap-2 sm:gap-4 p-1 bg-slate-100/80 rounded-xl w-full sm:w-fit">
                 <button
@@ -277,7 +277,7 @@ const EditJobPage = () => {
             >
               {({ values, setFieldValue }) => (
                 <Form className="space-y-6">
-                  {/* Job ID - Common for both tabs */}
+                  
                   <div className="bg-slate-50/50 rounded-xl p-5 border border-slate-100">
                     <div className="space-y-2">
                       <label className="text-sm font-semibold text-slate-700">
@@ -293,7 +293,7 @@ const EditJobPage = () => {
                     </div>
                   </div>
 
-                  {/* ENGLISH TAB */}
+                  
                   {activeTab === "english" && (
                     <div className="space-y-6 animate-in fade-in duration-200">
                       <div className="bg-white rounded-xl border border-slate-200 p-5 space-y-5">
@@ -331,7 +331,7 @@ const EditJobPage = () => {
                           <ErrorMessage name="description" component="p" className="text-xs text-red-500" />
                         </div>
 
-                        {/* Responsibilities - Addable List */}
+                        
                         <div className="space-y-3">
                           <div className="flex items-center justify-between">
                             <label className="text-sm font-semibold text-slate-700">
@@ -371,7 +371,7 @@ const EditJobPage = () => {
                           </div>
                         </div>
 
-                        {/* Requirements - Addable List */}
+                        
                         <div className="space-y-3">
                           <div className="flex items-center justify-between">
                             <label className="text-sm font-semibold text-slate-700">
@@ -414,7 +414,7 @@ const EditJobPage = () => {
                     </div>
                   )}
 
-                  {/* ARABIC TAB */}
+                  
                   {activeTab === "arabic" && (
                     <div className="space-y-6 animate-in fade-in duration-200">
                       <div className="bg-white rounded-xl border border-slate-200 p-5 space-y-5">
@@ -454,7 +454,7 @@ const EditJobPage = () => {
                           <ErrorMessage name="arabicDescription" component="p" className="text-xs text-red-500" />
                         </div>
 
-                        {/* Arabic Responsibilities - Addable List */}
+                        
                         <div className="space-y-3">
                           <div className="flex items-center justify-between">
                             <label className="text-sm font-semibold text-slate-700">
@@ -495,7 +495,7 @@ const EditJobPage = () => {
                           </div>
                         </div>
 
-                        {/* Arabic Requirements - Addable List */}
+                        
                         <div className="space-y-3">
                           <div className="flex items-center justify-between">
                             <label className="text-sm font-semibold text-slate-700">
@@ -539,7 +539,7 @@ const EditJobPage = () => {
                     </div>
                   )}
 
-                  {/* Common Fields */}
+                  
                   <div className="bg-white rounded-xl border border-slate-200 p-5 space-y-5">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                       <div className="space-y-2">

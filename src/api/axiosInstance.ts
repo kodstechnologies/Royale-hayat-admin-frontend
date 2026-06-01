@@ -24,7 +24,6 @@ const shouldRedirectToLoginOn401 = (requestUrl?: string) => {
     return !isAuthFlowRequest;
 };
 
-// RESPONSE INTERCEPTOR
 api.interceptors.response.use(
     (response) => response,
     (error) => {

@@ -44,8 +44,6 @@ import { scrollPageToTop, useScrollToTop } from "@/hooks/useScrollToTop";
 import { PERMISSIONS } from "@/constants/permissions";
 import PermissionGate, { hasPermission } from "@/utils/PermissionGate";
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
-
 const formatBadgeCount = (count: number) => (count > 99 ? "99+" : String(count));
 
 const notifyApplicationsUpdated = () => {
@@ -290,8 +288,6 @@ const ApplicationStatusFilterBar = ({
   );
 };
 
-// ── Map API application → local JobApplication shape ─────────────────────────
-
 const resolveJobRef = (jobRef: unknown) => {
   if (!jobRef) {
     return { jobTitle: "", jobId: "" };
@@ -331,8 +327,6 @@ const mapApiApplication = (app: any): JobApplication => {
   };
 };
 
-// ── Application List ──────────────────────────────────────────────────────────
-
 type ApplicationListProps = {
   jobMongoId: string;   // MongoDB _id of the job (from URL param)
   onSelect: (app: JobApplication) => void;
@@ -359,7 +353,6 @@ const ApplicationList = ({ jobMongoId, onSelect }: ApplicationListProps) => {
     const load = async () => {
       setLoading(true);
 
-      // ── Resolve job title ──────────────────────────────────────────────────
       let resolvedJobId = jobMongoId; // may be overwritten with jobId string
       try {
         const jobRes = await getJobByIdApi(jobMongoId);
@@ -369,7 +362,6 @@ const ApplicationList = ({ jobMongoId, onSelect }: ApplicationListProps) => {
           resolvedJobId = apiJob.jobId ?? jobMongoId;
         }
       } catch {
-        // Fallback: check static dummy data
         const staticJob = adminJobs.find((j) => j.id === jobMongoId);
         if (staticJob) {
           setJobTitle(staticJob.title);
@@ -377,7 +369,6 @@ const ApplicationList = ({ jobMongoId, onSelect }: ApplicationListProps) => {
         }
       }
 
-      // ── Fetch applications ─────────────────────────────────────────────────
       try {
         const appRes = await getApplicationsByJobIdApi(
           jobMongoId,
@@ -398,7 +389,6 @@ const ApplicationList = ({ jobMongoId, onSelect }: ApplicationListProps) => {
 
         setApplications(apiApps);
       } catch {
-        // API failed — fall back to dummy data
         const dummyApps = getDummyApplicationsByJobId(resolvedJobId);
         const filteredDummy =
           statusFilter === "all"
@@ -500,7 +490,7 @@ const ApplicationList = ({ jobMongoId, onSelect }: ApplicationListProps) => {
         <div className="h-1 bg-gradient-to-r from-burgundy/40 via-burgundy to-burgundy/40" />
 
         <div className="p-4 sm:p-6">
-          {/* Header */}
+          
           <div className="flex items-start gap-3 mb-4 sm:mb-6 min-w-0">
             <button
               type="button"
@@ -528,11 +518,7 @@ const ApplicationList = ({ jobMongoId, onSelect }: ApplicationListProps) => {
                       </span>
                     )}
                   </span>
-                  {/* {unviewedCount > 0 && (
-                    <span className="min-w-[1.375rem] h-5 px-1.5 rounded-full bg-burgundy text-white text-[11px] font-semibold leading-none inline-flex items-center justify-center">
-                      {formatBadgeCount(unviewedCount)} new
-                    </span>
-                  )} */}
+                  
                 </p>
               )}
             </div>
@@ -545,7 +531,7 @@ const ApplicationList = ({ jobMongoId, onSelect }: ApplicationListProps) => {
             disabled={loading}
           />
 
-          {/* Loading */}
+          
           {loading ? (
             <div className="space-y-3 py-4">
               {[...Array(4)].map((_, i) => (
@@ -579,7 +565,7 @@ const ApplicationList = ({ jobMongoId, onSelect }: ApplicationListProps) => {
             </div>
           ) : (
             <>
-            {/* Mobile cards */}
+            
             <div className="md:hidden space-y-3">
               {applications.map((app) => (
                 <article
@@ -840,8 +826,6 @@ const ApplicationList = ({ jobMongoId, onSelect }: ApplicationListProps) => {
   );
 };
 
-// ── Application Detail ────────────────────────────────────────────────────────
-
 type ApplicationDetailProps = {
   applicationId: string;   // _id of the selected application
   initialData: JobApplication; // pre-loaded from list (used as fallback)
@@ -958,7 +942,7 @@ const ApplicationDetail = ({ applicationId, initialData, onBack }: ApplicationDe
         <div className="h-1 bg-gradient-to-r from-burgundy/40 via-burgundy to-burgundy/40" />
 
         <div className="p-4 sm:p-6">
-          {/* Header */}
+          
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between mb-4 sm:mb-6">
             <div className="flex items-start gap-3 min-w-0">
               <button
@@ -991,9 +975,9 @@ const ApplicationDetail = ({ applicationId, initialData, onBack }: ApplicationDe
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-            {/* Left Column */}
+            
             <div className="lg:col-span-1 space-y-5">
-              {/* Profile Card */}
+              
               <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
                 <div className="flex items-center gap-3 mb-4 pb-3 border-b border-slate-100">
                   <div className="w-12 h-12 rounded-xl bg-burgundy/10 flex items-center justify-center">
@@ -1042,7 +1026,7 @@ const ApplicationDetail = ({ applicationId, initialData, onBack }: ApplicationDe
                 </div>
               </div>
 
-              {/* Position & Status Card */}
+              
               <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
                 <div className="flex items-center gap-3 mb-4 pb-3 border-b border-slate-100">
                   <div className="w-12 h-12 rounded-xl bg-burgundy/10 flex items-center justify-center">
@@ -1123,9 +1107,9 @@ const ApplicationDetail = ({ applicationId, initialData, onBack }: ApplicationDe
               </div>
             </div>
 
-            {/* Right Column */}
+            
             <div className="lg:col-span-2 space-y-5">
-              {/* Resume / CV */}
+              
               <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
                 <div className="flex items-center gap-3 mb-4 pb-3 border-b border-slate-100">
                   <div className="w-12 h-12 rounded-xl bg-burgundy/10 flex items-center justify-center">
@@ -1163,7 +1147,7 @@ const ApplicationDetail = ({ applicationId, initialData, onBack }: ApplicationDe
                 </div>
               </div>
 
-              {/* Cover Letter / Tell Us About Yourself */}
+              
               {application.coverLetter && (
                 <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
                   <div className="flex items-center gap-3 mb-4 pb-3 border-b border-slate-100">
@@ -1184,7 +1168,7 @@ const ApplicationDetail = ({ applicationId, initialData, onBack }: ApplicationDe
                 </div>
               )}
 
-              {/* Action Buttons */}
+              
               <div className="flex flex-col-reverse sm:flex-row gap-2 sm:gap-3 pt-2">
                 <Button onClick={onBack} variant="outline" className="w-full sm:flex-1">
                   Back to Applications
@@ -1219,8 +1203,6 @@ const ApplicationDetail = ({ applicationId, initialData, onBack }: ApplicationDe
     </div>
   );
 };
-
-// ── Main Component ────────────────────────────────────────────────────────────
 
 const ViewJobApplications = () => {
   const { id } = useParams<{ id: string }>();

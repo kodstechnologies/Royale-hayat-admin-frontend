@@ -1,4 +1,3 @@
-// AddFeedback.tsx
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import AdminLayout from "@/components/layout/AdminLayout";
@@ -40,13 +39,11 @@ const AddFeedback = ({ onSave }: AddFeedbackProps) => {
   const [doctorOptions, setDoctorOptions] = useState<FeedbackDoctorOption[]>([]);
   const [loadingDoctors, setLoadingDoctors] = useState(false);
   const [formData, setFormData] = useState({
-    // Common fields
     patientName: "",
     patientNameAr: "",
     rating: 5,
     comment: "",
     commentAr: "",
-    // Doctor specific fields
     doctorName: "",
     doctorNameAr: "",
     doctorDepartment: "",
@@ -90,7 +87,6 @@ const AddFeedback = ({ onSave }: AddFeedbackProps) => {
     fetchDoctors();
   }, []);
 
-  // Handle doctor selection
   const handleDoctorSelect = (doctorId: string) => {
     setSelectedDoctorId(doctorId);
     if (doctorId) {
@@ -106,7 +102,6 @@ const AddFeedback = ({ onSave }: AddFeedbackProps) => {
         }));
       }
     } else {
-      // Clear doctor fields if no doctor selected
       setFormData(prev => ({
         ...prev,
         doctorName: "",
@@ -119,7 +114,6 @@ const AddFeedback = ({ onSave }: AddFeedbackProps) => {
   };
 
   const handleSubmit = async () => {
-    // Validation - Only one language is required
     const hasEnglish = formData.patientName.trim() !== "" && formData.comment.trim() !== "";
     const hasArabic = formData.patientNameAr.trim() !== "" && formData.commentAr.trim() !== "";
     
@@ -163,7 +157,6 @@ const AddFeedback = ({ onSave }: AddFeedbackProps) => {
           ? "Doctor feedback added successfully!" 
           : "تم إضافة ملاحظة الطبيب بنجاح!");
       } else {
-        // Prepare hospital feedback payload
         const payload = {
           userName: formData.patientName,
           arabicUserName: formData.patientNameAr,
@@ -184,7 +177,6 @@ const AddFeedback = ({ onSave }: AddFeedbackProps) => {
           : "تم إضافة ملاحظة المستشفى بنجاح!");
       }
 
-      // Call onSave callback if provided
       if (onSave) {
         const newFeedback = {
           id: Date.now(),
@@ -210,7 +202,6 @@ const AddFeedback = ({ onSave }: AddFeedbackProps) => {
         onSave(newFeedback);
       }
       
-      // Navigate back to feedback list
       navigate("/feedback");
     } catch (error: any) {
       console.error("Error adding feedback:", error);
@@ -258,7 +249,6 @@ const AddFeedback = ({ onSave }: AddFeedbackProps) => {
     hospitalFeedback: activeLanguage === "english" ? "Hospital Feedback" : "ملاحظات المستشفى",
     rating: activeLanguage === "english" ? "Rating" : "التقييم",
     
-    // Dynamic field labels based on selected language
     patientName: activeLanguage === "english" ? "Patient Name" : "اسم المريض",
     doctorName: activeLanguage === "english" ? "Doctor Name" : "اسم الطبيب",
     department: activeLanguage === "english" ? "Department" : "القسم",
@@ -278,7 +268,7 @@ const AddFeedback = ({ onSave }: AddFeedbackProps) => {
       <div className="space-y-4 sm:space-y-6">
         <BreadCrumb />
         
-        {/* Header with Back Button and Language Tabs */}
+        
         <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center">
           <Button 
             variant="ghost" 
@@ -290,7 +280,7 @@ const AddFeedback = ({ onSave }: AddFeedbackProps) => {
             {getUIText.backToFeedback}
           </Button>
 
-          {/* Language Tabs */}
+          
           <div className="flex gap-2 p-1 bg-slate-100/80 rounded-lg w-full sm:w-auto">
             <button
               onClick={() => setActiveLanguage("english")}
@@ -325,19 +315,19 @@ const AddFeedback = ({ onSave }: AddFeedbackProps) => {
           </div>
         </div>
 
-        {/* Main Form Card */}
+        
         <div className="rounded-xl border-2 border-burgundy/30 bg-gradient-to-br from-white via-slate-50/90 to-white shadow-xl backdrop-blur-sm overflow-hidden">
           <div className="h-1 bg-gradient-to-r from-burgundy/40 via-burgundy to-burgundy/40"></div>
           
           <div className="p-4 sm:p-6">
-            {/* Page Title */}
+            
             <div className="mb-4 sm:mb-6">
               <h3 className="text-lg sm:text-xl font-bold text-slate-800">{getUIText.pageTitle}</h3>
               <p className="text-xs sm:text-sm text-slate-500 mt-1">{getUIText.pageDescription}</p>
             </div>
 
             <div className="space-y-6">
-              {/* Feedback Type Selection */}
+              
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">
                   {getUIText.feedbackType}
@@ -378,7 +368,7 @@ const AddFeedback = ({ onSave }: AddFeedbackProps) => {
                 </div>
               </div>
 
-              {/* Rating */}
+              
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">
                   {getUIText.rating}
@@ -387,7 +377,7 @@ const AddFeedback = ({ onSave }: AddFeedbackProps) => {
                 {renderStars(formData.rating)}
               </div>
 
-              {/* Patient Name - Single Field based on language */}
+              
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">
                   {getUIText.patientName}
@@ -414,10 +404,10 @@ const AddFeedback = ({ onSave }: AddFeedbackProps) => {
                 )}
               </div>
 
-              {/* Doctor Specific Fields */}
+              
               {feedbackType === "doctor" && (
                 <>
-                  {/* Doctor Name with integrated dropdown */}
+                  
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-2">
                       {getUIText.doctorName}
@@ -444,7 +434,7 @@ const AddFeedback = ({ onSave }: AddFeedbackProps) => {
                     </div>
                   </div>
 
-                  {/* Department - Auto-filled from dropdown */}
+                  
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-2">
                       {getUIText.department}
@@ -473,7 +463,7 @@ const AddFeedback = ({ onSave }: AddFeedbackProps) => {
                 </>
               )}
 
-              {/* Feedback Comment - Single Field based on language */}
+              
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">
                   {getUIText.feedback}
@@ -500,7 +490,7 @@ const AddFeedback = ({ onSave }: AddFeedbackProps) => {
                 )}
               </div>
 
-              {/* Info Note */}
+              
               <div className="bg-blue-50 rounded-lg p-3 border border-blue-200">
                 <p className="text-xs text-blue-700">
                   {activeLanguage === "english" 
@@ -509,7 +499,7 @@ const AddFeedback = ({ onSave }: AddFeedbackProps) => {
                 </p>
               </div>
 
-              {/* Form Actions */}
+              
               <div className="flex flex-col-reverse sm:flex-row gap-3 pt-4 border-t border-slate-200">
                 <Button 
                   variant="outline" 
@@ -541,7 +531,7 @@ const AddFeedback = ({ onSave }: AddFeedbackProps) => {
           </div>
         </div>
 
-        {/* Info Box */}
+        
         <div className="bg-amber-50 rounded-xl p-3 sm:p-4 border border-amber-200">
           <div className="flex gap-3">
             <Shield className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
@@ -559,7 +549,7 @@ const AddFeedback = ({ onSave }: AddFeedbackProps) => {
         </div>
       </div>
 
-      {/* RTL Styles */}
+      
       <style>{`
         .rtl-text {
           direction: rtl;

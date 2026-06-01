@@ -316,7 +316,6 @@ const Sidebar = ({
     nav.scrollTop = pendingScrollRestore.current;
   }, []);
 
-  /** Keep Master Data block (and items below) inside the nav viewport after expand. */
   const ensureMasterBlockVisible = useCallback(() => {
     const nav = navContainerRef.current;
     const block = masterBlockRef.current;
@@ -543,7 +542,6 @@ const Sidebar = ({
   ];
 
   const footerNavItems: NavItemConfig[] = [
-    // },
     {
       to: "/settings",
       icon: Settings,
@@ -646,14 +644,14 @@ const Sidebar = ({
           }
         `}
       >
-        {/* Logo Section */}
+        
         <div
           className={`relative flex items-center justify-center border-b border-slate-100 px-2 bg-gradient-to-r from-white to-slate-50/50 shrink-0 ${
             isMobile ? "h-20" : "h-28"
           }`}
         >
           <div className="relative w-full flex justify-center px-0">
-            {/* Glow Effect */}
+            
             <div className="absolute inset-0 bg-burgundy/20 rounded-full blur-xl animate-pulse"></div>
 
             <img
@@ -668,13 +666,13 @@ const Sidebar = ({
             />
           </div>
         </div>
-        {/* Navigation Area */}
+        
         <div className="flex-1 flex flex-col min-h-0 overflow-x-hidden overflow-y-hidden">
           <nav
             ref={navContainerRef}
             className="sidebar-nav-scroll flex-1 min-h-0 overflow-x-hidden overflow-y-auto [overflow-anchor:none] px-3"
           >
-            {/* Main Nav Items */}
+            
             <div className="space-y-0.5 min-w-0">
               {mainNavItems.map((item) => (
                 <PermissionGate
@@ -687,7 +685,7 @@ const Sidebar = ({
               ))}
             </div>
 
-            {/* Master Data + Documents — scroll target when dropdown opens */}
+            
             {showMasterSection && (effectiveCollapsed ? (
               <div ref={masterBlockRef} className="space-y-0.5 mt-2">
                 {masterItems.map((item) => (
@@ -772,13 +770,13 @@ const Sidebar = ({
             ))}
           </nav>
 
-          {/* Footer Section */}
+          
           <div className="border-t border-slate-100 bg-gradient-to-r from-white to-slate-50/50 backdrop-blur-sm shrink-0 mt-auto overflow-x-hidden px-3">
             <div className="space-y-0.5 pt-3">
               {footerNavItems.map((item) => renderNavItem(item, isRouteActive(item.to)))}
             </div>
 
-            {/* Logout Button */}
+            
             <button
               onClick={handleLogout}
               title={effectiveCollapsed ? t("Secure Logout") : undefined}
@@ -820,7 +818,6 @@ const Sidebar = ({
           border-radius: 20px;
         }
 
-        /* Fade-in animation for tooltips */
         @keyframes fadeInSlideLeft {
           from {
             opacity: 0;

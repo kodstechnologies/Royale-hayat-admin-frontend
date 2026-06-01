@@ -109,7 +109,6 @@ const EditWorkCulture = () => {
       return;
     }
 
-    // Check file size (5MB limit)
     const oversizedFiles = imageFilesList.filter(file => file.size > 5 * 1024 * 1024);
     if (oversizedFiles.length > 0) {
       toast.error("Some images exceed 5MB limit");
@@ -134,7 +133,6 @@ const EditWorkCulture = () => {
   };
 
   const handleSubmit = async () => {
-    // Validation
     if (!formData.heading.trim()) {
       toast.error("Please enter heading (English)");
       setActiveTab("english");
@@ -169,7 +167,6 @@ const EditWorkCulture = () => {
       formDataToSend.append("description", formData.description);
       formDataToSend.append("descriptionArabic", formData.descriptionArabic);
       
-      // Send retained existing images (empty string means clear all)
       if (existingImages.length > 0) {
         existingImages.forEach((imageUrl) => {
           formDataToSend.append("existingImages", imageUrl);
@@ -178,14 +175,12 @@ const EditWorkCulture = () => {
         formDataToSend.append("existingImages", "");
       }
       
-      // Append new image files
       imageFiles.forEach((file) => {
         formDataToSend.append("images", file);
       });
 
       const response = await updateWorkCulture(id!, formDataToSend);
       
-      // Dispatch event to notify list page
       window.dispatchEvent(new Event("workCultureUpdated"));
       
       toast.success(response?.message || "Work culture updated successfully!");
@@ -275,7 +270,7 @@ const EditWorkCulture = () => {
             </div>
 
             <div className="space-y-6">
-              {/* Heading */}
+              
               <div className="bg-slate-50 rounded-xl p-5">
                 <div className="flex items-center gap-2 pb-2 border-b border-slate-200 mb-4">
                   <FileText className="h-5 w-5 text-burgundy" />
@@ -293,7 +288,7 @@ const EditWorkCulture = () => {
                 />
               </div>
 
-              {/* Description */}
+              
               <div className="bg-slate-50 rounded-xl p-5">
                 <div className="flex items-center gap-2 pb-2 border-b border-slate-200 mb-4">
                   <FileText className="h-5 w-5 text-burgundy" />
@@ -312,14 +307,14 @@ const EditWorkCulture = () => {
                 />
               </div>
 
-              {/* Multiple Images Upload */}
+              
               <div className="bg-slate-50 rounded-xl p-5">
                 <div className="flex items-center gap-2 pb-2 border-b border-slate-200 mb-4">
                   <Upload className="h-5 w-5 text-burgundy" />
                   <h3 className="font-semibold text-slate-800">{getUIText.images}</h3>
                 </div>
 
-                {/* Existing Images */}
+                
                 {existingImages.length > 0 && (
                   <div className="mb-4">
                     <h4 className="text-sm font-semibold text-slate-700 mb-2">
@@ -341,7 +336,7 @@ const EditWorkCulture = () => {
                   </div>
                 )}
 
-                {/* Upload New Images */}
+                
                 <div className={`relative rounded-xl border-2 border-dashed transition-all p-8 ${
                   dragActive ? "border-burgundy bg-burgundy/5" : "border-slate-300"
                 }`}
@@ -367,7 +362,7 @@ const EditWorkCulture = () => {
                   </div>
                 </div>
 
-                {/* New Image Previews */}
+                
                 {imageFiles.length > 0 && (
                   <div className="mt-4">
                     <h4 className="text-sm font-semibold text-slate-700 mb-2">
@@ -390,7 +385,7 @@ const EditWorkCulture = () => {
                 )}
               </div>
 
-              {/* Submit Button */}
+              
               <div className="flex justify-end gap-3 pt-4 border-t">
                 <Button variant="outline" onClick={() => navigate("/work-culture")} className="gap-2">
                   <X className="h-4 w-4" />

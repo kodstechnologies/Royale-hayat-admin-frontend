@@ -64,7 +64,6 @@ const AddWorkCulture = () => {
       return;
     }
 
-    // Check file size (5MB limit)
     const oversizedFiles = imageFilesList.filter(file => file.size > 5 * 1024 * 1024);
     if (oversizedFiles.length > 0) {
       toast.error("Some images exceed 5MB limit");
@@ -76,19 +75,16 @@ const AddWorkCulture = () => {
     const newPreviews = imageFilesList.map(file => URL.createObjectURL(file));
     setImagePreviews(prev => [...prev, ...newPreviews]);
     
-    // Log for debugging
     console.log("Images added:", imageFilesList.length);
   };
 
   const removeImage = (index: number) => {
-    // Revoke the object URL to avoid memory leaks
     URL.revokeObjectURL(imagePreviews[index]);
     setImageFiles(prev => prev.filter((_, i) => i !== index));
     setImagePreviews(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async () => {
-    // Validation
     if (!formData.heading.trim()) {
       toast.error("Please enter heading (English)");
       setActiveTab("english");
@@ -123,14 +119,11 @@ const AddWorkCulture = () => {
       formDataToSend.append("description", formData.description);
       formDataToSend.append("descriptionArabic", formData.descriptionArabic);
       
-      // Append each image file with field name "images"
-      // Make sure to append each file individually
       imageFiles.forEach((file, index) => {
         formDataToSend.append("images", file);
         console.log(`Appending image ${index + 1}:`, file.name, file.size);
       });
 
-      // Log FormData contents for debugging
       for (let pair of formDataToSend.entries()) {
         console.log(pair[0], pair[1]);
       }
@@ -141,7 +134,6 @@ const AddWorkCulture = () => {
         },
       });
       
-      // Dispatch event to notify list page
       window.dispatchEvent(new Event("workCultureUpdated"));
       
       toast.success(response.data?.message || "Work culture added successfully!");
@@ -149,11 +141,9 @@ const AddWorkCulture = () => {
     } catch (error: any) {
       console.error("Error adding work culture:", error);
       
-      // Handle validation errors
       if (error?.response?.data?.message) {
         toast.error(error.response.data.message);
       } else if (error?.response?.data?.meta) {
-        // Handle array of validation errors
         const errors = error.response.data.meta;
         errors.forEach((err: string) => toast.error(err));
       } else {
@@ -194,7 +184,7 @@ const AddWorkCulture = () => {
                 </div>
               </div>
 
-              {/* Language Toggle */}
+              
               <div className="flex gap-2 p-1 bg-slate-100/80 rounded-lg">
                 <button
                   onClick={() => setActiveTab("english")}
@@ -218,7 +208,7 @@ const AddWorkCulture = () => {
             </div>
 
             <div className="space-y-6">
-              {/* Heading */}
+              
               <div className="bg-slate-50 rounded-xl p-5">
                 <div className="flex items-center gap-2 pb-2 border-b border-slate-200 mb-4">
                   <FileText className="h-5 w-5 text-burgundy" />
@@ -239,7 +229,7 @@ const AddWorkCulture = () => {
                 </p>
               </div>
 
-              {/* Description */}
+              
               <div className="bg-slate-50 rounded-xl p-5">
                 <div className="flex items-center gap-2 pb-2 border-b border-slate-200 mb-4">
                   <FileText className="h-5 w-5 text-burgundy" />
@@ -261,7 +251,7 @@ const AddWorkCulture = () => {
                 </p>
               </div>
 
-              {/* Multiple Images Upload */}
+              
               <div className="bg-slate-50 rounded-xl p-5">
                 <div className="flex items-center gap-2 pb-2 border-b border-slate-200 mb-4">
                   <Upload className="h-5 w-5 text-burgundy" />
@@ -320,7 +310,7 @@ const AddWorkCulture = () => {
                 )}
               </div>
 
-              {/* Submit Button */}
+              
               <div className="flex justify-end gap-3 pt-4 border-t">
                 <Button variant="outline" onClick={() => navigate("/work-culture")} className="gap-2">
                   <X className="h-4 w-4" />

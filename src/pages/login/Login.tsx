@@ -90,20 +90,20 @@ const Login = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-100 via-slate-50 to-gray-100 px-4 py-8 overflow-hidden">
       <div className="w-full max-w-md relative">
-        {/* Decorative elements */}
+        
         <div className="absolute -top-20 -left-20 w-64 h-64 bg-burgundy/10 rounded-full blur-3xl"></div>
         <div className="absolute -bottom-20 -right-20 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl"></div>
 
-        {/* CARD with bottom to top animation */}
+        
         <div
           className="relative bg-white rounded-3xl shadow-2xl border border-slate-200/80 transition-all duration-500 hover:shadow-burgundy/20 hover:shadow-xl animate-slide-up-from-bottom overflow-hidden"
         >
-          {/* Card gradient accent - properly aligned with border radius */}
+          
           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-burgundy/40 via-burgundy to-burgundy/40"></div>
 
-          {/* Content wrapper with padding */}
+          
           <div className="p-8">
-            {/* Logo inside card */}
+            
             <div className="flex justify-center mb-8 pt-4">
               <div className="relative">
                 <div className="absolute inset-0 bg-burgundy/20 rounded-full blur-2xl"></div>
@@ -125,7 +125,7 @@ const Login = () => {
             </div>
 
             <form onSubmit={handleCredentials} className="space-y-6">
-              {/* EMAIL */}
+              
               <div className="group">
                 <label className="text-sm font-semibold text-slate-700 mb-2 block transition-all group-focus-within:text-burgundy">
                   Email Address
@@ -171,7 +171,7 @@ const Login = () => {
                   </div>
                 </div>
 
-                {/* Email validation message */}
+                
                 {emailTouched && email !== "" && (
                   <div className="mt-2 animate-in fade-in duration-200">
                     <div className={`flex items-center gap-2 p-2 rounded-lg ${emailValid
@@ -192,7 +192,7 @@ const Login = () => {
                 )}
               </div>
 
-              {/* PASSWORD */}
+              
               <div className="group">
                 <label className="text-sm font-semibold text-slate-700 mb-2 block transition-all group-focus-within:text-burgundy">
                   Password
@@ -242,7 +242,7 @@ const Login = () => {
                 </div>
               </div>
 
-              {/* ERROR */}
+              
               {error && (
                 <div className="flex items-center gap-2 p-3 rounded-xl bg-red-50 border border-red-200 animate-in fade-in duration-200">
                   <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></div>
@@ -250,7 +250,7 @@ const Login = () => {
                 </div>
               )}
 
-              {/* BUTTON */}
+              
               <button
                 type="submit"
                 disabled={loading || (emailTouched && !emailValid && email !== "")}
@@ -272,7 +272,7 @@ const Login = () => {
                   group
                 "
               >
-                {/* Button shine effect */}
+                
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
 
                 {loading ? (
@@ -286,10 +286,10 @@ const Login = () => {
               </button>
             </form>
 
-            {/* Footer note */}
+            
             <div className="mt-8 pt-4 border-t border-slate-100">
               <p className="text-xs text-slate-400 text-center">
-                {/* Secure encrypted connection */}
+                
               </p>
             </div>
           </div>
@@ -300,7 +300,7 @@ const Login = () => {
         </p>
       </div>
 
-      {/* Add animation keyframes for bottom to top sliding */}
+      
       <style>{`
         @keyframes slideUpFromBottom {
           0% {

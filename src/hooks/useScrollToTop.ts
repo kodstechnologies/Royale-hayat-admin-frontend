@@ -8,6 +8,5 @@ export const scrollPageToTop = () => {
 export const useScrollToTop = (...deps: unknown[]) => {
   useEffect(() => {
     scrollPageToTop();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps);
 };

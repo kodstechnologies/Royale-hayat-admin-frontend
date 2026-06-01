@@ -1,4 +1,3 @@
-// Centralized Mock Database for Royale Hayat Hospital Admin Dashboard
 
 export type Patient = {
   id: string;
@@ -174,8 +173,6 @@ export type HospitalDocument = {
   tags: string[];
   description: string;
 };
-
-// ============ MOCK DATA ============
 
 export const departments: Department[] = [
   { id: 1, name: "Obstetrics & Gynecology", nameAr: "أمراض النساء والتوليد", description: "Comprehensive women's health services from prenatal care to gynecological treatments.", doctors: ["Dr. Layla Ahmed", "Dr. Sara Nasser", "Dr. Maryam Al-Harbi"], active: true, headOfDept: "Dr. Layla Ahmed", totalPatients: 1240, location: "Building A, Floor 3" },
@@ -401,7 +398,6 @@ export const notifications: Notification[] = [
 ];
 
 export const services: ServiceItem[] = [
-  // Medical Services
   { id: 1, name: "Prenatal Care", nameAr: "رعاية ما قبل الولادة", category: "Medical", description: "Complete pregnancy care with regular monitoring and ultrasound services.", active: true, price: "50 KWD", duration: "45 min" },
   { id: 2, name: "Cardiac Screening", nameAr: "فحص القلب", category: "Medical", description: "Comprehensive heart health assessment and risk evaluation.", active: true, price: "120 KWD", duration: "60 min" },
   { id: 3, name: "Pediatric Check-up", nameAr: "فحص الأطفال", category: "Medical", description: "Routine health examination for children with developmental assessment.", active: true, price: "35 KWD", duration: "30 min" },
@@ -410,24 +406,20 @@ export const services: ServiceItem[] = [
   { id: 6, name: "Neurology Consultation", nameAr: "استشارة الأعصاب", category: "Medical", description: "Comprehensive neurological examination and treatment.", active: true, price: "75 KWD", duration: "45 min" },
   { id: 7, name: "Eye Examination", nameAr: "فحص العيون", category: "Medical", description: "Complete eye health assessment and vision testing.", active: true, price: "40 KWD", duration: "30 min" },
   { id: 8, name: "Dental Care", nameAr: "رعاية الأسنان", category: "Medical", description: "Comprehensive dental care including cosmetic and restorative dentistry.", active: true, price: "30 KWD", duration: "45 min" },
-  // Surgical
   { id: 9, name: "Laparoscopic Surgery", nameAr: "جراحة المنظار", category: "Surgical", description: "Minimally invasive surgical procedures.", active: true, price: "Varies", duration: "Varies" },
   { id: 10, name: "C-Section Delivery", nameAr: "ولادة قيصرية", category: "Surgical", description: "Planned and emergency cesarean delivery.", active: true, price: "800 KWD", duration: "2-3 hrs" },
   { id: 11, name: "Joint Replacement", nameAr: "استبدال المفاصل", category: "Surgical", description: "Hip and knee replacement surgery.", active: true, price: "Varies", duration: "3-4 hrs" },
-  // Diagnostic
   { id: 12, name: "MRI Scan", nameAr: "تصوير بالرنين المغناطيسي", category: "Diagnostic", description: "High-resolution magnetic resonance imaging.", active: true, price: "150 KWD", duration: "45 min" },
   { id: 13, name: "CT Scan", nameAr: "الأشعة المقطعية", category: "Diagnostic", description: "Computed tomography for detailed body imaging.", active: true, price: "100 KWD", duration: "30 min" },
   { id: 14, name: "Blood Tests", nameAr: "تحاليل الدم", category: "Diagnostic", description: "Comprehensive blood work and analysis.", active: true, price: "25 KWD", duration: "15 min" },
   { id: 15, name: "Ultrasound", nameAr: "التصوير بالموجات فوق الصوتية", category: "Diagnostic", description: "Diagnostic ultrasound imaging.", active: true, price: "50 KWD", duration: "30 min" },
   { id: 16, name: "ECG / Echo", nameAr: "تخطيط القلب", category: "Diagnostic", description: "Electrocardiogram and echocardiography.", active: true, price: "60 KWD", duration: "30 min" },
-  // Hospitality
   { id: 17, name: "VIP Suite", nameAr: "جناح كبار الشخصيات", category: "Hospitality", description: "Private luxury suites with 24/7 concierge and premium amenities.", active: true, price: "300 KWD/night", duration: "Per stay" },
   { id: 18, name: "Airport Transfer", nameAr: "خدمة النقل من المطار", category: "Hospitality", description: "Private car service for international patients.", active: true, price: "50 KWD", duration: "1 hr" },
   { id: 19, name: "Private Dining", nameAr: "تناول طعام خاص", category: "Hospitality", description: "Gourmet meals prepared by our executive chef.", active: true, price: "25 KWD/meal", duration: "Per meal" },
   { id: 20, name: "Concierge Service", nameAr: "خدمة الكونسيرج", category: "Hospitality", description: "24/7 personal concierge for patient and family needs.", active: true, price: "Included", duration: "24/7" },
   { id: 21, name: "Hotel Accommodation", nameAr: "إقامة فندقية", category: "Hospitality", description: "Partner hotel bookings for patient companions.", active: true, price: "80 KWD/night", duration: "Per stay" },
   { id: 22, name: "Translation Services", nameAr: "خدمات الترجمة", category: "Hospitality", description: "Professional medical translation in 10+ languages.", active: true, price: "30 KWD/hr", duration: "Per hour" },
-  // Wellness
   { id: 23, name: "Nutrition Consultation", nameAr: "استشارة تغذية", category: "Wellness", description: "Personalized dietary planning and nutrition counseling.", active: true, price: "35 KWD", duration: "45 min" },
   { id: 24, name: "Physiotherapy", nameAr: "العلاج الطبيعي", category: "Wellness", description: "Rehabilitation and physical therapy sessions.", active: true, price: "30 KWD", duration: "45 min" },
   { id: 25, name: "Laser Therapy", nameAr: "العلاج بالليزر", category: "Wellness", description: "Advanced laser treatments for cosmetic procedures.", active: false, price: "200 KWD", duration: "60 min" },
@@ -451,7 +443,6 @@ export const hospitalDocuments: HospitalDocument[] = [
   { id: "hdoc-15", title: "Medical Equipment Inventory", category: "Report", department: "Biomedical", uploadDate: "2026-02-10", fileSize: "2.5 MB", uploadedBy: "Biomedical", tags: ["equipment", "inventory"], description: "Complete inventory of medical equipment across all departments." },
 ];
 
-// Export helper to simulate file download
 export const exportToExcel = (data: any[], filename: string) => {
   const headers = Object.keys(data[0] || {});
   const csvContent = [

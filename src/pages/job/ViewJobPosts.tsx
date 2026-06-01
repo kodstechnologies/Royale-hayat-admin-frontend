@@ -22,8 +22,6 @@ import { useScrollToTop } from "@/hooks/useScrollToTop";
 import { PERMISSIONS } from "@/constants/permissions";
 import PermissionGate from "@/utils/PermissionGate";
 
-// ── Types ────────────────────────────────────────────────────────────────────
-
 type JobPost = {
   _id: string;
   jobId: string;
@@ -46,8 +44,6 @@ type JobPost = {
 };
 
 const formatBadgeCount = (count: number) => (count > 99 ? "99+" : String(count));
-
-// ── Mappers ──────────────────────────────────────────────────────────────────
 
 const mapApiJob = (job: any, applicationsCount = 0): JobPost => ({
   _id: job._id,
@@ -74,8 +70,6 @@ const mapApiJob = (job: any, applicationsCount = 0): JobPost => ({
   unviewedApplicationsCount: job.unviewedApplicationsCount ?? 0,
 });
 
-// ── Component ────────────────────────────────────────────────────────────────
-
 const ViewJobPost = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -98,7 +92,6 @@ const ViewJobPost = () => {
           return;
         }
       } catch {
-        // API failed — show not found state
       }
 
       setJob(null);
@@ -112,8 +105,6 @@ const ViewJobPost = () => {
     window.addEventListener("jobApplicationsUpdated", handleApplicationsUpdated);
     return () => window.removeEventListener("jobApplicationsUpdated", handleApplicationsUpdated);
   }, [id]);
-
-  // ── Helpers ────────────────────────────────────────────────────────────────
 
   const isArabic = activeLanguage === "arabic";
 
@@ -146,8 +137,6 @@ const ViewJobPost = () => {
     return daysDiff <= 7 && daysDiff > 0;
   };
 
-  // ── Loading ────────────────────────────────────────────────────────────────
-
   if (loading) {
     return (
       <AdminLayout title="View Job">
@@ -163,8 +152,6 @@ const ViewJobPost = () => {
       </AdminLayout>
     );
   }
-
-  // ── Not found ──────────────────────────────────────────────────────────────
 
   if (!job) {
     return (
@@ -192,8 +179,6 @@ const ViewJobPost = () => {
     );
   }
 
-  // ── Render ─────────────────────────────────────────────────────────────────
-
   return (
     <AdminLayout title="View Job">
       <div className="space-y-4 sm:space-y-6">
@@ -203,7 +188,7 @@ const ViewJobPost = () => {
           <div className="h-1 bg-gradient-to-r from-burgundy/40 via-burgundy to-burgundy/40" />
 
           <div className="p-4 sm:p-6">
-            {/* Header */}
+            
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between mb-4 sm:mb-6">
               <div className="flex items-start gap-3 min-w-0">
                 <button
@@ -224,7 +209,7 @@ const ViewJobPost = () => {
                 </div>
               </div>
 
-              {/* Language Toggle */}
+              
               <div className="flex gap-2 p-1 bg-slate-100 rounded-lg border border-slate-200 shadow-sm w-full sm:w-auto shrink-0">
                 <button
                   type="button"
@@ -252,9 +237,9 @@ const ViewJobPost = () => {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-              {/* Left Column */}
+              
               <div className="lg:col-span-1 space-y-4 sm:space-y-5">
-                {/* Job Header Card */}
+                
                 <div className="bg-white rounded-xl border border-slate-200 p-4 sm:p-5 shadow-sm">
                   <div className="flex items-center gap-3 mb-4 pb-3 border-b border-slate-100">
                     <div className="w-12 h-12 rounded-xl bg-burgundy/10 flex items-center justify-center shrink-0">
@@ -307,7 +292,7 @@ const ViewJobPost = () => {
                   </div>
                 </div>
 
-                {/* Status Card */}
+                
                 <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
                   <div className="flex items-center gap-3 mb-4 pb-3 border-b border-slate-100">
                     <div className="w-12 h-12 rounded-xl bg-burgundy/10 flex items-center justify-center">
@@ -333,7 +318,7 @@ const ViewJobPost = () => {
                   </div>
                 </div>
 
-                {/* Quick Actions */}
+                
                 <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
                   <h3 className="text-sm font-semibold text-slate-800 mb-3">Quick Actions</h3>
                   <div className="space-y-2">
@@ -371,9 +356,9 @@ const ViewJobPost = () => {
                 </div>
               </div>
 
-              {/* Right Column */}
+              
               <div className="lg:col-span-2 space-y-5">
-                {/* Description */}
+                
                 <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
                   <h3 className="text-md font-semibold text-slate-800 mb-3 flex items-center gap-2">
                     <FileText className="h-5 w-5 text-burgundy" />
@@ -388,7 +373,7 @@ const ViewJobPost = () => {
                   </p>
                 </div>
 
-                {/* Responsibilities */}
+                
                 <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
                   <h3 className="text-md font-semibold text-slate-800 mb-3 flex items-center gap-2">
                     <CheckCircle className="h-5 w-5 text-burgundy" />
@@ -407,7 +392,7 @@ const ViewJobPost = () => {
                   </ul>
                 </div>
 
-                {/* Requirements */}
+                
                 <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
                   <h3 className="text-md font-semibold text-slate-800 mb-3 flex items-center gap-2">
                     <CheckCircle className="h-5 w-5 text-burgundy" />
@@ -426,7 +411,7 @@ const ViewJobPost = () => {
                   </ul>
                 </div>
 
-                {/* Action Buttons */}
+                
                 <div className="flex flex-col-reverse sm:flex-row gap-2 sm:gap-3 pt-2 sm:pt-4">
                   <Button
                     onClick={() => navigate("/job-posts")}

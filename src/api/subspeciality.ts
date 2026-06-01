@@ -21,7 +21,6 @@ export type Subspeciality = {
   arabicDescription: string
   createdAt?: string;
   updatedAt?: string;
-  /** Populated from API as objects; may be absent. */
   customSubspecialities?: CustomSubspecialityDoc[];
 };
 

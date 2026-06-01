@@ -51,7 +51,7 @@ const PatientRecords = () => {
             ← Back to Patient List
           </button>
 
-          {/* Patient Header */}
+          
           <div className="bg-card rounded-lg shadow-sm border border-border p-6 mb-4">
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-4">
@@ -82,7 +82,7 @@ const PatientRecords = () => {
             <p className="text-[10px] font-sans text-muted-foreground/60 mt-2 italic">Data synced from Afiyati.royale.hayat.com portal</p>
           </div>
 
-          {/* Tabs */}
+          
           <div className="flex gap-1 mb-4 overflow-x-auto">
             {tabs.map(tab => (
               <button key={tab.id} onClick={() => setActiveTab(tab.id)}
@@ -93,7 +93,7 @@ const PatientRecords = () => {
             ))}
           </div>
 
-          {/* Tab Content */}
+          
           <div className="bg-card rounded-lg shadow-sm border border-border p-6">
             {activeTab === "overview" && (
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -246,7 +246,7 @@ const PatientRecords = () => {
         </div>
       ) : (
         <>
-          {/* Patient List */}
+          
           <div className="bg-card rounded-lg shadow-sm border border-border">
             <div className="p-4 border-b border-border flex flex-wrap items-center gap-3">
               <div className="relative flex-1 min-w-[200px]">

@@ -1,9 +1,5 @@
 import api from "./axiosInstance";
 
-// ======================================================
-// TYPES
-// ======================================================
-
 export interface FeedbackPayload {
     userName?: string;
     arabicUserName?: string;
@@ -11,9 +7,7 @@ export interface FeedbackPayload {
     arabicFeedback?: string;
     stars: number;
     shownOnWebsite?: boolean;
-    /** Business doctor id (preferred) */
     doctorId?: string;
-    /** @deprecated use doctorId */
     doctor?: string;
     feedbackId?: string;
 }
@@ -25,15 +19,12 @@ export interface CreateFeedbackParams {
 }
 
 export interface UpdateDoctorFeedbackParams {
-    /** MongoDB _id of the feedback document */
     feedbackId: string;
-    /** Business doctor id */
     doctorId: string;
     data: FeedbackPayload;
 }
 
 export interface UpdateHospitalFeedbackParams {
-    /** MongoDB _id of the hospital feedback document */
     feedbackId: string;
     data: FeedbackPayload;
 }
@@ -50,13 +41,6 @@ export type FeedbackCounts = {
     hospitalFeedbacks: number;
 };
 
-// ======================================================
-// DOCTOR FEEDBACK APIs
-// ======================================================
-
-// ==============================
-// CREATE DOCTOR FEEDBACK
-// ==============================
 export const createDoctorFeedback =
     async ({
         data,
@@ -92,9 +76,6 @@ export const createDoctorFeedback =
         return response.data;
     };
 
-// ==============================
-// GET ALL DOCTOR FEEDBACKS
-// ==============================
 export const getAllDoctorFeedbacks =
     async () => {
 
@@ -106,9 +87,6 @@ export const getAllDoctorFeedbacks =
         return response.data;
     };
 
-// ==============================
-// GET DOCTOR FEEDBACKS BY doctorId (business id, not MongoDB _id)
-// ==============================
 export const getDoctorFeedbacksByDoctorId =
     async (doctorId: string) => {
 
@@ -122,9 +100,6 @@ export const getDoctorFeedbacksByDoctorId =
 
 export const getDoctorFeedbackById = getDoctorFeedbacksByDoctorId;
 
-// ==============================
-// UPDATE DOCTOR FEEDBACK
-// ==============================
 export const updateDoctorFeedback =
     async ({
         feedbackId,
@@ -141,9 +116,6 @@ export const updateDoctorFeedback =
         return response.data;
     };
 
-// ==============================
-// DELETE DOCTOR FEEDBACK
-// ==============================
 export const deleteDoctorFeedback =
     async (doctorId: string, feedbackId: string) => {
 
@@ -156,13 +128,6 @@ export const deleteDoctorFeedback =
         return response.data;
     };
 
-// ======================================================
-// HOSPITAL FEEDBACK APIs
-// ======================================================
-
-// ==============================
-// CREATE HOSPITAL FEEDBACK
-// ==============================
 export const createHospitalFeedback =
     async ({
         data,
@@ -198,9 +163,6 @@ export const createHospitalFeedback =
         return response.data;
     };
 
-// ==============================
-// GET ALL HOSPITAL FEEDBACKS
-// ==============================
 export const getAllHospitalFeedbacks =
     async () => {
 
@@ -212,9 +174,6 @@ export const getAllHospitalFeedbacks =
         return response.data;
     };
 
-// ==============================
-// GET HOSPITAL FEEDBACK BY feedbackId (MongoDB _id)
-// ==============================
 export const getHospitalFeedbackById =
     async (feedbackId: string) => {
 
@@ -226,9 +185,6 @@ export const getHospitalFeedbackById =
         return response.data;
     };
 
-// ==============================
-// UPDATE HOSPITAL FEEDBACK
-// ==============================
 export const updateHospitalFeedback =
     async ({
         feedbackId,
@@ -244,9 +200,6 @@ export const updateHospitalFeedback =
         return response.data;
     };
 
-// ==============================
-// DELETE HOSPITAL FEEDBACK
-// ==============================
 export const deleteHospitalFeedback =
     async (feedbackId: string) => {
 
@@ -258,9 +211,6 @@ export const deleteHospitalFeedback =
         return response.data;
     };
 
-// ==============================
-// GET UNVIEWED FEEDBACK COUNTS
-// ==============================
 export const getFeedbackCounts =
     async () => {
 

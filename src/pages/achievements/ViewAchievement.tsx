@@ -120,12 +120,12 @@ const ViewAchievement = () => {
       <div className="space-y-4 sm:space-y-6">
         <BreadCrumb />
 
-        {/* Main Card */}
+        
         <div className="rounded-xl border-2 border-burgundy/30 bg-gradient-to-br from-white via-slate-50/90 to-white shadow-xl backdrop-blur-sm overflow-hidden">
           <div className="h-1 bg-gradient-to-r from-burgundy/40 via-burgundy to-burgundy/40"></div>
 
           <div className="p-4 sm:p-6">
-            {/* Header with Back Button and Language Toggle */}
+            
             <div className="flex flex-col gap-4 mb-4 sm:mb-6">
               <div className="flex items-start gap-3 min-w-0">
                 <button
@@ -191,9 +191,9 @@ const ViewAchievement = () => {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-              {/* Left Column - Image & Basic Info */}
+              
               <div className="lg:col-span-1 space-y-4">
-                {/* Image Card */}
+                
                 <div className="rounded-xl border border-slate-200 bg-white overflow-hidden shadow-sm">
                   <div className="h-48 sm:h-64 bg-gradient-to-br from-slate-100 to-slate-50 flex items-center justify-center">
                     {achievement.image ? (
@@ -213,7 +213,7 @@ const ViewAchievement = () => {
                   </div>
                 </div>
 
-                {/* Status Card */}
+                
                 <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-5 shadow-sm">
                   <div className="flex items-center gap-2 pb-2 border-b border-slate-100 mb-3">
                     <FileText className="h-4 w-4 text-burgundy" />
@@ -246,9 +246,9 @@ const ViewAchievement = () => {
                 </div>
               </div>
 
-              {/* Right Column - Details */}
+              
               <div className="lg:col-span-2 space-y-4">
-                {/* Title Card */}
+                
                 <div className={`rounded-xl border border-slate-200 bg-white p-4 sm:p-5 shadow-sm ${activeLanguage === "arabic" ? "text-right" : ""}`}>
                   <div className="flex items-center gap-2 pb-2 border-b border-slate-100 mb-3">
                     <Award className="h-4 w-4 text-burgundy" />
@@ -263,7 +263,7 @@ const ViewAchievement = () => {
                   </h1>
                 </div>
 
-                {/* Employee Information Card */}
+                
                 <div className={`rounded-xl border border-slate-200 bg-white p-4 sm:p-5 shadow-sm ${activeLanguage === "arabic" ? "text-right" : ""}`}>
                   <div className="flex items-center gap-2 pb-2 border-b border-slate-100 mb-3">
                     <User className="h-4 w-4 text-burgundy" />
@@ -323,7 +323,7 @@ const ViewAchievement = () => {
                   </div>
                 </div>
 
-                {/* Description Card */}
+                
                 <div className={`rounded-xl border border-slate-200 bg-white p-4 sm:p-5 shadow-sm ${activeLanguage === "arabic" ? "rtl-text" : ""}`}>
                   <div className="flex items-center gap-2 pb-2 border-b border-slate-100 mb-3">
                     <FileText className="h-4 w-4 text-burgundy" />
@@ -338,7 +338,7 @@ const ViewAchievement = () => {
                   </p>
                 </div>
 
-                {/* Action Buttons */}
+                
                 <div className="flex flex-col-reverse sm:flex-row gap-3 pt-2">
                   <Button
                     onClick={() => navigate("/achievements")}
@@ -363,7 +363,7 @@ const ViewAchievement = () => {
         </div>
       </div>
 
-      {/* RTL Styles */}
+      
       <style>{`
         .rtl-text {
           direction: rtl;

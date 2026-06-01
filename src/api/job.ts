@@ -70,8 +70,6 @@ export const getTypes = async () => {
   return api.get(`${BASE}/types`);
 };
 
-// ── Job Applications ────────────────────────────────────────────────────────
-
 const APP_BASE = "/api/v1/job-applications";
 
 export type JobApplicationStatus = "pending" | "reviewed";

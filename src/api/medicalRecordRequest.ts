@@ -2,8 +2,6 @@ import api from "./axiosInstance";
 
 const BASE = "/api/v1/medical-record-requests";
 
-// ================= GET ALL MEDICAL REQUESTS =================
-
 export const getAllMedicalRequests = async () => {
 
   const response = await api.get(
@@ -12,8 +10,6 @@ export const getAllMedicalRequests = async () => {
 
   return response.data;
 };
-
-// ================= GET MEDICAL REQUEST BY ID =================
 
 export const GetMedicalRequestById = async (
   id: string

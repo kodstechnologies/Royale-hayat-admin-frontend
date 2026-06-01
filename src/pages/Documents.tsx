@@ -117,7 +117,6 @@ const Documents = () => {
       setDocs(apiDocs.length > 0 ? apiDocs : initialDocs);
     } catch (error) {
       console.error("Failed to fetch documents:", error);
-      // Keep initial mock data
     } finally {
       setLoading(false);
     }
@@ -399,12 +398,12 @@ const Documents = () => {
       <div className="space-y-4 sm:space-y-6">
         <BreadCrumb />
 
-        {/* Main Card */}
+        
         <div className="rounded-xl border-2 border-burgundy/30 bg-gradient-to-br from-white via-slate-50/90 to-white shadow-xl backdrop-blur-sm overflow-hidden">
           <div className="h-1 bg-gradient-to-r from-burgundy/40 via-burgundy to-burgundy/40"></div>
 
           <div className="p-4 sm:p-6">
-            {/* Header */}
+            
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4 sm:mb-6">
               <div>
                 <h3 className="text-lg sm:text-xl font-bold text-slate-800">Document Management</h3>
@@ -421,7 +420,7 @@ const Documents = () => {
               </PermissionGate>
             </div>
 
-            {/* Category Capsules */}
+            
             <div className="mb-4 sm:mb-6">
               <div className="flex flex-wrap gap-2">
                 {categories.map(c => {
@@ -449,7 +448,7 @@ const Documents = () => {
               </div>
             </div>
 
-            {/* Search Bar */}
+            
             <div className="relative mb-4 sm:mb-6">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
               <input
@@ -464,7 +463,7 @@ const Documents = () => {
               />
             </div>
 
-            {/* Upload Form */}
+            
             {showUpload && hasPermission(PERMISSIONS.DOCUMENT_CREATE) && (
               <div className="mb-4 sm:mb-6 p-4 sm:p-5 rounded-xl bg-gradient-to-r from-slate-50 to-white border border-slate-200 animate-in fade-in duration-200">
                 <h4 className="text-sm sm:text-md font-semibold text-slate-800 mb-4">Upload New Document</h4>
@@ -531,7 +530,7 @@ const Documents = () => {
               </div>
             )}
 
-            {/* Documents Grid */}
+            
             {loading ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                 {Array.from({ length: 6 }).map((_, i) => (
@@ -578,7 +577,7 @@ const Documents = () => {
                         }}
                       >
                         <div className="p-4 sm:p-5">
-                          {/* Header */}
+                          
                           <div className="flex items-start justify-between mb-3 min-w-0">
                             <div className="flex items-center gap-3 min-w-0 flex-1">
                               <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-burgundy/10 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-200">
@@ -600,10 +599,10 @@ const Documents = () => {
                             </div>
                           </div>
 
-                          {/* Description */}
+                          
                           <p className="text-sm text-slate-600 mb-4 line-clamp-2">{doc.description}</p>
 
-                          {/* Meta Info */}
+                          
                           <div className="flex items-center justify-between text-xs text-slate-400 mb-4">
                             <div className="flex items-center gap-1">
                               <Calendar className="h-3 w-3" />
@@ -611,7 +610,7 @@ const Documents = () => {
                             </div>
                           </div>
 
-                          {/* Action Buttons */}
+                          
                           <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-slate-100">
                             <button
                               type="button"
@@ -678,7 +677,7 @@ const Documents = () => {
                   })}
                 </div>
 
-                {/* Pagination */}
+                
                 {totalPages > 1 && (
                   <div className="mt-6 pt-4 border-t border-slate-100">
                     <div className="flex flex-wrap justify-center sm:justify-end gap-2">
@@ -734,7 +733,7 @@ const Documents = () => {
         </div>
       </div>
 
-      {/* View Document Modal */}
+      
       {showViewModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-0 sm:p-4" onClick={() => setShowViewModal(null)}>
           <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl border border-slate-200 w-full max-w-2xl max-h-[92vh] sm:max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
@@ -797,7 +796,7 @@ const Documents = () => {
         </div>
       )}
 
-      {/* Edit Document Modal */}
+      
       {showEditModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-0 sm:p-4" onClick={() => setShowEditModal(null)}>
           <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl border border-slate-200 w-full max-w-md max-h-[92vh] sm:max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
@@ -891,7 +890,7 @@ const Documents = () => {
         </div>
       )}
 
-      {/* Share Modal */}
+      
       {showShareModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-0 sm:p-4" onClick={() => {
           setShowShareModal(null);
@@ -1111,7 +1110,7 @@ const Documents = () => {
         </div>
       )}
 
-      {/* Delete confirmation */}
+      
       {docToDelete && (
         <div
           className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-0 sm:p-4"

@@ -1,4 +1,3 @@
-// pages/departments/CreateDepartment.tsx
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import AdminLayout from "@/components/layout/AdminLayout";
@@ -43,7 +42,6 @@ const initialValues: CreateDepartmentFormData = {
   customExplainantions: [],
 };
 
-// Dummy data for categories with Arabic names for display
 const dummyCategories = [
   { _id: "cat1", name: "Cardiology", arabicName: "أمراض القلب" },
   { _id: "cat2", name: "Neurology", arabicName: "الأعصاب" },
@@ -164,7 +162,6 @@ const CreateDepartmentPage = () => {
     const selectedCategory = categories.find(c => c._id === values.catagoryId);
     const categoryName = selectedCategory ? selectedCategory.name : "General";
 
-    // Prepare new department
     const newDepartment = {
       _id: Date.now().toString(),
       departmentId,
@@ -182,16 +179,13 @@ const CreateDepartmentPage = () => {
       updatedAt: new Date().toISOString(),
     };
 
-    // Save to localStorage
     const existingDepts = localStorage.getItem("rhh_departments");
     let departments = existingDepts ? JSON.parse(existingDepts) : [];
     departments = [newDepartment, ...departments];
     localStorage.setItem("rhh_departments", JSON.stringify(departments));
 
-    // Dispatch event to notify Departments list page
     window.dispatchEvent(new Event("departmentsUpdated"));
 
-    // Simulate API call with timeout
     setTimeout(() => {
       console.log("Department created:", newDepartment);
       toast.success("Department created successfully.");
@@ -226,7 +220,7 @@ const CreateDepartmentPage = () => {
               </div>
             </div>
 
-            {/* Tabs */}
+            
             <div className="mb-8">
               <div className="flex w-full sm:w-fit gap-2 sm:gap-4 p-1 bg-slate-100/80 rounded-xl">
                 <button
@@ -263,7 +257,7 @@ const CreateDepartmentPage = () => {
             <Formik initialValues={initialValues} onSubmit={handleSubmit}>
               {({ setFieldValue, values, touched, errors }) => (
                 <Form className="space-y-6">
-                  {/* Department ID - Common for both tabs */}
+                  
                   <div className="bg-slate-50/50 rounded-xl p-5 border border-slate-100">
                     <div className="space-y-2">
                       <label className="text-sm font-semibold text-slate-700">
@@ -280,7 +274,7 @@ const CreateDepartmentPage = () => {
                     </div>
                   </div>
 
-                  {/* ENGLISH TAB */}
+                  
                   {activeTab === "english" && (
                     <div className="space-y-6 animate-in fade-in duration-200">
                       <div className="bg-white rounded-xl border border-slate-200 p-5 space-y-5">
@@ -319,7 +313,7 @@ const CreateDepartmentPage = () => {
                         </div>
                       </div>
 
-                      {/* Custom Sections */}
+                      
                       <div className="bg-white rounded-xl border border-slate-200 p-5 space-y-4">
                         <div className="flex items-center justify-between pb-2 border-b border-slate-100">
                           <div>
@@ -415,7 +409,7 @@ const CreateDepartmentPage = () => {
                     </div>
                   )}
 
-                  {/* ARABIC TAB */}
+                  
                   {activeTab === "arabic" && (
                     <div className="space-y-6 animate-in fade-in duration-200">
                       <div className="bg-white rounded-xl border border-slate-200 p-5 space-y-5">
@@ -456,7 +450,7 @@ const CreateDepartmentPage = () => {
                         </div>
                       </div>
 
-                      {/* Arabic Custom Sections */}
+                      
                       <div className="bg-white rounded-xl border border-slate-200 p-5 space-y-4">
                         <div className="flex items-center justify-between pb-2 border-b border-slate-100">
                           <div>
@@ -554,7 +548,7 @@ const CreateDepartmentPage = () => {
                     </div>
                   )}
 
-                  {/* Common Fields - Category, Status, Image */}
+                  
                   <div className="bg-white rounded-xl border border-slate-200 p-5 space-y-5">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                       <div className="space-y-2">

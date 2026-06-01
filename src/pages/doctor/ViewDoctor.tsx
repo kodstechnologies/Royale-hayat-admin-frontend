@@ -55,7 +55,6 @@ type DoctorViewData = {
   totalPatients?: number;
 };
 
-// Function to load user doctors from localStorage
 const loadUserDoctors = () => {
   const stored = localStorage.getItem("rhh_doctors");
   if (stored) {
@@ -79,19 +78,16 @@ const ViewDoctor = () => {
     setError("");
 
     setTimeout(() => {
-      // First check user doctors from localStorage
       const userDoctors = loadUserDoctors();
       let foundDoctor = userDoctors.find((doc: any) => doc.id === id);
       let isUserDoctor = true;
 
-      // If not found in user doctors, check static data
       if (!foundDoctor) {
         foundDoctor = adminDoctors.find(doc => doc.id === id);
         isUserDoctor = false;
       }
 
       if (foundDoctor) {
-        // Convert to DoctorViewData format
         setDoctor({
           doctorId: foundDoctor.doctorId,
           name: foundDoctor.name,
@@ -116,7 +112,6 @@ const ViewDoctor = () => {
           consultationFee: 50,
           availableDays: ["Monday", "Wednesday", "Friday"],
           availableTime: "9:00 AM - 5:00 PM",
-          // rating: (Math.random() * 2 + 3).toFixed(1),
           totalPatients: Math.floor(Math.random() * 500) + 100,
         });
       } else {
@@ -203,12 +198,12 @@ const ViewDoctor = () => {
       <div className="space-y-4 sm:space-y-6">
         <BreadCrumb />
 
-        {/* Main Card */}
+        
         <div className="rounded-xl border-2 border-burgundy/30 bg-gradient-to-br from-white via-slate-50/90 to-white shadow-xl backdrop-blur-sm overflow-hidden">
           <div className="h-1 bg-gradient-to-r from-burgundy/40 via-burgundy to-burgundy/40"></div>
 
           <div className="p-4 sm:p-6">
-            {/* Header with Back Button and Language Toggle */}
+            
             <div className="flex flex-col gap-3 mb-4 sm:mb-6">
               <button
                 type="button"
@@ -252,7 +247,7 @@ const ViewDoctor = () => {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-[340px_1fr] gap-4 sm:gap-6">
-              {/* Left Column - Profile Card */}
+              
               <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm lg:sticky lg:top-6 h-fit">
                 <div className="relative p-4 sm:p-6">
                   <div className="relative">
@@ -326,9 +321,9 @@ const ViewDoctor = () => {
                 </div>
               </div>
 
-              {/* Right Column - Details */}
+              
               <div className={`space-y-5 ${activeLanguage === "arabic" ? "rtl-text" : ""}`}>
-                {/* Qualifications */}
+                
                 {doctor.qualifications && doctor.qualifications.length > 0 && (
                   <div className="bg-white rounded-xl border border-slate-200 p-4 sm:p-5 shadow-sm hover:shadow-md transition-shadow">
                     <div className="flex items-center gap-2 mb-4">
@@ -348,7 +343,7 @@ const ViewDoctor = () => {
                   </div>
                 )}
 
-                {/* Expertise */}
+                
                 {doctor.expertise && doctor.expertise.length > 0 && (
                   <div className="bg-white rounded-xl border border-slate-200 p-4 sm:p-5 shadow-sm hover:shadow-md transition-shadow">
                     <div className="flex items-center gap-2 mb-4">
@@ -367,7 +362,7 @@ const ViewDoctor = () => {
                   </div>
                 )}
 
-                {/* Action Buttons */}
+                
                 <div className="flex flex-col-reverse sm:flex-row gap-3 pt-2">
                   <Button
                     onClick={() => navigate("/doctors")}
@@ -390,7 +385,7 @@ const ViewDoctor = () => {
         </div>
       </div>
 
-      {/* RTL Styles */}
+      
       <style>{`
         .rtl-text {
           direction: rtl;

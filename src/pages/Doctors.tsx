@@ -42,7 +42,6 @@ const saveFeaturedDoctors = (featuredIds: string[]) => {
   localStorage.setItem("rhh_featured_doctors", JSON.stringify(featuredIds));
 };
 
-// Convert adminDoctors to the format expected by the component
 const convertToDoctor = (adminDoctor: AdminDoctor, index: number): Doctor => {
   return {
     _id: adminDoctor.id,
@@ -65,7 +64,6 @@ const convertToDoctor = (adminDoctor: AdminDoctor, index: number): Doctor => {
   };
 };
 
-// Function to load user doctors from localStorage
 const loadUserDoctors = () => {
   const stored = localStorage.getItem("rhh_doctors");
   if (stored) {
@@ -74,7 +72,6 @@ const loadUserDoctors = () => {
   return [];
 };
 
-// Function to convert user doctor to Doctor type
 const convertUserDoctorToDoctor = (userDoctor: any): Doctor => {
   return {
     _id: userDoctor.id,
@@ -103,10 +100,8 @@ const getMergedDoctors = (): Doctor[] => {
   const staticDoctors = adminDoctors.map((doctor, index) => convertToDoctor(doctor, index));
   
   const existingDoctorIds = new Set(convertedUserDoctors.map(doc => doc.doctorId));
-  // Filter out static doctors that have the same doctorId as user doctors
   const newStaticDoctors = staticDoctors.filter(doc => !existingDoctorIds.has(doc.doctorId));
   
-  // Return user doctors first (newest), then remaining static doctors
   return [...convertedUserDoctors, ...newStaticDoctors];
 };
 
@@ -125,7 +120,6 @@ const Doctors = () => {
   const [doctorToDelete, setDoctorToDelete] = useState<Doctor | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   
-  // Feature Doctor States
   const [isFeatureMode, setIsFeatureMode] = useState(false);
   const [selectedDoctors, setSelectedDoctors] = useState<Set<string>>(new Set());
   
@@ -149,7 +143,6 @@ const Doctors = () => {
     setTotalPages(Math.ceil(doctorsWithFeatured.length / limit));
   };
 
-  // Listen for doctor updates from create/edit page
   useEffect(() => {
     const handleDoctorsUpdate = () => {
       loadDoctors();
@@ -165,7 +158,6 @@ const Doctors = () => {
     };
   }, [currentPage, limit, doctors.length]);
 
-  // Setup department options from adminDepartments
   useEffect(() => {
     const deptOptions = adminDepartments.map(dept => ({
       _id: dept.id,
@@ -180,7 +172,6 @@ const Doctors = () => {
     setDepartmentMap(deptMap);
   }, []);
 
-  // Filter doctors based on search and department
   const filteredDoctors = doctors.filter(doctor => {
     const matchesSearch = search === "" || 
       doctor.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -219,18 +210,15 @@ const Doctors = () => {
 
     setIsDeleting(true);
     setTimeout(() => {
-      // Check if this is a user-created doctor (by checking if it exists in localStorage)
       const userDoctors = loadUserDoctors();
       const isUserCreated = userDoctors.some((doc: any) => doc.id === doctorToDelete._id);
       
       let updatedDoctors;
       if (isUserCreated) {
-        // Remove from localStorage
         const updatedUserDoctors = userDoctors.filter((doc: any) => doc.id !== doctorToDelete._id);
         localStorage.setItem("rhh_doctors", JSON.stringify(updatedUserDoctors));
         updatedDoctors = doctors.filter(doc => doc._id !== doctorToDelete._id);
       } else {
-        // For static doctors, just remove from the current view (or mark as inactive)
         updatedDoctors = doctors.filter(doc => doc._id !== doctorToDelete._id);
       }
       
@@ -240,10 +228,8 @@ const Doctors = () => {
 
       setDoctors(updatedDoctors);
 
-      // Dispatch event to notify other components
       window.dispatchEvent(new Event("doctorsUpdated"));
       
-      // Adjust pagination if needed
       const newTotalPages = Math.ceil(updatedDoctors.length / limit);
       if (currentPage > newTotalPages && newTotalPages > 0) {
         setCurrentPage(newTotalPages);
@@ -256,7 +242,6 @@ const Doctors = () => {
     }, 500);
   };
 
-  // Feature Doctor Functions
   const handleFeatureDoctorMode = () => {
     const alreadyFeatured = doctors.filter((doctor) => doctor.isFeatured).map((doctor) => doctor._id);
     setSelectedDoctors(new Set(alreadyFeatured));
@@ -314,12 +299,12 @@ const Doctors = () => {
       <div className="space-y-4 sm:space-y-6">
         <BreadCrumb />
 
-        {/* Main Card */}
+        
         <div className="rounded-xl border-2 border-burgundy/30 bg-gradient-to-br from-white via-slate-50/90 to-white shadow-xl backdrop-blur-sm overflow-hidden">
           <div className="h-1 bg-gradient-to-r from-burgundy/40 via-burgundy to-burgundy/40"></div>
           
           <div className="p-4 sm:p-6">
-            {/* Header with Buttons */}
+            
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4 sm:mb-6">
               <div>
                 <h3 className="text-lg sm:text-xl font-bold text-slate-800">Doctors Management</h3>
@@ -374,7 +359,7 @@ const Doctors = () => {
               </div>
             </div>
 
-            {/* Feature Mode Banner */}
+            
             {isFeatureMode && (
               <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                 <div className="flex items-start gap-2 min-w-0">
@@ -393,7 +378,7 @@ const Doctors = () => {
               </div>
             )}
 
-            {/* Search and Filter Section */}
+            
             <div className="flex flex-col gap-3 mb-4 sm:mb-6">
               <div className="relative w-full sm:flex-1 sm:max-w-md">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -438,14 +423,14 @@ const Doctors = () => {
               )}
             </div>
 
-            {/* Loading State */}
+            
             {loading ? (
               <div className="py-12">
                 <Loader />
               </div>
             ) : (
               <>
-                {/* Empty State */}
+                
                 {paginatedDoctors.length === 0 ? (
                   <div className="text-center py-16">
                     <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-slate-100 flex items-center justify-center">
@@ -465,7 +450,7 @@ const Doctors = () => {
                   </div>
                 ) : (
                   <>
-                    {/* Doctors Grid */}
+                    
                     <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-5">
                       {paginatedDoctors.map((doctor) => (
                         <div
@@ -578,7 +563,7 @@ const Doctors = () => {
                       ))}
                     </div>
 
-                    {/* Pagination - Bottom Right */}
+                    
                     {totalPages > 1 && (
                       <div className="mt-6 pt-4 border-t border-slate-100">
                         <div className="flex flex-wrap justify-center sm:justify-end">
@@ -630,7 +615,7 @@ const Doctors = () => {
         </div>
       </div>
 
-      {/* Delete Alert */}
+      
       <AlertBox
         isOpen={showDeleteAlert}
         onClose={() => {

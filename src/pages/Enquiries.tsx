@@ -161,18 +161,18 @@ const Enquiries = () => {
       <div className="space-y-6">
         <BreadCrumb />
 
-        {/* Main Card */}
+        
         <div className="rounded-xl border-2 border-burgundy/30 bg-gradient-to-br from-white via-slate-50/90 to-white shadow-xl backdrop-blur-sm overflow-hidden">
           <div className="h-1 bg-gradient-to-r from-burgundy/40 via-burgundy to-burgundy/40"></div>
           
           <div className="p-6">
-            {/* Header */}
+            
             <div className="mb-6">
               <h3 className="text-xl font-bold text-slate-800">Customer Enquiries</h3>
               <p className="text-sm text-slate-500 mt-1">View and manage enquiries from the contact form</p>
             </div>
 
-            {/* Search and Filter Section */}
+            
             <div className="flex flex-col sm:flex-row gap-3 mb-6">
               <div className="relative flex-1 max-w-md">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -214,7 +214,7 @@ const Enquiries = () => {
               )}
             </div>
 
-            {/* Table Section */}
+            
             {loading ? (
               <TableSkeletonLoader columns={7} rows={6} />
             ) : (
@@ -303,7 +303,7 @@ const Enquiries = () => {
                   </div>
                 )}
 
-                {/* Pagination */}
+                
                 {totalPages > 1 && (
                   <div className="mt-6 pt-4 border-t border-slate-100">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">

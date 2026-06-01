@@ -22,7 +22,6 @@ type Department = {
   customExplainantions?: any[];
 };
 
-// Function to load departments from localStorage (user created)
 const loadUserDepartments = () => {
   const stored = localStorage.getItem("rhh_departments");
   if (stored) {
@@ -31,7 +30,6 @@ const loadUserDepartments = () => {
   return [];
 };
 
-// Function to get category name from ID
 const getCategoryNameFromId = (categoryId: string): string => {
   const categoryMap: Record<string, string> = {
     cat1: "Cardiology",
@@ -43,7 +41,6 @@ const getCategoryNameFromId = (categoryId: string): string => {
   return categoryMap[categoryId] || "Clinical Speciality";
 };
 
-// Function to get category display name
 const getCategoryDisplayNameForDept = (category: string, isArabic: boolean) => {
   const categoryMap: Record<string, { en: string; ar: string }> = {
     "Clinical Speciality": { en: "Clinical Speciality", ar: "التخصصات السريرية" },
@@ -72,21 +69,16 @@ const ViewDepartment = () => {
     setLoading(true);
     setError("");
     
-    // Simulate loading delay
     setTimeout(() => {
-      // First check if this is a user-created department from localStorage
       const userDepartments = loadUserDepartments();
       let foundDept = userDepartments.find((dept: any) => dept._id === id);
       
-      // If not found in user departments, check static data
       if (!foundDept) {
         foundDept = adminDepartments.find(dept => dept.id === id);
       }
       
       if (foundDept) {
-        // Check if this is a user department (has catagoryId) or static department
         if (foundDept.catagoryId) {
-          // This is a user-created department
           const selectedCategory = getCategoryNameFromId(foundDept.catagoryId);
           setDepartment({
             _id: foundDept._id,
@@ -103,7 +95,6 @@ const ViewDepartment = () => {
             customExplainantions: foundDept.customExplainantions || [],
           });
         } else {
-          // This is a static department from adminDepartments
           setDepartment({
             _id: foundDept.id,
             departmentId: foundDept.clinicalCode || foundDept.id,
@@ -159,12 +150,12 @@ const ViewDepartment = () => {
       <div className="space-y-4 sm:space-y-6">
         <BreadCrumb />
 
-        {/* Main Card */}
+        
         <div className="rounded-xl border-2 border-burgundy/30 bg-gradient-to-br from-white via-slate-50/90 to-white shadow-xl backdrop-blur-sm overflow-hidden">
           <div className="h-1 bg-gradient-to-r from-burgundy/40 via-burgundy to-burgundy/40"></div>
           
           <div className="p-4 sm:p-6">
-            {/* Header with Navigation */}
+            
             <div className="flex flex-col gap-4 mb-4 sm:mb-6">
               <div className="flex items-start gap-3 sm:gap-4 min-w-0">
                 <button
@@ -180,7 +171,7 @@ const ViewDepartment = () => {
               </div>
               
               <div className="flex flex-col sm:flex-row gap-3">
-                {/* Language Toggle */}
+                
                 <div className="flex w-full sm:w-auto gap-2 p-1 bg-slate-100/80 rounded-lg">
                   <button
                     type="button"
@@ -224,14 +215,14 @@ const ViewDepartment = () => {
               </div>
             </div>
 
-            {/* Loading State */}
+            
             {loading && (
               <div className="py-12">
                 <Loader />
               </div>
             )}
 
-            {/* Error State */}
+            
             {error && !loading && (
               <div className="rounded-xl bg-red-50 border border-red-200 p-6 text-center">
                 <XCircle className="h-12 w-12 text-red-500 mx-auto mb-3" />
@@ -246,12 +237,12 @@ const ViewDepartment = () => {
               </div>
             )}
 
-            {/* Department Details */}
+            
             {!loading && !error && department && (
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Left Column - Image & Basic Info */}
+                
                 <div className="lg:col-span-1 space-y-4">
-                  {/* Image Card */}
+                  
                   <div className="rounded-xl border border-slate-200 bg-white overflow-hidden shadow-sm">
                     <div className="h-64 bg-gradient-to-br from-slate-100 to-slate-50 flex items-center justify-center">
                       {department.image ? (
@@ -269,7 +260,7 @@ const ViewDepartment = () => {
                     </div>
                   </div>
 
-                  {/* Basic Info Card */}
+                  
                   <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
                     <div>
                       <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
@@ -316,9 +307,9 @@ const ViewDepartment = () => {
                   </div>
                 </div>
 
-                {/* Right Column - Details */}
+                
                 <div className="lg:col-span-2 space-y-4">
-                  {/* Name Card */}
+                  
                   <div className={`rounded-xl border border-slate-200 bg-white p-5 shadow-sm ${activeLanguage === "arabic" ? "text-right" : ""}`}>
                     <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
                       {activeLanguage === "english" ? "Department Name" : "اسم القسم"}
@@ -328,7 +319,7 @@ const ViewDepartment = () => {
                     </h1>
                   </div>
 
-                  {/* Category Card */}
+                  
                   <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
                     <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
                       {activeLanguage === "english" ? "Category" : "التصنيف"}
@@ -341,7 +332,7 @@ const ViewDepartment = () => {
                     </div>
                   </div>
 
-                  {/* Description Card */}
+                  
                   <div className={`rounded-xl border border-slate-200 bg-white p-5 shadow-sm ${activeLanguage === "arabic" ? "rtl-text" : ""}`}>
                     <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
                       {activeLanguage === "english" ? "Description" : "الوصف"}
@@ -351,7 +342,7 @@ const ViewDepartment = () => {
                     </p>
                   </div>
 
-                  {/* Custom Sections - Only show if there are custom sections */}
+                  
                   {department.customExplainantions && department.customExplainantions.length > 0 && (
                     <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
                       <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3 block">
@@ -394,7 +385,7 @@ const ViewDepartment = () => {
         </div>
       </div>
 
-      {/* Add RTL styles for Arabic text */}
+      
       <style>{`
         .rtl-text {
           direction: rtl;

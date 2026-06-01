@@ -1,4 +1,3 @@
-// layouts/ProtectedLayout.tsx
 
 import {
   Navigate,

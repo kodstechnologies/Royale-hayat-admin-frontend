@@ -49,7 +49,6 @@ const OtpScreen = () => {
     return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
 
-  // Handle OTP input change
   const handleOtpChange = (index: number, value: string) => {
     if (value.length > 1) return;
     
@@ -57,20 +56,17 @@ const OtpScreen = () => {
     newOtp[index] = value;
     setOtp(newOtp);
 
-    // Auto-focus next input
     if (value !== "" && index < 5) {
       inputRefs.current[index + 1]?.focus();
     }
   };
 
-  // Handle key press for backspace
   const handleKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Backspace" && !otp[index] && index > 0) {
       inputRefs.current[index - 1]?.focus();
     }
   };
 
-  // Handle paste event
   const handlePaste = (e: React.ClipboardEvent) => {
     e.preventDefault();
     const pastedData = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
@@ -83,7 +79,6 @@ const OtpScreen = () => {
     
     setOtp(newOtp);
     
-    // Focus on the next empty field or last field
     let lastFilledIndex = -1;
     for (let i = 0; i < newOtp.length; i++) {
       if (newOtp[i] !== "") {
@@ -168,7 +163,6 @@ const OtpScreen = () => {
     }
   };
 
-  // Circular progress component - smaller size
   const CircularProgress = ({
     progress,
     filledDigits,
@@ -219,18 +213,18 @@ const OtpScreen = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-100 via-slate-50 to-gray-100 px-4 py-8">
       <div className="w-full max-w-md relative">
-        {/* Decorative elements */}
+        
         <div className="absolute -top-20 -left-20 w-64 h-64 bg-burgundy/10 rounded-full blur-3xl"></div>
         <div className="absolute -bottom-20 -right-20 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl"></div>
 
-        {/* CARD */}
+        
         <div className="relative bg-white rounded-3xl shadow-2xl border border-slate-200/80 transition-all duration-500 hover:shadow-burgundy/20 hover:shadow-xl overflow-hidden">
-          {/* Card gradient accent */}
+          
           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-burgundy/40 via-burgundy to-burgundy/40"></div>
 
-          {/* Content wrapper with padding */}
+          
           <div className="p-8">
-            {/* Logo inside card */}
+            
             <div className="flex justify-center mb-6 pt-4">
               <div className="relative">
                 <div className="absolute inset-0 bg-burgundy/20 rounded-full blur-2xl"></div>
@@ -257,7 +251,7 @@ const OtpScreen = () => {
                 Enter the 6-digit code sent to
               </p>
               
-              {/* Email display */}
+              
               <div className="mt-2 inline-flex items-center gap-2 px-4 py-2 bg-slate-100 rounded-full">
                 <span className="text-xs font-medium text-slate-600">📧</span>
                 <span className="text-sm font-semibold text-burgundy">
@@ -266,7 +260,7 @@ const OtpScreen = () => {
               </div>
             </div>
 
-            {/* Timer Display */}
+            
             <div className="flex justify-center mb-6">
               <div className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-burgundy/5 to-burgundy/10 rounded-full">
                 <Clock size={16} className="text-burgundy" />
@@ -280,9 +274,9 @@ const OtpScreen = () => {
             </div>
 
             <form onSubmit={handleVerifyOtp} className="space-y-6">
-              {/* OTP Input Boxes with Progress Circle */}
+              
               <div className="flex items-center justify-center gap-4">
-                {/* 6 OTP Boxes */}
+                
                 <div className="flex gap-2">
                   {otp.map((digit, index) => (
                     <input
@@ -318,7 +312,7 @@ const OtpScreen = () => {
                   ))}
                 </div>
                 
-                {/* Circular Progress */}
+                
                 <CircularProgress progress={otpProgress} filledDigits={filledDigits} />
               </div>
 
@@ -328,7 +322,7 @@ const OtpScreen = () => {
                 </div>
               )}
 
-              {/* ERROR */}
+              
               {error && (
                 <div className="flex items-center gap-2 p-3 rounded-xl bg-red-50 border border-red-200 animate-in fade-in duration-200">
                   <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></div>
@@ -336,7 +330,7 @@ const OtpScreen = () => {
                 </div>
               )}
 
-              {/* BUTTON */}
+              
               <button
                 type="submit"
                 disabled={loading || filledDigits < 6}
@@ -372,7 +366,7 @@ const OtpScreen = () => {
                 )}
               </button>
 
-              {/* Resend OTP Button — enabled after 5 min timer expires */}
+              
               <div className="flex justify-center">
                 <button
                   type="button"
@@ -399,7 +393,7 @@ const OtpScreen = () => {
                 </button>
               </div>
 
-              {/* Back to Login */}
+              
               <button
                 type="button"
                 onClick={() => navigate("/login")}

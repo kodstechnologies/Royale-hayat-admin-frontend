@@ -61,7 +61,6 @@ const pageMap: Record<string, { label: string; icon: any; description?: string }
   "/life-at-rhh":               { label: "Life at RHH",              icon: Sparkles, description: "Manage Life at RHH content" },
 };
 
-// Add descriptions for nested routes
 const nestedDescriptions: Record<string, string> = {
   "/medical-record/view": "View medical record request details",
   "/enquiries/view": "View enquiry details",
@@ -134,7 +133,6 @@ const BreadCrumb = ({ lastCrumbLabel }: { lastCrumbLabel?: string } = {}) => {
     .filter((key) => location.pathname.startsWith(key))
     .sort((a, b) => b.length - a.length)[0];
 
-  // Match the most specific route first
   let match = pageMap[location.pathname];
   let description = match?.description;
   let pageLabel = match?.label;
@@ -162,7 +160,6 @@ const BreadCrumb = ({ lastCrumbLabel }: { lastCrumbLabel?: string } = {}) => {
   const pageDescription =
     description || `Manage and configure ${label.toLowerCase()} settings`;
 
-  // Breadcrumb trail (hide MongoDB ObjectId segments)
   const breadcrumbItems: { segment: string; to: string; parentSegment?: string }[] = [];
   let pathSoFar = "";
   pathnames.forEach((segment, index) => {
@@ -175,9 +172,7 @@ const BreadCrumb = ({ lastCrumbLabel }: { lastCrumbLabel?: string } = {}) => {
     });
   });
 
-  // Helper to format path segment
   const formatSegment = (segment: string, parentSegment?: string) => {
-    // MongoDB ObjectId — replace with a readable label based on context
     if (/^[0-9a-fA-F]{24}$/.test(segment)) {
       const contextLabels: Record<string, string> = {
         "view": "Details",
@@ -234,14 +229,14 @@ const BreadCrumb = ({ lastCrumbLabel }: { lastCrumbLabel?: string } = {}) => {
 
   return (
     <div className="w-full">
-      {/* Breadcrumb Card - With beautiful burgundy themed background */}
+      
       <div className="w-full rounded-2xl bg-gradient-to-br from-burgundy/5 via-white to-burgundy/3 border-2 border-burgundy/20 shadow-xl backdrop-blur-sm overflow-hidden">
-        {/* Top accent bar */}
+        
         <div className="h-1.5 bg-gradient-to-r from-burgundy/60 via-burgundy to-burgundy/60"></div>
         
-        {/* Content */}
+        
         <div className="px-4 py-4 sm:px-6 sm:py-5 lg:px-8 lg:py-6">
-          {/* Breadcrumb navigation */}
+          
           <div className="flex items-center flex-wrap gap-2 mb-4">
             {layoutControls && (
               <button
@@ -282,7 +277,7 @@ const BreadCrumb = ({ lastCrumbLabel }: { lastCrumbLabel?: string } = {}) => {
             <span className="text-sm text-slate-500 font-medium">{t("Pages")}</span>
             <ChevronRight size={14} className="text-slate-400" />
             <div className="flex items-center flex-wrap gap-2">
-              {/* Home Link */}
+              
               <Link
                 to="/"
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/80 hover:bg-burgundy/10 text-slate-600 hover:text-burgundy transition-all duration-200 text-sm font-medium shadow-sm border border-slate-200/50 backdrop-blur-sm"
@@ -320,7 +315,7 @@ const BreadCrumb = ({ lastCrumbLabel }: { lastCrumbLabel?: string } = {}) => {
             </div>
           </div>
 
-          {/* Page Title with Icon */}
+          
           <div className="flex items-center gap-3 mb-2">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-burgundy/25 to-burgundy/10 border border-burgundy/30 flex items-center justify-center shadow-md">
               <Icon size={20} className="text-burgundy" />
@@ -330,7 +325,7 @@ const BreadCrumb = ({ lastCrumbLabel }: { lastCrumbLabel?: string } = {}) => {
             </h1>
           </div>
           
-          {/* Page Description */}
+          
           <p className="text-sm text-slate-500 ml-0">
             {t(pageDescription)}
           </p>

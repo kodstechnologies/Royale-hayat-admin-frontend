@@ -67,7 +67,6 @@ const CreateCSR = () => {
       return;
     }
 
-    // Check file size (5MB limit) for each image
     const oversizedFiles: File[] = [];
     const validFiles: File[] = [];
 
@@ -84,7 +83,6 @@ const CreateCSR = () => {
       toast.error(`The following images exceed 5MB limit: ${fileNames}`);
       setImageError(`Some images exceed 5MB limit. Maximum file size is 5MB.`);
       
-      // Clear error after 5 seconds
       setTimeout(() => setImageError(""), 5000);
     }
 
@@ -115,7 +113,6 @@ const CreateCSR = () => {
   };
 
   const handleSubmit = async () => {
-    // Validation
     if (!formData.heading.trim()) {
       toast.error("Please enter heading (English)");
       setActiveTab("english");
@@ -163,7 +160,6 @@ const CreateCSR = () => {
       formDataToSend.append("description", formData.description);
       formDataToSend.append("descriptionArabic", formData.descriptionArabic);
       
-      // Append each image file with field name "images"
       imageFiles.forEach((file) => {
         formDataToSend.append("images", file);
       });
@@ -174,7 +170,6 @@ const CreateCSR = () => {
         },
       });
       
-      // Dispatch event to notify list page
       window.dispatchEvent(new Event("csrUpdated"));
       
       toast.success(response?.data?.message || "CSR initiative added successfully!");
@@ -182,7 +177,6 @@ const CreateCSR = () => {
     } catch (error: any) {
       console.error("Error adding CSR:", error);
       
-      // Handle validation errors
       if (error?.response?.data?.message) {
         toast.error(error.response.data.message);
       } else if (error?.response?.data?.meta) {
@@ -196,7 +190,6 @@ const CreateCSR = () => {
     }
   };
 
-  // Labels remain in English regardless of activeTab
   const getUIText = {
     pageTitle: "Add CSR Initiative",
     pageDescription: "Add a new CSR initiative",
@@ -228,7 +221,7 @@ const CreateCSR = () => {
                 </div>
               </div>
 
-              {/* Language Toggle - Only affects input placeholders and direction */}
+              
               <div className="flex gap-2 p-1 bg-slate-100/80 rounded-lg">
                 <button onClick={() => setActiveTab("english")}
                   className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${
@@ -248,7 +241,7 @@ const CreateCSR = () => {
             </div>
 
             <div className="space-y-6">
-              {/* Heading - Label always in English */}
+              
               <div className="bg-slate-50 rounded-xl p-5">
                 <div className="flex items-center gap-2 pb-2 border-b border-slate-200 mb-4">
                   <FileText className="h-5 w-5 text-burgundy" />
@@ -266,7 +259,7 @@ const CreateCSR = () => {
                 />
               </div>
 
-              {/* Description - Label always in English */}
+              
               <div className="bg-slate-50 rounded-xl p-5">
                 <div className="flex items-center gap-2 pb-2 border-b border-slate-200 mb-4">
                   <FileText className="h-5 w-5 text-burgundy" />
@@ -284,7 +277,7 @@ const CreateCSR = () => {
                 />
               </div>
 
-              {/* Description - Label always in English */}
+              
               <div className="bg-slate-50 rounded-xl p-5">
                 <div className="flex items-center gap-2 pb-2 border-b border-slate-200 mb-4">
                   <FileText className="h-5 w-5 text-burgundy" />
@@ -303,7 +296,7 @@ const CreateCSR = () => {
                 />
               </div>
 
-              {/* Multiple Images Upload - Label always in English */}
+              
               <div className="bg-slate-50 rounded-xl p-5">
                 <div className="flex items-center gap-2 pb-2 border-b border-slate-200 mb-4">
                   <Upload className="h-5 w-5 text-burgundy" />
@@ -338,7 +331,7 @@ const CreateCSR = () => {
                   </div>
                 </div>
 
-                {/* Error Message */}
+                
                 {imageError && (
                   <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded-lg">
                     <p className="text-sm text-red-600">{imageError}</p>
@@ -370,7 +363,7 @@ const CreateCSR = () => {
                 )}
               </div>
 
-              {/* Submit Button */}
+              
               <div className="flex justify-end gap-3 pt-4 border-t">
                 <Button variant="outline" onClick={() => navigate("/csr")} className="gap-2">
                   <X className="h-4 w-4" />
@@ -382,7 +375,7 @@ const CreateCSR = () => {
                 </Button>
               </div>
               
-              {/* Hint message */}
+              
               {imageFiles.length === 0 && (
                 <p className="text-xs text-amber-600 text-center">
                   {activeTab === "english" 

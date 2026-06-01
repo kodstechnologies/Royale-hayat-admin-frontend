@@ -61,7 +61,6 @@ const toggleSubId = (id: string, current: string[]) => {
   return [...next];
 };
 
-// Helper functions for localStorage
 const getStoredDoctors = () => {
   const stored = localStorage.getItem('rhh_doctors');
   if (stored) {
@@ -74,7 +73,6 @@ const saveDoctorsToStorage = (doctors: any[]) => {
   localStorage.setItem('rhh_doctors', JSON.stringify(doctors));
 };
 
-// Dummy subspecialities for display (same as in create page)
 const dummySubspecialities: Record<string, Array<{ _id: string; name: string; arabicName: string }>> = {
   dept1: [
     { _id: "sub1", name: "Interventional Cardiology", arabicName: "أمراض القلب التداخلية" },
@@ -161,14 +159,12 @@ const EditDoctorPage = () => {
       setLoading(true);
 
       setTimeout(() => {
-        // First check user doctors from localStorage
         const userDoctors = getStoredDoctors();
         let foundDoctor = userDoctors.find((doc: any) => doc.id === id);
         let isUserCreated = true;
         let originalImage = "";
 
         if (!foundDoctor) {
-          // Check static doctors
           foundDoctor = adminDoctors.find(doc => doc.id === id);
           isUserCreated = false;
         }
@@ -262,12 +258,12 @@ const EditDoctorPage = () => {
       <div className="space-y-4 sm:space-y-6">
         <BreadCrumb />
 
-        {/* Main Card */}
+        
         <div className="rounded-xl border-2 border-burgundy/30 bg-gradient-to-br from-white via-slate-50/90 to-white shadow-xl backdrop-blur-sm overflow-hidden">
           <div className="h-1 bg-gradient-to-r from-burgundy/40 via-burgundy to-burgundy/40"></div>
 
           <div className="p-4 sm:p-6">
-            {/* Header with Back Button */}
+            
             <div className="flex items-start gap-3 mb-4 sm:mb-6">
               <button
                 type="button"
@@ -283,7 +279,7 @@ const EditDoctorPage = () => {
               </div>
             </div>
 
-            {/* Tabs */}
+            
             <div className="mb-6 sm:mb-8">
               <div className="flex gap-2 sm:gap-4 p-1 bg-slate-100/80 rounded-xl w-full sm:w-fit">
                 <button
@@ -333,7 +329,6 @@ const EditDoctorPage = () => {
                 setSaving(true);
 
                 setTimeout(() => {
-                  // Prepare updated doctor object
                   const selectedDept = departments.find(d => d._id === values.department);
                   const updatedDoctor = {
                     id: id,
@@ -364,10 +359,8 @@ const EditDoctorPage = () => {
                     );
                     saveDoctorsToStorage(updatedDoctors);
                   } else {
-                    // For static doctors, save as a copy to localStorage
                     const userDoctors = getStoredDoctors();
 
-                    // Check if this static doctor has already been edited before
                     const existingIndex = userDoctors.findIndex((doc: any) => doc.doctorId === values.doctorId);
 
                     if (existingIndex !== -1) {
@@ -379,7 +372,6 @@ const EditDoctorPage = () => {
                     }
                   }
 
-                  // Dispatch event to notify list page
                   window.dispatchEvent(new Event("doctorsUpdated"));
 
                   toast.success("Doctor updated successfully.", { position: "top-right" });
@@ -390,7 +382,7 @@ const EditDoctorPage = () => {
             >
               {({ values, setFieldValue }) => (
                 <Form className="space-y-6">
-                  {/* Doctor ID - Common for both tabs */}
+                  
                   <div className="bg-slate-50/50 rounded-xl p-5 border border-slate-100">
                     <div className="space-y-2">
                       <label className="text-sm font-semibold text-slate-700">
@@ -407,7 +399,7 @@ const EditDoctorPage = () => {
                     </div>
                   </div>
 
-                  {/* ENGLISH TAB */}
+                  
                   {activeTab === "english" && (
                     <div className="space-y-6 animate-in fade-in duration-200">
                       <div className="bg-white rounded-xl border border-slate-200 p-5 space-y-5">
@@ -455,7 +447,7 @@ const EditDoctorPage = () => {
                         </div>
                       </div>
 
-                      {/* Languages Section */}
+                      
                       <div className="bg-white rounded-xl border border-slate-200 p-5 space-y-4">
                         <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
                           <Globe className="h-5 w-5 text-burgundy" />
@@ -508,7 +500,7 @@ const EditDoctorPage = () => {
                         </div>
                       </div>
 
-                      {/* Qualifications Section */}
+                      
                       <div className="bg-white rounded-xl border border-slate-200 p-5 space-y-4">
                         <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
                           <GraduationCap className="h-5 w-5 text-burgundy" />
@@ -563,7 +555,7 @@ const EditDoctorPage = () => {
                         </Button>
                       </div>
 
-                      {/* Expertise Section */}
+                      
                       <div className="bg-white rounded-xl border border-slate-200 p-5 space-y-4">
                         <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
                           <Award className="h-5 w-5 text-burgundy" />
@@ -621,7 +613,7 @@ const EditDoctorPage = () => {
                     </div>
                   )}
 
-                  {/* ARABIC TAB */}
+                  
                   {activeTab === "arabic" && (
                     <div className="space-y-6 animate-in fade-in duration-200">
                       <div className="bg-white rounded-xl border border-slate-200 p-5 space-y-5">
@@ -660,7 +652,7 @@ const EditDoctorPage = () => {
                         </div>
                       </div>
 
-                      {/* Languages (Arabic) Section */}
+                      
                       <div className="bg-white rounded-xl border border-slate-200 p-5 space-y-4">
                         <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
                           <Globe className="h-5 w-5 text-burgundy" />
@@ -714,7 +706,7 @@ const EditDoctorPage = () => {
                         </div>
                       </div>
 
-                      {/* Expertise (Arabic) Section */}
+                      
                       <div className="bg-white rounded-xl border border-slate-200 p-5 space-y-4">
                         <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
                           <Award className="h-5 w-5 text-burgundy" />
@@ -770,7 +762,7 @@ const EditDoctorPage = () => {
                         </Button>
                       </div>
 
-                      {/* Qualifications (Arabic) Section */}
+                      
                       <div className="bg-white rounded-xl border border-slate-200 p-5 space-y-4">
                         <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
                           <GraduationCap className="h-5 w-5 text-burgundy" />
@@ -828,7 +820,7 @@ const EditDoctorPage = () => {
                     </div>
                   )}
 
-                  {/* Common Fields */}
+                  
                   <div className="bg-white rounded-xl border border-slate-200 p-5 space-y-5">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                       <div className="space-y-2">
@@ -902,7 +894,7 @@ const EditDoctorPage = () => {
                       </div>
                     )}
 
-                    {/* Image Section */}
+                    
                     <div className="space-y-2">
                       <label className="text-sm font-semibold text-slate-700">Doctor Image</label>
                       <div
@@ -953,7 +945,7 @@ const EditDoctorPage = () => {
                     </div>
                   </div>
 
-                  {/* Action Buttons */}
+                  
                   <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-4 border-t border-slate-100">
                     <Button variant="outline" onClick={() => navigate("/doctors")} className="gap-2 w-full sm:w-auto">
                       Cancel

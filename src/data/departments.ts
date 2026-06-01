@@ -1,4 +1,3 @@
-// adminDepartments.ts
 
 export type AdminDepartment = {
   id: string;
@@ -14,7 +13,6 @@ export type AdminDepartment = {
 };
 
 export const adminDepartments: AdminDepartment[] = [
-  // ── CLINICAL SPECIALITY ──────────────────────────────────────────────
   {
     id: "1",
     clinicalCode: "R002OBG",
@@ -172,7 +170,6 @@ export const adminDepartments: AdminDepartment[] = [
     updatedAt: "2024-01-27T22:30:00Z",
   },
 
-  // ── CLINICAL SUPPORT SERVICE ─────────────────────────────────────────
   {
     id: "16",
     clinicalCode: "R07LABH",
@@ -246,7 +243,6 @@ export const adminDepartments: AdminDepartment[] = [
     updatedAt: "2024-02-02T04:30:00Z",
   },
 
-  // ── HOME CARE SERVICE ────────────────────────────────────────────────
   {
     id: "18",
     clinicalCode: "",
@@ -273,17 +269,14 @@ export const adminDepartments: AdminDepartment[] = [
   },
 ];
 
-// Helper function to get departments by category
 export const getDepartmentsByCategory = (category: string): AdminDepartment[] => {
   return adminDepartments.filter(dept => dept.category === category);
 };
 
-// Helper function to get department by ID
 export const getDepartmentById = (id: string): AdminDepartment | undefined => {
   return adminDepartments.find(dept => dept.id === id);
 };
 
-// Helper function to get department by clinical code
 export const getDepartmentByClinicalCode = (clinicalCode: string): AdminDepartment | undefined => {
   return adminDepartments.find(dept => dept.clinicalCode === clinicalCode);
 };

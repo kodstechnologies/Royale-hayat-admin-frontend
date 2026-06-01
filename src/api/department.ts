@@ -20,9 +20,7 @@ export type DepartmentPayload = {
   departmentId: string;
   name: string;
   description: string;
-  /** Mongo ObjectId of category (required on create by API) */
   catagory?: string;
-  /** Mongo ObjectIds of subspecialities (optional) */
   subspecialities?: string[];
   image?: string;
   subSpecialties: string[];

@@ -1,4 +1,3 @@
-// ViewEnquiry.tsx
 
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -149,12 +148,12 @@ const ViewEnquiry = () => {
       <div className="space-y-6">
         <BreadCrumb />
 
-        {/* Main Card */}
+        
         <div className="rounded-xl border-2 border-burgundy/30 bg-gradient-to-br from-white via-slate-50/90 to-white shadow-xl backdrop-blur-sm overflow-hidden">
           <div className="h-1 bg-gradient-to-r from-burgundy/40 via-burgundy to-burgundy/40"></div>
 
           <div className="p-6">
-            {/* Header */}
+            
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-4">
                 <button
@@ -182,9 +181,9 @@ const ViewEnquiry = () => {
               </div>
             </div>
 
-            {/* Content */}
+            
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Left Side */}
+              
               <div className="lg:col-span-1 space-y-4">
                 <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
                   <h3 className="text-sm font-semibold text-slate-800 mb-4 flex items-center gap-2">
@@ -193,7 +192,7 @@ const ViewEnquiry = () => {
                   </h3>
 
                   <div className="space-y-4">
-                    {/* Name */}
+                    
                     <div className="flex items-start gap-3">
                       <div className="w-10 h-10 rounded-xl bg-burgundy/10 flex items-center justify-center flex-shrink-0">
                         <User className="h-5 w-5 text-burgundy" />
@@ -210,7 +209,7 @@ const ViewEnquiry = () => {
                       </div>
                     </div>
 
-                    {/* Email */}
+                    
                     <div className="flex items-start gap-3">
                       <div className="w-10 h-10 rounded-xl bg-burgundy/10 flex items-center justify-center flex-shrink-0">
                         <AtSign className="h-5 w-5 text-burgundy" />
@@ -227,7 +226,7 @@ const ViewEnquiry = () => {
                       </div>
                     </div>
 
-                    {/* Phone */}
+                    
                     <div className="flex items-start gap-3">
                       <div className="w-10 h-10 rounded-xl bg-burgundy/10 flex items-center justify-center flex-shrink-0">
                         <Phone className="h-5 w-5 text-burgundy" />
@@ -244,7 +243,7 @@ const ViewEnquiry = () => {
                       </div>
                     </div>
 
-                    {/* Department */}
+                    
                     <div className="flex items-start gap-3">
                       <div className="w-10 h-10 rounded-xl bg-burgundy/10 flex items-center justify-center flex-shrink-0">
                         <Building2 className="h-5 w-5 text-burgundy" />
@@ -261,7 +260,7 @@ const ViewEnquiry = () => {
                       </div>
                     </div>
 
-                    {/* Date */}
+                    
                     <div className="flex items-start gap-3">
                       <div className="w-10 h-10 rounded-xl bg-burgundy/10 flex items-center justify-center flex-shrink-0">
                         <Calendar className="h-5 w-5 text-burgundy" />
@@ -280,36 +279,11 @@ const ViewEnquiry = () => {
                   </div>
                 </div>
 
-                {/* Actions */}
-                {/* <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-                  <h3 className="text-sm font-semibold text-slate-800 mb-3 flex items-center gap-2">
-                    <div className="w-1 h-4 bg-burgundy rounded-full"></div>
-                    Quick Actions
-                  </h3>
-
-                  <div className="space-y-2">
-                    <Button
-                      onClick={() =>
-                        (window.location.href = `mailto:${enquiry.email}`)
-                      }
-                      className="w-full gap-2 bg-burgundy hover:bg-burgundy/90"
-                    >
-                      <Mail className="h-4 w-4" />
-                      Reply via Email
-                    </Button>
-
-                    <Button
-                      variant="outline"
-                      onClick={() => navigate("/enquiries")}
-                      className="w-full gap-2"
-                    >
-                      Back to List
-                    </Button>
-                  </div>
-                </div> */}
+                
+                
               </div>
 
-              {/* Right Side */}
+              
               <div className="lg:col-span-2">
                 <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
                   <div className="flex items-center gap-2 mb-4">
@@ -328,7 +302,7 @@ const ViewEnquiry = () => {
                     </p>
                   </div>
 
-                  {/* Footer */}
+                  
                   <div className="mt-4 pt-4 border-t border-slate-100 flex items-center gap-4 text-xs text-slate-400">
                     <div className="flex items-center gap-1">
                       <Clock className="h-3 w-3" />
@@ -371,7 +345,7 @@ const ViewEnquiry = () => {
                 </Button>
               </PermissionGate>
             </div>
-            {/* End Grid */}
+            
           </div>
         </div>
       </div>

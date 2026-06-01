@@ -96,7 +96,6 @@ const FeedbackReviews = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(5);
 
-  // Edit modal states
   const [editingFeedback, setEditingFeedback] = useState<DoctorFeedback | HospitalFeedback | null>(null);
   const [editFormData, setEditFormData] = useState({
     patientName: "",
@@ -123,14 +122,12 @@ const FeedbackReviews = () => {
       ? hasArabicFeedbackComment(commentAr)
       : hasEnglishFeedbackComment(comment);
 
-  // Fetch doctor feedbacks
   const fetchDoctorFeedbacks = useCallback(async () => {
     try {
       const response = await getAllDoctorFeedbacks();
       const feedbacks = response?.data || response || [];
       
       const mappedFeedbacks: DoctorFeedback[] = feedbacks.map((fb: any) => {
-        // Handle doctor object - it could be a populated object or just an ID
         let doctorData = {
           name: "",
           arabicName: "",
@@ -141,7 +138,6 @@ const FeedbackReviews = () => {
         
         if (fb.doctor) {
           if (typeof fb.doctor === 'object') {
-            // Doctor is populated object
             doctorData = {
               name: fb.doctor.name || "",
               arabicName: fb.doctor.arabicName || "",
@@ -182,7 +178,6 @@ const FeedbackReviews = () => {
     }
   }, [showArabicContent]);
 
-  // Fetch hospital feedbacks
   const fetchHospitalFeedbacks = useCallback(async () => {
     try {
       const response = await getAllHospitalFeedbacks();
@@ -260,7 +255,6 @@ const FeedbackReviews = () => {
     isNewPatientFeedback(fb.isViewed, fb.addedByAdmin),
   ).length;
 
-  // Toggle show on website
   const toggleShowOnWebsite = async (id: string, type: "doctor" | "hospital") => {
     if (!hasPermission(PERMISSIONS.FEEDBACK_UPDATE)) return;
     void markFeedbackAsViewed(id, type);
@@ -354,7 +348,6 @@ const FeedbackReviews = () => {
     }
   };
 
-  // Open edit modal
   const openEditModal = (feedback: DoctorFeedback | HospitalFeedback, type: "doctor" | "hospital") => {
     if (!hasPermission(PERMISSIONS.FEEDBACK_UPDATE)) return;
     void markFeedbackAsViewed(feedback.id, type);
@@ -374,7 +367,6 @@ const FeedbackReviews = () => {
     });
   };
 
-  // Save edit
   const saveEdit = async () => {
     if (!editingFeedback || !hasPermission(PERMISSIONS.FEEDBACK_UPDATE)) return;
     
@@ -493,7 +485,6 @@ const FeedbackReviews = () => {
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   };
 
-  // Filter doctor feedbacks
   const filteredDoctorFeedbacks = doctorFeedbacks.filter(fb => {
     if (!matchesSelectedLanguage(fb.comment, fb.commentAr)) return false;
 
@@ -517,7 +508,6 @@ const FeedbackReviews = () => {
     return matchesSearch && matchesRating && matchesWebsite && matchesAdmin;
   });
 
-  // Filter hospital feedbacks
   const filteredHospitalFeedbacks = hospitalFeedbacks.filter(fb => {
     if (!matchesSelectedLanguage(fb.comment, fb.commentAr)) return false;
 
@@ -577,7 +567,6 @@ const FeedbackReviews = () => {
   const doctorTotalPages = getTotalPages(filteredDoctorFeedbacks.length);
   const hospitalTotalPages = getTotalPages(filteredHospitalFeedbacks.length);
 
-  // UI Text
   const uiText = {
     doctorFeedback: "Doctor Feedback",
     hospitalFeedback: "Hospital Feedback",
@@ -628,7 +617,7 @@ const FeedbackReviews = () => {
       <div className="space-y-4 sm:space-y-6">
         <BreadCrumb />
 
-        {/* Header with Add Button */}
+        
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex gap-2 p-1 bg-slate-100/80 rounded-lg w-full sm:w-auto">
             <button
@@ -673,7 +662,7 @@ const FeedbackReviews = () => {
           </PermissionGate>
         </div>
 
-        {/* Tabs */}
+        
         <div className="flex gap-2 p-1 bg-slate-100/80 rounded-xl w-full sm:w-fit">
           <button
             onClick={() => { setActiveTab("doctor"); setCurrentPage(1); }}
@@ -715,7 +704,7 @@ const FeedbackReviews = () => {
           </button>
         </div>
 
-        {/* Filters */}
+        
         <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3">
           <div className="relative w-full sm:flex-1 sm:min-w-[200px]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -776,7 +765,7 @@ const FeedbackReviews = () => {
           )}
         </div>
 
-        {/* Doctor Feedback Section */}
+        
         {activeTab === "doctor" && (
           <div className="space-y-4">
             {currentDoctorItems.length === 0 ? (
@@ -919,7 +908,7 @@ const FeedbackReviews = () => {
                 );
                 })}
 
-                {/* Pagination for Doctor Feedback */}
+                
                 {doctorTotalPages > 1 && (
                   <div className="flex flex-wrap justify-center items-center gap-2 pt-4 px-1">
                     <button
@@ -963,7 +952,7 @@ const FeedbackReviews = () => {
           </div>
         )}
 
-        {/* Hospital Feedback Section */}
+        
         {activeTab === "hospital" && (
           <div className="space-y-4">
             {currentHospitalItems.length === 0 ? (
@@ -1097,7 +1086,7 @@ const FeedbackReviews = () => {
                 );
                 })}
 
-                {/* Pagination for Hospital Feedback */}
+                
                 {hospitalTotalPages > 1 && (
                   <div className="flex flex-wrap justify-center items-center gap-2 pt-4 px-1">
                     <button
@@ -1142,7 +1131,7 @@ const FeedbackReviews = () => {
         )}
       </div>
 
-      {/* Edit Modal */}
+      
       {editingFeedback && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-0 sm:p-4" onClick={() => setEditingFeedback(null)}>
           <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl border border-slate-200 w-full max-w-2xl max-h-[92vh] sm:max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
@@ -1164,13 +1153,13 @@ const FeedbackReviews = () => {
             </div>
 
             <div className="p-4 sm:p-6 space-y-5">
-              {/* Rating */}
+              
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">Rating</label>
                 {renderStars(editFormData.rating, true, (rating) => setEditFormData({ ...editFormData, rating }))}
               </div>
 
-              {/* Patient Name */}
+              
               {!editingArabicOnly && (
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">Patient Name (English)</label>
@@ -1198,7 +1187,7 @@ const FeedbackReviews = () => {
               </div>
               )}
 
-              {/* Doctor specific fields */}
+              
               {activeTab === "doctor" && (
               <>
                 {!editingArabicOnly && (
@@ -1257,7 +1246,7 @@ const FeedbackReviews = () => {
               </>
               )}
 
-              {/* Feedback Comments */}
+              
               {!editingArabicOnly && (
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">Feedback (English)</label>
@@ -1285,7 +1274,7 @@ const FeedbackReviews = () => {
               </div>
               )}
 
-              {/* Show on Website Toggle */}
+              
               <div className="flex items-center justify-between pt-2">
                 <label className="text-sm font-medium text-slate-700">Show on Website</label>
                 <button
@@ -1297,7 +1286,7 @@ const FeedbackReviews = () => {
                 </button>
               </div>
 
-              {/* Form Actions */}
+              
               <div className="flex flex-col-reverse sm:flex-row gap-3 pt-4 border-t border-slate-200">
                 <Button variant="outline" onClick={() => setEditingFeedback(null)} className="w-full sm:flex-1">
                   {uiText.cancel}
@@ -1312,7 +1301,7 @@ const FeedbackReviews = () => {
         </div>
       )}
 
-      {/* RTL Styles */}
+      
       <style>{`
         .rtl-text {
           direction: rtl;

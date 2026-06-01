@@ -117,32 +117,7 @@ const ViewBookings = () => {
             </span>
           }
         >
-          {/* <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
-            <SummaryChip
-              label="Appointment Date"
-              value={
-                booking.appointmentDate
-                  ? formatDisplayDate(booking.appointmentDate)
-                  : undefined
-              }
-              icon={Calendar}
-            />
-            <SummaryChip
-              label="Time Slot"
-              value={booking.timeSlot}
-              icon={Clock}
-            />
-            <SummaryChip
-              label="Department"
-              value={booking.department}
-              icon={Building}
-            />
-            <SummaryChip
-              label="Doctor"
-              value={booking.doctorName}
-              icon={UserCircle}
-            />
-          </div> */}
+          
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
             <DetailSection

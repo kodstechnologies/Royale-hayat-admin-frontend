@@ -31,22 +31,18 @@ type MedicalRequest = {
   status: "pending" | "received" | "approved" | "rejected" | "completed";
   requestedDate: string;
   requestId: string;
-  // Patient Info
   patientFullName: string;
   civilId: string;
   passportOrGovernmentId?: string;
   patientFileNo: string;
   dateOfBirth: string;
-  // Specific Information
   specificAuthorization: string;
   specificDateOfService?: string;
-  // Recipient Info
   recipientName: string;
   recipientEmailAddress: string;
   recipientContactNumber: string;
   purposeOfDisclosure: string;
   otherPurpose?: string;
-  // Requested By
   requestedBy: string;
   patientNameConfirmation?: string;
 };
@@ -126,7 +122,6 @@ const ViewRequest = () => {
     try {
   
   
-      // Call the ShareViaMail API function
       const response = await ShareViaMail(
         id,
         shareEmail
@@ -138,7 +133,6 @@ const ViewRequest = () => {
     } catch (error: any) {
       console.error("Failed to share via email:", error);
 
-      // Handle different error scenarios
       if (error?.response?.data?.message) {
         toast.error(error.response.data.message);
       } else if (error?.response?.status === 404) {
@@ -257,12 +251,12 @@ const ViewRequest = () => {
       <div className="space-y-4 sm:space-y-6">
         <BreadCrumb lastCrumbLabel={request.requestId} />
 
-        {/* Main Card */}
+        
         <div className="rounded-xl border-2 border-burgundy/30 bg-gradient-to-br from-white via-slate-50/90 to-white shadow-xl backdrop-blur-sm overflow-hidden">
           <div className="h-1 bg-gradient-to-r from-burgundy/40 via-burgundy to-burgundy/40"></div>
 
           <div className="p-4 sm:p-6">
-            {/* Header with Back Button */}
+            
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between mb-4 sm:mb-6">
               <div className="flex items-start gap-3 min-w-0">
                 <button
@@ -291,9 +285,9 @@ const ViewRequest = () => {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-              {/* Left Column */}
+              
               <div className="space-y-4 sm:space-y-5">
-                {/* Patient Information Section */}
+                
                 <div className="bg-white rounded-xl border border-slate-200 p-4 sm:p-5 shadow-sm">
                   <div className="flex items-center gap-3 mb-4 pb-3 border-b border-slate-100">
                     <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-burgundy/10 flex items-center justify-center shrink-0">
@@ -372,7 +366,7 @@ const ViewRequest = () => {
                   </div>
                 </div>
 
-                {/* Requested By Section */}
+                
                 <div className="bg-white rounded-xl border border-slate-200 p-4 sm:p-5 shadow-sm">
                   <div className="flex items-center gap-3 mb-4 pb-3 border-b border-slate-100">
                     <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-burgundy/10 flex items-center justify-center shrink-0">
@@ -399,9 +393,9 @@ const ViewRequest = () => {
                 </div>
               </div>
 
-              {/* Right Column */}
+              
               <div className="space-y-4 sm:space-y-5">
-                {/* Specific Information Section */}
+                
                 <div className="bg-white rounded-xl border border-slate-200 p-4 sm:p-5 shadow-sm">
                   <div className="flex items-center gap-3 mb-4 pb-3 border-b border-slate-100">
                     <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-burgundy/10 flex items-center justify-center shrink-0">
@@ -432,7 +426,7 @@ const ViewRequest = () => {
                   </div>
                 </div>
 
-                {/* Recipient Information Section */}
+                
                 <div className="bg-white rounded-xl border border-slate-200 p-4 sm:p-5 shadow-sm">
                   <div className="flex items-center gap-3 mb-4 pb-3 border-b border-slate-100">
                     <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-burgundy/10 flex items-center justify-center shrink-0">
@@ -477,7 +471,7 @@ const ViewRequest = () => {
                   </div>
                 </div>
 
-                {/* Request Metadata */}
+                
                 <div className="bg-white rounded-xl border border-slate-200 p-4 sm:p-5 shadow-sm">
                   <div className="flex items-center gap-3 mb-4 pb-3 border-b border-slate-100">
                     <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-burgundy/10 flex items-center justify-center shrink-0">
@@ -503,7 +497,7 @@ const ViewRequest = () => {
               </div>
             </div>
 
-            {/* Action Buttons */}
+            
             <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 sm:gap-3 mt-4 sm:mt-6 pt-4 border-t border-slate-100">
               <Button
                 onClick={() => navigate("/medical-records-requests")}
@@ -522,7 +516,7 @@ const ViewRequest = () => {
               </PermissionGate>
             </div>
 
-            {/* Share Email Modal */}
+            
             {isShareModalOpen && hasPermission(PERMISSIONS.MRR_SHARE_VIA_EMAIL) && (
               <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 p-0 sm:p-4">
                 <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-xl w-full max-w-md p-5 sm:p-6 max-h-[90dvh] overflow-y-auto">

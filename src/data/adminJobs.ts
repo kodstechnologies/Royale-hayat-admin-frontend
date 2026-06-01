@@ -1,4 +1,3 @@
-// adminJobs.ts
 
 export type AdminJob = {
   id: string;
@@ -20,19 +19,16 @@ export type AdminJob = {
   isActive: boolean;
 };
 
-// Helper function to generate closing date (one year from today)
 const getClosingDate = () => {
   const date = new Date();
   date.setFullYear(date.getFullYear() + 1);
   return date.toISOString().split('T')[0];
 };
 
-// Helper function to generate job ID
 const generateJobId = (index: number) => {
   return `JA-${String(index + 1).padStart(3, '0')}`;
 };
 
-// Helper function to generate Arabic text (simplified translation)
 const getArabicTitle = (title: string): string => {
   const titleMap: Record<string, string> = {
     "Registrar – Plastic Surgeon": "أخصائي - جراح تجميل",
@@ -66,7 +62,6 @@ const getArabicTitle = (title: string): string => {
 };
 
 const getArabicDescription = (description: string): string => {
-  // Simplified Arabic translations
   const arabicPrefix = "وصف الوظيفة: ";
   return arabicPrefix + description;
 };
@@ -671,7 +666,6 @@ export const adminJobs: AdminJob[] = [
   },
 ];
 
-// Helper functions
 export const getJobsByCategory = (category: string): AdminJob[] => {
   return adminJobs.filter(job => job.category === category);
 };

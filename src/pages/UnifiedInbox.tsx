@@ -32,7 +32,6 @@ const UnifiedInbox = () => {
     setConfirmAction(null);
   };
 
-  // Individual patient inbox detail page
   if (selectedItem) {
     return (
       <AdminLayout title="Unified Inbox">
@@ -70,7 +69,7 @@ const UnifiedInbox = () => {
             className="flex items-center gap-1.5 px-4 py-2 rounded-md bg-success/10 text-success text-xs font-sans font-medium hover:bg-success/20"><MessageSquare size={13} /> WhatsApp</button>
         </div>
 
-        {/* Confirm Modal */}
+        
         {confirmAction && (
           <div className="fixed inset-0 bg-foreground/30 flex items-center justify-center z-50" onClick={() => setConfirmAction(null)}>
             <div className="bg-card rounded-lg shadow-lg border border-border p-6 w-96 animate-fade-in" onClick={e => e.stopPropagation()}>
@@ -160,7 +159,7 @@ const UnifiedInbox = () => {
         </div>
       </div>
 
-      {/* Confirm Modal */}
+      
       {confirmAction && (
         <div className="fixed inset-0 bg-foreground/30 flex items-center justify-center z-50" onClick={() => setConfirmAction(null)}>
           <div className="bg-card rounded-lg shadow-lg border border-border p-6 w-96 animate-fade-in" onClick={e => e.stopPropagation()}>

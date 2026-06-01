@@ -26,7 +26,6 @@ type Department = {
   order?: number;
 };
 
-// Convert AdminDepartment to Department format
 const convertToDepartment = (dept: AdminDepartment): Department => {
   return {
     _id: dept.id,
@@ -46,12 +45,10 @@ const convertToDepartment = (dept: AdminDepartment): Department => {
 
 const initialDepartments: Department[] = adminDepartments.map(convertToDepartment);
 
-// Function to load departments from localStorage and merge with initial departments
 const loadDepartmentsFromStorage = () => {
   const stored = localStorage.getItem("rhh_departments");
   if (stored) {
     const storedDepts = JSON.parse(stored);
-    // Convert stored departments to Department format
     const formattedStoredDepts = storedDepts.map((dept: any) => ({
       _id: dept._id,
       departmentId: dept.departmentId,
@@ -67,17 +64,14 @@ const loadDepartmentsFromStorage = () => {
       order: dept.order || 0,
     }));
     
-    // Merge stored departments with initial departments, avoiding duplicates by departmentId
     const existingDeptIds = new Set(formattedStoredDepts.map((dept: Department) => dept.departmentId));
     const newDeptsFromInitial = initialDepartments.filter(dept => !existingDeptIds.has(dept.departmentId));
     
-    // Return stored departments first (newest first), then remaining initial departments
     return [...formattedStoredDepts, ...newDeptsFromInitial];
   }
   return initialDepartments;
 };
 
-// Helper function to get category name from ID
 const getCategoryNameFromId = (categoryId: string): string => {
   const categoryMap: Record<string, string> = {
     cat1: "Cardiology",
@@ -89,7 +83,6 @@ const getCategoryNameFromId = (categoryId: string): string => {
   return categoryMap[categoryId] || "Clinical Speciality";
 };
 
-// Helper function to save user-created departments to localStorage
 const saveUserDepartmentsToStorage = (allDepartments: Department[]) => {
   const initialDeptIds = new Set(initialDepartments.map(dept => dept.departmentId));
   const userCreatedDepts = allDepartments.filter(dept => !initialDeptIds.has(dept.departmentId));
@@ -136,7 +129,6 @@ const Departments = () => {
     setTotalPages(Math.ceil(mergedDepartments.length / limit));
   }, []);
 
-  // Listen for department updates from create/edit page
   useEffect(() => {
     const handleDepartmentsUpdate = () => {
       const updatedDepartments = loadDepartmentsFromStorage();
@@ -155,7 +147,6 @@ const Departments = () => {
     };
   }, [currentPage, limit]);
 
-  // Filter departments based on search and category
   const filteredDepartments = departments.filter(dept => {
     const matchesSearch = search === "" || 
       dept.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -193,10 +184,8 @@ const Departments = () => {
       
       let updatedDepartments;
       if (isUserCreated) {
-        // Remove user-created department completely
         updatedDepartments = departments.filter(dept => dept._id !== departmentToDelete._id);
       } else {
-        // For initial departments, just mark as inactive
         updatedDepartments = departments.map(dept => 
           dept._id === departmentToDelete._id ? { ...dept, isActive: false } : dept
         );
@@ -249,28 +238,22 @@ const Departments = () => {
       <div className="space-y-4 sm:space-y-6">
         <BreadCrumb />
 
-        {/* Main Card */}
+        
         <div className="rounded-xl border-2 border-burgundy/30 bg-gradient-to-br from-white via-slate-50/90 to-white shadow-xl backdrop-blur-sm overflow-hidden">
           <div className="h-1 bg-gradient-to-r from-burgundy/40 via-burgundy to-burgundy/40"></div>
           
           <div className="p-4 sm:p-6">
-            {/* Header with Create Button */}
+            
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4 sm:mb-6">
               <div>
                 <h3 className="text-lg sm:text-xl font-bold text-slate-800">Departments Management</h3>
                 <p className="text-sm text-slate-500 mt-1">Manage hospital departments and their details</p>
               </div>
               
-              {/* <Button
-                onClick={() => navigate("/departments/create")}
-                className="gap-2 bg-burgundy hover:bg-burgundy/90 shadow-md hover:shadow-lg transition-all duration-200"
-              >
-                <Plus className="h-4 w-4" />
-                Create Department
-              </Button> */}
+              
             </div>
 
-            {/* Search and Filter Section */}
+            
             <div className="flex flex-col gap-3 mb-4 sm:mb-6">
               <div className="flex flex-col min-[400px]:flex-row gap-2">
                 <div className="relative flex-1 min-w-0">
@@ -295,7 +278,7 @@ const Departments = () => {
                 </div>
               </div>
               
-              {/* Category Filter */}
+              
               <select
                 value={selectedCategory}
                 onChange={(e) => {
@@ -311,14 +294,14 @@ const Departments = () => {
               </select>
             </div>
 
-            {/* Loading State */}
+            
             {loading ? (
               <div className="py-12">
                 <Loader />
               </div>
             ) : (
               <>
-                {/* Empty State */}
+                
                 {paginatedDepartments.length === 0 ? (
                   <div className="text-center py-16">
                     <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-slate-100 flex items-center justify-center">
@@ -336,7 +319,7 @@ const Departments = () => {
                   </div>
                 ) : (
                   <>
-                    {/* Departments Grid */}
+                    
                     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
                       {paginatedDepartments.map((dept) => (
                         <div
@@ -390,29 +373,14 @@ const Departments = () => {
                                 <Eye size={12} />
                                 View
                               </button>
-                              {/* <button
-                                type="button"
-                                onClick={() => navigate(`/departments/edit/${dept._id}`)}
-                                className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 text-xs font-medium hover:bg-slate-50 transition-colors"
-                              >
-                                <Pencil size={12} />
-                                Edit
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleDeleteClick(dept)}
-                                className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-200 text-red-600 text-xs font-medium hover:bg-red-50 transition-colors"
-                              >
-                                <Trash2 size={12} />
-                                Delete
-                              </button> */}
+                              
                             </div>
                           </div>
                         </div>
                       ))}
                     </div>
 
-                    {/* Pagination - Bottom Right */}
+                    
                     {totalPages > 1 && (
                       <div className="mt-6 pt-4 border-t border-slate-100">
                         <div className="flex flex-wrap justify-center sm:justify-end gap-2">
@@ -472,7 +440,7 @@ const Departments = () => {
         </div>
       </div>
 
-      {/* Delete Alert */}
+      
       <AlertBox
         isOpen={showDeleteAlert}
         onClose={() => {

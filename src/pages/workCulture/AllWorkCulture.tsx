@@ -72,7 +72,6 @@ const AllWorkCulture = () => {
     setLoading(true);
     try {
       const response = await getWorkCulture();
-      // Handle the response structure: response.data is the array
       const data = response.data || response;
       if (Array.isArray(data)) {
         setWorkCultureData(data);
@@ -109,7 +108,6 @@ const AllWorkCulture = () => {
       toast.success("Event deleted successfully");
       setShowDeleteConfirm(null);
       
-      // Adjust pagination if needed
       const newTotalPages = Math.ceil((filteredData.length - 1) / itemsPerPage);
       if (currentPage > newTotalPages && newTotalPages > 0) {
         setCurrentPage(newTotalPages);
@@ -125,7 +123,7 @@ const AllWorkCulture = () => {
       <div className="space-y-6">
         <BreadCrumb />
 
-        {/* Header with Tabs */}
+        
         <div className="flex flex-col gap-4">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
@@ -143,7 +141,7 @@ const AllWorkCulture = () => {
             )}
           </div>
 
-          {/* Tabs */}
+          
           <div className="flex gap-1 p-1 bg-slate-100/80 rounded-xl w-fit">
             <button
               onClick={() => setActiveTab("life")}
@@ -170,7 +168,7 @@ const AllWorkCulture = () => {
           </div>
         </div>
 
-        {/* Tab Content - Only Events Tab Content */}
+        
         <div
           className={`rounded-xl overflow-hidden ${
             activeTab === "life"
@@ -205,7 +203,7 @@ const AllWorkCulture = () => {
               </div>
             ) : (
               <>
-                {/* Search and Filter Section */}
+                
                 <div className="flex flex-wrap gap-3 mb-6">
                   <div className="relative flex-1 min-w-[250px]">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -219,14 +217,14 @@ const AllWorkCulture = () => {
                   </div>
                 </div>
 
-                {/* Loading State */}
+                
                 {loading ? (
                   <div className="flex justify-center items-center py-12">
                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-burgundy"></div>
                   </div>
                 ) : (
                   <>
-                    {/* Events Table */}
+                    
                     <div className="overflow-x-auto">
                       <table className="w-full">
                         <thead className="bg-slate-50 border-b border-slate-200">
@@ -307,7 +305,7 @@ const AllWorkCulture = () => {
                       </table>
                     </div>
 
-                    {/* Pagination */}
+                    
                     {totalPages > 1 && (
                       <div className="flex justify-center gap-2 py-4 border-t border-slate-100 mt-4">
                         <button
@@ -345,7 +343,7 @@ const AllWorkCulture = () => {
         </div>
       </div>
 
-      {/* Delete Confirmation Modal */}
+      
       {showDeleteConfirm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl max-w-md w-full mx-4 p-6">

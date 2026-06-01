@@ -90,7 +90,6 @@ const AddAchievement = () => {
     const effectiveDepartment =
       formData.department.trim() || formData.arabicDepartment.trim();
 
-    // Validation — all required fields checked regardless of active tab
     if (!formData.employeeId.trim()) {
       toast.error("Please enter Employee ID");
       return;
@@ -146,12 +145,12 @@ const AddAchievement = () => {
       <div className="space-y-4 sm:space-y-6">
         <BreadCrumb />
 
-        {/* Main Card */}
+        
         <div className="rounded-xl border-2 border-burgundy/30 bg-gradient-to-br from-white via-slate-50/90 to-white shadow-xl backdrop-blur-sm overflow-hidden">
           <div className="h-1 bg-gradient-to-r from-burgundy/40 via-burgundy to-burgundy/40"></div>
           
           <div className="p-4 sm:p-6">
-            {/* Header with Back Button */}
+            
             <div className="flex flex-col gap-4 mb-4 sm:mb-6">
               <div className="flex items-start gap-3 min-w-0">
                 <button
@@ -172,7 +171,7 @@ const AddAchievement = () => {
                 </div>
               </div>
               
-              {/* Language Toggle */}
+              
               <div className="flex gap-2 p-1 bg-slate-100/80 rounded-lg w-full sm:w-fit">
                 <button
                   type="button"
@@ -205,9 +204,9 @@ const AddAchievement = () => {
               </div>
             </div>
 
-            {/* Form */}
+            
             <div className="space-y-6">
-              {/* Employee Information Section */}
+              
               <div className="bg-white rounded-xl border border-slate-200 p-4 sm:p-5 space-y-5">
                 <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
                   <User className="h-5 w-5 text-burgundy shrink-0" />
@@ -217,7 +216,7 @@ const AddAchievement = () => {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  {/* Employee ID */}
+                  
                   <div className="space-y-2">
                     <label className="text-sm font-semibold text-slate-700">
                       Employee ID <span className="text-red-500">*</span>
@@ -230,7 +229,7 @@ const AddAchievement = () => {
                     />
                   </div>
 
-                  {/* Employee Name */}
+                  
                   <div className="space-y-2">
                     <label className="text-sm font-semibold text-slate-700">
                       Employee Name <span className="text-red-500">*</span>
@@ -249,7 +248,7 @@ const AddAchievement = () => {
                     />
                   </div>
 
-                  {/* Department */}
+                  
                   <div className="space-y-2 md:col-span-2">
                     <label className="text-sm font-semibold text-slate-700">
                       Department
@@ -270,7 +269,7 @@ const AddAchievement = () => {
                 </div>
               </div>
 
-              {/* Achievement Details Section */}
+              
               <div className="bg-white rounded-xl border border-slate-200 p-4 sm:p-5 space-y-5">
                 <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
                   <Award className="h-5 w-5 text-burgundy shrink-0" />
@@ -280,7 +279,7 @@ const AddAchievement = () => {
                 </div>
 
                 <div className="space-y-5">
-                  {/* Title */}
+                  
                   <div className="space-y-2">
                     <label className="text-sm font-semibold text-slate-700">
                       Title <span className="text-red-500">*</span>
@@ -301,7 +300,7 @@ const AddAchievement = () => {
                     />
                   </div>
 
-                  {/* Achievements */}
+                  
                   <div className="space-y-2">
                     <label className="text-sm font-semibold text-slate-700">
                       Achievements <span className="text-red-500">*</span>
@@ -328,7 +327,7 @@ const AddAchievement = () => {
                 </div>
               </div>
 
-              {/* Image Upload Section */}
+              
               <div className="bg-white rounded-xl border border-slate-200 p-4 sm:p-5 space-y-5">
                 <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
                   <Upload className="h-5 w-5 text-burgundy shrink-0" />
@@ -380,7 +379,7 @@ const AddAchievement = () => {
                 </div>
               </div>
 
-              {/* Status Toggle - Hide/Show Button */}
+              
               <div className="bg-white rounded-xl border border-slate-200 p-4 sm:p-5 space-y-5">
                 <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
                   <Eye className="h-5 w-5 text-burgundy shrink-0" />
@@ -423,7 +422,7 @@ const AddAchievement = () => {
                 </p>
               </div>
 
-              {/* Submit Button */}
+              
               <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-4 border-t border-slate-100">
                 <Button variant="outline" onClick={() => navigate("/achievements")} className="gap-2 w-full sm:w-auto">
                   <X className="h-4 w-4" />

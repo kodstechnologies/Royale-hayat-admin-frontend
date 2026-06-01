@@ -370,7 +370,7 @@ const AllAchievements = () => {
               </div>
             ) : (
               <>
-                {/* Mobile card list */}
+                
                 <div className="md:hidden space-y-3">
                   {paginatedAchievements.map((achievement) => {
                     const achievementId = getAchievementId(achievement);
@@ -458,7 +458,7 @@ const AllAchievements = () => {
                   )}
                 </div>
 
-                {/* Desktop table */}
+                
                 <div className="hidden md:block overflow-x-auto">
                   <table className="w-full">
                     <thead>

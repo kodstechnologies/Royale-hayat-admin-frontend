@@ -1,4 +1,3 @@
-// pages/departments/EditDepartment.tsx
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import AdminLayout from "@/components/layout/AdminLayout";
@@ -31,7 +30,6 @@ type DepartmentFormData = {
   }[];
 };
 
-// Dummy categories
 const dummyCategories = [
   { _id: "cat1", name: "Cardiology", arabicName: "أمراض القلب" },
   { _id: "cat2", name: "Neurology", arabicName: "الأعصاب" },
@@ -40,7 +38,6 @@ const dummyCategories = [
   { _id: "cat5", name: "Dermatology", arabicName: "الأمراض الجلدية" },
 ];
 
-// Helper functions for localStorage
 const getStoredDepartments = () => {
   const stored = localStorage.getItem('rhh_departments');
   if (stored) {
@@ -53,7 +50,6 @@ const saveDepartmentsToStorage = (departments: any[]) => {
   localStorage.setItem('rhh_departments', JSON.stringify(departments));
 };
 
-// Function to get category name from ID
 const getCategoryNameFromId = (categoryId: string): string => {
   const categoryMap: Record<string, string> = {
     cat1: "Cardiology",
@@ -85,7 +81,6 @@ const EditDepartmentPage = () => {
       let isUserCreated = false;
       let imageUrl = "";
 
-      // First check user departments from localStorage
       const userDepartments = getStoredDepartments();
       foundDepartment = userDepartments.find((dept: any) => dept._id === id);
       
@@ -93,7 +88,6 @@ const EditDepartmentPage = () => {
         isUserCreated = true;
         imageUrl = foundDepartment.image || "";
         
-        // Convert user department to form format
         setInitialValues({
           departmentId: foundDepartment.departmentId,
           name: foundDepartment.name,
@@ -113,7 +107,6 @@ const EditDepartmentPage = () => {
           })) || [],
         });
       } else {
-        // Check static departments from adminDepartments
         const staticDepartment = adminDepartments.find((dept: any) => dept.id === id);
         if (staticDepartment) {
           isUserCreated = false;
@@ -245,7 +238,6 @@ const EditDepartmentPage = () => {
     setSaving(true);
     
     setTimeout(() => {
-      // Prepare updated department object
       const selectedCategory = dummyCategories.find(c => c._id === values.catagoryId);
       const categoryName = selectedCategory ? selectedCategory.name : "General";
 
@@ -278,10 +270,8 @@ const EditDepartmentPage = () => {
         );
         saveDepartmentsToStorage(updatedDepartments);
       } else {
-        // For static departments, save as a new user department (copy with edits)
         const userDepartments = getStoredDepartments();
         
-        // Check if this static department has already been edited before
         const existingIndex = userDepartments.findIndex((dept: any) => dept.departmentId === departmentId);
         
         if (existingIndex !== -1) {
@@ -293,7 +283,6 @@ const EditDepartmentPage = () => {
         }
       }
       
-      // Dispatch event to notify list page
       window.dispatchEvent(new Event("departmentsUpdated"));
       
       toast.success("Department updated successfully.");
@@ -327,7 +316,7 @@ const EditDepartmentPage = () => {
           <div className="h-1 bg-gradient-to-r from-burgundy/40 via-burgundy to-burgundy/40"></div>
 
           <div className="p-4 sm:p-6">
-            {/* Header with Back Button */}
+            
             <div className="flex items-start gap-3 sm:gap-4 mb-6 min-w-0">
               <button
                 onClick={() => navigate("/departments")}
@@ -341,7 +330,7 @@ const EditDepartmentPage = () => {
               </div>
             </div>
 
-            {/* Tabs */}
+            
             <div className="mb-8">
               <div className="flex w-full sm:w-fit gap-2 sm:gap-4 p-1 bg-slate-100/80 rounded-xl">
                 <button
@@ -378,7 +367,7 @@ const EditDepartmentPage = () => {
             <Formik initialValues={initialValues} onSubmit={handleSubmit} enableReinitialize>
               {({ setFieldValue, values }) => (
                 <Form className="space-y-6">
-                  {/* Department ID - Common for both tabs */}
+                  
                   <div className="bg-slate-50/50 rounded-xl p-5 border border-slate-100">
                     <div className="space-y-2">
                       <label className="text-sm font-semibold text-slate-700">
@@ -393,7 +382,7 @@ const EditDepartmentPage = () => {
                     </div>
                   </div>
 
-                  {/* ENGLISH TAB */}
+                  
                   {activeTab === "english" && (
                     <div className="space-y-6 animate-in fade-in duration-200">
                       <div className="bg-white rounded-xl border border-slate-200 p-5 space-y-5">
@@ -428,7 +417,7 @@ const EditDepartmentPage = () => {
                         </div>
                       </div>
 
-                      {/* Custom Sections */}
+                      
                       <div className="bg-white rounded-xl border border-slate-200 p-5 space-y-4">
                         <div className="flex items-center justify-between pb-2 border-b border-slate-100">
                           <div>
@@ -537,7 +526,7 @@ const EditDepartmentPage = () => {
                     </div>
                   )}
 
-                  {/* ARABIC TAB */}
+                  
                   {activeTab === "arabic" && (
                     <div className="space-y-6 animate-in fade-in duration-200">
                       <div className="bg-white rounded-xl border border-slate-200 p-5 space-y-5">
@@ -574,7 +563,7 @@ const EditDepartmentPage = () => {
                         </div>
                       </div>
 
-                      {/* Arabic Custom Sections */}
+                      
                       <div className="bg-white rounded-xl border border-slate-200 p-5 space-y-4">
                         <div className="pb-2 border-b border-slate-100">
                           <h3 className="text-md font-semibold text-slate-800">Arabic Custom Sections</h3>
@@ -643,7 +632,7 @@ const EditDepartmentPage = () => {
                     </div>
                   )}
 
-                  {/* Common Fields - Category, Status, Image */}
+                  
                   <div className="bg-white rounded-xl border border-slate-200 p-5 space-y-5">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                       <div className="space-y-2">
@@ -728,7 +717,7 @@ const EditDepartmentPage = () => {
                     </div>
                   </div>
 
-                  {/* Action Buttons */}
+                  
                   <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-4 border-t border-slate-100">
                     <Button variant="outline" onClick={() => navigate("/departments")} className="gap-2 w-full sm:w-auto">
                       Cancel

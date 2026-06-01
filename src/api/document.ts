@@ -2,8 +2,6 @@ import api from "./axiosInstance";
 
 const BASE = "/api/v1/documents";
 
-// ================= CREATE DOCUMENT =================
-
 export type CreateDocumentPayload = {
   title: string;
   catagory: "Brochure" | "Form" | "Guide" | "Policy";
@@ -41,8 +39,6 @@ export const createDocument = async (
   return response.data;
 };
 
-// ================= GET ALL DOCUMENTS =================
-
 export const getAllDocuments = async () => {
 
   const response = await api.get(
@@ -51,8 +47,6 @@ export const getAllDocuments = async () => {
 
   return response.data;
 };
-
-// ================= GET DOCUMENT BY ID =================
 
 export const getDocumentById = async (
   id: string
@@ -64,8 +58,6 @@ export const getDocumentById = async (
 
   return response.data;
 };
-
-// ================= UPDATE DOCUMENT =================
 
 export type UpdateDocumentPayload = {
   title?: string;
@@ -117,8 +109,6 @@ export const updateDocument = async (
 
   return response.data;
 };
-
-// ================= DELETE DOCUMENT =================
 
 export const deleteDocument = async (
   id: string

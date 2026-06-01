@@ -28,7 +28,6 @@ const LifeAtRHH = () => {
     arabic: activeLanguage === "english" ? "Arabic" : "العربية",
   };
 
-  // Life at RHH content
   const lifeAtRHHContent = {
     description: activeLanguage === "english" 
       ? "At Royale Hayat Hospital, we hold a simple belief: people may forget what we said, but they will never forget how we made them feel as patients, family members, or colleagues.\n\nThat belief guides how we care, how we work, and how we treat one another. Every day, our teams deliver safe, modern, quality care with compassion and comfort—because healing is not only about medicine, but about experience.\n\nHere, professionalism meets kindness. Standards meet empathy. And work carries purpose. If this belief resonates with you, you already belong here."
@@ -46,7 +45,7 @@ const LifeAtRHH = () => {
       <div className="space-y-6">
         <BreadCrumb />
 
-        {/* Header with Back Button and Language Toggle */}
+        
         <div className="flex justify-between items-center flex-wrap gap-4">
           <div className="flex items-center gap-4">
             <button
@@ -64,7 +63,7 @@ const LifeAtRHH = () => {
             </div>
           </div>
 
-          {/* Language Toggle */}
+          
           <div className="flex gap-2 p-1 bg-slate-100/80 rounded-lg">
             <button
               onClick={() => setActiveLanguage("english")}
@@ -91,19 +90,15 @@ const LifeAtRHH = () => {
           </div>
         </div>
 
-        {/* Main Card */}
+        
         <div className="rounded-xl border-2 border-burgundy/30 bg-gradient-to-br from-white via-slate-50/90 to-white shadow-xl backdrop-blur-sm overflow-hidden">
           <div className="h-1 bg-gradient-to-r from-burgundy/40 via-burgundy to-burgundy/40"></div>
           
           <div className="p-6">
             <div className="space-y-6">
-              {/* Hero Section */}
+              
               <div className="relative rounded-xl overflow-hidden">
-                {/* <img 
-                  src={lifeAtRHHContent.image} 
-                  alt={getUIText.lifeAtRHHHeading}
-                  className="w-full h-64 md:h-96 object-cover"
-                /> */}
+                
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex items-end">
                   <div className="p-6 md:p-8 text-white">
                     <h3 className="text-2xl md:text-4xl font-bold mb-2">{getUIText.lifeAtRHHHeading}</h3>
@@ -114,7 +109,7 @@ const LifeAtRHH = () => {
 
            
 
-              {/* Description Section */}
+              
               <div className="bg-white rounded-xl border border-slate-200 p-6 md:p-8">
               
                 <div className="prose prose-sm max-w-none">

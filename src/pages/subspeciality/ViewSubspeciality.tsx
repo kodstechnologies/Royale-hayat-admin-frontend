@@ -39,7 +39,6 @@ type Subspeciality = {
   isActive: boolean;
 };
 
-// Function to load user subspecialities from localStorage
 const loadUserSubspecialities = (): Subspeciality[] => {
   const stored = localStorage.getItem("rhh_subspecialities");
   if (stored) {
@@ -48,7 +47,6 @@ const loadUserSubspecialities = (): Subspeciality[] => {
   return [];
 };
 
-// Dummy data for existing subspecialities
 const dummySubspecialities: Record<string, Subspeciality> = {
   "1": {
     id: "1",
@@ -114,11 +112,9 @@ const ViewSubspeciality = () => {
     if (!id) return;
 
     setTimeout(() => {
-      // First check user subspecialities from localStorage
       const userSubs = loadUserSubspecialities();
       let foundSub = userSubs.find((sub: any) => sub.id === id);
       
-      // If not found in user subs, check dummy data
       if (!foundSub) {
         foundSub = dummySubspecialities[id];
       }
@@ -214,12 +210,12 @@ const ViewSubspeciality = () => {
       <div className="space-y-4 sm:space-y-6">
         <BreadCrumb />
 
-        {/* Main Card */}
+        
         <div className="rounded-xl border-2 border-burgundy/30 bg-gradient-to-br from-white via-slate-50/90 to-white shadow-xl backdrop-blur-sm overflow-hidden">
           <div className="h-1 bg-gradient-to-r from-burgundy/40 via-burgundy to-burgundy/40"></div>
           
           <div className="p-4 sm:p-6">
-            {/* Header with Back Button and Language Toggle */}
+            
             <div className="flex flex-col gap-4 mb-4 sm:mb-6">
               <div className="flex items-start gap-3 sm:gap-4 min-w-0">
                 <button
@@ -241,7 +237,7 @@ const ViewSubspeciality = () => {
               </div>
               
               <div className="flex flex-col sm:flex-row gap-3">
-                {/* Language Toggle */}
+                
                 <div className="flex w-full sm:w-auto gap-2 p-1 bg-slate-100/80 rounded-lg">
                   <button
                     type="button"
@@ -284,9 +280,9 @@ const ViewSubspeciality = () => {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Left Column - Basic Info */}
+              
               <div className="lg:col-span-1 space-y-4">
-                {/* Name Card */}
+                
                 <div className={`rounded-xl border border-slate-200 bg-white p-5 shadow-sm ${activeLanguage === "arabic" ? "text-right" : ""}`}>
                   <div className="flex items-center gap-2 pb-2 border-b border-slate-100 mb-3">
                     <FileText className="h-4 w-4 text-burgundy" />
@@ -299,7 +295,7 @@ const ViewSubspeciality = () => {
                   </h1>
                 </div>
 
-                {/* Status Card */}
+                
                 <div className={`rounded-xl border border-slate-200 bg-white p-5 shadow-sm ${activeLanguage === "arabic" ? "text-right" : ""}`}>
                   <div className="flex items-center gap-2 pb-2 border-b border-slate-100 mb-3">
                     <FileText className="h-4 w-4 text-burgundy" />
@@ -329,7 +325,7 @@ const ViewSubspeciality = () => {
                   </div>
                 </div>
 
-                {/* Department Card */}
+                
                 <div className={`rounded-xl border border-slate-200 bg-white p-5 shadow-sm ${activeLanguage === "arabic" ? "text-right" : ""}`}>
                   <div className="flex items-center gap-2 pb-2 border-b border-slate-100 mb-3">
                     <Building2 className="h-4 w-4 text-burgundy" />
@@ -341,9 +337,9 @@ const ViewSubspeciality = () => {
                 </div>
               </div>
 
-              {/* Right Column - Details */}
+              
               <div className="lg:col-span-2 space-y-4">
-                {/* Description Card */}
+                
                 <div className={`rounded-xl border border-slate-200 bg-white p-5 shadow-sm ${activeLanguage === "arabic" ? "rtl-text" : ""}`}>
                   <div className="flex items-center gap-2 pb-2 border-b border-slate-100 mb-3">
                     <BookOpen className="h-4 w-4 text-burgundy" />
@@ -356,7 +352,7 @@ const ViewSubspeciality = () => {
                   </p>
                 </div>
 
-                {/* Custom Sections */}
+                
                 {subspeciality.customSubspecialities && subspeciality.customSubspecialities.length > 0 && (
                   <div className="space-y-4">
                     <div className="flex items-center gap-2">
@@ -395,7 +391,7 @@ const ViewSubspeciality = () => {
                   </div>
                 )}
 
-                {/* Action Buttons */}
+                
                 <div className="flex gap-3 pt-2">
                   <Button 
                     onClick={() => navigate("/subspecialities")}
@@ -418,7 +414,7 @@ const ViewSubspeciality = () => {
         </div>
       </div>
 
-      {/* RTL Styles */}
+      
       <style>{`
         .rtl-text {
           direction: rtl;

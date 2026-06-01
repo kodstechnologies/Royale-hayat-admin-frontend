@@ -17,16 +17,13 @@ type CustomBlockDraft = {
     key: string;
     serverId?: string;
 
-    // ENGLISH
     subHeading: string;
     explanationLines: string[];
 
-    // ARABIC
     arabicSubHeading: string;
     arabicExplanationLines: string[];
 };
 
-// Dummy departments
 const dummyDepartments = [
     { _id: "dept1", name: "Cardiology", arabicName: "أمراض القلب" },
     { _id: "dept2", name: "Neurology", arabicName: "الأعصاب" },
@@ -40,7 +37,6 @@ const dummyDepartments = [
     { _id: "dept10", name: "Radiology", arabicName: "الأشعة" },
 ];
 
-// Department name mapping for display
 const departmentNameMap: Record<string, string> = {
     "dept1": "Cardiology",
     "dept2": "Neurology",
@@ -54,7 +50,6 @@ const departmentNameMap: Record<string, string> = {
     "dept10": "Radiology",
 };
 
-// Dummy data for existing subspecialities
 const dummySubspecialities: Record<string, any> = {
     "1": {
         _id: "1",
@@ -99,7 +94,6 @@ const dummySubspecialities: Record<string, any> = {
     },
 };
 
-// Function to load existing user subspecialities from localStorage
 const loadUserSubspecialities = () => {
     const stored = localStorage.getItem("rhh_subspecialities");
     if (stored) {
@@ -108,7 +102,6 @@ const loadUserSubspecialities = () => {
     return [];
 };
 
-// Function to save user subspecialities to localStorage
 const saveUserSubspecialities = (subs: any[]) => {
     localStorage.setItem("rhh_subspecialities", JSON.stringify(subs));
 };
@@ -148,7 +141,6 @@ const SubspecialityForm = ({ mode, subspecialityId }: Props) => {
 
     useEffect(() => {
         if (mode !== "edit" || !subspecialityId) {
-            // For create mode, initialize empty
             if (mode === "create") {
                 setCustomBlocks([]);
             }
@@ -157,11 +149,9 @@ const SubspecialityForm = ({ mode, subspecialityId }: Props) => {
 
         setLoading(true);
         setTimeout(() => {
-            // First check if this is a user-created subspeciality from localStorage
             const userSubs = loadUserSubspecialities();
             let dummyData = userSubs.find((sub: any) => sub.id === subspecialityId);
             
-            // If not found in user subs, check dummy data
             if (!dummyData) {
                 dummyData = dummySubspecialities[subspecialityId];
             }
@@ -221,7 +211,6 @@ const SubspecialityForm = ({ mode, subspecialityId }: Props) => {
 
         setSaving(true);
 
-        // Prepare custom sections data
         const customSubspecialities = customBlocks
             .filter(block => block.subHeading.trim() || block.arabicSubHeading.trim())
             .map(block => ({
@@ -233,7 +222,6 @@ const SubspecialityForm = ({ mode, subspecialityId }: Props) => {
             }))
             .filter(block => block.explanations.length > 0 || block.arabicExplanations.length > 0);
 
-        // Prepare payload
         const payload = {
             id: mode === "create" ? Date.now().toString() : subspecialityId,
             name,
@@ -249,7 +237,6 @@ const SubspecialityForm = ({ mode, subspecialityId }: Props) => {
 
         console.log("Subspeciality data:", payload);
 
-        // Save to localStorage for user-created subspecialities
         const existingSubs = loadUserSubspecialities();
         let updatedSubs;
         
@@ -263,7 +250,6 @@ const SubspecialityForm = ({ mode, subspecialityId }: Props) => {
         
         saveUserSubspecialities(updatedSubs);
         
-        // Dispatch event to notify list page
         window.dispatchEvent(new Event("subspecialitiesUpdated"));
 
         setTimeout(() => {
@@ -336,7 +322,7 @@ const SubspecialityForm = ({ mode, subspecialityId }: Props) => {
                 <div className="h-1 bg-gradient-to-r from-burgundy/40 via-burgundy to-burgundy/40"></div>
 
                 <div className="p-4 sm:p-6">
-                    {/* Header with Back Button */}
+                    
                     <div className="flex items-start gap-3 sm:gap-4 mb-6 min-w-0">
                         <button
                             onClick={() => navigate("/subspecialities")}
@@ -356,7 +342,7 @@ const SubspecialityForm = ({ mode, subspecialityId }: Props) => {
                         </div>
                     </div>
 
-                    {/* Tabs */}
+                    
                     <div className="mb-8">
                         <div className="flex w-full sm:w-fit gap-2 sm:gap-4 p-1 bg-slate-100/80 rounded-xl">
                             <button
@@ -390,7 +376,7 @@ const SubspecialityForm = ({ mode, subspecialityId }: Props) => {
                         </div>
                     </div>
 
-                    {/* Department Selection - Common for both tabs */}
+                    
                     <div className="mb-6">
                         <div className="bg-white rounded-xl border border-slate-200 p-5 space-y-5">
                             <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
@@ -418,7 +404,7 @@ const SubspecialityForm = ({ mode, subspecialityId }: Props) => {
                         </div>
                     </div>
 
-                    {/* ENGLISH TAB */}
+                    
                     {activeTab === "english" && (
                         <div className="space-y-6 animate-in fade-in duration-200">
                             <div className="bg-white rounded-xl border border-slate-200 p-5 space-y-5">
@@ -453,7 +439,7 @@ const SubspecialityForm = ({ mode, subspecialityId }: Props) => {
                                 </div>
                             </div>
 
-                            {/* Custom Sections */}
+                            
                             <div className="bg-white rounded-xl border border-slate-200 p-5 space-y-4">
                                 <div className="flex items-center justify-between pb-2 border-b border-slate-100">
                                     <div>
@@ -569,7 +555,7 @@ const SubspecialityForm = ({ mode, subspecialityId }: Props) => {
                         </div>
                     )}
 
-                    {/* ARABIC TAB */}
+                    
                     {activeTab === "arabic" && (
                         <div className="space-y-6 animate-in fade-in duration-200">
                             <div className="bg-white rounded-xl border border-slate-200 p-5 space-y-5">
@@ -606,7 +592,7 @@ const SubspecialityForm = ({ mode, subspecialityId }: Props) => {
                                 </div>
                             </div>
 
-                            {/* Arabic Custom Sections */}
+                            
                             <div className="bg-white rounded-xl border border-slate-200 p-5 space-y-4">
                                 <div className="pb-2 border-b border-slate-100">
                                     <h3 className="text-md font-semibold text-slate-800">Arabic Custom Sections</h3>
@@ -682,7 +668,7 @@ const SubspecialityForm = ({ mode, subspecialityId }: Props) => {
                         </div>
                     )}
 
-                    {/* Action Buttons */}
+                    
                     <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-6 mt-6 border-t border-slate-100">
                         <Button variant="outline" onClick={() => navigate("/subspecialities")} className="gap-2 w-full sm:w-auto">
                             <X className="h-4 w-4" />

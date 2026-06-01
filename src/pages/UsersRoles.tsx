@@ -88,7 +88,7 @@ const UsersRoles = () => {
   return (
     <AdminLayout title="Users & Roles">
       <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
-        {/* Main Table */}
+        
         <div className="xl:col-span-3">
           <div className="bg-card rounded-lg shadow-sm border border-border">
             <div className="p-4 border-b border-border flex flex-wrap items-center justify-between gap-3">
@@ -106,7 +106,7 @@ const UsersRoles = () => {
               </button>
             </div>
 
-            {/* Filters */}
+            
             <div className="p-4 border-b border-border flex flex-wrap gap-3">
               <div className="relative flex-1 max-w-xs">
                 <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
@@ -224,9 +224,9 @@ const UsersRoles = () => {
           </div>
         </div>
 
-        {/* Sidebar: Activity Log + User Detail */}
+        
         <div className="space-y-4">
-          {/* Activity Log */}
+          
           <div className="bg-card rounded-lg shadow-sm border border-border p-4">
             <h3 className="font-serif font-semibold text-foreground mb-3 flex items-center gap-2">
               <History size={16} /> Activity Log
@@ -242,7 +242,7 @@ const UsersRoles = () => {
             </div>
           </div>
 
-          {/* Selected User Detail */}
+          
           {selectedUser && (
             <div className="bg-card rounded-lg shadow-sm border border-border p-4 animate-fade-in">
               <div className="flex items-center justify-between mb-3">
@@ -266,7 +266,7 @@ const UsersRoles = () => {
         </div>
       </div>
 
-      {/* Edit Role Modal */}
+      
       {editingUser && (
         <div className="fixed inset-0 bg-foreground/30 flex items-center justify-center z-50" onClick={() => setEditingUser(null)}>
           <div className="bg-card rounded-lg shadow-lg border border-border p-6 w-80 animate-fade-in" onClick={(e) => e.stopPropagation()}>

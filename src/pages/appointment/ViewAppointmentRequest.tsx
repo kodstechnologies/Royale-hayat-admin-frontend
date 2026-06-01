@@ -138,28 +138,7 @@ const ViewAppointmentRequest = () => {
             </span>
           }
         >
-          {/* <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
-            <SummaryChip
-              label="Preferred Date"
-              value={
-                request.preferredDate
-                  ? formatDisplayDate(request.preferredDate)
-                  : undefined
-              }
-              icon={Calendar}
-            />
-            <SummaryChip label="Time Slot" value={timeSlotLabel} icon={Clock} />
-            <SummaryChip
-              label="Department"
-              value={request.department}
-              icon={Building}
-            />
-            <SummaryChip
-              label="Doctor"
-              value={request.doctorName}
-              icon={UserCircle}
-            />
-          </div> */}
+          
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
             <DetailSection

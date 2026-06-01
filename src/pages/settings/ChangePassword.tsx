@@ -159,7 +159,7 @@ const Settings = () => {
       <div className="space-y-6">
         <BreadCrumb />
 
-        {/* Main Card */}
+        
         <div className="rounded-xl border-2 border-burgundy/30 bg-gradient-to-br from-white via-slate-50/90 to-white shadow-xl backdrop-blur-sm overflow-hidden">
           <div className="h-1 bg-gradient-to-r from-burgundy/40 via-burgundy to-burgundy/40"></div>
 
@@ -169,73 +169,8 @@ const Settings = () => {
               <p className="text-sm text-slate-500 mt-1">Manage your account and organization settings</p>
             </div>
 
-            {/* General Settings Section */}
-            {/* <div className="bg-white rounded-xl border border-slate-200 p-6 mb-6 shadow-sm">
-              <div className="flex items-center gap-3 mb-5 pb-3 border-b border-slate-100">
-                <div className="w-10 h-10 rounded-xl bg-burgundy/10 flex items-center justify-center">
-                  <Globe className="h-5 w-5 text-burgundy" />
-                </div>
-                <div>
-                  <h4 className="text-lg font-semibold text-slate-800">General Settings</h4>
-                  <p className="text-xs text-slate-500">Organization information and preferences</p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <InputField
-                  label="Hospital Name"
-                  value={generalSettings.hospitalName}
-                  onChange={(val) => setGeneralSettings({ ...generalSettings, hospitalName: val })}
-                  placeholder="Enter hospital name"
-                />
-                <InputField
-                  label="Email Address"
-                  value={generalSettings.email}
-                  onChange={(val) => setGeneralSettings({ ...generalSettings, email: val })}
-                  placeholder="Enter email address"
-                  type="email"
-                />
-                <InputField
-                  label="Phone Number"
-                  value={generalSettings.phone}
-                  onChange={(val) => setGeneralSettings({ ...generalSettings, phone: val })}
-                  placeholder="Enter phone number"
-                />
-                <InputField
-                  label="Website"
-                  value={generalSettings.website}
-                  onChange={(val) => setGeneralSettings({ ...generalSettings, website: val })}
-                  placeholder="Enter website URL"
-                />
-                <div className="md:col-span-2">
-                  <InputField
-                    label="Address"
-                    value={generalSettings.address}
-                    onChange={(val) => setGeneralSettings({ ...generalSettings, address: val })}
-                    placeholder="Enter hospital address"
-                  />
-                </div>
-                <InputField
-                  label="Timezone"
-                  value={generalSettings.timezone}
-                  onChange={(val) => setGeneralSettings({ ...generalSettings, timezone: val })}
-                  placeholder="Select timezone"
-                />
-                <InputField
-                  label="Default Language"
-                  value={generalSettings.language}
-                  onChange={(val) => setGeneralSettings({ ...generalSettings, language: val })}
-                  placeholder="Select language"
-                />
-              </div>
-
-              <div className="flex justify-end mt-6 pt-4 border-t border-slate-100">
-                <Button onClick={handleGeneralSave} className="gap-2 bg-burgundy hover:bg-burgundy/90">
-                  <Save className="h-4 w-4" />
-                  Save General Settings
-                </Button>
-              </div>
-            </div> */}
+            
+            
 
             <div className="mb-6 flex flex-wrap items-center gap-3">
               <Button
@@ -249,17 +184,7 @@ const Settings = () => {
               >
                 Change Password
               </Button>
-              {/* <Button
-                type="button"
-                onClick={() => setActiveTab("add-user")}
-                className={
-                  activeTab === "add-user"
-                    ? "bg-burgundy hover:bg-burgundy/90"
-                    : "bg-slate-200 text-slate-700 hover:bg-slate-300"
-                }
-              >
-                Add User
-              </Button> */}
+              
             </div>
 
             {activeTab === "change-password" && (
@@ -356,9 +281,9 @@ const Settings = () => {
               </div>
             )}
 
-            {/* {activeTab === "add-user" && <AddUserForm />} */}
+            
 
-            {/* Success Message */}
+            
             {saved && (
               <div className="fixed bottom-6 right-6 bg-green-100 border border-green-200 rounded-xl p-4 shadow-lg animate-in slide-in-from-right-5 duration-300 z-50">
                 <div className="flex items-center gap-2">

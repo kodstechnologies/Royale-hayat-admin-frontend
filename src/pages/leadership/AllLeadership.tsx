@@ -61,7 +61,6 @@ const AllLeadership = () => {
   useEffect(() => {
     loadLeadershipData();
     
-    // Listen for updates from Add/Edit pages
     const handleUpdate = () => {
       loadLeadershipData();
     };
@@ -91,7 +90,6 @@ const AllLeadership = () => {
     }
   };
 
-  // Filter data
   const filteredData = leadershipData.filter((item) => {
     const searchValue = searchTerm.toLowerCase();
     if (!searchValue) return true;
@@ -115,7 +113,6 @@ const AllLeadership = () => {
       toast.success("Leadership member deleted successfully");
       setShowDeleteConfirm(null);
       
-      // Adjust pagination if needed
       const newTotalPages = Math.ceil((filteredData.length - 1) / itemsPerPage);
       if (currentPage > newTotalPages && newTotalPages > 0) {
         setCurrentPage(newTotalPages);
@@ -131,7 +128,7 @@ const AllLeadership = () => {
       <div className="space-y-4 sm:space-y-6">
         <BreadCrumb />
 
-        {/* Header */}
+        
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h2 className="text-xl sm:text-2xl font-bold text-slate-800">{uiText.pageTitle}</h2>
@@ -146,7 +143,7 @@ const AllLeadership = () => {
           </PermissionGate>
         </div>
 
-        {/* Search */}
+        
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative w-full sm:flex-1 sm:max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -173,7 +170,7 @@ const AllLeadership = () => {
           )}
         </div>
 
-        {/* Loading State */}
+        
         {loading ? (
           <div className="flex justify-center items-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-burgundy"></div>
@@ -195,7 +192,7 @@ const AllLeadership = () => {
           </div>
         ) : (
           <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
-            {/* Mobile card list */}
+            
             <div className="md:hidden divide-y divide-slate-100">
               {paginatedData.map((item) => (
                 <article key={item._id} className="p-4">
@@ -241,7 +238,7 @@ const AllLeadership = () => {
               ))}
             </div>
 
-            {/* Desktop table */}
+            
             <div className="hidden md:block overflow-x-auto">
               <table className="w-full">
                 <thead className="bg-slate-50 border-b border-slate-200">
@@ -307,7 +304,7 @@ const AllLeadership = () => {
               </table>
             </div>
 
-            {/* Pagination */}
+            
             {totalPages > 1 && (
               <div className="flex flex-wrap justify-center items-center gap-2 py-4 px-2 border-t border-slate-100">
                 <button
@@ -345,7 +342,7 @@ const AllLeadership = () => {
         )}
       </div>
 
-      {/* Delete Confirmation Modal */}
+      
       {showDeleteConfirm && (
         <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
           <div className="bg-white rounded-t-2xl sm:rounded-xl max-w-md w-full p-4 sm:p-6">

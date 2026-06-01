@@ -110,7 +110,6 @@ const JobPosts = () => {
     void fetchJobs();
   }, [fetchJobs, location.pathname]);
 
-  // Listen for job created/updated and application viewed events
   useEffect(() => {
     const handleJobsUpdate = () => {
       void fetchJobs();
@@ -141,7 +140,6 @@ const JobPosts = () => {
       await deleteJobApi(jobToDelete._id);
       await fetchJobs();
     } catch (err: any) {
-      // Keep the dialog open on error — user can retry or cancel
       console.error("Delete failed:", err);
     } finally {
       setDeleteOpen(false);
@@ -191,12 +189,12 @@ const JobPosts = () => {
       <div className="space-y-4 sm:space-y-6">
         <BreadCrumb />
 
-        {/* Main Card */}
+        
         <div className="rounded-xl border-2 border-burgundy/30 bg-gradient-to-br from-white via-slate-50/90 to-white shadow-xl backdrop-blur-sm overflow-hidden">
           <div className="h-1 bg-gradient-to-r from-burgundy/40 via-burgundy to-burgundy/40"></div>
 
           <div className="p-4 sm:p-6">
-            {/* Header with Create Button and Search */}
+            
             <div className="flex flex-col gap-4 mb-4 sm:mb-6">
               <div>
                 <h3 className="text-lg sm:text-xl font-bold text-slate-800">Job Posts</h3>
@@ -248,7 +246,7 @@ const JobPosts = () => {
               </div>
             </div>
 
-            {/* Table Section */}
+            
             {loading ? (
               <div className="space-y-3 py-4">
                 {[...Array(5)].map((_, i) => (
@@ -278,7 +276,7 @@ const JobPosts = () => {
               </div>
             ) : (
               <>
-                {/* Mobile cards */}
+                
                 <div className="md:hidden space-y-3">
                   {jobs.map((job) => (
                     <article
@@ -467,7 +465,7 @@ const JobPosts = () => {
                   </table>
                 </div>
 
-                {/* Pagination - Bottom Right */}
+                
                 {totalPages > 1 && (
                   <div className="mt-6 pt-4 border-t border-slate-100">
                     <div className="flex justify-center sm:justify-end overflow-x-auto">
@@ -513,7 +511,7 @@ const JobPosts = () => {
                   </div>
                 )}
 
-                {/* Showing entries info */}
+                
                 <div className="mt-4 text-center sm:text-right text-xs text-slate-400">
                   Showing {((currentPage - 1) * limit) + 1} to {Math.min(currentPage * limit, totalRecords)} of {totalRecords} entries
                 </div>
@@ -523,7 +521,7 @@ const JobPosts = () => {
         </div>
       </div>
 
-      {/* Delete Alert */}
+      
       <AlertBox
         isOpen={deleteOpen}
         onClose={() => {

@@ -46,7 +46,6 @@ const Appointments = () => {
     })), "appointments-report");
   };
 
-  // Completed patient detail view
   if (selectedPatient) {
     return (
       <AdminLayout title="Appointments">
@@ -184,7 +183,7 @@ const Appointments = () => {
         </div>
       </div>
 
-      {/* Reschedule Modal */}
+      
       {rescheduleModal && (
         <div className="fixed inset-0 bg-foreground/30 flex items-center justify-center z-50" onClick={() => setRescheduleModal(null)}>
           <div className="bg-card rounded-lg shadow-lg border border-border p-6 w-96 animate-fade-in" onClick={e => e.stopPropagation()}>
@@ -206,7 +205,7 @@ const Appointments = () => {
         </div>
       )}
 
-      {/* Confirm Action Modal */}
+      
       {confirmModal && (
         <div className="fixed inset-0 bg-foreground/30 flex items-center justify-center z-50" onClick={() => setConfirmModal(null)}>
           <div className="bg-card rounded-lg shadow-lg border border-border p-6 w-96 animate-fade-in" onClick={e => e.stopPropagation()}>
