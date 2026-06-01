@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Formik, Form, ErrorMessage } from "formik";
+import { Formik, Form, ErrorMessage, type FormikHelpers } from "formik";
 import * as Yup from "yup";
 import { toast } from "sonner";
 import AdminLayout from "@/components/layout/AdminLayout";
@@ -22,6 +22,7 @@ type JobForm = {
   arabicRequirements: string[];
   classification: string;
   location: string;
+  arabicLocation: string;
   type: "Full-time" | "Part-time" | "Contract";
   closingDate: string;
 };
@@ -29,8 +30,6 @@ type JobForm = {
 const validationSchema = Yup.object({
   title: Yup.string().trim().required("English Title is required"),
   description: Yup.string().trim().required("English Description is required"),
-  arabicTitle: Yup.string().trim().required("Arabic Title is required"),
-  arabicDescription: Yup.string().trim().required("Arabic Description is required"),
   classification: Yup.string().trim().required("Classification is required"),
   location: Yup.string().trim().required("Location is required"),
   type: Yup.string().required("Type is required"),
@@ -53,6 +52,18 @@ const classificationOptions = [
   "Surgical Services",
 ];
 
+const isArabicContentComplete = (values: JobForm) => {
+  const arabicResponsibilities = values.arabicResponsibilities.filter((r) => r.trim());
+  const arabicRequirements = values.arabicRequirements.filter((r) => r.trim());
+  return (
+    Boolean(values.arabicTitle.trim()) &&
+    Boolean(values.arabicDescription.trim()) &&
+    Boolean(values.arabicLocation.trim()) &&
+    arabicResponsibilities.length > 0 &&
+    arabicRequirements.length > 0
+  );
+};
+
 const initialValues: JobForm = {
   title: "",
   description: "",
@@ -64,6 +75,7 @@ const initialValues: JobForm = {
   arabicRequirements: [""],
   classification: "",
   location: "",
+  arabicLocation: "",
   type: "Full-time",
   closingDate: "",
 };
@@ -103,6 +115,41 @@ const CreateJobPage = () => {
     setFieldValue(fieldName, updated);
   };
 
+  const attemptSubmit = async (
+    values: JobForm,
+    validateForm: FormikHelpers<JobForm>["validateForm"],
+    setTouched: FormikHelpers<JobForm>["setTouched"],
+  ) => {
+    if (!isArabicContentComplete(values)) {
+      toast.error("Fill arabic fields", { position: "top-right" });
+      setActiveTab("arabic");
+      await setTouched({
+        arabicTitle: true,
+        arabicDescription: true,
+        arabicLocation: true,
+      });
+      return;
+    }
+
+    const errors = await validateForm();
+    if (Object.keys(errors).length > 0) {
+      const englishFieldKeys = [
+        "title",
+        "description",
+        "classification",
+        "location",
+        "type",
+        "closingDate",
+      ] as const;
+      if (englishFieldKeys.some((key) => errors[key as keyof typeof errors])) {
+        setActiveTab("english");
+      }
+      return;
+    }
+
+    await handleSubmit(values);
+  };
+
   const handleSubmit = async (values: JobForm) => {
     const responsibilities = values.responsibilities.filter((r) => r.trim());
     const requirements = values.requirements.filter((r) => r.trim());
@@ -113,10 +160,6 @@ const CreateJobPage = () => {
       toast.error("Add at least one responsibility and one requirement in English.");
       return;
     }
-    if (!arabicResponsibilities.length || !arabicRequirements.length) {
-      toast.error("Add at least one responsibility and one requirement in Arabic.");
-      return;
-    }
 
     setSaving(true);
     try {
@@ -125,9 +168,14 @@ const CreateJobPage = () => {
         description: values.description.trim(),
         classification: values.classification.trim(),
         location: values.location.trim(),
+        arabicLocation: values.arabicLocation.trim(),
         type: values.type,
         responsibilities,
         requirements,
+        arabicTitle: values.arabicTitle.trim(),
+        arabicDescription: values.arabicDescription.trim(),
+        arabicResponsibilities,
+        arabicRequirements,
         closingDate: values.closingDate,
       });
 
@@ -205,10 +253,16 @@ const CreateJobPage = () => {
             <Formik
               initialValues={initialValues}
               validationSchema={validationSchema}
-              onSubmit={handleSubmit}
+              onSubmit={() => undefined}
             >
-              {({ values, setFieldValue }) => (
-                <Form className="space-y-6">
+              {({ values, setFieldValue, validateForm, setTouched }) => (
+                <Form
+                  className="space-y-6"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    void attemptSubmit(values, validateForm, setTouched);
+                  }}
+                >
 
                   
                   {activeTab === "english" && (
@@ -252,7 +306,6 @@ const CreateJobPage = () => {
                           />
                         </div>
 
-                        
                         <div className="space-y-3">
                           <div className="flex items-center justify-between">
                             <label className="text-sm font-semibold text-slate-700">
@@ -417,7 +470,6 @@ const CreateJobPage = () => {
                           />
                         </div>
 
-                        
                         <div className="space-y-3">
                           <div className="flex items-center justify-between">
                             <label className="text-sm font-semibold text-slate-700">
@@ -575,16 +627,24 @@ const CreateJobPage = () => {
                           Location <span className="text-red-500">*</span>
                         </label>
                         <Input
-                          value={values.location}
-                          onChange={(e) => setFieldValue("location", e.target.value)}
+                          value={activeTab === "arabic" ? values.arabicLocation : values.location}
+                          onChange={(e) =>
+                            setFieldValue(
+                              activeTab === "arabic" ? "arabicLocation" : "location",
+                              e.target.value,
+                            )
+                          }
                           placeholder="Enter location"
                           className="h-11"
+                          dir={activeTab === "arabic" ? "rtl" : "ltr"}
                         />
-                        <ErrorMessage
-                          name="location"
-                          component="p"
-                          className="text-xs text-red-500"
-                        />
+                        {activeTab === "english" ? (
+                          <ErrorMessage
+                            name="location"
+                            component="p"
+                            className="text-xs text-red-500"
+                          />
+                        ) : null}
                       </div>
 
                       <div className="space-y-2">
@@ -632,9 +692,12 @@ const CreateJobPage = () => {
                       Cancel
                     </Button>
                     <Button
-                      type="submit"
+                      type="button"
                       disabled={saving}
                       className="gap-2 w-full sm:w-auto bg-burgundy hover:bg-burgundy/90"
+                      onClick={() => {
+                        void attemptSubmit(values, validateForm, setTouched);
+                      }}
                     >
                       {saving ? "Creating..." : "Create Job"}
                     </Button>

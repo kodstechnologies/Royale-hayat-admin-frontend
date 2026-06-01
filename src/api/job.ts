@@ -8,6 +8,7 @@ export interface CreateJobPayload {
   description: string;
   classification: string;
   location: string;
+  arabicLocation?: string;
   type: "Full-time" | "Part-time" | "Contract";
   responsibilities: string[];
   requirements: string[];
