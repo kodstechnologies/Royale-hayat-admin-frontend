@@ -41,6 +41,8 @@ import {
   type JobApplicationStatusFilter,
 } from "@/api/job";
 import { scrollPageToTop, useScrollToTop } from "@/hooks/useScrollToTop";
+import { PERMISSIONS } from "@/constants/permissions";
+import PermissionGate, { hasPermission } from "@/utils/PermissionGate";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -338,6 +340,8 @@ type ApplicationListProps = {
 
 const ApplicationList = ({ jobMongoId, onSelect }: ApplicationListProps) => {
   const navigate = useNavigate();
+  const canDeleteApplication = hasPermission(PERMISSIONS.JOB_APPLICATION_DELETE);
+  const canUpdateApplication = hasPermission(PERMISSIONS.JOB_APPLICATION_UPDATE);
   const [applications, setApplications] = useState<JobApplication[]>([]);
   const [jobTitle, setJobTitle] = useState("");
   const [loading, setLoading] = useState(true);
@@ -429,12 +433,13 @@ const ApplicationList = ({ jobMongoId, onSelect }: ApplicationListProps) => {
   };
 
   const handleDeleteClick = (app: JobApplication) => {
+    if (!hasPermission(PERMISSIONS.JOB_APPLICATION_DELETE)) return;
     setApplicationToDelete(app);
     setDeleteOpen(true);
   };
 
   const confirmDelete = async () => {
-    if (!applicationToDelete?._id) return;
+    if (!applicationToDelete?._id || !hasPermission(PERMISSIONS.JOB_APPLICATION_DELETE)) return;
 
     setIsDeleting(true);
     try {
@@ -458,6 +463,10 @@ const ApplicationList = ({ jobMongoId, onSelect }: ApplicationListProps) => {
     newStatus: JobApplicationStatus,
   ) => {
     if (!appId) return;
+    if (!hasPermission(PERMISSIONS.JOB_APPLICATION_UPDATE)) {
+      toast.error("You do not have permission to update job applications");
+      return;
+    }
 
     setUpdatingStatusId(appId);
     try {
@@ -635,15 +644,19 @@ const ApplicationList = ({ jobMongoId, onSelect }: ApplicationListProps) => {
                     className="mb-3"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    <ApplicationStatusToggle
-                      value={normalizeStatus(app.status)}
-                      onChange={(status) =>
-                        void handleStatusChange(app._id, status)
-                      }
-                      disabled={updatingStatusId === app._id}
-                      size="sm"
-                      className="w-full"
-                    />
+                    {canUpdateApplication ? (
+                      <ApplicationStatusToggle
+                        value={normalizeStatus(app.status)}
+                        onChange={(status) =>
+                          void handleStatusChange(app._id, status)
+                        }
+                        disabled={updatingStatusId === app._id}
+                        size="sm"
+                        className="w-full"
+                      />
+                    ) : (
+                      <StatusBadge status={normalizeStatus(app.status)} />
+                    )}
                   </div>
                   <div
                     className="flex gap-2 pt-3 border-t border-slate-100"
@@ -652,19 +665,21 @@ const ApplicationList = ({ jobMongoId, onSelect }: ApplicationListProps) => {
                     <button
                       type="button"
                       onClick={() => handleSelect(app)}
-                      className="flex-1 inline-flex items-center justify-center gap-1 py-2 rounded-lg text-sm font-medium text-burgundy bg-burgundy/10"
+                      className={`${canDeleteApplication ? "flex-1" : "w-full"} inline-flex items-center justify-center gap-1 py-2 rounded-lg text-sm font-medium text-burgundy bg-burgundy/10`}
                     >
                       View
                       <ChevronRight className="h-4 w-4" />
                     </button>
-                    <button
-                      type="button"
-                      onClick={() => handleDeleteClick(app)}
-                      className="p-2 rounded-lg text-red-600 bg-red-50"
-                      aria-label="Delete application"
-                    >
-                      <Trash2 size={16} />
-                    </button>
+                    <PermissionGate permission={PERMISSIONS.JOB_APPLICATION_DELETE}>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteClick(app)}
+                        className="p-2 rounded-lg text-red-600 bg-red-50"
+                        aria-label="Delete application"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </PermissionGate>
                   </div>
                 </article>
               ))}
@@ -760,14 +775,18 @@ const ApplicationList = ({ jobMongoId, onSelect }: ApplicationListProps) => {
                         </div>
                       </td>
                       <td className="py-3 px-4" onClick={(e) => e.stopPropagation()}>
-                        <ApplicationStatusToggle
-                          value={normalizeStatus(app.status)}
-                          onChange={(status) =>
-                            void handleStatusChange(app._id, status)
-                          }
-                          disabled={updatingStatusId === app._id}
-                          size="sm"
-                        />
+                        {canUpdateApplication ? (
+                          <ApplicationStatusToggle
+                            value={normalizeStatus(app.status)}
+                            onChange={(status) =>
+                              void handleStatusChange(app._id, status)
+                            }
+                            disabled={updatingStatusId === app._id}
+                            size="sm"
+                          />
+                        ) : (
+                          <StatusBadge status={normalizeStatus(app.status)} />
+                        )}
                       </td>
                       <td className="py-3 px-4 text-right">
                         <div
@@ -782,14 +801,16 @@ const ApplicationList = ({ jobMongoId, onSelect }: ApplicationListProps) => {
                             View
                             <ChevronRight className="h-3.5 w-3.5" />
                           </button>
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteClick(app)}
-                            className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors"
-                            title="Delete"
-                          >
-                            <Trash2 size={14} />
-                          </button>
+                          <PermissionGate permission={PERMISSIONS.JOB_APPLICATION_DELETE}>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteClick(app)}
+                              className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                              title="Delete"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </PermissionGate>
                         </div>
                       </td>
                     </tr>
@@ -828,6 +849,7 @@ type ApplicationDetailProps = {
 };
 
 const ApplicationDetail = ({ applicationId, initialData, onBack }: ApplicationDetailProps) => {
+  const canUpdateApplication = hasPermission(PERMISSIONS.JOB_APPLICATION_UPDATE);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [application, setApplication] = useState<JobApplication>(initialData);
@@ -878,6 +900,10 @@ const ApplicationDetail = ({ applicationId, initialData, onBack }: ApplicationDe
 
   const handleStatusChange = async (newStatus: JobApplicationStatus) => {
     if (!application._id) return;
+    if (!hasPermission(PERMISSIONS.JOB_APPLICATION_UPDATE)) {
+      toast.error("You do not have permission to update job applications");
+      return;
+    }
 
     setIsUpdatingStatus(true);
     try {
@@ -905,7 +931,7 @@ const ApplicationDetail = ({ applicationId, initialData, onBack }: ApplicationDe
   };
 
   const confirmDelete = async () => {
-    if (!application._id) return;
+    if (!application._id || !hasPermission(PERMISSIONS.JOB_APPLICATION_DELETE)) return;
 
     setIsDeleting(true);
     try {
@@ -1075,18 +1101,22 @@ const ApplicationDetail = ({ applicationId, initialData, onBack }: ApplicationDe
                           status={normalizeStatus(application.status)}
                           size="md"
                         />
-                        <span className="text-[11px] font-medium text-slate-400">
-                          Tap to update
-                        </span>
+                        {canUpdateApplication && (
+                          <span className="text-[11px] font-medium text-slate-400">
+                            Tap to update
+                          </span>
+                        )}
                       </div>
-                      <ApplicationStatusToggle
-                        value={normalizeStatus(application.status)}
-                        onChange={(status) => void handleStatusChange(status)}
-                        disabled={isUpdatingStatus}
-                        size="md"
-                        showDescription
-                        className="w-full"
-                      />
+                      {canUpdateApplication ? (
+                        <ApplicationStatusToggle
+                          value={normalizeStatus(application.status)}
+                          onChange={(status) => void handleStatusChange(status)}
+                          disabled={isUpdatingStatus}
+                          size="md"
+                          showDescription
+                          className="w-full"
+                        />
+                      ) : null}
                     </div>
                   </div>
                 </div>
@@ -1159,15 +1189,17 @@ const ApplicationDetail = ({ applicationId, initialData, onBack }: ApplicationDe
                 <Button onClick={onBack} variant="outline" className="w-full sm:flex-1">
                   Back to Applications
                 </Button>
-                <Button
-                  type="button"
-                  variant="destructive"
-                  className="gap-2 w-full sm:w-auto"
-                  onClick={() => setDeleteOpen(true)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                  Delete Application
-                </Button>
+                <PermissionGate permission={PERMISSIONS.JOB_APPLICATION_DELETE}>
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    className="gap-2 w-full sm:w-auto"
+                    onClick={() => setDeleteOpen(true)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Delete Application
+                  </Button>
+                </PermissionGate>
               </div>
             </div>
           </div>

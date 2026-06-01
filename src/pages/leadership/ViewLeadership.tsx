@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, User, FileText, Briefcase, Calendar, Eye, Edit, Trash2, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { getLeadershipById, deleteLeadership } from "@/api/leadership";
+import { PERMISSIONS } from "@/constants/permissions";
+import PermissionGate, { hasPermission } from "@/utils/PermissionGate";
 
 type Leadership = {
   _id: string;
@@ -71,7 +73,7 @@ const ViewLeadership = () => {
   };
 
   const handleDelete = async () => {
-    if (!leadership) return;
+    if (!leadership || !hasPermission(PERMISSIONS.LEADERSHIP_DELETE)) return;
     
     setIsDeleting(true);
     try {
@@ -178,17 +180,21 @@ const ViewLeadership = () => {
           <div className="p-4 sm:p-6">
             {/* Action Buttons */}
             <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 mb-4 sm:mb-6 pb-4 border-b border-slate-100">
-              <Button
-                onClick={() => navigate(`/leadership/edit/${id}`)}
-                className="gap-2 w-full sm:w-auto bg-blue-600 hover:bg-blue-700"
-              >
-                <Edit className="h-4 w-4" />
-                {uiText.edit}
-              </Button>
-              <Button onClick={() => setShowDeleteConfirm(true)} variant="destructive" className="gap-2 w-full sm:w-auto" disabled={isDeleting}>
-                <Trash2 className="h-4 w-4" />
-                {isDeleting ? "Deleting..." : uiText.delete}
-              </Button>
+              <PermissionGate permission={PERMISSIONS.LEADERSHIP_UPDATE}>
+                <Button
+                  onClick={() => navigate(`/leadership/edit/${id}`)}
+                  className="gap-2 w-full sm:w-auto bg-blue-600 hover:bg-blue-700"
+                >
+                  <Edit className="h-4 w-4" />
+                  {uiText.edit}
+                </Button>
+              </PermissionGate>
+              <PermissionGate permission={PERMISSIONS.LEADERSHIP_DELETE}>
+                <Button onClick={() => setShowDeleteConfirm(true)} variant="destructive" className="gap-2 w-full sm:w-auto" disabled={isDeleting}>
+                  <Trash2 className="h-4 w-4" />
+                  {isDeleting ? "Deleting..." : uiText.delete}
+                </Button>
+              </PermissionGate>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">

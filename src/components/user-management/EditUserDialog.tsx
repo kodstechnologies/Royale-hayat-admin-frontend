@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { updateUser, type AdminUser } from "@/api/auth";
-import { getAllPermissionOptions } from "@/utils/permissionOptions";
+import { getAllPermissionOptions, filterAssignablePermissions } from "@/utils/permissionOptions";
 import { applyViewPermissionRules } from "@/utils/permissionSelection";
 import PermissionGroupsPicker from "@/components/user-management/PermissionGroupsPicker";
 
@@ -36,7 +36,9 @@ const EditUserDialog = ({ user, open, onClose, onSuccess }: EditUserDialogProps)
       password: "",
       role: user.role,
     });
-    setSelectedPermissions(applyViewPermissionRules(user.permissions ?? []));
+    setSelectedPermissions(
+      applyViewPermissionRules(filterAssignablePermissions(user.permissions ?? [])),
+    );
     setShowPassword(false);
   }, [user, open]);
 
@@ -69,7 +71,9 @@ const EditUserDialog = ({ user, open, onClose, onSuccess }: EditUserDialogProps)
         name: formData.name.trim(),
         email: formData.email.trim().toLowerCase(),
         role: formData.role.trim().replace(/\s+/g, "_").toLowerCase(),
-        permissions: applyViewPermissionRules(selectedPermissions),
+        permissions: applyViewPermissionRules(
+          filterAssignablePermissions(selectedPermissions),
+        ),
       };
 
       if (formData.password.trim()) {

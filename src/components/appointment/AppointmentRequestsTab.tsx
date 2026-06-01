@@ -34,6 +34,8 @@ import AppointmentPagination, {
   parseListMeta,
   type AppointmentListMeta,
 } from "./AppointmentPagination";
+import { PERMISSIONS } from "@/constants/permissions";
+import PermissionGate, { hasPermission } from "@/utils/PermissionGate";
 
 export type AppointmentRequestStats = {
   pending: number;
@@ -44,7 +46,6 @@ export type AppointmentRequestStats = {
 type AppointmentRequestsTabProps = {
   requestType: AppointmentRequestType;
   emptyMessage: string;
-  canManageRequests: boolean;
   onCountChange?: (count: number) => void;
   onStatsChange?: (stats: AppointmentRequestStats) => void;
   onMutation?: () => void;
@@ -78,13 +79,14 @@ const statusStyles: Record<
 const AppointmentRequestsTab = ({
   requestType,
   emptyMessage,
-  canManageRequests,
   onCountChange,
   onStatsChange,
   onMutation,
   refreshKey = 0,
 }: AppointmentRequestsTabProps) => {
   const navigate = useNavigate();
+  const canAcceptRequests = hasPermission(PERMISSIONS.APPOINTMENT_REQUEST_ACCEPT);
+  const canRejectRequests = hasPermission(PERMISSIONS.APPOINTMENT_REQUEST_REJECT);
   const onCountChangeRef = useRef(onCountChange);
   const onStatsChangeRef = useRef(onStatsChange);
   const requestTypeRef = useRef(requestType);
@@ -233,8 +235,16 @@ const AppointmentRequestsTab = ({
     comment: string,
   ) => {
     if (newStatus === "confirmed") {
+      if (!hasPermission(PERMISSIONS.APPOINTMENT_REQUEST_ACCEPT)) {
+        toast.error("You do not have permission to confirm appointment requests");
+        return;
+      }
       await acceptRequest(id, comment);
     } else if (newStatus === "cancelled") {
+      if (!hasPermission(PERMISSIONS.APPOINTMENT_REQUEST_REJECT)) {
+        toast.error("You do not have permission to cancel appointment requests");
+        return;
+      }
       await cancelRequest(id, comment);
     }
 
@@ -406,44 +416,48 @@ const AppointmentRequestsTab = ({
                         >
                           <Eye size={16} />
                         </button>
-                        {canManageRequests && req.status !== "confirmed" && (
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            disabled={isActioning}
-                            onClick={() =>
-                              setStatusModal({
-                                isOpen: true,
-                                id: req.id,
-                                newStatus: "confirmed",
-                                name: req.fullName,
-                              })
-                            }
-                            className="h-8 w-8 p-0 text-green-600 hover:text-green-700 hover:bg-green-50"
-                            title="Confirm Request"
-                          >
-                            <Check className="h-4 w-4" />
-                          </Button>
-                        )}
-                        {canManageRequests && req.status !== "cancelled" && (
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            disabled={isActioning}
-                            onClick={() =>
-                              setStatusModal({
-                                isOpen: true,
-                                id: req.id,
-                                newStatus: "cancelled",
-                                name: req.fullName,
-                              })
-                            }
-                            className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
-                            title="Cancel Request"
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                        )}
+                        <PermissionGate permission={PERMISSIONS.APPOINTMENT_REQUEST_ACCEPT}>
+                          {req.status !== "confirmed" && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              disabled={isActioning}
+                              onClick={() =>
+                                setStatusModal({
+                                  isOpen: true,
+                                  id: req.id,
+                                  newStatus: "confirmed",
+                                  name: req.fullName,
+                                })
+                              }
+                              className="h-8 w-8 p-0 text-green-600 hover:text-green-700 hover:bg-green-50"
+                              title="Confirm Request"
+                            >
+                              <Check className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </PermissionGate>
+                        <PermissionGate permission={PERMISSIONS.APPOINTMENT_REQUEST_REJECT}>
+                          {req.status !== "cancelled" && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              disabled={isActioning}
+                              onClick={() =>
+                                setStatusModal({
+                                  isOpen: true,
+                                  id: req.id,
+                                  newStatus: "cancelled",
+                                  name: req.fullName,
+                                })
+                              }
+                              className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                              title="Cancel Request"
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </PermissionGate>
                       </div>
                     </td>
                   </tr>
@@ -462,17 +476,19 @@ const AppointmentRequestsTab = ({
         </div>
       )}
 
-      {canManageRequests && (
-        <StatusUpdateModal
-          isOpen={statusModal.isOpen}
-          onClose={() =>
-            setStatusModal({ isOpen: false, id: "", newStatus: "", name: "" })
-          }
-          onConfirm={handleStatusUpdate}
-          currentStatus={statusModal.newStatus}
-          itemName={statusModal.name}
-        />
-      )}
+      {statusModal.isOpen &&
+        ((statusModal.newStatus === "confirmed" && canAcceptRequests) ||
+          (statusModal.newStatus === "cancelled" && canRejectRequests)) && (
+          <StatusUpdateModal
+            isOpen={statusModal.isOpen}
+            onClose={() =>
+              setStatusModal({ isOpen: false, id: "", newStatus: "", name: "" })
+            }
+            onConfirm={handleStatusUpdate}
+            currentStatus={statusModal.newStatus}
+            itemName={statusModal.name}
+          />
+        )}
     </>
   );
 };

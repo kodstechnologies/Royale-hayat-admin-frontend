@@ -10,6 +10,8 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { getLeadership, deleteLeadership } from "@/api/leadership";
+import { PERMISSIONS } from "@/constants/permissions";
+import PermissionGate, { hasPermission } from "@/utils/PermissionGate";
 
 type Leadership = {
   _id: string;
@@ -107,6 +109,7 @@ const AllLeadership = () => {
   const paginatedData = filteredData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   const handleDelete = async (id: string) => {
+    if (!hasPermission(PERMISSIONS.LEADERSHIP_DELETE)) return;
     try {
       await deleteLeadership(id);
       await loadLeadershipData();
@@ -137,10 +140,12 @@ const AllLeadership = () => {
             <p className="text-xs sm:text-sm text-slate-500 mt-1">{uiText.pageDescription}</p>
           </div>
 
-          <Button onClick={() => navigate("/leadership/create")} className="gap-2 w-full sm:w-auto">
-            <Plus className="h-4 w-4" />
-            {uiText.addLeadership}
-          </Button>
+          <PermissionGate permission={PERMISSIONS.LEADERSHIP_CREATE}>
+            <Button onClick={() => navigate("/leadership/create")} className="gap-2 w-full sm:w-auto">
+              <Plus className="h-4 w-4" />
+              {uiText.addLeadership}
+            </Button>
+          </PermissionGate>
         </div>
 
         {/* Search */}
@@ -180,13 +185,15 @@ const AllLeadership = () => {
             <User className="h-12 w-12 text-slate-300 mx-auto mb-3" />
             <p className="text-slate-500 font-medium">{uiText.noData}</p>
             <p className="text-sm text-slate-400 mt-1">{uiText.adjustFilters}</p>
-            <Button
-              onClick={() => navigate("/leadership/create")}
-              className="mt-4 gap-2 bg-burgundy hover:bg-burgundy/90"
-            >
-              <Plus className="h-4 w-4" />
-              {uiText.addLeadership}
-            </Button>
+            <PermissionGate permission={PERMISSIONS.LEADERSHIP_CREATE}>
+              <Button
+                onClick={() => navigate("/leadership/create")}
+                className="mt-4 gap-2 bg-burgundy hover:bg-burgundy/90"
+              >
+                <Plus className="h-4 w-4" />
+                {uiText.addLeadership}
+              </Button>
+            </PermissionGate>
           </div>
         ) : (
           <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
@@ -211,22 +218,26 @@ const AllLeadership = () => {
                       <Eye className="h-4 w-4" />
                       {uiText.view}
                     </button>
-                    <button
-                      type="button"
-                      onClick={() => navigate(`/leadership/edit/${item._id}`)}
-                      className="inline-flex items-center justify-center p-2 rounded-lg text-amber-600 bg-amber-50 hover:bg-amber-100 transition-colors"
-                      aria-label={uiText.edit}
-                    >
-                      <Edit className="h-4 w-4" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setShowDeleteConfirm(item._id)}
-                      className="inline-flex items-center justify-center p-2 rounded-lg text-red-600 bg-red-50 hover:bg-red-100 transition-colors"
-                      aria-label={uiText.delete}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
+                    <PermissionGate permission={PERMISSIONS.LEADERSHIP_UPDATE}>
+                      <button
+                        type="button"
+                        onClick={() => navigate(`/leadership/edit/${item._id}`)}
+                        className="inline-flex items-center justify-center p-2 rounded-lg text-amber-600 bg-amber-50 hover:bg-amber-100 transition-colors"
+                        aria-label={uiText.edit}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </button>
+                    </PermissionGate>
+                    <PermissionGate permission={PERMISSIONS.LEADERSHIP_DELETE}>
+                      <button
+                        type="button"
+                        onClick={() => setShowDeleteConfirm(item._id)}
+                        className="inline-flex items-center justify-center p-2 rounded-lg text-red-600 bg-red-50 hover:bg-red-100 transition-colors"
+                        aria-label={uiText.delete}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </PermissionGate>
                   </div>
                 </article>
               ))}
@@ -272,20 +283,24 @@ const AllLeadership = () => {
                             >
                               <Eye className="h-4 w-4" />
                             </button>
-                            <button
-                              onClick={() => navigate(`/leadership/edit/${item._id}`)}
-                              className="p-2 rounded-lg text-amber-600 hover:bg-amber-50 transition-colors"
-                              title={uiText.edit}
-                            >
-                              <Edit className="h-4 w-4" />
-                            </button>
-                            <button
-                              onClick={() => setShowDeleteConfirm(item._id)}
-                              className="p-2 rounded-lg text-red-600 hover:bg-red-50 transition-colors"
-                              title={uiText.delete}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </button>
+                            <PermissionGate permission={PERMISSIONS.LEADERSHIP_UPDATE}>
+                              <button
+                                onClick={() => navigate(`/leadership/edit/${item._id}`)}
+                                className="p-2 rounded-lg text-amber-600 hover:bg-amber-50 transition-colors"
+                                title={uiText.edit}
+                              >
+                                <Edit className="h-4 w-4" />
+                              </button>
+                            </PermissionGate>
+                            <PermissionGate permission={PERMISSIONS.LEADERSHIP_DELETE}>
+                              <button
+                                onClick={() => setShowDeleteConfirm(item._id)}
+                                className="p-2 rounded-lg text-red-600 hover:bg-red-50 transition-colors"
+                                title={uiText.delete}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            </PermissionGate>
                           </div>
                         </td>
                       </tr>

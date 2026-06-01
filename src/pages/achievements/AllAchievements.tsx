@@ -33,6 +33,8 @@ import {
   mapApiToAchievement,
   buildAchievementFormData,
 } from "@/data/achievementData";
+import { PERMISSIONS } from "@/constants/permissions";
+import PermissionGate, { hasPermission } from "@/utils/PermissionGate";
 
 const StatsCard = ({ title, value, icon: Icon, color }: { title: string; value: number; icon: typeof Award; color: string }) => (
   <div className="bg-white rounded-xl border border-slate-200 p-3.5 sm:p-5 shadow-sm hover:shadow-md transition-all duration-200">
@@ -128,12 +130,13 @@ const AllAchievements = () => {
   };
 
   const handleDeleteClick = (achievement: Achievement) => {
+    if (!hasPermission(PERMISSIONS.ACHIEVEMENT_DELETE)) return;
     setAchievementToDelete(achievement);
     setDeleteOpen(true);
   };
 
   const confirmDelete = async () => {
-    if (!achievementToDelete) return;
+    if (!achievementToDelete || !hasPermission(PERMISSIONS.ACHIEVEMENT_DELETE)) return;
 
     setIsDeleting(true);
     try {
@@ -156,6 +159,7 @@ const AllAchievements = () => {
   };
 
   const updateVisibility = async (achievement: Achievement, visibility: "show" | "hide") => {
+    if (!hasPermission(PERMISSIONS.ACHIEVEMENT_UPDATE)) return;
     try {
       const achievementId = getAchievementId(achievement);
       if (!achievementId) {
@@ -193,6 +197,7 @@ const AllAchievements = () => {
   const handleMarkAsPublished = (achievement: Achievement) => updateVisibility(achievement, "show");
 
   const handleMakeAllDraft = async () => {
+    if (!hasPermission(PERMISSIONS.ACHIEVEMENT_UPDATE)) return;
     setIsUpdatingAll(true);
     try {
       const published = achievements.filter((a) => a.status === "published");
@@ -290,22 +295,26 @@ const AllAchievements = () => {
               </div>
 
               <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
-                <Button
-                  onClick={() => setMakeAllDraftOpen(true)}
-                  variant="outline"
-                  disabled={publishedCount === 0 || isUpdatingAll}
-                  className="gap-2 w-full sm:w-auto border-amber-300 text-amber-700 bg-amber-50 hover:bg-amber-100"
-                >
-                  <FileText className="h-4 w-4" />
-                  Make All Draft
-                </Button>
-                <Button
-                  onClick={() => navigate("/achievements/create")}
-                  className="gap-2 w-full sm:w-auto bg-burgundy hover:bg-burgundy/90"
-                >
-                  <Plus className="h-4 w-4" />
-                  Add Achievement
-                </Button>
+                <PermissionGate permission={PERMISSIONS.ACHIEVEMENT_UPDATE}>
+                  <Button
+                    onClick={() => setMakeAllDraftOpen(true)}
+                    variant="outline"
+                    disabled={publishedCount === 0 || isUpdatingAll}
+                    className="gap-2 w-full sm:w-auto border-amber-300 text-amber-700 bg-amber-50 hover:bg-amber-100"
+                  >
+                    <FileText className="h-4 w-4" />
+                    Make All Draft
+                  </Button>
+                </PermissionGate>
+                <PermissionGate permission={PERMISSIONS.ACHIEVEMENT_CREATE}>
+                  <Button
+                    onClick={() => navigate("/achievements/create")}
+                    className="gap-2 w-full sm:w-auto bg-burgundy hover:bg-burgundy/90"
+                  >
+                    <Plus className="h-4 w-4" />
+                    Add Achievement
+                  </Button>
+                </PermissionGate>
               </div>
             </div>
 
@@ -352,10 +361,12 @@ const AllAchievements = () => {
               <div className="text-center py-16">
                 <Award className="h-10 w-10 text-slate-400 mx-auto mb-4" />
                 <p className="text-slate-500 font-medium">No achievements found</p>
-                <Button onClick={() => navigate("/achievements/create")} className="mt-4 gap-2 bg-burgundy hover:bg-burgundy/90">
-                  <Plus className="h-4 w-4" />
-                  Add Achievement
-                </Button>
+                <PermissionGate permission={PERMISSIONS.ACHIEVEMENT_CREATE}>
+                  <Button onClick={() => navigate("/achievements/create")} className="mt-4 gap-2 bg-burgundy hover:bg-burgundy/90">
+                    <Plus className="h-4 w-4" />
+                    Add Achievement
+                  </Button>
+                </PermissionGate>
               </div>
             ) : (
               <>
@@ -393,45 +404,49 @@ const AllAchievements = () => {
                           >
                             <Eye size={16} />
                           </button>
-                          <button
-                            type="button"
-                            onClick={() => navigate(`/achievements/edit/${achievementId}`)}
-                            className="inline-flex items-center justify-center p-2 rounded-lg text-slate-600 bg-slate-50 hover:bg-slate-100"
-                            title="Edit"
-                            aria-label="Edit achievement"
-                          >
-                            <Pencil size={16} />
-                          </button>
-                          {achievement.status === "published" ? (
+                          <PermissionGate permission={PERMISSIONS.ACHIEVEMENT_UPDATE}>
                             <button
                               type="button"
-                              onClick={() => handleMarkAsDraft(achievement)}
-                              className="inline-flex items-center justify-center p-2 rounded-lg text-amber-600 bg-amber-50 hover:bg-amber-100"
-                              title="Mark as Draft"
-                              aria-label="Mark as draft"
+                              onClick={() => navigate(`/achievements/edit/${achievementId}`)}
+                              className="inline-flex items-center justify-center p-2 rounded-lg text-slate-600 bg-slate-50 hover:bg-slate-100"
+                              title="Edit"
+                              aria-label="Edit achievement"
                             >
-                              <FileText size={16} />
+                              <Pencil size={16} />
                             </button>
-                          ) : (
+                            {achievement.status === "published" ? (
+                              <button
+                                type="button"
+                                onClick={() => handleMarkAsDraft(achievement)}
+                                className="inline-flex items-center justify-center p-2 rounded-lg text-amber-600 bg-amber-50 hover:bg-amber-100"
+                                title="Mark as Draft"
+                                aria-label="Mark as draft"
+                              >
+                                <FileText size={16} />
+                              </button>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => handleMarkAsPublished(achievement)}
+                                className="inline-flex items-center justify-center p-2 rounded-lg text-emerald-600 bg-emerald-50 hover:bg-emerald-100"
+                                title="Publish"
+                                aria-label="Publish achievement"
+                              >
+                                <CheckCircle size={16} />
+                              </button>
+                            )}
+                          </PermissionGate>
+                          <PermissionGate permission={PERMISSIONS.ACHIEVEMENT_DELETE}>
                             <button
                               type="button"
-                              onClick={() => handleMarkAsPublished(achievement)}
-                              className="inline-flex items-center justify-center p-2 rounded-lg text-emerald-600 bg-emerald-50 hover:bg-emerald-100"
-                              title="Publish"
-                              aria-label="Publish achievement"
+                              onClick={() => handleDeleteClick(achievement)}
+                              className="inline-flex items-center justify-center p-2 rounded-lg text-red-600 bg-red-50 hover:bg-red-100"
+                              title="Delete"
+                              aria-label="Delete achievement"
                             >
-                              <CheckCircle size={16} />
+                              <Trash2 size={16} />
                             </button>
-                          )}
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteClick(achievement)}
-                            className="inline-flex items-center justify-center p-2 rounded-lg text-red-600 bg-red-50 hover:bg-red-100"
-                            title="Delete"
-                            aria-label="Delete achievement"
-                          >
-                            <Trash2 size={16} />
-                          </button>
+                          </PermissionGate>
                         </div>
                       </article>
                     );
@@ -476,21 +491,25 @@ const AllAchievements = () => {
                               <button onClick={() => navigate(`/achievements/view/${getAchievementId(achievement)}`)} className="p-1.5 rounded-lg text-slate-400 hover:text-burgundy hover:bg-burgundy/10" title="View">
                                 <Eye size={14} />
                               </button>
-                              <button onClick={() => navigate(`/achievements/edit/${getAchievementId(achievement)}`)} className="p-1.5 rounded-lg text-slate-400 hover:text-burgundy hover:bg-burgundy/10" title="Edit">
-                                <Pencil size={14} />
-                              </button>
-                              {achievement.status === "published" ? (
-                                <button onClick={() => handleMarkAsDraft(achievement)} className="p-1.5 rounded-lg text-amber-500 hover:bg-amber-50" title="Mark as Draft">
-                                  <FileText size={14} />
+                              <PermissionGate permission={PERMISSIONS.ACHIEVEMENT_UPDATE}>
+                                <button onClick={() => navigate(`/achievements/edit/${getAchievementId(achievement)}`)} className="p-1.5 rounded-lg text-slate-400 hover:text-burgundy hover:bg-burgundy/10" title="Edit">
+                                  <Pencil size={14} />
                                 </button>
-                              ) : (
-                                <button onClick={() => handleMarkAsPublished(achievement)} className="p-1.5 rounded-lg text-emerald-500 hover:bg-emerald-50" title="Publish">
-                                  <CheckCircle size={14} />
+                                {achievement.status === "published" ? (
+                                  <button onClick={() => handleMarkAsDraft(achievement)} className="p-1.5 rounded-lg text-amber-500 hover:bg-amber-50" title="Mark as Draft">
+                                    <FileText size={14} />
+                                  </button>
+                                ) : (
+                                  <button onClick={() => handleMarkAsPublished(achievement)} className="p-1.5 rounded-lg text-emerald-500 hover:bg-emerald-50" title="Publish">
+                                    <CheckCircle size={14} />
+                                  </button>
+                                )}
+                              </PermissionGate>
+                              <PermissionGate permission={PERMISSIONS.ACHIEVEMENT_DELETE}>
+                                <button onClick={() => handleDeleteClick(achievement)} className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50" title="Delete">
+                                  <Trash2 size={14} />
                                 </button>
-                              )}
-                              <button onClick={() => handleDeleteClick(achievement)} className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50" title="Delete">
-                                <Trash2 size={14} />
-                              </button>
+                              </PermissionGate>
                             </div>
                           </td>
                         </tr>

@@ -4,6 +4,8 @@ import AdminLayout from "@/components/layout/AdminLayout";
 import BreadCrumb from "@/components/layout/BreadCrumb";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
+import { PERMISSIONS } from "@/constants/permissions";
+import PermissionGate from "@/utils/PermissionGate";
 import {
   ArrowLeft,
   User,
@@ -176,13 +178,15 @@ const ViewAchievement = () => {
                   </button>
                 </div>
 
-                <Button
-                  onClick={() => navigate(`/achievements/edit/${achievement.id}`)}
-                  className="gap-2 w-full sm:w-auto bg-burgundy hover:bg-burgundy/90 shadow-md hover:shadow-lg transition-all duration-200"
-                >
-                  <Pencil className="h-4 w-4" />
-                  Edit
-                </Button>
+                <PermissionGate permission={PERMISSIONS.ACHIEVEMENT_UPDATE}>
+                  <Button
+                    onClick={() => navigate(`/achievements/edit/${achievement.id}`)}
+                    className="gap-2 w-full sm:w-auto bg-burgundy hover:bg-burgundy/90 shadow-md hover:shadow-lg transition-all duration-200"
+                  >
+                    <Pencil className="h-4 w-4" />
+                    Edit
+                  </Button>
+                </PermissionGate>
               </div>
             </div>
 
@@ -343,13 +347,15 @@ const ViewAchievement = () => {
                   >
                     Back to Employee Recognition
                   </Button>
-                  <Button
-                    onClick={() => navigate(`/achievements/edit/${achievement.id}`)}
-                    className="w-full sm:flex-1 gap-2 bg-burgundy hover:bg-burgundy/90"
-                  >
-                    <Pencil className="h-4 w-4" />
-                    Edit Achievement
-                  </Button>
+                  <PermissionGate permission={PERMISSIONS.ACHIEVEMENT_UPDATE}>
+                    <Button
+                      onClick={() => navigate(`/achievements/edit/${achievement.id}`)}
+                      className="w-full sm:flex-1 gap-2 bg-burgundy hover:bg-burgundy/90"
+                    >
+                      <Pencil className="h-4 w-4" />
+                      Edit Achievement
+                    </Button>
+                  </PermissionGate>
                 </div>
               </div>
             </div>

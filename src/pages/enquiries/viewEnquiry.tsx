@@ -23,6 +23,8 @@ import { Button } from "@/components/ui/button";
 import AlertBox from "@/components/AlertBox";
 import { deleteEnquiry, getEnquiryById } from "@/api/enquiries";
 import { toast } from "sonner";
+import { PERMISSIONS } from "@/constants/permissions";
+import PermissionGate, { hasPermission } from "@/utils/PermissionGate";
 
 type Enquiry = {
   _id: string;
@@ -71,7 +73,7 @@ const ViewEnquiry = () => {
   }, [id]);
 
   const confirmDelete = async () => {
-    if (!enquiry?._id) return;
+    if (!enquiry?._id || !hasPermission(PERMISSIONS.ENQUIRY_DELETE)) return;
 
     setIsDeleting(true);
     try {
@@ -353,18 +355,21 @@ const ViewEnquiry = () => {
                 type="button"
                 variant="outline"
                 onClick={() => navigate("/enquiries")}
+                className="w-full sm:w-auto"
               >
                 Back to Enquiries
               </Button>
-              <Button
-                type="button"
-                variant="destructive"
-                className="gap-2"
-                onClick={() => setDeleteOpen(true)}
-              >
-                <Trash2 className="h-4 w-4" />
-                Delete Enquiry
-              </Button>
+              <PermissionGate permission={PERMISSIONS.ENQUIRY_DELETE}>
+                <Button
+                  type="button"
+                  variant="destructive"
+                  className="gap-2 w-full sm:w-auto"
+                  onClick={() => setDeleteOpen(true)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Delete Enquiry
+                </Button>
+              </PermissionGate>
             </div>
             {/* End Grid */}
           </div>

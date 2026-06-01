@@ -21,6 +21,8 @@ import {
   type AdminUser,
 } from "@/api/auth";
 import { formatPermissionLabel } from "@/utils/permissionOptions";
+import { PERMISSIONS } from "@/constants/permissions";
+import PermissionGate, { hasPermission } from "@/utils/PermissionGate";
 
 const formatRoleLabel = (role: string) =>
   role.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
@@ -64,6 +66,7 @@ const UsersList = () => {
   });
 
   const handleStatusToggle = async (user: AdminUser) => {
+    if (!hasPermission(PERMISSIONS.USER_UPDATE)) return;
     const nextActive = user.isActive === false;
     setStatusUpdatingId(user._id);
     try {
@@ -79,7 +82,7 @@ const UsersList = () => {
   };
 
   const handleDeleteConfirm = async () => {
-    if (!deleteTarget) return;
+    if (!deleteTarget || !hasPermission(PERMISSIONS.USER_DELETE)) return;
     setIsDeleting(true);
     try {
       const response = await deleteUser(deleteTarget._id);
@@ -109,13 +112,15 @@ const UsersList = () => {
               </p>
             </div>
           </div>
-          <Button
-            onClick={() => navigate("/user-management/create")}
-            className="gap-2 bg-burgundy hover:bg-burgundy/90 shrink-0"
-          >
-            <Plus className="h-4 w-4" />
-            Create User
-          </Button>
+          <PermissionGate permission={PERMISSIONS.USER_CREATE}>
+            <Button
+              onClick={() => navigate("/user-management/create")}
+              className="gap-2 bg-burgundy hover:bg-burgundy/90 shrink-0"
+            >
+              <Plus className="h-4 w-4" />
+              Create User
+            </Button>
+          </PermissionGate>
         </div>
 
         <div className="relative mb-4 max-w-md">
@@ -204,41 +209,45 @@ const UsersList = () => {
                       </td>
                       <td className="py-3 px-4">
                         <div className="flex items-center justify-end gap-1">
-                          <button
-                            type="button"
-                            onClick={() => navigate(`/user-management/edit/${user._id}`)}
-                            className="p-1.5 rounded-lg text-slate-400 hover:text-burgundy hover:bg-burgundy/10"
-                            title="Edit user"
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </button>
-                          <button
-                            type="button"
-                            disabled={isUpdating}
-                            onClick={() => void handleStatusToggle(user)}
-                            className={`p-1.5 rounded-lg disabled:opacity-50 ${
-                              isActive
-                                ? "text-amber-500 hover:bg-amber-50"
-                                : "text-emerald-500 hover:bg-emerald-50"
-                            }`}
-                            title={isActive ? "Deactivate user" : "Activate user"}
-                          >
-                            {isUpdating ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : isActive ? (
-                              <UserX className="h-4 w-4" />
-                            ) : (
-                              <UserCheck className="h-4 w-4" />
-                            )}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setDeleteTarget(user)}
-                            className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50"
-                            title="Delete user"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
+                          <PermissionGate permission={PERMISSIONS.USER_UPDATE}>
+                            <button
+                              type="button"
+                              onClick={() => navigate(`/user-management/edit/${user._id}`)}
+                              className="p-1.5 rounded-lg text-slate-400 hover:text-burgundy hover:bg-burgundy/10"
+                              title="Edit user"
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </button>
+                            <button
+                              type="button"
+                              disabled={isUpdating}
+                              onClick={() => void handleStatusToggle(user)}
+                              className={`p-1.5 rounded-lg disabled:opacity-50 ${
+                                isActive
+                                  ? "text-amber-500 hover:bg-amber-50"
+                                  : "text-emerald-500 hover:bg-emerald-50"
+                              }`}
+                              title={isActive ? "Deactivate user" : "Activate user"}
+                            >
+                              {isUpdating ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : isActive ? (
+                                <UserX className="h-4 w-4" />
+                              ) : (
+                                <UserCheck className="h-4 w-4" />
+                              )}
+                            </button>
+                          </PermissionGate>
+                          <PermissionGate permission={PERMISSIONS.USER_DELETE}>
+                            <button
+                              type="button"
+                              onClick={() => setDeleteTarget(user)}
+                              className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50"
+                              title="Delete user"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </PermissionGate>
                         </div>
                       </td>
                     </tr>

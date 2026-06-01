@@ -22,6 +22,8 @@ import {
 import { GetMedicalRequestById, ShareViaMail } from "@/api/medicalRecordRequest";
 import { toast } from "sonner";
 import { useScrollToTop } from "@/hooks/useScrollToTop";
+import { PERMISSIONS } from "@/constants/permissions";
+import PermissionGate, { hasPermission } from "@/utils/PermissionGate";
 
 type MedicalRequest = {
   id: string;
@@ -100,6 +102,10 @@ const ViewRequest = () => {
   }, [id]);
 
   const handleShareViaEmail = async () => {
+    if (!hasPermission(PERMISSIONS.MRR_SHARE_VIA_EMAIL)) {
+      toast.error("You do not have permission to share medical records via email");
+      return;
+    }
     if (!shareEmail.trim()) {
       toast.error("Please enter an email address");
       return;
@@ -507,16 +513,18 @@ const ViewRequest = () => {
               >
                 Back to Requests
               </Button>
-              <Button
-                onClick={() => setIsShareModalOpen(true)}
-                className="gap-2 w-full sm:w-auto bg-burgundy hover:bg-burgundy/90"
-              >
-                Share via Mail
-              </Button>
+              <PermissionGate permission={PERMISSIONS.MRR_SHARE_VIA_EMAIL}>
+                <Button
+                  onClick={() => setIsShareModalOpen(true)}
+                  className="gap-2 w-full sm:w-auto bg-burgundy hover:bg-burgundy/90"
+                >
+                  Share via Mail
+                </Button>
+              </PermissionGate>
             </div>
 
             {/* Share Email Modal */}
-            {isShareModalOpen && (
+            {isShareModalOpen && hasPermission(PERMISSIONS.MRR_SHARE_VIA_EMAIL) && (
               <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 p-0 sm:p-4">
                 <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-xl w-full max-w-md p-5 sm:p-6 max-h-[90dvh] overflow-y-auto">
                   <h2 className="text-xl font-semibold text-slate-800 mb-4">

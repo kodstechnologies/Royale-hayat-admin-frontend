@@ -13,6 +13,7 @@ import {
   LogOut,
   ClipboardList,
   Shield,
+  Bell,
   Mail,
   UserCheck,
   ChevronLeft,
@@ -520,6 +521,19 @@ const Sidebar = ({
     },
   ];
 
+  const footerNavItems: NavItemConfig[] = [
+    // {
+    //   to: "/notifications",
+    //   icon: Bell,
+    //   label: "Notifications",
+    // },
+    {
+      to: "/settings",
+      icon: Settings,
+      label: "Settings",
+    },
+  ];
+
   const masterItems: NavItemConfig[] = [
     {
       to: "/categories",
@@ -743,6 +757,10 @@ const Sidebar = ({
 
           {/* Footer Section */}
           <div className="border-t border-slate-100 bg-gradient-to-r from-white to-slate-50/50 backdrop-blur-sm shrink-0 mt-auto overflow-x-hidden px-3">
+            <div className="space-y-0.5 pt-3">
+              {footerNavItems.map((item) => renderNavItem(item, isRouteActive(item.to)))}
+            </div>
+
             {/* Logout Button */}
             <button
               onClick={handleLogout}

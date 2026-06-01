@@ -9,6 +9,8 @@ import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
 import AlertBox from "@/components/AlertBox";
 import { getAllJobs, deleteJob as deleteJobApi } from "@/api/job";
+import { PERMISSIONS } from "@/constants/permissions";
+import PermissionGate, { hasAnyPermission, hasPermission } from "@/utils/PermissionGate";
 
 type JobPost = {
   _id: string;
@@ -62,6 +64,13 @@ const JobPosts = () => {
   const [totalUnviewedApplications, setTotalUnviewedApplications] = useState(0);
   const navigate = useNavigate();
   const location = useLocation();
+  const canCreateJob = hasPermission(PERMISSIONS.JOB_CREATE);
+  const canUpdateJob = hasPermission(PERMISSIONS.JOB_UPDATE);
+  const canDeleteJob = hasPermission(PERMISSIONS.JOB_DELETE);
+  const canViewApplications = hasAnyPermission([
+    PERMISSIONS.JOB_APPLICATION_VIEW,
+    PERMISSIONS.JOB_VIEW,
+  ]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -120,12 +129,13 @@ const JobPosts = () => {
   };
 
   const handleDeleteClick = (job: JobPost) => {
+    if (!hasPermission(PERMISSIONS.JOB_DELETE)) return;
     setJobToDelete(job);
     setDeleteOpen(true);
   };
 
   const confirmDelete = async () => {
-    if (!jobToDelete) return;
+    if (!jobToDelete || !hasPermission(PERMISSIONS.JOB_DELETE)) return;
     setIsDeleting(true);
     try {
       await deleteJobApi(jobToDelete._id);
@@ -225,13 +235,15 @@ const JobPosts = () => {
                       <span className="min-[480px]:sr-only">Clear</span>
                     </Button>
                   )}
-                  <Button
-                    onClick={() => navigate("/jobs/create")}
-                    className="gap-2 flex-1 min-[480px]:flex-none bg-burgundy hover:bg-burgundy/90 shadow-md hover:shadow-lg transition-all duration-200"
-                  >
-                    <Plus className="h-4 w-4 shrink-0" />
-                    <span className="whitespace-nowrap">Create Job</span>
-                  </Button>
+                  <PermissionGate permission={PERMISSIONS.JOB_CREATE}>
+                    <Button
+                      onClick={() => navigate("/jobs/create")}
+                      className="gap-2 flex-1 min-[480px]:flex-none bg-burgundy hover:bg-burgundy/90 shadow-md hover:shadow-lg transition-all duration-200"
+                    >
+                      <Plus className="h-4 w-4 shrink-0" />
+                      <span className="whitespace-nowrap">Create Job</span>
+                    </Button>
+                  </PermissionGate>
                 </div>
               </div>
             </div>
@@ -254,13 +266,15 @@ const JobPosts = () => {
                     ? "No jobs match your Job ID or title search."
                     : "Create a new job posting to get started."}
                 </p>
-                <Button
-                  onClick={() => navigate("/jobs/create")}
-                  className="mt-4 gap-2 bg-burgundy hover:bg-burgundy/90"
-                >
-                  <Plus className="h-4 w-4" />
-                  Create Job
-                </Button>
+                {canCreateJob && (
+                  <Button
+                    onClick={() => navigate("/jobs/create")}
+                    className="mt-4 gap-2 bg-burgundy hover:bg-burgundy/90"
+                  >
+                    <Plus className="h-4 w-4" />
+                    Create Job
+                  </Button>
+                )}
               </div>
             ) : (
               <>
@@ -301,47 +315,53 @@ const JobPosts = () => {
                           </span>
                         </div>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          navigate(`/jobs/view-applications/${job._id}`)
-                        }
-                        className="w-full mb-3 inline-flex items-center justify-center gap-1.5 px-2.5 py-2 rounded-lg bg-burgundy/10 text-burgundy text-xs font-medium hover:bg-burgundy/20 transition-colors"
-                      >
-                        <FileText size={12} />
-                        {job.applicationsCount} Application
-                        {job.applicationsCount !== 1 ? "s" : ""}
-                        {job.unviewedApplicationsCount > 0 && (
-                          <span className="min-w-[1.25rem] h-5 px-1.5 rounded-full bg-burgundy text-white text-[10px] font-semibold leading-none inline-flex items-center justify-center">
-                            {formatBadgeCount(job.unviewedApplicationsCount)}
-                          </span>
-                        )}
-                      </button>
+                      {canViewApplications && (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            navigate(`/jobs/view-applications/${job._id}`)
+                          }
+                          className="w-full mb-3 inline-flex items-center justify-center gap-1.5 px-2.5 py-2 rounded-lg bg-burgundy/10 text-burgundy text-xs font-medium hover:bg-burgundy/20 transition-colors"
+                        >
+                          <FileText size={12} />
+                          {job.applicationsCount} Application
+                          {job.applicationsCount !== 1 ? "s" : ""}
+                          {job.unviewedApplicationsCount > 0 && (
+                            <span className="min-w-[1.25rem] h-5 px-1.5 rounded-full bg-burgundy text-white text-[10px] font-semibold leading-none inline-flex items-center justify-center">
+                              {formatBadgeCount(job.unviewedApplicationsCount)}
+                            </span>
+                          )}
+                        </button>
+                      )}
                       <div className="flex gap-2 pt-3 border-t border-slate-100">
                         <button
                           type="button"
                           onClick={() => navigate(`/jobs/view/${job._id}`)}
-                          className="flex-1 inline-flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm text-burgundy bg-burgundy/10 hover:bg-burgundy/15"
+                          className={`${canUpdateJob || canDeleteJob ? "flex-1" : "w-full"} inline-flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm text-burgundy bg-burgundy/10 hover:bg-burgundy/15`}
                         >
                           <Eye size={16} />
                           View
                         </button>
-                        <button
-                          type="button"
-                          onClick={() => navigate(`/jobs/edit/${job._id}`)}
-                          className="p-2 rounded-lg text-slate-500 bg-slate-50 hover:bg-slate-100"
-                          aria-label="Edit job"
-                        >
-                          <Pencil size={16} />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteClick(job)}
-                          className="p-2 rounded-lg text-red-600 bg-red-50 hover:bg-red-100"
-                          aria-label="Delete job"
-                        >
-                          <Trash2 size={16} />
-                        </button>
+                        <PermissionGate permission={PERMISSIONS.JOB_UPDATE}>
+                          <button
+                            type="button"
+                            onClick={() => navigate(`/jobs/edit/${job._id}`)}
+                            className="p-2 rounded-lg text-slate-500 bg-slate-50 hover:bg-slate-100"
+                            aria-label="Edit job"
+                          >
+                            <Pencil size={16} />
+                          </button>
+                        </PermissionGate>
+                        <PermissionGate permission={PERMISSIONS.JOB_DELETE}>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteClick(job)}
+                            className="p-2 rounded-lg text-red-600 bg-red-50 hover:bg-red-100"
+                            aria-label="Delete job"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </PermissionGate>
                       </div>
                     </article>
                   ))}
@@ -383,48 +403,62 @@ const JobPosts = () => {
                             </span>
                           </td>
                           <td className="py-3 px-4">
-                            <button
-                              onClick={() => navigate(`/jobs/view-applications/${job._id}`)}
-                              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-burgundy/10 text-burgundy text-xs font-medium hover:bg-burgundy/20 transition-colors"
-                            >
-                              <FileText size={12} />
-                              <span>
+                            {canViewApplications ? (
+                              <button
+                                type="button"
+                                onClick={() => navigate(`/jobs/view-applications/${job._id}`)}
+                                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-burgundy/10 text-burgundy text-xs font-medium hover:bg-burgundy/20 transition-colors"
+                              >
+                                <FileText size={12} />
+                                <span>
+                                  {job.applicationsCount} Application{job.applicationsCount !== 1 ? "s" : ""}
+                                </span>
+                                {job.unviewedApplicationsCount > 0 && (
+                                  <span
+                                    className="min-w-[1.25rem] h-5 px-1.5 rounded-full bg-burgundy text-white text-[10px] font-semibold leading-none inline-flex items-center justify-center"
+                                    title={`${job.unviewedApplicationsCount} unviewed application${job.unviewedApplicationsCount !== 1 ? "s" : ""}`}
+                                  >
+                                    {formatBadgeCount(job.unviewedApplicationsCount)}
+                                  </span>
+                                )}
+                              </button>
+                            ) : (
+                              <span className="text-sm text-slate-400">
                                 {job.applicationsCount} Application{job.applicationsCount !== 1 ? "s" : ""}
                               </span>
-                              {job.unviewedApplicationsCount > 0 && (
-                                <span
-                                  className="min-w-[1.25rem] h-5 px-1.5 rounded-full bg-burgundy text-white text-[10px] font-semibold leading-none inline-flex items-center justify-center"
-                                  title={`${job.unviewedApplicationsCount} unviewed application${job.unviewedApplicationsCount !== 1 ? "s" : ""}`}
-                                >
-                                  {formatBadgeCount(job.unviewedApplicationsCount)}
-                                </span>
-                              )}
-                            </button>
+                            )}
                           </td>
                           <td className="py-3 px-4">{getStatusBadge(job.isActive)}</td>
                           <td className="py-3 px-4 text-right">
                             <div className="flex gap-1 justify-end">
                               <button
+                                type="button"
                                 onClick={() => navigate(`/jobs/view/${job._id}`)}
                                 className="p-1.5 rounded-lg text-slate-400 hover:text-burgundy hover:bg-burgundy/10 transition-colors"
                                 title="View Details"
                               >
                                 <Eye size={14} />
                               </button>
-                              <button
-                                onClick={() => navigate(`/jobs/edit/${job._id}`)}
-                                className="p-1.5 rounded-lg text-slate-400 hover:text-burgundy hover:bg-burgundy/10 transition-colors"
-                                title="Edit Job"
-                              >
-                                <Pencil size={14} />
-                              </button>
-                              <button
-                                onClick={() => handleDeleteClick(job)}
-                                className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors"
-                                title="Delete Job"
-                              >
-                                <Trash2 size={14} />
-                              </button>
+                              <PermissionGate permission={PERMISSIONS.JOB_UPDATE}>
+                                <button
+                                  type="button"
+                                  onClick={() => navigate(`/jobs/edit/${job._id}`)}
+                                  className="p-1.5 rounded-lg text-slate-400 hover:text-burgundy hover:bg-burgundy/10 transition-colors"
+                                  title="Edit Job"
+                                >
+                                  <Pencil size={14} />
+                                </button>
+                              </PermissionGate>
+                              <PermissionGate permission={PERMISSIONS.JOB_DELETE}>
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeleteClick(job)}
+                                  className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                                  title="Delete Job"
+                                >
+                                  <Trash2 size={14} />
+                                </button>
+                              </PermissionGate>
                             </div>
                           </td>
                         </tr>

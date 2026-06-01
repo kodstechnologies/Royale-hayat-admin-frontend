@@ -9,7 +9,6 @@ import {
   Stethoscope,
   UserPlus,
 } from "lucide-react";
-import { getStoredUserRole, isCallCenterRole } from "@/lib/userRole";
 import AppointmentRequestsTab, {
   type AppointmentRequestStats,
 } from "@/components/appointment/AppointmentRequestsTab";
@@ -60,7 +59,6 @@ const REQUEST_CATEGORIES: {
 
 const AppointmentRequests = () => {
   useLanguage();
-  const canManageRequests = isCallCenterRole(getStoredUserRole());
   const [requestSubTab, setRequestSubTab] =
     useState<RequestSubTab>("doctor_unavailability");
   const [countsBySubTab, setCountsBySubTab] = useState<
@@ -239,7 +237,6 @@ const AppointmentRequests = () => {
             <AppointmentRequestsTab
               requestType={activeRequestSubTab.requestType}
               emptyMessage={activeRequestSubTab.emptyMessage}
-              canManageRequests={canManageRequests}
               onCountChange={handleRequestCountChange}
               onStatsChange={handleRequestStatsChange}
             />

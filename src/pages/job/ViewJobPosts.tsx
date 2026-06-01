@@ -19,6 +19,8 @@ import {
 import { format } from "date-fns";
 import { getJobById as getJobByIdApi } from "@/api/job";
 import { useScrollToTop } from "@/hooks/useScrollToTop";
+import { PERMISSIONS } from "@/constants/permissions";
+import PermissionGate from "@/utils/PermissionGate";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -336,27 +338,36 @@ const ViewJobPost = () => {
                 <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
                   <h3 className="text-sm font-semibold text-slate-800 mb-3">Quick Actions</h3>
                   <div className="space-y-2">
-                    <Button
-                      onClick={() => navigate(`/jobs/edit/${job._id}`)}
-                      variant="outline"
-                      className="w-full gap-2"
+                    <PermissionGate permission={PERMISSIONS.JOB_UPDATE}>
+                      <Button
+                        onClick={() => navigate(`/jobs/edit/${job._id}`)}
+                        variant="outline"
+                        className="w-full gap-2"
+                      >
+                        <Pencil className="h-4 w-4" />
+                        Edit Job Posting
+                      </Button>
+                    </PermissionGate>
+
+                    <PermissionGate
+                      permissions={[
+                        PERMISSIONS.JOB_APPLICATION_VIEW,
+                        PERMISSIONS.JOB_VIEW,
+                      ]}
                     >
-                      <Pencil className="h-4 w-4" />
-                      Edit Job Posting
-                    </Button>
-                    
-                    <Button
-                      onClick={() => navigate(`/jobs/view-applications/${job._id}`)}
-                      className="w-full gap-2 bg-burgundy hover:bg-burgundy/90"
-                    >
-                      <Users className="h-4 w-4" />
-                      <span>{`View Applications (${job.applicationsCount})`}</span>
-                      {job.unviewedApplicationsCount > 0 && (
-                        <span className="min-w-[1.25rem] h-5 px-1.5 rounded-full bg-white text-burgundy text-[10px] font-semibold leading-none inline-flex items-center justify-center">
-                          {formatBadgeCount(job.unviewedApplicationsCount)}
-                        </span>
-                      )}
-                    </Button>
+                      <Button
+                        onClick={() => navigate(`/jobs/view-applications/${job._id}`)}
+                        className="w-full gap-2 bg-burgundy hover:bg-burgundy/90"
+                      >
+                        <Users className="h-4 w-4" />
+                        <span>{`View Applications (${job.applicationsCount})`}</span>
+                        {job.unviewedApplicationsCount > 0 && (
+                          <span className="min-w-[1.25rem] h-5 px-1.5 rounded-full bg-white text-burgundy text-[10px] font-semibold leading-none inline-flex items-center justify-center">
+                            {formatBadgeCount(job.unviewedApplicationsCount)}
+                          </span>
+                        )}
+                      </Button>
+                    </PermissionGate>
                   </div>
                 </div>
               </div>
@@ -425,13 +436,15 @@ const ViewJobPost = () => {
                   >
                     Back to Jobs
                   </Button>
-                  <Button
-                    onClick={() => navigate(`/jobs/edit/${job._id}`)}
-                    className="w-full sm:flex-1 gap-2 bg-burgundy hover:bg-burgundy/90"
-                  >
-                    <Pencil className="h-4 w-4" />
-                    Edit Job
-                  </Button>
+                  <PermissionGate permission={PERMISSIONS.JOB_UPDATE}>
+                    <Button
+                      onClick={() => navigate(`/jobs/edit/${job._id}`)}
+                      className="w-full sm:flex-1 gap-2 bg-burgundy hover:bg-burgundy/90"
+                    >
+                      <Pencil className="h-4 w-4" />
+                      Edit Job
+                    </Button>
+                  </PermissionGate>
                 </div>
               </div>
             </div>

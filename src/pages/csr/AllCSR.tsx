@@ -10,6 +10,8 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { getCSR, deleteCSR } from "@/api/csr";
+import { PERMISSIONS } from "@/constants/permissions";
+import PermissionGate, { hasPermission } from "@/utils/PermissionGate";
 
 type CSR = {
   _id: string;
@@ -113,6 +115,7 @@ const AllCSR = () => {
   const paginatedData = filteredData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   const handleDelete = async (id: string) => {
+    if (!hasPermission(PERMISSIONS.CSR_DELETE)) return;
     try {
       await deleteCSR(id);
       await loadCSRData();
@@ -171,10 +174,12 @@ const AllCSR = () => {
             </div>
 
             {activeTab === "csr" && (
-              <Button onClick={() => navigate("/csr/create")} className="gap-2 w-full sm:w-auto">
-                <Plus className="h-4 w-4" />
-                {uiText.addCSR}
-              </Button>
+              <PermissionGate permission={PERMISSIONS.CSR_CREATE}>
+                <Button onClick={() => navigate("/csr/create")} className="gap-2 w-full sm:w-auto">
+                  <Plus className="h-4 w-4" />
+                  {uiText.addCSR}
+                </Button>
+              </PermissionGate>
             )}
           </div>
 
@@ -271,13 +276,15 @@ const AllCSR = () => {
                                 <ImageIcon className="h-12 w-12 text-slate-300 mb-3" />
                                 <p className="text-slate-500 font-medium">{uiText.noData}</p>
                                 <p className="text-sm text-slate-400 mt-1">{uiText.adjustFilters}</p>
-                                <Button
-                                  onClick={() => navigate("/csr/create")}
-                                  className="mt-4 gap-2 bg-burgundy hover:bg-burgundy/90"
-                                >
-                                  <Plus className="h-4 w-4" />
-                                  {uiText.addCSR}
-                                </Button>
+                                <PermissionGate permission={PERMISSIONS.CSR_CREATE}>
+                                  <Button
+                                    onClick={() => navigate("/csr/create")}
+                                    className="mt-4 gap-2 bg-burgundy hover:bg-burgundy/90"
+                                  >
+                                    <Plus className="h-4 w-4" />
+                                    {uiText.addCSR}
+                                  </Button>
+                                </PermissionGate>
                               </div>
                             </td>
                           </tr>
@@ -311,18 +318,22 @@ const AllCSR = () => {
                                   >
                                     <Eye className="h-4 w-4" />
                                   </button>
-                                  <button
-                                    onClick={() => navigate(`/csr/edit/${item._id}`)}
-                                    className="p-2 rounded-lg text-amber-600 hover:bg-amber-50"
-                                  >
-                                    <Edit className="h-4 w-4" />
-                                  </button>
-                                  <button
-                                    onClick={() => setShowDeleteConfirm(item._id)}
-                                    className="p-2 rounded-lg text-red-600 hover:bg-red-50"
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                  </button>
+                                  <PermissionGate permission={PERMISSIONS.CSR_UPDATE}>
+                                    <button
+                                      onClick={() => navigate(`/csr/edit/${item._id}`)}
+                                      className="p-2 rounded-lg text-amber-600 hover:bg-amber-50"
+                                    >
+                                      <Edit className="h-4 w-4" />
+                                    </button>
+                                  </PermissionGate>
+                                  <PermissionGate permission={PERMISSIONS.CSR_DELETE}>
+                                    <button
+                                      onClick={() => setShowDeleteConfirm(item._id)}
+                                      className="p-2 rounded-lg text-red-600 hover:bg-red-50"
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </button>
+                                  </PermissionGate>
                                 </div>
                               </td>
                             </tr>

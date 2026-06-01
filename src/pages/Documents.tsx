@@ -15,6 +15,8 @@ import {
   updateDocument,
   deleteDocument,
 } from "@/api/document";
+import { PERMISSIONS } from "@/constants/permissions";
+import PermissionGate, { hasPermission } from "@/utils/PermissionGate";
 
 type AdminDoc = {
   id: string;
@@ -180,6 +182,7 @@ const Documents = () => {
   };
 
   const handleUpload = async () => {
+    if (!hasPermission(PERMISSIONS.DOCUMENT_CREATE)) return;
     if (!uploadForm.title) { toast.error("Please enter document title"); return; }
     if (!uploadForm.file) { toast.error("Please select a file to upload"); return; }
 
@@ -226,6 +229,7 @@ const Documents = () => {
   };
 
   const handleEdit = async () => {
+    if (!hasPermission(PERMISSIONS.DOCUMENT_UPDATE)) return;
     if (!editForm.title) { toast.error("Please enter document title"); return; }
     if (!showEditModal) return;
 
@@ -291,7 +295,7 @@ const Documents = () => {
   };
 
   const confirmDelete = async () => {
-    if (!docToDelete) return;
+    if (!docToDelete || !hasPermission(PERMISSIONS.DOCUMENT_DELETE)) return;
 
     setDeleting(true);
     try {
@@ -418,13 +422,15 @@ const Documents = () => {
                 <h3 className="text-lg sm:text-xl font-bold text-slate-800">Document Management</h3>
                 <p className="text-xs sm:text-sm text-slate-500 mt-1">Upload and manage documents to share with patients</p>
               </div>
-              <Button
-                onClick={() => setShowUpload(!showUpload)}
-                className="gap-2 bg-burgundy hover:bg-burgundy/90 shadow-md hover:shadow-lg transition-all duration-200 w-full sm:w-auto"
-              >
-                <Upload className="h-4 w-4" />
-                Upload Document
-              </Button>
+              <PermissionGate permission={PERMISSIONS.DOCUMENT_CREATE}>
+                <Button
+                  onClick={() => setShowUpload(!showUpload)}
+                  className="gap-2 bg-burgundy hover:bg-burgundy/90 shadow-md hover:shadow-lg transition-all duration-200 w-full sm:w-auto"
+                >
+                  <Upload className="h-4 w-4" />
+                  Upload Document
+                </Button>
+              </PermissionGate>
             </div>
 
             {/* Category Capsules */}
@@ -471,7 +477,7 @@ const Documents = () => {
             </div>
 
             {/* Upload Form */}
-            {showUpload && (
+            {showUpload && hasPermission(PERMISSIONS.DOCUMENT_CREATE) && (
               <div className="mb-4 sm:mb-6 p-4 sm:p-5 rounded-xl bg-gradient-to-r from-slate-50 to-white border border-slate-200 animate-in fade-in duration-200">
                 <h4 className="text-sm sm:text-md font-semibold text-slate-800 mb-4">Upload New Document</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -641,38 +647,42 @@ const Documents = () => {
                               <Send size={12} />
                               Share
                             </button>
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setEditForm({
-                                  title: doc.title,
-                                  category: doc.category,
-                                  description: doc.description,
-                                  file: null,
-                                  existingFileUrl: doc.fileUrl || ""
-                                });
-                                setEditPreviewUrl(doc.fileUrl || "");
-                                setShowEditModal(doc);
-                              }}
-                              className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3 py-2 sm:py-1.5 rounded-lg border border-slate-200 text-slate-600 text-xs font-medium hover:bg-burgundy/5 hover:border-burgundy/30 transition-all"
-                              aria-label="Edit document"
-                            >
-                              <Pencil size={12} />
-                              <span className="sm:hidden">Edit</span>
-                            </button>
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setDocToDelete(doc);
-                              }}
-                              className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3 py-2 sm:py-1.5 rounded-lg border border-slate-200 text-slate-600 text-xs font-medium hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition-all"
-                              aria-label="Delete document"
-                            >
-                              <X size={12} />
-                              <span className="sm:hidden">Delete</span>
-                            </button>
+                            <PermissionGate permission={PERMISSIONS.DOCUMENT_UPDATE}>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setEditForm({
+                                    title: doc.title,
+                                    category: doc.category,
+                                    description: doc.description,
+                                    file: null,
+                                    existingFileUrl: doc.fileUrl || ""
+                                  });
+                                  setEditPreviewUrl(doc.fileUrl || "");
+                                  setShowEditModal(doc);
+                                }}
+                                className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3 py-2 sm:py-1.5 rounded-lg border border-slate-200 text-slate-600 text-xs font-medium hover:bg-burgundy/5 hover:border-burgundy/30 transition-all"
+                                aria-label="Edit document"
+                              >
+                                <Pencil size={12} />
+                                <span className="sm:hidden">Edit</span>
+                              </button>
+                            </PermissionGate>
+                            <PermissionGate permission={PERMISSIONS.DOCUMENT_DELETE}>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setDocToDelete(doc);
+                                }}
+                                className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3 py-2 sm:py-1.5 rounded-lg border border-slate-200 text-slate-600 text-xs font-medium hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition-all"
+                                aria-label="Delete document"
+                              >
+                                <X size={12} />
+                                <span className="sm:hidden">Delete</span>
+                              </button>
+                            </PermissionGate>
                           </div>
                         </div>
                       </div>

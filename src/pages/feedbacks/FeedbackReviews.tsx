@@ -23,6 +23,8 @@ import {
   markHospitalFeedbackViewed,
   type FeedbackPayload
 } from "@/api/feedback";
+import { PERMISSIONS } from "@/constants/permissions";
+import PermissionGate, { hasPermission } from "@/utils/PermissionGate";
 
 const notifyFeedbackUpdated = () => {
   window.dispatchEvent(new Event("feedbackUpdated"));
@@ -263,6 +265,7 @@ const FeedbackReviews = () => {
 
   // Toggle show on website
   const toggleShowOnWebsite = async (id: string, type: "doctor" | "hospital") => {
+    if (!hasPermission(PERMISSIONS.FEEDBACK_UPDATE)) return;
     void markFeedbackAsViewed(id, type);
     try {
       if (type === "doctor") {
@@ -357,6 +360,7 @@ const FeedbackReviews = () => {
 
   // Open edit modal
   const openEditModal = (feedback: DoctorFeedback | HospitalFeedback, type: "doctor" | "hospital") => {
+    if (!hasPermission(PERMISSIONS.FEEDBACK_UPDATE)) return;
     void markFeedbackAsViewed(feedback.id, type);
     setEditingFeedback(feedback);
     setEditFormData({
@@ -376,7 +380,7 @@ const FeedbackReviews = () => {
 
   // Save edit
   const saveEdit = async () => {
-    if (!editingFeedback) return;
+    if (!editingFeedback || !hasPermission(PERMISSIONS.FEEDBACK_UPDATE)) return;
     
     setIsSubmitting(true);
     try {
@@ -668,10 +672,12 @@ const FeedbackReviews = () => {
             </button>
           </div>
 
-          <Button onClick={() => navigate("/add-feedback")} className="gap-2 w-full sm:w-auto">
-            <Plus className="h-4 w-4" />
-            {uiText.addFeedback}
-          </Button>
+          <PermissionGate permission={PERMISSIONS.FEEDBACK_ADD}>
+            <Button onClick={() => navigate("/add-feedback")} className="gap-2 w-full sm:w-auto">
+              <Plus className="h-4 w-4" />
+              {uiText.addFeedback}
+            </Button>
+          </PermissionGate>
         </div>
 
         {/* Tabs */}
@@ -832,53 +838,59 @@ const FeedbackReviews = () => {
                             className="flex flex-wrap items-center gap-2 w-full sm:justify-end pt-2 sm:pt-0 border-t border-slate-100 sm:border-0"
                             onClick={(e) => e.stopPropagation()}
                           >
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                void toggleShowOnWebsite(fb.id, "doctor");
-                              }}
-                              className={`flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-2 py-2 sm:py-1 rounded-lg sm:rounded-full text-xs font-medium transition-all duration-200 ${fb.showOnWebsite
-                                ? "bg-green-100 text-green-700 hover:bg-green-200"
-                                : "bg-slate-100 text-slate-500 hover:bg-slate-200"
-                                }`}
-                            >
-                              {fb.showOnWebsite ? (
-                                <>
-                                  <Eye className="h-3.5 w-3.5 shrink-0" />
-                                  <span className="truncate">{uiText.shown}</span>
-                                </>
-                              ) : (
-                                <>
-                                  <EyeOff className="h-3.5 w-3.5 shrink-0" />
-                                  <span className="truncate">{uiText.hiddenText}</span>
-                                </>
-                              )}
-                            </button>
-                            {fb.addedByAdmin && (
+                            <PermissionGate permission={PERMISSIONS.FEEDBACK_UPDATE}>
                               <button
                                 type="button"
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  openEditModal(fb, "doctor");
+                                  void toggleShowOnWebsite(fb.id, "doctor");
                                 }}
-                                className="inline-flex items-center justify-center p-2 rounded-lg text-slate-500 bg-slate-50 hover:bg-blue-50 hover:text-blue-600 transition-colors"
-                                aria-label={uiText.edit}
+                                className={`flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-2 py-2 sm:py-1 rounded-lg sm:rounded-full text-xs font-medium transition-all duration-200 ${fb.showOnWebsite
+                                  ? "bg-green-100 text-green-700 hover:bg-green-200"
+                                  : "bg-slate-100 text-slate-500 hover:bg-slate-200"
+                                  }`}
                               >
-                                <Edit className="h-4 w-4" />
+                                {fb.showOnWebsite ? (
+                                  <>
+                                    <Eye className="h-3.5 w-3.5 shrink-0" />
+                                    <span className="truncate">{uiText.shown}</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <EyeOff className="h-3.5 w-3.5 shrink-0" />
+                                    <span className="truncate">{uiText.hiddenText}</span>
+                                  </>
+                                )}
                               </button>
+                            </PermissionGate>
+                            {fb.addedByAdmin && (
+                              <PermissionGate permission={PERMISSIONS.FEEDBACK_UPDATE}>
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    openEditModal(fb, "doctor");
+                                  }}
+                                  className="inline-flex items-center justify-center p-2 rounded-lg text-slate-500 bg-slate-50 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                                  aria-label={uiText.edit}
+                                >
+                                  <Edit className="h-4 w-4" />
+                                </button>
+                              </PermissionGate>
                             )}
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                void handleDelete(fb.id, "doctor");
-                              }}
-                              className="inline-flex items-center justify-center p-2 rounded-lg text-red-600 bg-red-50 hover:bg-red-100 transition-colors"
-                              aria-label={uiText.delete}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </button>
+                            <PermissionGate permission={PERMISSIONS.FEEDBACK_DELETE}>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  void handleDelete(fb.id, "doctor");
+                                }}
+                                className="inline-flex items-center justify-center p-2 rounded-lg text-red-600 bg-red-50 hover:bg-red-100 transition-colors"
+                                aria-label={uiText.delete}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            </PermissionGate>
                           </div>
                         </div>
                       </div>
@@ -1011,53 +1023,59 @@ const FeedbackReviews = () => {
                             className="flex flex-wrap items-center gap-2 w-full sm:justify-end pt-2 sm:pt-0 border-t border-slate-100 sm:border-0"
                             onClick={(e) => e.stopPropagation()}
                           >
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                void toggleShowOnWebsite(fb.id, "hospital");
-                              }}
-                              className={`flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-2 py-2 sm:py-1 rounded-lg sm:rounded-full text-xs font-medium transition-all duration-200 ${fb.showOnWebsite
-                                ? "bg-green-100 text-green-700 hover:bg-green-200"
-                                : "bg-slate-100 text-slate-500 hover:bg-slate-200"
-                                }`}
-                            >
-                              {fb.showOnWebsite ? (
-                                <>
-                                  <Eye className="h-3.5 w-3.5 shrink-0" />
-                                  <span className="truncate">{uiText.shown}</span>
-                                </>
-                              ) : (
-                                <>
-                                  <EyeOff className="h-3.5 w-3.5 shrink-0" />
-                                  <span className="truncate">{uiText.hiddenText}</span>
-                                </>
-                              )}
-                            </button>
-                            {fb.addedByAdmin && (
+                            <PermissionGate permission={PERMISSIONS.FEEDBACK_UPDATE}>
                               <button
                                 type="button"
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  openEditModal(fb, "hospital");
+                                  void toggleShowOnWebsite(fb.id, "hospital");
                                 }}
-                                className="inline-flex items-center justify-center p-2 rounded-lg text-slate-500 bg-slate-50 hover:bg-blue-50 hover:text-blue-600 transition-colors"
-                                aria-label={uiText.edit}
+                                className={`flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-2 py-2 sm:py-1 rounded-lg sm:rounded-full text-xs font-medium transition-all duration-200 ${fb.showOnWebsite
+                                  ? "bg-green-100 text-green-700 hover:bg-green-200"
+                                  : "bg-slate-100 text-slate-500 hover:bg-slate-200"
+                                  }`}
                               >
-                                <Edit className="h-4 w-4" />
+                                {fb.showOnWebsite ? (
+                                  <>
+                                    <Eye className="h-3.5 w-3.5 shrink-0" />
+                                    <span className="truncate">{uiText.shown}</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <EyeOff className="h-3.5 w-3.5 shrink-0" />
+                                    <span className="truncate">{uiText.hiddenText}</span>
+                                  </>
+                                )}
                               </button>
+                            </PermissionGate>
+                            {fb.addedByAdmin && (
+                              <PermissionGate permission={PERMISSIONS.FEEDBACK_UPDATE}>
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    openEditModal(fb, "hospital");
+                                  }}
+                                  className="inline-flex items-center justify-center p-2 rounded-lg text-slate-500 bg-slate-50 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                                  aria-label={uiText.edit}
+                                >
+                                  <Edit className="h-4 w-4" />
+                                </button>
+                              </PermissionGate>
                             )}
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                void handleDelete(fb.id, "hospital");
-                              }}
-                              className="inline-flex items-center justify-center p-2 rounded-lg text-red-600 bg-red-50 hover:bg-red-100 transition-colors"
-                              aria-label={uiText.delete}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </button>
+                            <PermissionGate permission={PERMISSIONS.FEEDBACK_DELETE}>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  void handleDelete(fb.id, "hospital");
+                                }}
+                                className="inline-flex items-center justify-center p-2 rounded-lg text-red-600 bg-red-50 hover:bg-red-100 transition-colors"
+                                aria-label={uiText.delete}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            </PermissionGate>
                           </div>
                         </div>
                       </div>

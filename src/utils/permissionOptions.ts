@@ -76,9 +76,7 @@ const PERMISSION_GROUP_DEFS: {
     id: "appointment-requests",
     title: "Appointment Requests",
     permissionKeys: [
-      "APPOINTMENT_REQUEST_CREATE",
       "APPOINTMENT_REQUEST_VIEW",
-   
       "APPOINTMENT_REQUEST_ACCEPT",
       "APPOINTMENT_REQUEST_REJECT",
     ],
@@ -105,7 +103,6 @@ const PERMISSION_GROUP_DEFS: {
     title: "Enquiries",
     permissionKeys: [
       "ENQUIRY_VIEW",
-      "ENQUIRY_UPDATE",
       "ENQUIRY_DELETE",
     ],
   },
@@ -190,9 +187,20 @@ const PERMISSION_GROUP_DEFS: {
   },
 ];
 
-/** All permissions from constants — flat list */
+/** Permissions not shown in user-management create/edit pickers */
+const UNASSIGNABLE_PERMISSION_KEYS = new Set<string>([
+  PERMISSIONS.APPOINTMENT_REQUEST_CREATE,
+  PERMISSIONS.ENQUIRY_UPDATE,
+]);
+
+export const filterAssignablePermissions = (permissions: string[]): string[] =>
+  permissions.filter((key) => !UNASSIGNABLE_PERMISSION_KEYS.has(key));
+
+/** All permissions from constants — flat list (excludes unassignable) */
 export const getAllPermissionOptions = (): PermissionOption[] =>
-  Object.values(PERMISSIONS).map((key) => toOption(key));
+  Object.values(PERMISSIONS)
+    .filter((key) => !UNASSIGNABLE_PERMISSION_KEYS.has(key))
+    .map((key) => toOption(key));
 
 /** Permissions grouped by module for user-management UI */
 export const getGroupedPermissionOptions = (): PermissionGroup[] => {

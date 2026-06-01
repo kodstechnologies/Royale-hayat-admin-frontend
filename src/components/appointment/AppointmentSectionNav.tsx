@@ -1,5 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
 import { CalendarDays, ListChecks } from "lucide-react";
+import { PERMISSIONS } from "@/constants/permissions";
+import { hasAnyPermission } from "@/utils/PermissionGate";
 
 const tabs = [
   {
@@ -7,6 +9,7 @@ const tabs = [
     label: "Requests",
     description: "Review incoming requests",
     icon: ListChecks,
+    permissions: [PERMISSIONS.APPOINTMENT_REQUEST_VIEW],
     isActive: (pathname: string) =>
       !pathname.startsWith("/appointment/bookings"),
   },
@@ -15,6 +18,7 @@ const tabs = [
     label: "Bookings",
     description: "View patient bookings",
     icon: CalendarDays,
+    permissions: [PERMISSIONS.APPOINTMENT_BOOKING_VIEW],
     isActive: (pathname: string) =>
       pathname.startsWith("/appointment/bookings"),
   },
@@ -22,10 +26,17 @@ const tabs = [
 
 const AppointmentSectionNav = () => {
   const { pathname } = useLocation();
+  const visibleTabs = tabs.filter((tab) => hasAnyPermission(tab.permissions));
+
+  if (visibleTabs.length === 0) return null;
 
   return (
-    <div className="w-full sm:w-auto grid grid-cols-2 gap-3 p-1.5 bg-slate-100/90 rounded-2xl border border-slate-200 shadow-inner min-w-[min(100%,320px)] sm:min-w-[420px]">
-      {tabs.map((tab) => {
+    <div
+      className={`w-full sm:w-auto grid gap-3 p-1.5 bg-slate-100/90 rounded-2xl border border-slate-200 shadow-inner min-w-[min(100%,320px)] sm:min-w-[420px] ${
+        visibleTabs.length === 1 ? "grid-cols-1" : "grid-cols-2"
+      }`}
+    >
+      {visibleTabs.map((tab) => {
         const isActive = tab.isActive(pathname);
         const Icon = tab.icon;
 

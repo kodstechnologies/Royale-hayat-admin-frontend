@@ -10,6 +10,8 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { getWorkCulture, deleteWorkCulture } from "@/api/workCulture";
+import { PERMISSIONS } from "@/constants/permissions";
+import PermissionGate, { hasPermission } from "@/utils/PermissionGate";
 
 type WorkCulture = {
   _id: string;  // Changed from id to _id
@@ -99,6 +101,7 @@ const AllWorkCulture = () => {
   const paginatedData = filteredData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   const handleDelete = async (id: string) => {
+    if (!hasPermission(PERMISSIONS.WORK_CULTURE_DELETE)) return;
     try {
       await deleteWorkCulture(id);
       await loadWorkCultureData(); // Reload data after deletion
@@ -131,10 +134,12 @@ const AllWorkCulture = () => {
             </div>
 
             {activeTab === "events" && (
-              <Button onClick={() => navigate("/work-culture/create")} className="gap-2 w-full sm:w-auto">
-                <Plus className="h-4 w-4" />
-                {uiText.addEvent}
-              </Button>
+              <PermissionGate permission={PERMISSIONS.WORK_CULTURE_CREATE}>
+                <Button onClick={() => navigate("/work-culture/create")} className="gap-2 w-full sm:w-auto">
+                  <Plus className="h-4 w-4" />
+                  {uiText.addEvent}
+                </Button>
+              </PermissionGate>
             )}
           </div>
 
@@ -240,13 +245,15 @@ const AllWorkCulture = () => {
                                   <Calendar className="h-12 w-12 text-slate-300 mb-3" />
                                   <p className="text-slate-500 font-medium">{uiText.noData}</p>
                                   <p className="text-sm text-slate-400 mt-1">{uiText.adjustFilters}</p>
-                                  <Button
-                                    onClick={() => navigate("/work-culture/create")}
-                                    className="mt-4 gap-2 bg-burgundy hover:bg-burgundy/90"
-                                  >
-                                    <Plus className="h-4 w-4" />
-                                    {uiText.addEvent}
-                                  </Button>
+                                  <PermissionGate permission={PERMISSIONS.WORK_CULTURE_CREATE}>
+                                    <Button
+                                      onClick={() => navigate("/work-culture/create")}
+                                      className="mt-4 gap-2 bg-burgundy hover:bg-burgundy/90"
+                                    >
+                                      <Plus className="h-4 w-4" />
+                                      {uiText.addEvent}
+                                    </Button>
+                                  </PermissionGate>
                                 </div>
                                </td>
                             </tr>
@@ -275,18 +282,22 @@ const AllWorkCulture = () => {
                                     >
                                       <Eye className="h-4 w-4" />
                                     </button>
-                                    <button
-                                      onClick={() => navigate(`/work-culture/edit/${item._id}`)}
-                                      className="p-2 rounded-lg text-amber-600 hover:bg-amber-50"
-                                    >
-                                      <Edit className="h-4 w-4" />
-                                    </button>
-                                    <button
-                                      onClick={() => setShowDeleteConfirm(item._id)}
-                                      className="p-2 rounded-lg text-red-600 hover:bg-red-50"
-                                    >
-                                      <Trash2 className="h-4 w-4" />
-                                    </button>
+                                    <PermissionGate permission={PERMISSIONS.WORK_CULTURE_UPDATE}>
+                                      <button
+                                        onClick={() => navigate(`/work-culture/edit/${item._id}`)}
+                                        className="p-2 rounded-lg text-amber-600 hover:bg-amber-50"
+                                      >
+                                        <Edit className="h-4 w-4" />
+                                      </button>
+                                    </PermissionGate>
+                                    <PermissionGate permission={PERMISSIONS.WORK_CULTURE_DELETE}>
+                                      <button
+                                        onClick={() => setShowDeleteConfirm(item._id)}
+                                        className="p-2 rounded-lg text-red-600 hover:bg-red-50"
+                                      >
+                                        <Trash2 className="h-4 w-4" />
+                                      </button>
+                                    </PermissionGate>
                                   </div>
                                 </td>
                               </tr>

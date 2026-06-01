@@ -10,6 +10,8 @@ import {
 } from "@/api/medicalRecordRequest";
 import AlertBox from "@/components/AlertBox";
 import { toast } from "sonner";
+import { PERMISSIONS } from "@/constants/permissions";
+import PermissionGate, { hasPermission } from "@/utils/PermissionGate";
 
 type MedicalRequest = {
   id: string;
@@ -101,13 +103,16 @@ const MedicalRecordsRequests = () => {
     received: requests.filter((r) => r.status === "received").length,
   };
 
+  const canDelete = hasPermission(PERMISSIONS.MRR_DELETE);
+
   const handleDeleteClick = (request: MedicalRequest) => {
+    if (!hasPermission(PERMISSIONS.MRR_DELETE)) return;
     setRequestToDelete(request);
     setDeleteOpen(true);
   };
 
   const confirmDelete = async () => {
-    if (!requestToDelete) return;
+    if (!requestToDelete || !hasPermission(PERMISSIONS.MRR_DELETE)) return;
 
     setIsDeleting(true);
     try {
@@ -293,19 +298,21 @@ const MedicalRecordsRequests = () => {
                         onClick={() =>
                           navigate(`/medical-record/view/${request.id}`)
                         }
-                        className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-sm text-burgundy bg-burgundy/10 hover:bg-burgundy/15 transition-colors"
+                        className={`${canDelete ? "flex-1 sm:flex-none" : "w-full"} inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-sm text-burgundy bg-burgundy/10 hover:bg-burgundy/15 transition-colors`}
                       >
                         <Eye size={16} />
                         View
                       </button>
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteClick(request)}
-                        className="inline-flex items-center justify-center p-2 rounded-lg text-red-600 bg-red-50 hover:bg-red-100 transition-colors"
-                        aria-label="Delete request"
-                      >
-                        <Trash2 size={16} />
-                      </button>
+                      <PermissionGate permission={PERMISSIONS.MRR_DELETE}>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteClick(request)}
+                          className="inline-flex items-center justify-center p-2 rounded-lg text-red-600 bg-red-50 hover:bg-red-100 transition-colors"
+                          aria-label="Delete request"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </PermissionGate>
                     </div>
                   </article>
                 ))}
@@ -379,14 +386,16 @@ const MedicalRecordsRequests = () => {
                             >
                               <Eye size={16} />
                             </button>
-                            <button
-                              type="button"
-                              onClick={() => handleDeleteClick(request)}
-                              className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors"
-                              title="Delete"
-                            >
-                              <Trash2 size={16} />
-                            </button>
+                            <PermissionGate permission={PERMISSIONS.MRR_DELETE}>
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteClick(request)}
+                                className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                                title="Delete"
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            </PermissionGate>
                           </div>
                         </td>
                       </tr>

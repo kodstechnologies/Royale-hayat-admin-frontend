@@ -10,6 +10,8 @@ import TableSkeletonLoader from "@/components/TableSkeletonLoader";
 import AlertBox from "@/components/AlertBox";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { PERMISSIONS } from "@/constants/permissions";
+import PermissionGate, { hasPermission } from "@/utils/PermissionGate";
 
 type ContactMessage = {
   id: string;
@@ -108,12 +110,13 @@ const Enquiries = () => {
   }, [fetchEnquiries]);
 
   const handleDeleteClick = (enquiry: ContactMessage) => {
+    if (!hasPermission(PERMISSIONS.ENQUIRY_DELETE)) return;
     setEnquiryToDelete(enquiry);
     setDeleteOpen(true);
   };
 
   const confirmDelete = async () => {
-    if (!enquiryToDelete?.id) return;
+    if (!enquiryToDelete?.id || !hasPermission(PERMISSIONS.ENQUIRY_DELETE)) return;
 
     setIsDeleting(true);
     try {
@@ -282,14 +285,16 @@ const Enquiries = () => {
                                     className="text-slate-400 group-hover:text-burgundy transition-colors"
                                   />
                                 </button>
-                                <button
-                                  type="button"
-                                  onClick={() => handleDeleteClick(m)}
-                                  className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors"
-                                  title="Delete"
-                                >
-                                  <Trash2 size={14} />
-                                </button>
+                                <PermissionGate permission={PERMISSIONS.ENQUIRY_DELETE}>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDeleteClick(m)}
+                                    className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                                    title="Delete"
+                                  >
+                                    <Trash2 size={14} />
+                                  </button>
+                                </PermissionGate>
                               </div>
                             </td>
                           </tr>

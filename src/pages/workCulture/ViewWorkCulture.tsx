@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, Edit, Trash2, Calendar, Image as ImageIcon, X, Eye, EyeOff, Building2 } from "lucide-react";
 import { toast } from "sonner";
 import { getWorkCultureById, deleteWorkCulture } from "@/api/workCulture";
+import { PERMISSIONS } from "@/constants/permissions";
+import PermissionGate, { hasPermission } from "@/utils/PermissionGate";
 
 type WorkCulture = {
   _id?: string;
@@ -71,7 +73,7 @@ const ViewWorkCulture = () => {
   };
 
   const handleDelete = async () => {
-    if (!record) return;
+    if (!record || !hasPermission(PERMISSIONS.WORK_CULTURE_DELETE)) return;
     
     setIsDeleting(true);
     try {
@@ -160,12 +162,16 @@ const ViewWorkCulture = () => {
                 العربية
               </button>
             </div>
-            <Button onClick={() => navigate(`/work-culture/edit/${id}`)} className="gap-2 bg-blue-600 hover:bg-blue-700">
-              <Edit className="h-4 w-4" /> {uiText.edit}
-            </Button>
-            <Button onClick={() => setShowDeleteConfirm(true)} variant="destructive" className="gap-2" disabled={isDeleting}>
-              <Trash2 className="h-4 w-4" /> {isDeleting ? "Deleting..." : uiText.delete}
-            </Button>
+            <PermissionGate permission={PERMISSIONS.WORK_CULTURE_UPDATE}>
+              <Button onClick={() => navigate(`/work-culture/edit/${id}`)} className="gap-2 bg-blue-600 hover:bg-blue-700">
+                <Edit className="h-4 w-4" /> {uiText.edit}
+              </Button>
+            </PermissionGate>
+            <PermissionGate permission={PERMISSIONS.WORK_CULTURE_DELETE}>
+              <Button onClick={() => setShowDeleteConfirm(true)} variant="destructive" className="gap-2" disabled={isDeleting}>
+                <Trash2 className="h-4 w-4" /> {isDeleting ? "Deleting..." : uiText.delete}
+              </Button>
+            </PermissionGate>
           </div>
         </div>
 
