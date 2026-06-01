@@ -6,6 +6,16 @@ const api = axios.create({
     withCredentials: true,
 });
 
+const ACCESS_TOKEN_KEY = "rhh_admin_access_token";
+
+api.interceptors.request.use((config) => {
+    const token = localStorage.getItem(ACCESS_TOKEN_KEY);
+    if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+});
+
 const AUTH_PATHS_NO_SESSION_REDIRECT = [
     "/api/v1/auth/login",
     "/api/v1/auth/send-otp",
@@ -14,7 +24,7 @@ const AUTH_PATHS_NO_SESSION_REDIRECT = [
 ];
 
 const shouldRedirectToLoginOn401 = (requestUrl?: string) => {
-    const hasToken = !!localStorage.getItem("rhh_admin_access_token");
+    const hasToken = !!localStorage.getItem(ACCESS_TOKEN_KEY);
     if (!hasToken) return false;
 
     const url = requestUrl ?? "";
