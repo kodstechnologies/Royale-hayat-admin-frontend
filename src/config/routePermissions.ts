@@ -61,6 +61,7 @@ export const ROUTE_PERMISSION_RULES: RoutePermissionRule[] = [
     permissions: [PERMISSIONS.ENQUIRY_VIEW],
   },
   { pattern: "/enquiries", permissions: [PERMISSIONS.ENQUIRY_VIEW] },
+  { pattern: "/al-safwa-enrollments", permissions: [PERMISSIONS.AL_SAFWA_VIEW] },
 
   // Jobs
   {
@@ -197,7 +198,7 @@ export const ROUTE_PERMISSION_RULES: RoutePermissionRule[] = [
   // Authenticated-only (no module permission required)
   { pattern: "/settings", permissions: [] },
   { pattern: "/international-patients", permissions: [] },
-  { pattern: "/al-safwa-enrollments", permissions: [] },
+  { pattern: "/al-safwa-enrollments", permissions: [PERMISSIONS.AL_SAFWA_VIEW] },
   { pattern: "/services", permissions: [] },
   { pattern: "/reports", permissions: [] },
   {
@@ -216,6 +217,7 @@ export const NAV_LANDING_ROUTES: RoutePermissionRule[] = [
   },
   { pattern: "/job-posts", permissions: [PERMISSIONS.JOB_VIEW] },
   { pattern: "/enquiries", permissions: [PERMISSIONS.ENQUIRY_VIEW] },
+  { pattern: "/al-safwa-enrollments", permissions: [PERMISSIONS.AL_SAFWA_VIEW] },
   { pattern: "/feedback", permissions: [PERMISSIONS.FEEDBACK_VIEW] },
   { pattern: "/achievements", permissions: [PERMISSIONS.ACHIEVEMENT_VIEW] },
   { pattern: "/doctors", permissions: [PERMISSIONS.DOCTOR_VIEW] },

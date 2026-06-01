@@ -107,6 +107,16 @@ const PERMISSION_GROUP_DEFS: {
     ],
   },
   {
+    id: "al-safwa",
+    title: "Al Safwa Enrollments",
+    permissionKeys: [
+      "AL_SAFWA_VIEW",
+      "AL_SAFWA_CREATE",
+      "AL_SAFWA_UPDATE",
+      "AL_SAFWA_DELETE",
+    ],
+  },
+  {
     id: "jobs",
     title: "Jobs",
     permissionKeys: [

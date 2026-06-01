@@ -125,6 +125,7 @@ export type SidebarCounts = {
   medicalRecordRequests: number;
   appointmentRequests: number;
   appointmentBookingRecords: number;
+  alSafwaEnrollments: number;
 };
 
 export const getSidebarCounts = async () => {

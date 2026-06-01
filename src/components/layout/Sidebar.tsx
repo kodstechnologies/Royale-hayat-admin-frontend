@@ -43,6 +43,7 @@ type SidebarBadgeCounts = {
   jobApplications: number;
   enquiries: number;
   feedback: number;
+  alSafwaEnrollments: number;
 };
 
 const getBadgeCountForRoute = (to: string, counts: SidebarBadgeCounts | null): number => {
@@ -59,6 +60,8 @@ const getBadgeCountForRoute = (to: string, counts: SidebarBadgeCounts | null): n
       return counts.enquiries;
     case "/feedback":
       return counts.feedback;
+    case "/al-safwa-enrollments":
+      return counts.alSafwaEnrollments;
     default:
       return 0;
   }
@@ -246,6 +249,7 @@ const Sidebar = ({
           jobApplications: prev?.jobApplications ?? 0,
           enquiries: prev?.enquiries ?? 0,
           feedback: prev?.feedback ?? 0,
+          alSafwaEnrollments: prev?.alSafwaEnrollments ?? 0,
         };
 
         if (sidebarResult.status === "fulfilled" && sidebarResult.value.success) {
@@ -253,6 +257,7 @@ const Sidebar = ({
           next.medicalRecordRequests = data.medicalRecordRequests;
           next.jobApplications = data.jobApplications;
           next.enquiries = data.enquiries;
+          next.alSafwaEnrollments = data.alSafwaEnrollments ?? 0;
         }
 
         if (appointmentResult.status === "fulfilled" && appointmentResult.value.success) {
@@ -281,12 +286,14 @@ const Sidebar = ({
     window.addEventListener("jobApplicationsUpdated", handleCountsRefresh);
     window.addEventListener("appointmentsUpdated", handleCountsRefresh);
     window.addEventListener("feedbackUpdated", handleCountsRefresh);
+    window.addEventListener("alSafwaUpdated", handleCountsRefresh);
 
     return () => {
       window.clearInterval(interval);
       window.removeEventListener("jobApplicationsUpdated", handleCountsRefresh);
       window.removeEventListener("appointmentsUpdated", handleCountsRefresh);
       window.removeEventListener("feedbackUpdated", handleCountsRefresh);
+      window.removeEventListener("alSafwaUpdated", handleCountsRefresh);
     };
   }, [fetchSidebarCounts, location.pathname]);
 
@@ -466,6 +473,12 @@ const Sidebar = ({
       icon: Mail,
       label: "Enquiries",
       permissions: [PERMISSIONS.ENQUIRY_VIEW],
+    },
+    {
+      to: "/al-safwa-enrollments",
+      icon: Shield,
+      label: "Al Safwa Enrollments",
+      permissions: [PERMISSIONS.AL_SAFWA_VIEW],
     },
     {
       to: "/feedback",
