@@ -28,10 +28,9 @@ export const login = async (email: string, password: string) => {
 };
 
 export const getMe = async () => {
-
-  const response = await api.get(
-    "/api/v1/auth/me"
-  );
+  const response = await api.get("/api/v1/auth/me", {
+    withCredentials: true,
+  });
 
   return response.data;
 };
