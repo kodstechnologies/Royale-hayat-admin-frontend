@@ -24,8 +24,11 @@ jobs:
 
             git pull origin main
 
+            # Create .env from GitHub Secret
+            echo "${{ secrets.ENV_FILE }}" > .env
+
             npm install
 
-            NODE_OPTIONS="--max-old-space-size=2048" npm run build
+            NODE_OPTIONS="--max-old-space-size=4096" npm run build
 
             sudo systemctl reload nginx
