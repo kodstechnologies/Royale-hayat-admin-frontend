@@ -8,29 +8,21 @@ import BreadCrumb from "@/components/layout/BreadCrumb";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { adminDoctors } from "@/data/adminDoctors";
-import { adminDepartments } from "@/data/departments";
+import { getDepartments, mapApiDepartmentToListItem } from "@/api/department";
+import { getSubspecialities, mapApiSubspecialityToListItem } from "@/api/subspeciality";
+import {
+  editDoctor,
+  getDoctorById,
+  mapApiDoctorToFormValues,
+  type ApiDoctor,
+} from "@/api/doctors";
+import {
+  buildDoctorFormData,
+  DOCTOR_LIST_SEPARATOR as SEPARATOR,
+  type DeptSubspecialityOption,
+  type DoctorFormValues,
+} from "@/lib/doctorForm";
 
-type FormDataType = {
-  doctorId: string;
-  name: string;
-  title: string;
-  initials: string;
-  languages: string;
-  expertise: string;
-  qualifications: string;
-  arabicName: string;
-  arabicTitle: string;
-  arabicLanguages: string;
-  arabicExpertise: string;
-  arabicQualifications: string;
-  department: string;
-  subspecialityIds: string[];
-  availableOnline: boolean;
-  imageFile: File | null;
-};
-
-const SEPARATOR = "|||";
 
 const toItems = (value: string) => value.split(SEPARATOR).map((v) => v.trim()).filter(Boolean);
 const removeItem = (value: string, itemToRemove: string) =>
@@ -61,43 +53,6 @@ const toggleSubId = (id: string, current: string[]) => {
   return [...next];
 };
 
-const getStoredDoctors = () => {
-  const stored = localStorage.getItem('rhh_doctors');
-  if (stored) {
-    return JSON.parse(stored);
-  }
-  return [];
-};
-
-const saveDoctorsToStorage = (doctors: any[]) => {
-  localStorage.setItem('rhh_doctors', JSON.stringify(doctors));
-};
-
-const dummySubspecialities: Record<string, Array<{ _id: string; name: string; arabicName: string }>> = {
-  dept1: [
-    { _id: "sub1", name: "Interventional Cardiology", arabicName: "أمراض القلب التداخلية" },
-    { _id: "sub2", name: "Pediatric Cardiology", arabicName: "أمراض قلب الأطفال" },
-    { _id: "sub3", name: "Cardiac Electrophysiology", arabicName: "فيزيولوجيا القلب الكهربائية" },
-  ],
-  dept2: [
-    { _id: "sub4", name: "Neuro Surgery", arabicName: "جراحة الأعصاب" },
-    { _id: "sub5", name: "Pediatric Neurology", arabicName: "أعصاب الأطفال" },
-    { _id: "sub6", name: "Stroke Neurology", arabicName: "أمراض السكتة الدماغية" },
-  ],
-  dept3: [
-    { _id: "sub7", name: "Neonatology", arabicName: "حديثي الولادة" },
-    { _id: "sub8", name: "Pediatric Emergency", arabicName: "طوارئ الأطفال" },
-  ],
-  dept4: [
-    { _id: "sub9", name: "Sports Medicine", arabicName: "الطب الرياضي" },
-    { _id: "sub10", name: "Joint Replacement", arabicName: "استبدال المفاصل" },
-  ],
-  dept5: [
-    { _id: "sub11", name: "Cosmetic Dermatology", arabicName: "الأمراض الجلدية التجميلية" },
-    { _id: "sub12", name: "Pediatric Dermatology", arabicName: "الأمراض الجلدية للأطفال" },
-  ],
-};
-
 const EditDoctorPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -105,14 +60,14 @@ const EditDoctorPage = () => {
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState<"english" | "arabic">("english");
   const [departments, setDepartments] = useState<Array<{ _id: string; name: string; arabicName?: string }>>([]);
-  const [deptSubspecialities, setDeptSubspecialities] = useState<Array<{ _id: string; name: string; arabicName?: string }>>([]);
+  const [deptSubspecialities, setDeptSubspecialities] = useState<DeptSubspecialityOption[]>([]);
   const [deptSubsLoading, setDeptSubsLoading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState("");
   const [dragActive, setDragActive] = useState(false);
   const [languageInput, setLanguageInput] = useState("");
   const [arabicLanguageInput, setArabicLanguageInput] = useState("");
-  const [isUserDoctor, setIsUserDoctor] = useState(false);
-  const [initialValues, setInitialValues] = useState<FormDataType>({
+  const [existingImageUrl, setExistingImageUrl] = useState("");
+  const [initialValues, setInitialValues] = useState<DoctorFormValues>({
     doctorId: "",
     name: "",
     title: "",
@@ -132,85 +87,108 @@ const EditDoctorPage = () => {
   });
 
   useEffect(() => {
-    const deptOptions = adminDepartments.map(dept => ({
-      _id: dept.id,
-      name: dept.name,
-      arabicName: dept.nameAr
-    }));
-    setDepartments(deptOptions);
+    const loadDepartments = async () => {
+      try {
+        const res = await getDepartments({ page: 1, limit: 100, sortBy: "order", sortOrder: "asc" });
+        const list = Array.isArray(res.data?.data) ? res.data.data : [];
+        setDepartments(
+          list.map((row) => {
+            const mapped = mapApiDepartmentToListItem(row);
+            return { _id: mapped._id, name: mapped.name, arabicName: mapped.nameAr };
+          }),
+        );
+      } catch {
+        setDepartments([]);
+      }
+    };
+    void loadDepartments();
   }, []);
 
-  const loadDepartmentSubspecialities = useCallback((departmentId: string) => {
+  const loadDepartmentSubspecialities = useCallback(async (departmentId: string) => {
     if (!departmentId) {
       setDeptSubspecialities([]);
       return;
     }
     setDeptSubsLoading(true);
-    setTimeout(() => {
-      const subs = dummySubspecialities[departmentId] || [];
-      setDeptSubspecialities(subs.map(s => ({ ...s, arabicName: s.arabicName })));
+    try {
+      const res = await getSubspecialities({ department: departmentId, page: 1, limit: 100 });
+      const list = Array.isArray(res.data?.data) ? res.data.data : [];
+      setDeptSubspecialities(
+        list.map((row) => {
+          const mapped = mapApiSubspecialityToListItem(row);
+          return { _id: mapped.id, name: mapped.name, arabicName: mapped.arabicName };
+        }),
+      );
+    } catch {
+      setDeptSubspecialities([]);
+    } finally {
       setDeptSubsLoading(false);
-    }, 300);
+    }
   }, []);
 
   useEffect(() => {
-    const loadData = () => {
+    const loadData = async () => {
       if (!id) return;
       setLoading(true);
 
-      setTimeout(() => {
-        const userDoctors = getStoredDoctors();
-        let foundDoctor = userDoctors.find((doc: any) => doc.id === id);
-        let isUserCreated = true;
-        let originalImage = "";
+      try {
+        const response = await getDoctorById(id);
+        const raw = (response.data?.data ?? response.data) as ApiDoctor | undefined;
 
-        if (!foundDoctor) {
-          foundDoctor = adminDoctors.find(doc => doc.id === id);
-          isUserCreated = false;
-        }
-
-        if (foundDoctor) {
-          originalImage = foundDoctor.image || "";
-
-          const deptObj = departments.find(d => d.name === foundDoctor.department);
-          const deptId = deptObj?._id || "";
-
-          setInitialValues({
-            doctorId: foundDoctor.doctorId || "",
-            name: foundDoctor.name || "",
-            title: foundDoctor.title || "",
-            initials: foundDoctor.initials || "",
-            languages: (foundDoctor.languages || []).join(SEPARATOR),
-            expertise: (foundDoctor.expertise || []).join(SEPARATOR),
-            qualifications: (foundDoctor.qualifications || []).join(SEPARATOR),
-            arabicName: foundDoctor.arabicName || "",
-            arabicTitle: foundDoctor.arabicTitle || "",
-            arabicLanguages: (foundDoctor.arabicLanguages || []).join(SEPARATOR),
-            arabicExpertise: (foundDoctor.arabicExpertise || []).join(SEPARATOR),
-            arabicQualifications: (foundDoctor.arabicQualifications || []).join(SEPARATOR),
-            department: deptId,
-            subspecialityIds: foundDoctor.subspecialityIds || [],
-            availableOnline: foundDoctor.availableOnline !== undefined ? foundDoctor.availableOnline : true,
-            imageFile: null,
-          });
-          setPreviewUrl(originalImage);
-          setIsUserDoctor(isUserCreated);
-
-          if (deptId) {
-            loadDepartmentSubspecialities(deptId);
-          }
-        } else {
+        if (!raw || !raw._id) {
           toast.error("Doctor not found.");
           navigate("/doctors");
+          return;
         }
+
+        const deptId =
+          raw.department && typeof raw.department === "object"
+            ? String(raw.department._id ?? "")
+            : String(raw.department ?? "");
+
+        let subsForDept: Array<{ _id: string; name: string; arabicName: string }> = [];
+        if (deptId) {
+          const subRes = await getSubspecialities({ department: deptId, page: 1, limit: 100 });
+          const subList = Array.isArray(subRes.data?.data) ? subRes.data.data : [];
+          subsForDept = subList.map((row) => {
+            const mapped = mapApiSubspecialityToListItem(row);
+            return { _id: mapped.id, name: mapped.name, arabicName: mapped.arabicName };
+          });
+          setDeptSubspecialities(subsForDept);
+        }
+
+        const formValues = mapApiDoctorToFormValues(raw, subsForDept);
+        setInitialValues({
+          doctorId: formValues.doctorId,
+          name: formValues.name,
+          title: formValues.title,
+          initials: formValues.initials,
+          languages: formValues.languages,
+          expertise: formValues.expertise,
+          qualifications: formValues.qualifications,
+          arabicName: formValues.arabicName,
+          arabicTitle: formValues.arabicTitle,
+          arabicLanguages: formValues.arabicLanguages,
+          arabicExpertise: formValues.arabicExpertise,
+          arabicQualifications: formValues.arabicQualifications,
+          department: formValues.department,
+          subspecialityIds: formValues.subspecialityIds,
+          availableOnline: formValues.availableOnline,
+          imageFile: null,
+        });
+        setExistingImageUrl(formValues.imageUrl);
+        setPreviewUrl(formValues.imageUrl);
+      } catch (error: unknown) {
+        const err = error as { response?: { data?: { message?: string } } };
+        toast.error(err?.response?.data?.message || "Failed to load doctor");
+        navigate("/doctors");
+      } finally {
         setLoading(false);
-      }, 500);
+      }
     };
 
-    if (departments.length > 0) {
-      loadData();
-    }
-  }, [id, navigate, departments, loadDepartmentSubspecialities]);
+    void loadData();
+  }, [id, navigate, loadDepartmentSubspecialities]);
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
@@ -317,7 +295,7 @@ const EditDoctorPage = () => {
               enableReinitialize
               initialValues={initialValues}
               validate={(values) => {
-                const errors: Partial<Record<keyof FormDataType, string>> = {};
+                const errors: Partial<Record<keyof DoctorFormValues, string>> = {};
                 if (!values.doctorId.trim()) errors.doctorId = "Doctor ID is required";
                 if (!values.name.trim() && activeTab === "english") errors.name = "Name is required";
                 if (!values.arabicName.trim() && activeTab === "arabic") errors.arabicName = "Arabic Name is required";
@@ -328,56 +306,19 @@ const EditDoctorPage = () => {
                 if (!id) return;
                 setSaving(true);
 
-                setTimeout(() => {
-                  const selectedDept = departments.find(d => d._id === values.department);
-                  const updatedDoctor = {
-                    id: id,
-                    doctorId: values.doctorId.trim(),
-                    name: values.name.trim(),
-                    arabicName: values.arabicName.trim(),
-                    department: selectedDept?.name || values.department,
-                    departmentAr: selectedDept?.arabicName || values.department,
-                    title: values.title.trim(),
-                    arabicTitle: values.arabicTitle.trim(),
-                    initials: values.initials.trim().toUpperCase(),
-                    languages: toItems(values.languages),
-                    arabicLanguages: toItems(values.arabicLanguages),
-                    expertise: toItems(values.expertise),
-                    arabicExpertise: toItems(values.arabicExpertise),
-                    qualifications: toItems(values.qualifications),
-                    arabicQualifications: toItems(values.arabicQualifications),
-                    subspecialityIds: values.subspecialityIds,
-                    availableOnline: values.availableOnline,
-                    image: previewUrl,
-                    updatedAt: new Date().toISOString(),
-                  };
-
-                  if (isUserDoctor) {
-                    const userDoctors = getStoredDoctors();
-                    const updatedDoctors = userDoctors.map((doc: any) =>
-                      doc.id === id ? updatedDoctor : doc
-                    );
-                    saveDoctorsToStorage(updatedDoctors);
-                  } else {
-                    const userDoctors = getStoredDoctors();
-
-                    const existingIndex = userDoctors.findIndex((doc: any) => doc.doctorId === values.doctorId);
-
-                    if (existingIndex !== -1) {
-                      userDoctors[existingIndex] = { ...updatedDoctor, createdAt: userDoctors[existingIndex].createdAt };
-                      saveDoctorsToStorage(userDoctors);
-                    } else {
-                      updatedDoctor.createdAt = new Date().toISOString();
-                      saveDoctorsToStorage([updatedDoctor, ...userDoctors]);
-                    }
-                  }
-
-                  window.dispatchEvent(new Event("doctorsUpdated"));
-
-                  toast.success("Doctor updated successfully.", { position: "top-right" });
-                  setSaving(false);
+                try {
+                  const formData = buildDoctorFormData(values, deptSubspecialities, {
+                    existingImageUrl: values.imageFile ? undefined : existingImageUrl,
+                  });
+                  await editDoctor(id, formData);
+                  toast.success("Doctor updated successfully");
                   navigate("/doctors");
-                }, 1000);
+                } catch (error: unknown) {
+                  const err = error as { response?: { data?: { message?: string } } };
+                  toast.error(err?.response?.data?.message || "Failed to update doctor");
+                } finally {
+                  setSaving(false);
+                }
               }}
             >
               {({ values, setFieldValue }) => (

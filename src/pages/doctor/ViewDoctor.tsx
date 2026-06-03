@@ -6,65 +6,20 @@ import {
   User,
   XCircle,
   Globe,
-  Award,
   Brain,
   Languages,
   GraduationCap,
-  Mail,
-  Phone,
-  Calendar,
-  Clock,
-  CheckCircle,
-  BadgeCheck,
-  Star,
   Pencil,
-  ArrowLeft
+  ArrowLeft,
+  BadgeCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { adminDoctors, AdminDoctor } from "@/data/adminDoctors";
-import { adminDepartments } from "@/data/departments";
-
-type DoctorViewData = {
-  doctorId?: string;
-  name?: string;
-  arabicName?: string;
-  specialty?: string;
-  department?: string;
-  departmentAr?: string;
-  title?: string;
-  arabicTitle?: string;
-  bio?: string;
-  arabicBio?: string;
-  qualifications?: string[];
-  arabicQualifications?: string[];
-  expertise?: string[];
-  arabicExpertise?: string[];
-  languages?: string[];
-  arabicLanguages?: string[];
-  initials?: string;
-  availableOnline?: boolean;
-  image?: string;
-  isActive?: boolean;
-  email?: string;
-  phone?: string;
-  experience?: number;
-  consultationFee?: number;
-  availableDays?: string[];
-  availableTime?: string;
-  rating?: number;
-  totalPatients?: number;
-};
-
-const loadUserDoctors = () => {
-  const stored = localStorage.getItem("rhh_doctors");
-  if (stored) {
-    return JSON.parse(stored);
-  }
-  return [];
-};
+import { toast } from "sonner";
+import { getDoctorById, mapApiDoctorToView, type DoctorViewData } from "@/api/doctors";
+import type { ApiDoctor } from "@/api/doctors";
 
 const ViewDoctor = () => {
-  const { id } = useParams();
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [doctor, setDoctor] = useState<DoctorViewData | null>(null);
   const [loading, setLoading] = useState(false);
@@ -74,60 +29,36 @@ const ViewDoctor = () => {
   useEffect(() => {
     if (!id) return;
 
-    setLoading(true);
-    setError("");
+    const loadDoctor = async () => {
+      setLoading(true);
+      setError("");
 
-    setTimeout(() => {
-      const userDoctors = loadUserDoctors();
-      let foundDoctor = userDoctors.find((doc: any) => doc.id === id);
-      let isUserDoctor = true;
+      try {
+        const response = await getDoctorById(id);
+        const raw = (response.data?.data ?? response.data) as ApiDoctor | undefined;
 
-      if (!foundDoctor) {
-        foundDoctor = adminDoctors.find(doc => doc.id === id);
-        isUserDoctor = false;
+        if (raw && raw._id) {
+          setDoctor(mapApiDoctorToView(raw));
+        } else {
+          setError("Doctor not found.");
+        }
+      } catch (err: unknown) {
+        const apiErr = err as { response?: { data?: { message?: string } } };
+        setError(apiErr?.response?.data?.message || "Failed to load doctor.");
+        toast.error(apiErr?.response?.data?.message || "Failed to load doctor");
+      } finally {
+        setLoading(false);
       }
+    };
 
-      if (foundDoctor) {
-        setDoctor({
-          doctorId: foundDoctor.doctorId,
-          name: foundDoctor.name,
-          arabicName: foundDoctor.arabicName,
-          department: isUserDoctor ? foundDoctor.departmentName || foundDoctor.department : foundDoctor.department,
-          departmentAr: isUserDoctor ? foundDoctor.departmentAr || foundDoctor.department : foundDoctor.departmentAr,
-          title: foundDoctor.title,
-          arabicTitle: foundDoctor.arabicTitle,
-          qualifications: foundDoctor.qualifications,
-          arabicQualifications: foundDoctor.arabicQualifications,
-          expertise: foundDoctor.expertise,
-          arabicExpertise: foundDoctor.arabicExpertise,
-          languages: foundDoctor.languages,
-          arabicLanguages: foundDoctor.arabicLanguages,
-          initials: foundDoctor.initials,
-          availableOnline: foundDoctor.availableOnline !== undefined ? foundDoctor.availableOnline : true,
-          image: foundDoctor.image,
-          isActive: true,
-          email: `${foundDoctor.name.toLowerCase().replace(/\s/g, '.')}@royalehayat.com`,
-          phone: "+965 1234 5678",
-          experience: Math.floor(Math.random() * 20) + 5,
-          consultationFee: 50,
-          availableDays: ["Monday", "Wednesday", "Friday"],
-          availableTime: "9:00 AM - 5:00 PM",
-          totalPatients: Math.floor(Math.random() * 500) + 100,
-        });
-      } else {
-        setError("Doctor not found.");
-      }
-      setLoading(false);
-    }, 500);
+    void loadDoctor();
   }, [id]);
 
   const getDepartmentName = () => {
     if (!doctor?.department) return "-";
-    if (activeLanguage === "english") {
-      return doctor.department;
-    } else {
-      return doctor.departmentAr || doctor.department;
-    }
+    return activeLanguage === "english"
+      ? doctor.department
+      : doctor.departmentAr || doctor.department;
   };
 
   if (loading) {
@@ -150,15 +81,9 @@ const ViewDoctor = () => {
           <BreadCrumb />
           <div className="flex items-center justify-center min-h-[400px]">
             <div className="text-center">
-              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <XCircle className="w-8 h-8 text-red-600" />
-              </div>
+              <XCircle className="w-8 h-8 text-red-600 mx-auto mb-4" />
               <p className="text-sm text-red-600">{error}</p>
-              <Button
-                onClick={() => navigate("/doctors")}
-                className="mt-4 gap-2"
-                variant="outline"
-              >
+              <Button onClick={() => navigate("/doctors")} className="mt-4" variant="outline">
                 Back to Doctors
               </Button>
             </div>
@@ -174,19 +99,7 @@ const ViewDoctor = () => {
         <div className="space-y-6">
           <BreadCrumb />
           <div className="flex items-center justify-center min-h-[400px]">
-            <div className="text-center">
-              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <User className="w-8 h-8 text-gray-400" />
-              </div>
-              <p className="text-sm text-muted-foreground">Doctor not found.</p>
-              <Button
-                onClick={() => navigate("/doctors")}
-                className="mt-4 gap-2"
-                variant="outline"
-              >
-                Back to Doctors
-              </Button>
-            </div>
+            <p className="text-sm text-muted-foreground">Doctor not found.</p>
           </div>
         </div>
       </AdminLayout>
@@ -198,78 +111,73 @@ const ViewDoctor = () => {
       <div className="space-y-4 sm:space-y-6">
         <BreadCrumb />
 
-        
         <div className="rounded-xl border-2 border-burgundy/30 bg-gradient-to-br from-white via-slate-50/90 to-white shadow-xl backdrop-blur-sm overflow-hidden">
           <div className="h-1 bg-gradient-to-r from-burgundy/40 via-burgundy to-burgundy/40"></div>
 
           <div className="p-4 sm:p-6">
-            
             <div className="flex flex-col gap-3 mb-4 sm:mb-6">
               <button
                 type="button"
                 onClick={() => navigate("/doctors")}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-100 transition-all duration-200 group self-start"
+                className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-100 transition-all self-start"
               >
-                <ArrowLeft className="h-4 w-4 text-slate-500 group-hover:text-burgundy shrink-0" />
-                <span className="text-sm text-slate-600 group-hover:text-burgundy">Back to Doctors</span>
+                <ArrowLeft className="h-4 w-4 text-slate-500" />
+                <span className="text-sm text-slate-600">Back to Doctors</span>
               </button>
 
               <div className="flex gap-2 p-1 bg-slate-100/80 rounded-lg w-full sm:w-auto">
                 <button
                   type="button"
                   onClick={() => setActiveLanguage("english")}
-                  className={`
-                    flex-1 sm:flex-none flex items-center justify-center gap-2 px-3 sm:px-4 py-1.5 rounded-md text-sm font-medium transition-all duration-200
-                    ${activeLanguage === "english"
-                      ? "bg-white text-burgundy shadow-sm"
-                      : "text-slate-600 hover:text-slate-800 hover:bg-white/50"
-                    }
-                  `}
+                  className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium ${
+                    activeLanguage === "english" ? "bg-white text-burgundy shadow-sm" : ""
+                  }`}
                 >
-                  <Globe className="h-3.5 w-3.5 shrink-0" />
+                  <Globe className="h-3.5 w-3.5" />
                   English
                 </button>
                 <button
                   type="button"
                   onClick={() => setActiveLanguage("arabic")}
-                  className={`
-                    flex-1 sm:flex-none flex items-center justify-center gap-2 px-3 sm:px-4 py-1.5 rounded-md text-sm font-medium transition-all duration-200
-                    ${activeLanguage === "arabic"
-                      ? "bg-white text-burgundy shadow-sm"
-                      : "text-slate-600 hover:text-slate-800 hover:bg-white/50"
-                    }
-                  `}
+                  className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium ${
+                    activeLanguage === "arabic" ? "bg-white text-burgundy shadow-sm" : ""
+                  }`}
                 >
-                  <Languages className="h-3.5 w-3.5 shrink-0" />
+                  <Languages className="h-3.5 w-3.5" />
                   العربية
                 </button>
               </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-[340px_1fr] gap-4 sm:gap-6">
-              
               <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm lg:sticky lg:top-6 h-fit">
                 <div className="relative p-4 sm:p-6">
-                  <div className="relative">
-                    <div className="rounded-xl overflow-hidden bg-gradient-to-br from-burgundy/5 to-slate-100">
-                      {doctor.image ? (
-                        <img
-                          src={doctor.image}
-                          alt={activeLanguage === "english" ? doctor.name : doctor.arabicName}
-                          className="w-full h-56 sm:h-80 object-contain"
-                        />
-                      ) : (
-                        <div className="h-56 sm:h-80 flex items-center justify-center">
-                          <div className="w-32 h-32 rounded-full bg-burgundy/10 flex items-center justify-center">
-                            <User size={56} className="text-burgundy/60" />
-                          </div>
-                        </div>
-                      )}
-                    </div>
+                  <div className="rounded-xl overflow-hidden bg-gradient-to-br from-burgundy/5 to-slate-100">
+                    {doctor.image ? (
+                      <img
+                        src={doctor.image}
+                        alt={activeLanguage === "english" ? doctor.name : doctor.arabicName}
+                        className="w-full h-56 sm:h-80 object-contain"
+                      />
+                    ) : (
+                      <div className="h-56 sm:h-80 flex items-center justify-center">
+                        <User size={56} className="text-burgundy/60" />
+                      </div>
+                    )}
+                  </div>
 
-                    <div className={`absolute top-6 right-6 px-3 py-1.5 rounded-full text-xs font-medium shadow-lg bg-green-500 text-white`}>
-                      {activeLanguage === "english" ? "Active" : "نشط"}
-                    </div>
+                  <div
+                    className={`absolute top-6 right-6 px-3 py-1.5 rounded-full text-xs font-medium shadow-lg ${
+                      doctor.isActive ? "bg-green-500 text-white" : "bg-gray-500 text-white"
+                    }`}
+                  >
+                    {activeLanguage === "english"
+                      ? doctor.isActive
+                        ? "Active"
+                        : "Inactive"
+                      : doctor.isActive
+                        ? "نشط"
+                        : "غير نشط"}
                   </div>
 
                   <div className={`text-center mt-4 ${activeLanguage === "arabic" ? "rtl-text" : ""}`}>
@@ -279,53 +187,49 @@ const ViewDoctor = () => {
                     <p className="text-sm text-slate-500">
                       {activeLanguage === "english" ? doctor.title : doctor.arabicTitle}
                     </p>
-
-                    {(doctor.rating || doctor.totalPatients) && (
-                      <div className="flex items-center justify-center gap-3 mt-3">
-                        {doctor.rating && (
-                          <div className="flex items-center gap-1">
-                            <Star size={14} className="text-amber-500 fill-amber-500" />
-                            <span className="text-sm font-medium text-slate-700">{doctor.rating}</span>
-                          </div>
-                        )}
-
-                      </div>
-                    )}
                   </div>
 
                   <div className={`mt-6 space-y-3 text-sm ${activeLanguage === "arabic" ? "rtl-text" : ""}`}>
-                    <div className="flex flex-col gap-0.5 sm:flex-row sm:justify-between sm:items-center py-2 border-b border-slate-100">
-                      <span className="text-slate-500">{activeLanguage === "english" ? "Doctor ID" : "معرف الطبيب"}</span>
-                      <span className="font-mono text-xs text-slate-700 break-all">{doctor.doctorId || "-"}</span>
+                    <div className="flex flex-col gap-0.5 py-2 border-b border-slate-100">
+                      <span className="text-slate-500">
+                        {activeLanguage === "english" ? "Doctor ID" : "معرف الطبيب"}
+                      </span>
+                      <span className="font-mono text-xs text-slate-700 break-all">
+                        {doctor.doctorId || "-"}
+                      </span>
                     </div>
-                    <div className="flex flex-col gap-0.5 sm:flex-row sm:justify-between sm:items-center py-2 border-b border-slate-100">
-                      <span className="text-slate-500">{activeLanguage === "english" ? "Department" : "القسم"}</span>
-                      <span className="font-medium text-slate-700 text-right sm:text-left">{getDepartmentName()}</span>
+                    <div className="flex flex-col gap-0.5 py-2 border-b border-slate-100">
+                      <span className="text-slate-500">
+                        {activeLanguage === "english" ? "Department" : "القسم"}
+                      </span>
+                      <span className="font-medium text-slate-700">{getDepartmentName()}</span>
                     </div>
-
                   </div>
 
                   <div className="mt-6 pt-2">
-                    <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium ${doctor.availableOnline ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"}`}>
+                    <div
+                      className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium ${
+                        doctor.availableOnline
+                          ? "bg-green-100 text-green-700"
+                          : "bg-gray-100 text-gray-600"
+                      }`}
+                    >
                       <Globe size={12} />
                       {doctor.availableOnline
-                        ? (activeLanguage === "english"
+                        ? activeLanguage === "english"
                           ? "Available for Online Booking"
-                          : "متاح للحجز عبر الإنترنت")
-                        : (activeLanguage === "english"
+                          : "متاح للحجز عبر الإنترنت"
+                        : activeLanguage === "english"
                           ? "Not Available for Online Consultation"
-                          : "غير متاح للاستشارة عبر الإنترنت")}
+                          : "غير متاح للاستشارة عبر الإنترنت"}
                     </div>
                   </div>
-
                 </div>
               </div>
 
-              
               <div className={`space-y-5 ${activeLanguage === "arabic" ? "rtl-text" : ""}`}>
-                
-                {doctor.qualifications && doctor.qualifications.length > 0 && (
-                  <div className="bg-white rounded-xl border border-slate-200 p-4 sm:p-5 shadow-sm hover:shadow-md transition-shadow">
+                {doctor.qualifications.length > 0 && (
+                  <div className="bg-white rounded-xl border border-slate-200 p-4 sm:p-5 shadow-sm">
                     <div className="flex items-center gap-2 mb-4">
                       <GraduationCap size={18} className="text-burgundy shrink-0" />
                       <h3 className="text-md font-semibold text-slate-800">
@@ -333,7 +237,10 @@ const ViewDoctor = () => {
                       </h3>
                     </div>
                     <div className="space-y-2.5">
-                      {(activeLanguage === "english" ? doctor.qualifications : doctor.arabicQualifications || doctor.qualifications)?.map((item, idx) => (
+                      {(activeLanguage === "english"
+                        ? doctor.qualifications
+                        : doctor.arabicQualifications
+                      ).map((item, idx) => (
                         <div key={idx} className="flex items-start gap-2">
                           <BadgeCheck size={16} className="text-burgundy mt-0.5 flex-shrink-0" />
                           <span className="text-sm text-slate-600">{item}</span>
@@ -343,9 +250,8 @@ const ViewDoctor = () => {
                   </div>
                 )}
 
-                
-                {doctor.expertise && doctor.expertise.length > 0 && (
-                  <div className="bg-white rounded-xl border border-slate-200 p-4 sm:p-5 shadow-sm hover:shadow-md transition-shadow">
+                {doctor.expertise.length > 0 && (
+                  <div className="bg-white rounded-xl border border-slate-200 p-4 sm:p-5 shadow-sm">
                     <div className="flex items-center gap-2 mb-4">
                       <Brain size={18} className="text-burgundy shrink-0" />
                       <h3 className="text-md font-semibold text-slate-800">
@@ -353,27 +259,47 @@ const ViewDoctor = () => {
                       </h3>
                     </div>
                     <ul className="list-disc list-outside pl-5 space-y-1.5 marker:text-burgundy">
-                      {(activeLanguage === "english" ? doctor.expertise : doctor.arabicExpertise || doctor.expertise)?.map((item, idx) => (
-                        <li key={idx} className="text-sm text-slate-600">
-                          {item}
-                        </li>
-                      ))}
+                      {(activeLanguage === "english" ? doctor.expertise : doctor.arabicExpertise).map(
+                        (item, idx) => (
+                          <li key={idx} className="text-sm text-slate-600">
+                            {item}
+                          </li>
+                        ),
+                      )}
                     </ul>
                   </div>
                 )}
 
-                
+                {doctor.languages.length > 0 && (
+                  <div className="bg-white rounded-xl border border-slate-200 p-4 sm:p-5 shadow-sm">
+                    <div className="flex items-center gap-2 mb-4">
+                      <Languages size={18} className="text-burgundy shrink-0" />
+                      <h3 className="text-md font-semibold text-slate-800">
+                        {activeLanguage === "english" ? "Languages" : "اللغات"}
+                      </h3>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {(activeLanguage === "english" ? doctor.languages : doctor.arabicLanguages).map(
+                        (lang) => (
+                          <span
+                            key={lang}
+                            className="px-2 py-1 rounded-full text-xs bg-burgundy/10 text-burgundy"
+                          >
+                            {lang}
+                          </span>
+                        ),
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 <div className="flex flex-col-reverse sm:flex-row gap-3 pt-2">
-                  <Button
-                    onClick={() => navigate("/doctors")}
-                    variant="outline"
-                    className="w-full sm:flex-1"
-                  >
+                  <Button onClick={() => navigate("/doctors")} variant="outline" className="w-full sm:flex-1">
                     {activeLanguage === "english" ? "View All Doctors" : "عرض جميع الأطباء"}
                   </Button>
                   <Button
                     onClick={() => navigate(`/doctors/edit/${id}`)}
-                    className="w-full sm:flex-1 gap-2 bg-burgundy hover:bg-burgundy/90 shadow-sm"
+                    className="w-full sm:flex-1 gap-2 bg-burgundy hover:bg-burgundy/90"
                   >
                     <Pencil className="h-4 w-4" />
                     {activeLanguage === "english" ? "Edit Doctor" : "تعديل الطبيب"}
@@ -385,7 +311,6 @@ const ViewDoctor = () => {
         </div>
       </div>
 
-      
       <style>{`
         .rtl-text {
           direction: rtl;

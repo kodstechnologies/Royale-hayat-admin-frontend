@@ -18,11 +18,63 @@ export type Subspeciality = {
   name: string;
   arabicName: string;
   description: string;
-  arabicDescription: string
+  arabicDescription: string;
+  department?: string | { _id?: string; name?: string; arabicName?: string };
   createdAt?: string;
   updatedAt?: string;
   customSubspecialities?: CustomSubspecialityDoc[];
 };
+
+export type SubspecialityListItem = {
+  id: string;
+  name: string;
+  arabicName: string;
+  description: string;
+  arabicDescription: string;
+  departmentId: string;
+  departmentName: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type SubspecialityDetail = SubspecialityListItem & {
+  customSubspecialities: CustomSubspecialityDoc[];
+};
+
+const resolveDepartment = (department: Subspeciality["department"]) => {
+  if (department && typeof department === "object") {
+    return {
+      departmentId: String(department._id ?? ""),
+      departmentName: String(department.name ?? department.arabicName ?? ""),
+    };
+  }
+  if (typeof department === "string" && department.trim()) {
+    return { departmentId: department.trim(), departmentName: "" };
+  }
+  return { departmentId: "", departmentName: "" };
+};
+
+export const mapApiSubspecialityToListItem = (row: Subspeciality): SubspecialityListItem => {
+  const dept = resolveDepartment(row.department);
+  return {
+    id: String(row._id ?? ""),
+    name: String(row.name ?? ""),
+    arabicName: String(row.arabicName ?? ""),
+    description: String(row.description ?? ""),
+    arabicDescription: String(row.arabicDescription ?? ""),
+    departmentId: dept.departmentId,
+    departmentName: dept.departmentName,
+    createdAt: String(row.createdAt ?? ""),
+    updatedAt: String(row.updatedAt ?? ""),
+  };
+};
+
+export const mapApiSubspecialityToDetail = (row: Subspeciality): SubspecialityDetail => ({
+  ...mapApiSubspecialityToListItem(row),
+  customSubspecialities: Array.isArray(row.customSubspecialities)
+    ? row.customSubspecialities
+    : [],
+});
 
 export type CustomSubspecialityInput = {
   subHeading?: string;
@@ -56,7 +108,8 @@ export type ListSubspecialitiesParams = {
   page?: number;
   limit?: number;
   search?: string;
-  sortBy?: "name" | "createdAt" | "updatedAt";
+  department?: string;
+  sortBy?: "name" | "arabicName" | "createdAt" | "updatedAt";
   sortOrder?: "asc" | "desc";
 };
 

@@ -8,29 +8,18 @@ import BreadCrumb from "@/components/layout/BreadCrumb";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { adminDepartments } from "@/data/departments";
-import { getSubspecialitiesByDepartmentId } from "@/data/subspeciality";
+import { getDepartments, mapApiDepartmentToListItem } from "@/api/department";
+import { getSubspecialities, mapApiSubspecialityToListItem } from "@/api/subspeciality";
+import { createDoctor } from "@/api/doctors";
+import {
+  buildDoctorFormData,
+  DOCTOR_LIST_SEPARATOR as SEPARATOR,
+  toItems,
+  type DeptSubspecialityOption,
+  type DoctorFormValues,
+} from "@/lib/doctorForm";
 
-type FormDataType = {
-  doctorId: string;
-  name: string;
-  title: string;
-  initials: string;
-  languages: string;
-  expertise: string;
-  qualifications: string;
-  arabicName: string;
-  arabicTitle: string;
-  arabicLanguages: string;
-  arabicExpertise: string;
-  arabicQualifications: string;
-  department: string;
-  subspecialityIds: string[];
-  availableOnline: boolean;
-  imageFile: File | null;
-};
-
-const initialValues: FormDataType = {
+const initialValues: DoctorFormValues = {
   doctorId: "",
   name: "",
   title: "",
@@ -49,21 +38,6 @@ const initialValues: FormDataType = {
   imageFile: null,
 };
 
-const loadUserDoctors = () => {
-  const stored = localStorage.getItem("rhh_doctors");
-  if (stored) {
-    return JSON.parse(stored);
-  }
-  return [];
-};
-
-const saveUserDoctors = (doctors: any[]) => {
-  localStorage.setItem("rhh_doctors", JSON.stringify(doctors));
-};
-
-const SEPARATOR = "|||";
-
-const toItems = (value: string) => value.split(SEPARATOR).map((v) => v.trim()).filter(Boolean);
 const removeItem = (value: string, itemToRemove: string) =>
   toItems(value)
     .filter((item) => item !== itemToRemove)
@@ -97,43 +71,47 @@ const CreateDoctorPage = () => {
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState<"english" | "arabic">("english");
   const [departments, setDepartments] = useState<Array<{ _id: string; name: string; arabicName: string }>>([]);
-  const [deptSubspecialities, setDeptSubspecialities] = useState<Array<{ _id: string; name: string; arabicName: string }>>([]);
+  const [deptSubspecialities, setDeptSubspecialities] = useState<DeptSubspecialityOption[]>([]);
   const [previewUrl, setPreviewUrl] = useState("");
   const [dragActive, setDragActive] = useState(false);
   const [languageInput, setLanguageInput] = useState("");
   const [arabicLanguageInput, setArabicLanguageInput] = useState("");
 
   useEffect(() => {
-    const deptOptions = adminDepartments.map(dept => ({
-      _id: dept.id,
-      name: dept.name,
-      arabicName: dept.nameAr
-    }));
-    setDepartments(deptOptions);
+    const loadDepartments = async () => {
+      try {
+        const res = await getDepartments({ page: 1, limit: 100, sortBy: "order", sortOrder: "asc" });
+        const list = Array.isArray(res.data?.data) ? res.data.data : [];
+        setDepartments(
+          list.map((row) => {
+            const mapped = mapApiDepartmentToListItem(row);
+            return { _id: mapped._id, name: mapped.name, arabicName: mapped.nameAr };
+          }),
+        );
+      } catch {
+        setDepartments([]);
+      }
+    };
+    void loadDepartments();
   }, []);
 
-  const loadDepartmentSubspecialities = useCallback((departmentId: string) => {
+  const loadDepartmentSubspecialities = useCallback(async (departmentId: string) => {
     if (!departmentId) {
       setDeptSubspecialities([]);
       return;
     }
-    const staticSubs = getSubspecialitiesByDepartmentId(departmentId).map((sub) => ({
-      _id: sub.id,
-      name: sub.name,
-      arabicName: sub.nameAr,
-    }));
-
-    const stored = localStorage.getItem("rhh_subspecialities");
-    const userSubs: Array<{ _id: string; name: string; arabicName: string }> = stored
-      ? (JSON.parse(stored) as any[])
-        .filter((s: any) => s.departmentId === departmentId)
-        .map((s: any) => ({ _id: s.id, name: s.name, arabicName: s.arabicName }))
-      : [];
-
-    const staticIds = new Set(staticSubs.map((s) => s._id));
-    const merged = [...staticSubs, ...userSubs.filter((s) => !staticIds.has(s._id))];
-
-    setDeptSubspecialities(merged);
+    try {
+      const res = await getSubspecialities({ department: departmentId, page: 1, limit: 100 });
+      const list = Array.isArray(res.data?.data) ? res.data.data : [];
+      setDeptSubspecialities(
+        list.map((row) => {
+          const mapped = mapApiSubspecialityToListItem(row);
+          return { _id: mapped.id, name: mapped.name, arabicName: mapped.arabicName };
+        }),
+      );
+    } catch {
+      setDeptSubspecialities([]);
+    }
   }, []);
 
   const handleDrag = (e: React.DragEvent) => {
@@ -167,7 +145,7 @@ const CreateDoctorPage = () => {
     return activeTab === "arabic" ? dept.arabicName : dept.name;
   };
 
-  const handleSubmit = async (values: FormDataType) => {
+  const handleSubmit = async (values: DoctorFormValues) => {
     if (!values.doctorId.trim()) {
       toast.error("Doctor ID is required");
       return;
@@ -187,43 +165,17 @@ const CreateDoctorPage = () => {
 
     setSaving(true);
 
-    setTimeout(() => {
-      const newDoctor = {
-        id: Date.now().toString(),
-        doctorId: values.doctorId.trim(),
-        name: values.name.trim(),
-        arabicName: values.arabicName.trim(),
-        department: values.department,
-        departmentName: departments.find(d => d._id === values.department)?.name || values.department,
-        departmentAr: departments.find(d => d._id === values.department)?.arabicName || values.department,
-        subspecialityIds: values.subspecialityIds,
-        availableOnline: values.availableOnline,
-        title: values.title,
-        initials: values.initials,
-        languages: toItems(values.languages),
-        expertise: toItems(values.expertise),
-        qualifications: toItems(values.qualifications),
-        arabicTitle: values.arabicTitle,
-        arabicLanguages: toItems(values.arabicLanguages),
-        arabicExpertise: toItems(values.arabicExpertise),
-        arabicQualifications: toItems(values.arabicQualifications),
-        image: values.imageFile ? previewUrl : null,
-        isActive: true,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-
-      const existingDoctors = loadUserDoctors();
-      const updatedDoctors = [newDoctor, ...existingDoctors];
-      saveUserDoctors(updatedDoctors);
-
-      window.dispatchEvent(new Event("doctorsUpdated"));
-
-      console.log("Doctor created:", newDoctor);
+    try {
+      const formData = buildDoctorFormData(values, deptSubspecialities);
+      await createDoctor(formData);
       toast.success("Doctor created successfully");
-      setSaving(false);
       navigate("/doctors");
-    }, 1000);
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } } };
+      toast.error(err?.response?.data?.message || "Failed to create doctor");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -289,7 +241,7 @@ const CreateDoctorPage = () => {
             <Formik
               initialValues={initialValues}
               validate={(values) => {
-                const errors: Partial<Record<keyof FormDataType, string>> = {};
+                const errors: Partial<Record<keyof DoctorFormValues, string>> = {};
                 if (!values.doctorId.trim()) errors.doctorId = "Doctor ID is required";
                 if (!values.name.trim() && activeTab === "english") errors.name = "Name is required";
                 if (!values.arabicName.trim() && activeTab === "arabic") errors.arabicName = "Arabic Name is required";
