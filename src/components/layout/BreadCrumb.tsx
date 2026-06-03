@@ -3,6 +3,7 @@ import {
   FolderOpen,
   LayoutDashboard,
   CalendarCheck,
+  CalendarHeart,
   ClipboardList,
   Globe,
   Shield,
@@ -39,6 +40,7 @@ const pageMap: Record<string, { label: string; icon: any; description?: string }
   "/medical-record":            { label: "Medical Records Requests", icon: ClipboardList, description: "Handle medical record access requests" },
   "/international-patients":    { label: "International Patients",   icon: Globe, description: "Manage international patient inquiries and records" },
   "/al-safwa-enrollments":      { label: "Al Safwa Enrollments",     icon: Shield, description: "Process and manage Al Safwa program enrollments" },
+  "/event-bookings":            { label: "Event Bookings",           icon: CalendarHeart, description: "Manage hospitality event booking requests" },
   "/enquiries":                 { label: "Enquiries",                icon: Mail, description: "View and respond to patient enquiries" },
   "/job-applications":          { label: "Job Applications",         icon: UserCheck, description: "Review and manage job applications" },
   "/feedback":                  { label: "Feedback & Reviews",       icon: MessageSquare, description: "Monitor patient feedback and reviews" },
@@ -63,6 +65,7 @@ const pageMap: Record<string, { label: string; icon: any; description?: string }
 
 const nestedDescriptions: Record<string, string> = {
   "/medical-record/view": "View medical record request details",
+  "/event-bookings/view": "View event booking details",
   "/enquiries/view": "View enquiry details",
   "/doctors/edit": "Update doctor information",
   "/categories/create": "Add new category",
@@ -190,6 +193,7 @@ const BreadCrumb = ({ lastCrumbLabel }: { lastCrumbLabel?: string } = {}) => {
         "csr": "Details",
         "leadership": "Details",
         "work-culture": "Details",
+        "event-bookings": "Details",
       };
       return contextLabels[parentSegment ?? ""] ?? "Details";
     }
@@ -201,6 +205,7 @@ const BreadCrumb = ({ lastCrumbLabel }: { lastCrumbLabel?: string } = {}) => {
       "medical-record": "Medical Records Requests",
       "international-patients": "International Patients",
       "al-safwa-enrollments": "Al Safwa Enrollments",
+      "event-bookings": "Event Bookings",
       "job-applications": "Job Applications",
       "job-posts": "Job Posts",
       "jobs": "Job Posts",

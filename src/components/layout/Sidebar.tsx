@@ -2,6 +2,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
   CalendarCheck,
+  CalendarHeart,
   Globe,
   MessageSquare,
   Stethoscope,
@@ -45,6 +46,7 @@ type SidebarBadgeCounts = {
   feedback: number;
   alSafwaEnrollments: number;
   internationalPatientEnquiries: number;
+  eventBookings: number;
 };
 
 const getBadgeCountForRoute = (to: string, counts: SidebarBadgeCounts | null): number => {
@@ -65,6 +67,8 @@ const getBadgeCountForRoute = (to: string, counts: SidebarBadgeCounts | null): n
       return counts.alSafwaEnrollments;
     case "/international-patients":
       return counts.internationalPatientEnquiries;
+    case "/event-bookings":
+      return counts.eventBookings;
     default:
       return 0;
   }
@@ -254,6 +258,7 @@ const Sidebar = ({
           feedback: prev?.feedback ?? 0,
           alSafwaEnrollments: prev?.alSafwaEnrollments ?? 0,
           internationalPatientEnquiries: prev?.internationalPatientEnquiries ?? 0,
+          eventBookings: prev?.eventBookings ?? 0,
         };
 
         if (sidebarResult.status === "fulfilled" && sidebarResult.value.success) {
@@ -263,6 +268,7 @@ const Sidebar = ({
           next.enquiries = data.enquiries;
           next.alSafwaEnrollments = data.alSafwaEnrollments ?? 0;
           next.internationalPatientEnquiries = data.internationalPatientEnquiries ?? 0;
+          next.eventBookings = data.eventBookings ?? 0;
         }
 
         if (appointmentResult.status === "fulfilled" && appointmentResult.value.success) {
@@ -292,6 +298,7 @@ const Sidebar = ({
     window.addEventListener("feedbackUpdated", handleCountsRefresh);
     window.addEventListener("alSafwaUpdated", handleCountsRefresh);
     window.addEventListener("internationalPatientUpdated", handleCountsRefresh);
+    window.addEventListener("eventBookingsUpdated", handleCountsRefresh);
 
     return () => {
       window.clearInterval(interval);
@@ -300,6 +307,7 @@ const Sidebar = ({
       window.removeEventListener("feedbackUpdated", handleCountsRefresh);
       window.removeEventListener("alSafwaUpdated", handleCountsRefresh);
       window.removeEventListener("internationalPatientUpdated", handleCountsRefresh);
+      window.removeEventListener("eventBookingsUpdated", handleCountsRefresh);
     };
   }, [fetchSidebarCounts, location.pathname]);
 
@@ -481,6 +489,12 @@ const Sidebar = ({
       icon: Shield,
       label: "Al Safwa Enrollments",
       permissions: [PERMISSIONS.AL_SAFWA_VIEW],
+    },
+    {
+      to: "/event-bookings",
+      icon: CalendarHeart,
+      label: "Event Bookings",
+      permissions: [PERMISSIONS.EVENT_VIEW],
     },
     {
       to: "/international-patients",

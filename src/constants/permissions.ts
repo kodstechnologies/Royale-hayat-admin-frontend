@@ -93,4 +93,7 @@ export const PERMISSIONS = {
     INTERNATIONAL_PATIENT_CREATE: 'international.patient.create',
     INTERNATIONAL_PATIENT_UPDATE: 'international.patient.update',
     INTERNATIONAL_PATIENT_DELETE: 'international.patient.delete',
+
+    EVENT_VIEW: 'event.view',
+    EVENT_DELETE: 'event.delete',
   };

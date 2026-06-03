@@ -108,22 +108,12 @@ const PERMISSION_GROUP_DEFS: {
   {
     id: "al-safwa",
     title: "Al Safwa Enrollments",
-    permissionKeys: [
-      "AL_SAFWA_VIEW",
-      "AL_SAFWA_CREATE",
-      "AL_SAFWA_UPDATE",
-      "AL_SAFWA_DELETE",
-    ],
+    permissionKeys: ["AL_SAFWA_VIEW"],
   },
   {
     id: "international-patient",
     title: "International Patients",
-    permissionKeys: [
-      "INTERNATIONAL_PATIENT_VIEW",
-      "INTERNATIONAL_PATIENT_CREATE",
-      "INTERNATIONAL_PATIENT_UPDATE",
-      "INTERNATIONAL_PATIENT_DELETE",
-    ],
+    permissionKeys: ["INTERNATIONAL_PATIENT_VIEW"],
   },
   {
     id: "jobs",
@@ -136,18 +126,14 @@ const PERMISSION_GROUP_DEFS: {
     ],
   },
   {
-    id: "job-applications",
-    title: "Job Applications",
-    permissionKeys: [
-      "JOB_APPLICATION_VIEW",
-      "JOB_APPLICATION_UPDATE",
-      "JOB_APPLICATION_DELETE",
-    ],
-  },
-  {
     id: "medical-records",
     title: "Medical Record Requests",
     permissionKeys: ["MRR_VIEW", "MRR_SHARE_VIA_EMAIL", "MRR_DELETE"],
+  },
+  {
+    id: "event-bookings",
+    title: "Event Bookings",
+    permissionKeys: ["EVENT_VIEW", "EVENT_DELETE"],
   },
   {
     id: "feedback",
@@ -209,6 +195,15 @@ const PERMISSION_GROUP_DEFS: {
 const UNASSIGNABLE_PERMISSION_KEYS = new Set<string>([
   PERMISSIONS.APPOINTMENT_REQUEST_CREATE,
   PERMISSIONS.ENQUIRY_UPDATE,
+  PERMISSIONS.AL_SAFWA_CREATE,
+  PERMISSIONS.AL_SAFWA_UPDATE,
+  PERMISSIONS.AL_SAFWA_DELETE,
+  PERMISSIONS.INTERNATIONAL_PATIENT_CREATE,
+  PERMISSIONS.INTERNATIONAL_PATIENT_UPDATE,
+  PERMISSIONS.INTERNATIONAL_PATIENT_DELETE,
+  PERMISSIONS.JOB_APPLICATION_VIEW,
+  PERMISSIONS.JOB_APPLICATION_UPDATE,
+  PERMISSIONS.JOB_APPLICATION_DELETE,
 ]);
 
 export const filterAssignablePermissions = (permissions: string[]): string[] =>

@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft, Save, Globe, Languages, User, FileText, Upload, X } from "lucide-react";
 import { toast } from "sonner";
 import { createLeadership } from "@/api/leadership";
+import { TitlePositionFieldHints } from "./leadershipFormHints";
 
 type FormData = {
   initials: string;
@@ -301,6 +302,7 @@ const AddLeadership = () => {
                       dir={activeTab === "arabic" ? "rtl" : "ltr"}
                       placeholder={activeTab === "english" ? "Enter title/position" : "أدخل المسمى/المنصب"}
                     />
+                    <TitlePositionFieldHints activeTab={activeTab} />
                   </div>
                 </div>
               </div>

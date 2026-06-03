@@ -10,6 +10,7 @@ import { ArrowLeft, Save, Globe, Languages, User, FileText, Upload, X } from "lu
 import { toast } from "sonner";
 import { getLeadershipById, updateLeadership } from "@/api/leadership";
 import api from "@/api/axiosInstance";
+import { TitlePositionFieldHints } from "./leadershipFormHints";
 
 type Leadership = {
   _id: string;
@@ -400,6 +401,7 @@ const EditLeadership = () => {
                       dir={activeTab === "arabic" ? "rtl" : "ltr"}
                       placeholder={activeTab === "english" ? "Enter title/position" : "أدخل المسمى/المنصب"}
                     />
+                    <TitlePositionFieldHints activeTab={activeTab} />
                   </div>
                 </div>
               </div>

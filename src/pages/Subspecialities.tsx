@@ -21,6 +21,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import AlertBox from "@/components/AlertBox";
 import { adminSubspecialities, AdminSubspeciality } from "@/data/subspeciality";
+import { PERMISSIONS } from "@/constants/permissions";
+import PermissionGate from "@/utils/PermissionGate";
 
 type Subspeciality = {
   id: string;
@@ -245,6 +247,18 @@ const Subspecialities = () => {
                 <h3 className="text-lg sm:text-xl font-bold text-slate-800">Subspecialities Management</h3>
                 <p className="text-sm text-slate-500 mt-1">Manage medical subspecialities and organize your services</p>
               </div>
+
+              <PermissionGate permission={PERMISSIONS.SUBSPECIALITY}>
+                <Button
+                  asChild
+                  className="gap-2 w-full sm:w-auto bg-burgundy hover:bg-burgundy/90 shrink-0"
+                >
+                  <Link to="/subspecialities/create">
+                    <Plus className="h-4 w-4" />
+                    Add Subspeciality
+                  </Link>
+                </Button>
+              </PermissionGate>
             </div>
 
             
@@ -316,12 +330,14 @@ const Subspecialities = () => {
                     </div>
                     <p className="text-slate-500 font-medium">No subspecialities found</p>
                     <p className="text-sm text-slate-400">Get started by creating your first subspeciality</p>
-                    <Button asChild className="mt-4 gap-2 border-burgundy text-burgundy hover:bg-burgundy/5" variant="outline">
-                      <Link to="/subspecialities/create">
-                        <Plus className="h-4 w-4" />
-                        Add your first subspeciality
-                      </Link>
-                    </Button>
+                    <PermissionGate permission={PERMISSIONS.SUBSPECIALITY}>
+                      <Button asChild className="mt-4 gap-2 border-burgundy text-burgundy hover:bg-burgundy/5" variant="outline">
+                        <Link to="/subspecialities/create">
+                          <Plus className="h-4 w-4" />
+                          Add your first subspeciality
+                        </Link>
+                      </Button>
+                    </PermissionGate>
                   </div>
                 ) : (
                   <>

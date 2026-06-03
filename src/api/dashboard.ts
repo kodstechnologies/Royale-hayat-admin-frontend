@@ -127,6 +127,7 @@ export type SidebarCounts = {
   appointmentBookingRecords: number;
   alSafwaEnrollments: number;
   internationalPatientEnquiries: number;
+  eventBookings: number;
 };
 
 export const getSidebarCounts = async () => {

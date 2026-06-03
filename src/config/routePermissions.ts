@@ -54,6 +54,11 @@ export const ROUTE_PERMISSION_RULES: RoutePermissionRule[] = [
   },
   { pattern: "/enquiries", permissions: [PERMISSIONS.ENQUIRY_VIEW] },
   { pattern: "/al-safwa-enrollments", permissions: [PERMISSIONS.AL_SAFWA_VIEW] },
+  {
+    pattern: "/event-bookings/view/:id",
+    permissions: [PERMISSIONS.EVENT_VIEW],
+  },
+  { pattern: "/event-bookings", permissions: [PERMISSIONS.EVENT_VIEW] },
 
   {
     pattern: "/jobs/view-applications/:id",
@@ -179,6 +184,7 @@ export const ROUTE_PERMISSION_RULES: RoutePermissionRule[] = [
   { pattern: "/settings", permissions: [] },
   { pattern: "/international-patients", permissions: [PERMISSIONS.INTERNATIONAL_PATIENT_VIEW] },
   { pattern: "/al-safwa-enrollments", permissions: [PERMISSIONS.AL_SAFWA_VIEW] },
+  { pattern: "/event-bookings", permissions: [PERMISSIONS.EVENT_VIEW] },
   { pattern: "/services", permissions: [] },
   { pattern: "/reports", permissions: [] },
   {
@@ -197,6 +203,7 @@ export const NAV_LANDING_ROUTES: RoutePermissionRule[] = [
   { pattern: "/job-posts", permissions: [PERMISSIONS.JOB_VIEW] },
   { pattern: "/enquiries", permissions: [PERMISSIONS.ENQUIRY_VIEW] },
   { pattern: "/al-safwa-enrollments", permissions: [PERMISSIONS.AL_SAFWA_VIEW] },
+  { pattern: "/event-bookings", permissions: [PERMISSIONS.EVENT_VIEW] },
   {
     pattern: "/international-patients",
     permissions: [PERMISSIONS.INTERNATIONAL_PATIENT_VIEW],

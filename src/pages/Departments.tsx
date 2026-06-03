@@ -10,6 +10,8 @@ import Loader from "@/components/SkeletonLoader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { adminDepartments, AdminDepartment } from "@/data/departments";
+import { PERMISSIONS } from "@/constants/permissions";
+import PermissionGate from "@/utils/PermissionGate";
 
 type Department = {
   _id: string;
@@ -249,8 +251,17 @@ const Departments = () => {
                 <h3 className="text-lg sm:text-xl font-bold text-slate-800">Departments Management</h3>
                 <p className="text-sm text-slate-500 mt-1">Manage hospital departments and their details</p>
               </div>
-              
-              
+
+              <PermissionGate permission={PERMISSIONS.DEPARTMENT}>
+                <Button
+                  type="button"
+                  onClick={() => navigate("/departments/create")}
+                  className="gap-2 w-full sm:w-auto bg-burgundy hover:bg-burgundy/90 shrink-0"
+                >
+                  <Plus className="h-4 w-4" />
+                  Create Department
+                </Button>
+              </PermissionGate>
             </div>
 
             
@@ -309,13 +320,16 @@ const Departments = () => {
                     </div>
                     <p className="text-slate-500 font-medium">No departments found</p>
                     <p className="text-sm text-slate-400 mt-1">Get started by creating your first department</p>
-                    <Button
-                      onClick={() => navigate("/departments/create")}
-                      className="mt-4 gap-2 bg-burgundy hover:bg-burgundy/90"
-                    >
-                      <Plus className="h-4 w-4" />
-                      Create Department
-                    </Button>
+                    <PermissionGate permission={PERMISSIONS.DEPARTMENT}>
+                      <Button
+                        type="button"
+                        onClick={() => navigate("/departments/create")}
+                        className="mt-4 gap-2 bg-burgundy hover:bg-burgundy/90"
+                      >
+                        <Plus className="h-4 w-4" />
+                        Create Department
+                      </Button>
+                    </PermissionGate>
                   </div>
                 ) : (
                   <>

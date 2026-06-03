@@ -22,6 +22,8 @@ const MedicalRecordsRequests = lazy(
 );
 const InternationalPatients = lazy(() => import("./pages/InternationalPatients"));
 const AlSafwaEnrollments = lazy(() => import("./pages/AlSafwaEnrollments"));
+const EventBookings = lazy(() => import("./pages/event-bookings/EventBookings"));
+const ViewEventBooking = lazy(() => import("./pages/event-bookings/ViewEventBooking"));
 const Enquiries = lazy(() => import("./pages/Enquiries"));
 const CreateJobPage = lazy(() => import("./pages/job/createJob"));
 const EditJobPage = lazy(() => import("./pages/job/EditJob"));
@@ -106,6 +108,8 @@ const App = () => (
 
                   <Route path="/international-patients" element={<InternationalPatients />} />
                   <Route path="/al-safwa-enrollments" element={<AlSafwaEnrollments />} />
+                  <Route path="/event-bookings" element={<EventBookings />} />
+                  <Route path="/event-bookings/view/:id" element={<ViewEventBooking />} />
                   <Route path="/enquiries" element={<Enquiries />} />
                   <Route path="/enquiries/view/:id" element={<ViewEnquiry />} />
                   <Route path="/job-posts" element={<JobPosts />} />

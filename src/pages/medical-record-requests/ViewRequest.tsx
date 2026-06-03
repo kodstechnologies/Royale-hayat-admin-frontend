@@ -9,53 +9,91 @@ import {
   FileText,
   Building2,
   Mail,
-  Phone,
-  Calendar,
-  IdCard,
   FileCheck,
   Download,
   CheckCircle,
-  XCircle,
   Clock,
   UserCheck,
+  ClipboardList,
 } from "lucide-react";
 import { GetMedicalRequestById, ShareViaMail } from "@/api/medicalRecordRequest";
 import { toast } from "sonner";
 import { useScrollToTop } from "@/hooks/useScrollToTop";
 import { PERMISSIONS } from "@/constants/permissions";
 import PermissionGate, { hasPermission } from "@/utils/PermissionGate";
+import {
+  formatDateOnly,
+  formatDateTime,
+  mapDetail,
+  type MedicalRecordRequestDetail,
+} from "./medicalRecordRequestUtils";
 
 const DEFAULT_SHARE_EMAILS =
   "medicalrecords@royalehayat.com,marketing@royalehayat.com";
 
 type ShareLanguage = "en" | "ar";
 
-type MedicalRequest = {
-  id: string;
-  mongoId: string;
-  status: "pending" | "received" | "approved" | "rejected" | "completed";
-  requestedDate: string;
-  requestId: string;
-  patientFullName: string;
-  civilId: string;
-  passportOrGovernmentId?: string;
-  patientFileNo: string;
-  dateOfBirth: string;
-  specificAuthorization: string;
-  specificDateOfService?: string;
-  recipientName: string;
-  recipientEmailAddress: string;
-  recipientContactNumber: string;
-  purposeOfDisclosure: string;
-  otherPurpose?: string;
-  requestedBy: string;
-  patientNameConfirmation?: string;
+const DetailField = ({
+  label,
+  value,
+  mono,
+  italic,
+}: {
+  label: string;
+  value?: string;
+  mono?: boolean;
+  italic?: boolean;
+}) => (
+  <div>
+    <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
+      {label}
+    </label>
+    <p
+      className={`text-sm text-slate-800 mt-1 break-words ${
+        mono ? "font-mono" : "font-medium"
+      } ${italic ? "font-serif italic font-normal" : ""}`}
+    >
+      {value?.trim() ? value : "—"}
+    </p>
+  </div>
+);
+
+const AttachmentButton = ({
+  url,
+  label,
+}: {
+  url?: string;
+  label: string;
+}) => {
+  if (!url?.trim()) return null;
+
+  return (
+    <div>
+      <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1">
+        <FileText className="h-3 w-3" /> {label}
+      </label>
+      <div className="mt-2">
+        <Button
+          type="button"
+          onClick={() => {
+            window.open(url, "_blank", "noopener,noreferrer");
+            toast.success("Opening document in new tab");
+          }}
+          className="gap-2 bg-burgundy hover:bg-burgundy/90 w-full sm:w-auto"
+          size="sm"
+        >
+          <Download size={14} />
+          Open Document
+        </Button>
+      </div>
+    </div>
+  );
 };
 
 const ViewRequest = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [request, setRequest] = useState<MedicalRequest | null>(null);
+  const [request, setRequest] = useState<MedicalRecordRequestDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [shareEmail, setShareEmail] = useState(DEFAULT_SHARE_EMAILS);
@@ -70,34 +108,14 @@ const ViewRequest = () => {
     setLoading(true);
     GetMedicalRequestById(id)
       .then((res) => {
-        const d = res?.data ?? res;
-
-        const mrrId = d.mrrId ? String(d.mrrId) : "—";
-
-        setRequest({
-          id: mrrId,
-          mongoId: d._id ?? d.id ?? id,
-          status: d.isViewed === true ? "received" : "pending",
-          requestedDate: d.createdAt ?? new Date().toISOString(),
-          requestId: mrrId,
-          patientFullName: d.patientFullName ?? "—",
-          civilId: d.civilId ?? "—",
-          passportOrGovernmentId: d.passportOrGovernmentId,
-          patientFileNo: d.patientFileNo ?? "—",
-          dateOfBirth: d.dateOfBirth ?? "",
-          specificAuthorization: d.specificAuthorization ?? "—",
-          specificDateOfService: d.specificDateOfService,
-          recipientName: d.recipientName ?? "—",
-          recipientEmailAddress: d.recipientEmailAddress ?? "—",
-          recipientContactNumber: d.recipientContactNumber ?? "—",
-          purposeOfDisclosure: d.purposeOfDisclosure ?? "—",
-          otherPurpose: d.otherPurpose,
-          requestedBy: d.requestedBy ?? "—",
-          patientNameConfirmation: d.patientNameConfirmation,
-        });
+        const d = (res?.data ?? res) as Record<string, unknown>;
+        if (!d || typeof d !== "object") {
+          setRequest(null);
+          return;
+        }
+        setRequest(mapDetail(d, id));
       })
-      .catch((error) => {
-        console.error("Failed to fetch request:", error);
+      .catch(() => {
         setRequest(null);
         toast.error("Failed to load request details");
       })
@@ -113,12 +131,10 @@ const ViewRequest = () => {
       toast.error("Please enter at least one email address");
       return;
     }
-
     if (!shareEnglish && !shareArabic) {
       toast.error("Select at least one email language (English or Arabic)");
       return;
     }
-
     if (!id) {
       toast.error("Request ID not found");
       return;
@@ -161,15 +177,12 @@ const ViewRequest = () => {
       setShareEmail(DEFAULT_SHARE_EMAILS);
       setShareEnglish(true);
       setShareArabic(true);
-    } catch (error: any) {
-      console.error("Failed to share via email:", error);
-
-      if (error?.response?.data?.message) {
-        toast.error(error.response.data.message);
-      } else if (error?.response?.status === 404) {
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string }; status?: number } };
+      if (err?.response?.data?.message) {
+        toast.error(err.response.data.message);
+      } else if (err?.response?.status === 404) {
         toast.error("Request not found");
-      } else if (error?.response?.status === 500) {
-        toast.error("Server error. Please try again later.");
       } else {
         toast.error("Failed to share medical record. Please try again.");
       }
@@ -178,61 +191,21 @@ const ViewRequest = () => {
     }
   };
 
-  const handleDownloadDocument = (url: string, fileName: string) => {
-    if (!url) {
-      toast.error("No document available for download");
-      return;
-    }
-
-    window.open(url, "_blank", "noopener,noreferrer");
-    toast.success("Opening document in new tab");
-  };
-
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status: MedicalRecordRequestDetail["status"]) => {
     const statusConfig = {
-      pending: { icon: Clock, color: "bg-amber-100 text-amber-700", label: "Pending" },
+      pending: { icon: Clock, color: "bg-amber-100 text-amber-700", label: "New" },
       received: { icon: CheckCircle, color: "bg-green-100 text-green-700", label: "Viewed" },
-      approved: { icon: CheckCircle, color: "bg-green-100 text-green-700", label: "Approved" },
-      rejected: { icon: XCircle, color: "bg-red-100 text-red-700", label: "Rejected" },
-      completed: { icon: CheckCircle, color: "bg-blue-100 text-blue-700", label: "Completed" }
     };
-    const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.pending;
+    const config = statusConfig[status] ?? statusConfig.pending;
     const Icon = config.icon;
     return (
-      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${config.color}`}>
+      <span
+        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${config.color}`}
+      >
         <Icon className="h-3 w-3" />
         {config.label}
       </span>
     );
-  };
-
-  const formatDate = (dateString: string) => {
-    if (!dateString) return "—";
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
-  const formatDateOnly = (dateString: string) => {
-    if (!dateString) return "—";
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-  };
-
-  const getFileNameFromUrl = (url: string) => {
-    if (!url) return "document";
-    const parts = url.split('/');
-    const fileName = parts[parts.length - 1].split('?')[0];
-    return fileName || "passport_document";
   };
 
   if (loading) {
@@ -242,7 +215,7 @@ const ViewRequest = () => {
           <BreadCrumb />
           <div className="flex items-center justify-center min-h-[50vh] sm:min-h-[400px]">
             <div className="text-center">
-              <div className="w-12 h-12 border-4 border-burgundy/30 border-t-burgundy rounded-full animate-spin mx-auto mb-4"></div>
+              <div className="w-12 h-12 border-4 border-burgundy/30 border-t-burgundy rounded-full animate-spin mx-auto mb-4" />
               <p className="text-sm text-slate-500">Loading request details...</p>
             </div>
           </div>
@@ -256,8 +229,8 @@ const ViewRequest = () => {
       <AdminLayout title="View Request">
         <div className="space-y-6">
           <BreadCrumb />
-          <div className="rounded-xl border-2 border-burgundy/30 bg-gradient-to-br from-white via-slate-50/90 to-white shadow-xl backdrop-blur-sm overflow-hidden">
-            <div className="h-1 bg-gradient-to-r from-burgundy/40 via-burgundy to-burgundy/40"></div>
+          <div className="rounded-xl border-2 border-burgundy/30 bg-gradient-to-br from-white via-slate-50/90 to-white shadow-xl overflow-hidden">
+            <div className="h-1 bg-gradient-to-r from-burgundy/40 via-burgundy to-burgundy/40" />
             <div className="p-4 sm:p-6 text-center py-12 sm:py-16">
               <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-slate-100 flex items-center justify-center">
                 <FileText className="h-10 w-10 text-slate-400" />
@@ -277,17 +250,21 @@ const ViewRequest = () => {
     );
   }
 
+  const isCivilId = request.validIdentification === "civilId";
+  const isPassportId = request.validIdentification === "passportORGovtId";
+  const isSpecificDocuments = request.specificAuthorization === "specific documents";
+  const isPatientRequestor = request.requestedBy === "Patient";
+  const isLegalRep = request.requestedBy === "Legal Representative";
+
   return (
     <AdminLayout title="View Request">
       <div className="space-y-4 sm:space-y-6">
-        <BreadCrumb lastCrumbLabel={request.requestId} />
+        <BreadCrumb lastCrumbLabel={request.mrrId} />
 
-        
         <div className="rounded-xl border-2 border-burgundy/30 bg-gradient-to-br from-white via-slate-50/90 to-white shadow-xl backdrop-blur-sm overflow-hidden">
-          <div className="h-1 bg-gradient-to-r from-burgundy/40 via-burgundy to-burgundy/40"></div>
+          <div className="h-1 bg-gradient-to-r from-burgundy/40 via-burgundy to-burgundy/40" />
 
           <div className="p-4 sm:p-6">
-            
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between mb-4 sm:mb-6">
               <div className="flex items-start gap-3 min-w-0">
                 <button
@@ -302,234 +279,167 @@ const ViewRequest = () => {
                   <h2 className="text-lg sm:text-2xl font-bold text-slate-800 leading-tight">
                     Medical Records Request
                   </h2>
-                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1">
-                    <p className="text-xs sm:text-sm text-slate-500">ID:</p>
-                    <p className="text-xs sm:text-sm font-mono font-semibold text-burgundy break-all">
-                      {request.requestId}
-                    </p>
-                  </div>
+                  <p className="text-xs sm:text-sm text-slate-500 mt-1">
+                    Complete submission from the patient authorization form
+                  </p>
+                  <p className="text-xs sm:text-sm font-mono font-semibold text-burgundy break-all mt-1">
+                    {request.mrrId}
+                  </p>
                 </div>
               </div>
-              <div className="shrink-0 sm:pt-1">
-                {getStatusBadge(request.status)}
-              </div>
+              <div className="shrink-0 sm:pt-1">{getStatusBadge(request.status)}</div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+              <SummaryChip label="Patient" value={request.patientFullName} />
+              <SummaryChip label="Authorization" value={request.authorizationLabel} />
+              <SummaryChip label="Service Period" value={request.servicePeriod} />
+              <SummaryChip label="Requested By" value={request.requestedBy} />
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-              
-              <div className="space-y-4 sm:space-y-5">
-                
-                <div className="bg-white rounded-xl border border-slate-200 p-4 sm:p-5 shadow-sm">
-                  <div className="flex items-center gap-3 mb-4 pb-3 border-b border-slate-100">
-                    <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-burgundy/10 flex items-center justify-center shrink-0">
-                      <User className="h-5 w-5 text-burgundy" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-slate-800">Patient Information</h3>
-                      <p className="text-xs text-slate-500">Demographic and identification details</p>
-                    </div>
-                  </div>
+              <Section
+                title="Patient Information"
+                description="Demographic and identification details"
+                icon={User}
+              >
+                <DetailField label="Full Name" value={request.patientFullName} />
+                <DetailField
+                  label="Patient File No. (URN)"
+                  value={request.patientFileNo}
+                  mono
+                />
+                <DetailField
+                  label="Date of Birth"
+                  value={formatDateOnly(request.dateOfBirth)}
+                />
+                <DetailField
+                  label="Identification Type"
+                  value={request.identificationLabel}
+                />
+                {isCivilId && (
+                  <DetailField label="Civil ID Number" value={request.civilIdNumber} mono />
+                )}
+                <AttachmentButton
+                  url={isCivilId ? request.civilIdAttachment : undefined}
+                  label="Civil ID Attachment"
+                />
+                <AttachmentButton
+                  url={isPassportId ? request.passportOrGovernmentIdAttachment : undefined}
+                  label="Passport / Government ID Attachment"
+                />
+              </Section>
 
-                  <div className="space-y-3">
-                    <div>
-                      <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Full Name</label>
-                      <p className="text-sm font-medium text-slate-800 mt-1">{request.patientFullName}</p>
-                    </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1">
-                          <IdCard className="h-3 w-3" /> Civil ID
-                        </label>
-                        <p className="text-sm text-slate-700 mt-1">{request.civilId}</p>
-                      </div>
-                    </div>
-                    <div>
-                      <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1">
-                        <FileText className="h-3 w-3" /> Passport / Valid Government ID
-                      </label>
+              <Section
+                title="Authorization & Records Requested"
+                description="Information the patient authorized for release"
+                icon={FileCheck}
+              >
+                <DetailField
+                  label="Authorization Type"
+                  value={request.authorizationLabel}
+                />
+                <DetailField label="Service Period (From → To)" value={request.servicePeriod} />
+                <DetailField
+                  label="Service From Date"
+                  value={formatDateOnly(request.specificFromDate)}
+                />
+                <DetailField
+                  label="Service To Date"
+                  value={formatDateOnly(request.specificToDate)}
+                />
+                {isSpecificDocuments ? (
+                  <DetailField
+                    label="Document Types"
+                    value={request.documentTypesLabel}
+                  />
+                ) : (
+                  <DetailField label="Document Types" value="—" />
+                )}
+                <DetailField label="Special Request" value={request.specialRequest} />
+              </Section>
 
-                      <div className="mt-2">
-                        {request.passportOrGovernmentId ? (
-                          <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
-                            <div className="flex items-start gap-3">
-                              <div className="w-10 h-10 rounded-lg bg-red-100 flex items-center justify-center shrink-0">
-                                <FileText size={20} className="text-red-600" />
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <p className="text-xs text-slate-500 break-all">
-                                  {getFileNameFromUrl(request.passportOrGovernmentId)}
-                                </p>
-                              </div>
-                            </div>
-                            <div className="mt-3">
-                              <Button
-                                onClick={() =>
-                                  handleDownloadDocument(
-                                    request.passportOrGovernmentId!,
-                                    `Passport_${request.patientFullName}`
-                                  )
-                                }
-                                className="gap-2 bg-burgundy hover:bg-burgundy/90 w-full sm:w-auto"
-                                size="sm"
-                              >
-                                <Download size={14} />
-                                Open Document
-                              </Button>
-                            </div>
-                          </div>
-                        ) : (
-                          <p className="text-sm text-slate-400 italic">Not provided</p>
-                        )}
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-1 min-[400px]:grid-cols-2 gap-3">
-                      <div>
-                        <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Patient File No. (URN)</label>
-                        <p className="text-sm font-mono text-slate-700 mt-1 break-all">{request.patientFileNo}</p>
-                      </div>
-                      <div>
-                        <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1">
-                          <Calendar className="h-3 w-3 shrink-0" /> Date of Birth
-                        </label>
-                        <p className="text-sm text-slate-700 mt-1">{request.dateOfBirth ? formatDateOnly(request.dateOfBirth) : "—"}</p>
-                      </div>
-                    </div>
+              <Section
+                title="Recipient & Purpose"
+                description="Where records will be sent and why"
+                icon={Building2}
+              >
+                <DetailField label="Recipient Name" value={request.recipientName} />
+                <DetailField
+                  label="Recipient Email"
+                  value={request.recipientEmailAddress}
+                />
+                <DetailField
+                  label="Recipient Contact Number"
+                  value={request.recipientContactNumber}
+                />
+                <DetailField label="Purpose of Disclosure" value={request.purposeLabel} />
+                {request.purposeOfDisclosure === "Others" && (
+                  <div className="rounded-lg border border-amber-100 bg-amber-50 p-3">
+                    <p className="text-[10px] font-semibold text-amber-700 uppercase tracking-wider mb-1">
+                      Other Purpose (specified)
+                    </p>
+                    <p className="text-sm text-amber-900">{request.otherPurpose || "—"}</p>
                   </div>
+                )}
+              </Section>
+
+              <Section
+                title="Requested By & Signature"
+                description="Who submitted the form and electronic signature"
+                icon={UserCheck}
+              >
+                <DetailField label="Requestor Type" value={request.requestedBy} />
+                {isPatientRequestor && (
+                  <DetailField
+                    label="E-Signature (Patient Full Name)"
+                    value={request.patientNameConfirmation}
+                    italic
+                  />
+                )}
+                {isLegalRep && (
+                  <>
+                    <DetailField
+                      label="Legal Representative Full Name"
+                      value={request.legalRepresentativeFullName}
+                    />
+                    <DetailField
+                      label="Relationship to Patient"
+                      value={request.relationshipWithPatient}
+                    />
+                    <AttachmentButton
+                      url={request.validProof}
+                      label="Government ID / Valid Proof"
+                    />
+                  </>
+                )}
+              </Section>
+
+              <Section
+                title="Submission Details"
+                description="Request tracking information"
+                icon={ClipboardList}
+                className="lg:col-span-2"
+              >
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <DetailField label="MRR ID" value={request.mrrId} mono />
+                  <DetailField
+                    label="Submitted On"
+                    value={formatDateTime(request.requestedDate)}
+                  />
+                  <DetailField
+                    label="Last Updated"
+                    value={formatDateTime(request.updatedAt)}
+                  />
+                  <DetailField
+                    label="Admin Status"
+                    value={request.isViewed ? "Viewed by admin" : "Not yet viewed"}
+                  />
                 </div>
-
-                
-                <div className="bg-white rounded-xl border border-slate-200 p-4 sm:p-5 shadow-sm">
-                  <div className="flex items-center gap-3 mb-4 pb-3 border-b border-slate-100">
-                    <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-burgundy/10 flex items-center justify-center shrink-0">
-                      <UserCheck className="h-5 w-5 text-burgundy" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-slate-800">Requested By</h3>
-                      <p className="text-xs text-slate-500">Who made this request</p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-3">
-                    <div>
-                      <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Requestor Type</label>
-                      <p className="text-sm font-medium text-slate-800 mt-1">{request.requestedBy}</p>
-                    </div>
-                    {request.requestedBy === "Patient" && request.patientNameConfirmation && (
-                      <div>
-                        <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">E-Signature (Patient Name Confirmation)</label>
-                        <p className="text-sm text-slate-700 mt-1 font-serif italic">{request.patientNameConfirmation}</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              
-              <div className="space-y-4 sm:space-y-5">
-                
-                <div className="bg-white rounded-xl border border-slate-200 p-4 sm:p-5 shadow-sm">
-                  <div className="flex items-center gap-3 mb-4 pb-3 border-b border-slate-100">
-                    <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-burgundy/10 flex items-center justify-center shrink-0">
-                      <FileCheck className="h-5 w-5 text-burgundy" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-slate-800">Information Authorized for Release</h3>
-                      <p className="text-xs text-slate-500">Documents and records requested</p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-3">
-                    <div>
-                      <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Authorization Type</label>
-                      <div className="mt-2">
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs bg-burgundy/10 text-burgundy">
-                          <FileText className="h-3 w-3" />
-                          {request.specificAuthorization}
-                        </span>
-                      </div>
-                    </div>
-                    {request.specificDateOfService && (
-                      <div>
-                        <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Specific Date of Service</label>
-                        <p className="text-sm text-slate-700 mt-1">{formatDateOnly(request.specificDateOfService)}</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                
-                <div className="bg-white rounded-xl border border-slate-200 p-4 sm:p-5 shadow-sm">
-                  <div className="flex items-center gap-3 mb-4 pb-3 border-b border-slate-100">
-                    <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-burgundy/10 flex items-center justify-center shrink-0">
-                      <Building2 className="h-5 w-5 text-burgundy" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-slate-800">Recipient Information & Purpose</h3>
-                      <p className="text-xs text-slate-500">Where the records will be sent</p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-3">
-                    <div>
-                      <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Recipient Name</label>
-                      <p className="text-sm font-medium text-slate-800 mt-1">{request.recipientName}</p>
-                    </div>
-                    <div className="grid grid-cols-1 min-[400px]:grid-cols-2 gap-3">
-                      <div className="min-w-0">
-                        <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1">
-                          <Mail className="h-3 w-3 shrink-0" /> Email Address
-                        </label>
-                        <p className="text-sm text-slate-700 mt-1 break-all">{request.recipientEmailAddress}</p>
-                      </div>
-                      <div>
-                        <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1">
-                          <Phone className="h-3 w-3 shrink-0" /> Contact Number
-                        </label>
-                        <p className="text-sm text-slate-700 mt-1 break-all">{request.recipientContactNumber}</p>
-                      </div>
-                    </div>
-                    <div>
-                      <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Purpose of Disclosure</label>
-                      <p className="text-sm text-slate-700 mt-1">{request.purposeOfDisclosure}</p>
-                      {request.otherPurpose && (
-                        <div className="mt-2 p-2 bg-amber-50 rounded-lg border border-amber-100">
-                          <p className="text-xs text-amber-700">
-                            <span className="font-semibold">Other Reason:</span> {request.otherPurpose}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                
-                <div className="bg-white rounded-xl border border-slate-200 p-4 sm:p-5 shadow-sm">
-                  <div className="flex items-center gap-3 mb-4 pb-3 border-b border-slate-100">
-                    <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-burgundy/10 flex items-center justify-center shrink-0">
-                      <Calendar className="h-5 w-5 text-burgundy" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-slate-800">Request Information</h3>
-                      <p className="text-xs text-slate-500">Submission and processing details</p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-3">
-                    <div>
-                      <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Request ID</label>
-                      <p className="text-sm font-mono font-semibold text-burgundy mt-1">{request.requestId}</p>
-                    </div>
-                    <div>
-                      <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Requested Date</label>
-                      <p className="text-sm text-slate-700 mt-1">{formatDate(request.requestedDate)}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              </Section>
             </div>
 
-            
-            <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 sm:gap-3 mt-4 sm:mt-6 pt-4 border-t border-slate-100">
+            <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 sm:gap-3 mt-6 pt-4 border-t border-slate-100">
               <Button
                 onClick={() => navigate("/medical-records-requests")}
                 variant="outline"
@@ -547,12 +457,12 @@ const ViewRequest = () => {
                   }}
                   className="gap-2 w-full sm:w-auto bg-burgundy hover:bg-burgundy/90"
                 >
+                  <Mail className="h-4 w-4" />
                   Share via Mail
                 </Button>
               </PermissionGate>
             </div>
 
-            
             {isShareModalOpen && hasPermission(PERMISSIONS.MRR_SHARE_VIA_EMAIL) && (
               <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 p-0 sm:p-4">
                 <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-xl w-full max-w-md p-5 sm:p-6 max-h-[90dvh] overflow-y-auto">
@@ -565,7 +475,6 @@ const ViewRequest = () => {
                       <label className="text-sm font-medium text-slate-600">
                         Recipient email(s) <span className="text-red-500">*</span>
                       </label>
-
                       <textarea
                         value={shareEmail}
                         onChange={(e) => setShareEmail(e.target.value)}
@@ -603,9 +512,6 @@ const ViewRequest = () => {
                           Arabic
                         </label>
                       </div>
-                      <p className="text-xs text-slate-400">
-                        Select one or both. Both includes English and Arabic sections in one email.
-                      </p>
                     </div>
                   </div>
 
@@ -622,9 +528,8 @@ const ViewRequest = () => {
                     >
                       Cancel
                     </Button>
-
                     <Button
-                      onClick={handleShareViaEmail}
+                      onClick={() => void handleShareViaEmail()}
                       disabled={isSharing}
                       className="w-full sm:w-auto bg-burgundy hover:bg-burgundy/90"
                     >
@@ -640,5 +545,45 @@ const ViewRequest = () => {
     </AdminLayout>
   );
 };
+
+const Section = ({
+  title,
+  description,
+  icon: Icon,
+  children,
+  className,
+}: {
+  title: string;
+  description: string;
+  icon: typeof User;
+  children: React.ReactNode;
+  className?: string;
+}) => (
+  <div
+    className={`bg-white rounded-xl border border-slate-200 p-4 sm:p-5 shadow-sm space-y-4 ${className ?? ""}`}
+  >
+    <div className="flex items-center gap-3 pb-3 border-b border-slate-100">
+      <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-burgundy/10 flex items-center justify-center shrink-0">
+        <Icon className="h-5 w-5 text-burgundy" />
+      </div>
+      <div>
+        <h3 className="font-semibold text-slate-800">{title}</h3>
+        <p className="text-xs text-slate-500">{description}</p>
+      </div>
+    </div>
+    <div className="space-y-4">{children}</div>
+  </div>
+);
+
+const SummaryChip = ({ label, value }: { label: string; value: string }) => (
+  <div className="rounded-xl border border-slate-200 bg-white/90 px-4 py-3 shadow-sm min-w-0">
+    <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
+      {label}
+    </p>
+    <p className="text-sm font-medium text-slate-800 mt-1 truncate" title={value}>
+      {value}
+    </p>
+  </div>
+);
 
 export default ViewRequest;
