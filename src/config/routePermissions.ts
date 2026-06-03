@@ -182,6 +182,7 @@ export const ROUTE_PERMISSION_RULES: RoutePermissionRule[] = [
   },
 
   { pattern: "/settings", permissions: [] },
+  { pattern: "/file-manager", permissions: [] },
   { pattern: "/international-patients", permissions: [PERMISSIONS.INTERNATIONAL_PATIENT_VIEW] },
   { pattern: "/al-safwa-enrollments", permissions: [PERMISSIONS.AL_SAFWA_VIEW] },
   { pattern: "/event-bookings", permissions: [PERMISSIONS.EVENT_VIEW] },
