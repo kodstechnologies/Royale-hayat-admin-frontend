@@ -473,18 +473,16 @@ const ViewRequest = () => {
                   <div className="space-y-4">
                     <div className="space-y-2">
                       <label className="text-sm font-medium text-slate-600">
-                        Recipient email(s) <span className="text-red-500">*</span>
+                        Recipient email(s)
                       </label>
                       <textarea
                         value={shareEmail}
-                        onChange={(e) => setShareEmail(e.target.value)}
-                        placeholder="email1@example.com, email2@example.com"
+                        readOnly
                         rows={2}
-                        className="w-full border border-slate-300 rounded-lg px-4 py-2 outline-none focus:ring-2 focus:ring-burgundy/30 resize-y min-h-[72px]"
-                        autoFocus
+                        className="w-full border border-slate-300 rounded-lg px-4 py-2 bg-slate-50 text-slate-700 cursor-not-allowed resize-none min-h-[72px]"
                       />
                       <p className="text-xs text-slate-400">
-                        Separate multiple addresses with commas
+                        View only. Email recipients cannot be edited.
                       </p>
                     </div>
 

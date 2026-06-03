@@ -16,6 +16,25 @@ type EnrollmentRow = AlSafwaEnrollment & {
   date: string;
 };
 
+const humanizeAnswer = (value?: string) => {
+  if (!value) return "-";
+  if (value === "dont_know") return "Don't know";
+  if (value === "less_than_1_year") return "Less than 1 yr";
+  if (value === "more_than_1_year") return "More than 1 yr";
+  return value.charAt(0).toUpperCase() + value.slice(1);
+};
+
+const formatDate = (value?: string) => {
+  if (!value) return "-";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "-";
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+};
+
 const AlSafwaEnrollments = () => {
   const { t } = useLanguage();
   const [enrollments, setEnrollments] = useState<EnrollmentRow[]>([]);
@@ -165,7 +184,7 @@ const AlSafwaEnrollments = () => {
                     setSearch(e.target.value);
                     setCurrentPage(1);
                   }}
-                  placeholder={t("Search by name, email, or phone...")}
+                  placeholder={t("Search by name, family name, email, or mobile...")}
                   className="w-full pl-9 pr-3 py-2.5 text-sm border border-slate-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-burgundy/20"
                 />
               </div>
@@ -207,9 +226,9 @@ const AlSafwaEnrollments = () => {
                   <thead className="bg-slate-50 text-slate-500 text-[11px] uppercase">
                     <tr>
                       <th className="text-left px-4 py-2.5">{t("Applicant")}</th>
-                      <th className="text-left px-4 py-2.5">{t("Phone")}</th>
-                      <th className="text-left px-4 py-2.5">{t("Age")}</th>
+                      <th className="text-left px-4 py-2.5">{t("Mobile")}</th>
                       <th className="text-left px-4 py-2.5">{t("Gender")}</th>
+                      <th className="text-left px-4 py-2.5">{t("Medical Checkup")}</th>
                       <th className="text-left px-4 py-2.5">{t("Date")}</th>
                       <th className="text-left px-4 py-2.5">{t("Status")}</th>
                       <th className="text-right px-4 py-2.5">{t("Actions")}</th>
@@ -224,12 +243,16 @@ const AlSafwaEnrollments = () => {
                         }`}
                       >
                         <td className="px-4 py-2.5">
-                          <div className="font-medium text-slate-800">{e.name}</div>
+                          <div className="font-medium text-slate-800">
+                            {e.firstName} {e.familyName}
+                          </div>
                           <div className="text-[10px] text-slate-500">{e.email}</div>
                         </td>
-                        <td className="px-4 py-2.5 text-slate-600">{e.phone}</td>
-                        <td className="px-4 py-2.5">{e.age}</td>
-                        <td className="px-4 py-2.5">{e.gender}</td>
+                        <td className="px-4 py-2.5 text-slate-600">{e.mobile}</td>
+                        <td className="px-4 py-2.5">{humanizeAnswer(e.gender)}</td>
+                        <td className="px-4 py-2.5">
+                          {humanizeAnswer(e.previousMedicalCheckup)}
+                        </td>
                         <td className="px-4 py-2.5 text-slate-500">{e.date}</td>
                         <td className="px-4 py-2.5">{viewedBadge(e.isViewed)}</td>
                         <td className="px-4 py-2.5 text-right">
@@ -282,7 +305,7 @@ const AlSafwaEnrollments = () => {
           onClick={() => setSelected(null)}
         >
           <div
-            className="bg-white rounded-t-2xl sm:rounded-xl shadow-2xl max-w-lg w-full p-5 sm:p-6 max-h-[90vh] overflow-y-auto"
+            className="bg-white rounded-t-2xl sm:rounded-xl shadow-2xl max-w-5xl w-full p-5 sm:p-6 max-h-[90vh] overflow-y-auto"
             onClick={(ev) => ev.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-4">
@@ -308,39 +331,97 @@ const AlSafwaEnrollments = () => {
               </div>
             ) : (
               <>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm mb-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm mb-4">
                   <div>
                     <span className="text-slate-500">{t("Name")}:</span>{" "}
-                    <span className="font-medium">{selected.name}</span>
+                    <span className="font-medium">
+                      {selected.firstName} {selected.familyName}
+                    </span>
                   </div>
                   <div>
                     <span className="text-slate-500">{t("Email")}:</span>{" "}
                     <span className="font-medium break-all">{selected.email}</span>
                   </div>
                   <div>
-                    <span className="text-slate-500">{t("Phone")}:</span>{" "}
-                    <span className="font-medium">{selected.phone}</span>
-                  </div>
-                  <div>
-                    <span className="text-slate-500">{t("Age")}:</span>{" "}
-                    <span className="font-medium">{selected.age}</span>
+                    <span className="text-slate-500">{t("Mobile")}:</span>{" "}
+                    <span className="font-medium">{selected.mobile}</span>
                   </div>
                   <div>
                     <span className="text-slate-500">{t("Gender")}:</span>{" "}
-                    <span className="font-medium">{selected.gender}</span>
+                    <span className="font-medium">{humanizeAnswer(selected.gender)}</span>
                   </div>
                   <div>
-                    <span className="text-slate-500">{t("Date")}:</span>{" "}
+                    <span className="text-slate-500">{t("Date of Birth")}:</span>{" "}
+                    <span className="font-medium">{formatDate(selected.dateOfBirth)}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-500">
+                      {t("Preferred Appointment Date")}:
+                    </span>{" "}
+                    <span className="font-medium">
+                      {formatDate(selected.preferredAppointmentDate)}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-slate-500">{t("Medical Checkup")}:</span>{" "}
+                    <span className="font-medium">
+                      {humanizeAnswer(selected.previousMedicalCheckup)}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-slate-500">{t("Submitted")}:</span>{" "}
                     <span className="font-medium">{selected.date}</span>
                   </div>
-                  <div className="sm:col-span-2">
+                  <div className="md:col-span-2">
                     <span className="text-slate-500">{t("Status")}:</span>{" "}
                     {viewedBadge(selected.isViewed)}
                   </div>
                 </div>
+
+                <div className="text-sm rounded-lg bg-slate-50 p-3 border border-slate-100 mb-4">
+                  <span className="text-slate-500 block mb-2">
+                    {t("Health Conditions")}
+                  </span>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                    {[
+                      ["Diabetes", selected.diabetes],
+                      ["Hypertension", selected.hypertension],
+                      ["High Cholesterol", selected.highCholesterol],
+                      ["Heart Disease", selected.heartDisease],
+                      ["Bronchial Asthma", selected.bronchialAsthma],
+                      ["Overweight / Obesity", selected.overweightObesity],
+                    ].map(([label, value]) => (
+                      <div
+                        key={label}
+                        className="rounded border border-slate-200 bg-white px-2 py-1.5"
+                      >
+                        <p className="text-[11px] text-slate-500">{t(label)}</p>
+                        <p className="font-medium text-slate-700">
+                          {humanizeAnswer(String(value))}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
                 <div className="text-sm rounded-lg bg-slate-50 p-3 border border-slate-100">
-                  <span className="text-slate-500 block mb-1">{t("Notes")}</span>
-                  <p className="text-slate-700 whitespace-pre-wrap">{selected.notes}</p>
+                  <span className="text-slate-500 block mb-2">{t("Special Habits")}</span>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <div className="rounded border border-slate-200 bg-white px-2 py-1.5">
+                      <p className="text-[11px] text-slate-500">{t("Do you smoke?")}</p>
+                      <p className="font-medium text-slate-700">
+                        {humanizeAnswer(selected.smoker)}
+                      </p>
+                    </div>
+                    <div className="rounded border border-slate-200 bg-white px-2 py-1.5">
+                      <p className="text-[11px] text-slate-500">
+                        {t("Do you drink alcohol?")}
+                      </p>
+                      <p className="font-medium text-slate-700">
+                        {humanizeAnswer(selected.alcohol)}
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </>
             )}
