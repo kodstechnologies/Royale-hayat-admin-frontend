@@ -126,8 +126,10 @@ const EditDepartmentPage = () => {
       ...current,
       {
         id: Date.now().toString(),
+        heading: "",
         subHeading: "",
         explaination: [""],
+        arabicHeading: "",
         arabicSubHeading: "",
         arabicExplaination: [""],
       },
@@ -224,9 +226,11 @@ const EditDepartmentPage = () => {
         order: values.order,
         imageFile: values.imageFile,
         customExplainantions: values.customSections.map(
-          ({ subHeading, explaination, arabicSubHeading, arabicExplaination }) => ({
+          ({ heading, subHeading, explaination, arabicHeading, arabicSubHeading, arabicExplaination }) => ({
+            heading,
             subHeading,
             explaination,
+            arabicHeading,
             arabicSubHeading,
             arabicExplaination,
           }),
@@ -371,7 +375,7 @@ const EditDepartmentPage = () => {
                         <div className="flex items-center justify-between pb-2 border-b border-slate-100">
                           <div>
                             <h3 className="text-md font-semibold text-slate-800">Custom Sections</h3>
-                            <p className="text-xs text-slate-500">Add headings and explanations</p>
+                            <p className="text-xs text-slate-500">Add headings, subheadings, and explanations</p>
                           </div>
                           <Button
                             type="button"
@@ -421,6 +425,20 @@ const EditDepartmentPage = () => {
                               <label className="text-xs font-medium text-slate-600 block mb-1">Heading</label>
                               <Input
                                 placeholder="Enter heading"
+                                value={section.heading}
+                                onChange={(e) => {
+                                  const newSections = [...values.customSections];
+                                  newSections[idx].heading = e.target.value;
+                                  setFieldValue("customSections", newSections);
+                                }}
+                                className="h-9"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="text-xs font-medium text-slate-600 block mb-1">Subheading</label>
+                              <Input
+                                placeholder="Enter subheading"
                                 value={section.subHeading}
                                 onChange={(e) => {
                                   const newSections = [...values.customSections];
@@ -516,16 +534,40 @@ const EditDepartmentPage = () => {
                       <div className="bg-white rounded-xl border border-slate-200 p-5 space-y-4">
                         <div className="pb-2 border-b border-slate-100">
                           <h3 className="text-md font-semibold text-slate-800">Arabic Custom Sections</h3>
-                          <p className="text-xs text-slate-500">Arabic translations for headings and explanations</p>
+                          <p className="text-xs text-slate-500">Arabic translations for headings, subheadings, and explanations</p>
                         </div>
 
+                        {values.customSections.length === 0 && (
+                          <div className="text-center py-8 bg-slate-50 rounded-xl border border-dashed border-slate-200">
+                            <p className="text-slate-500">Add custom sections in the English tab first</p>
+                          </div>
+                        )}
+
                         {values.customSections.map((section, idx) => (
-                          <div key={section.id} className="border border-slate-200 rounded-xl p-4 space-y-3 bg-slate-50/30">
+                          <div key={section.id} className="border border-slate-200 rounded-xl p-4 space-y-3 bg-slate-50/30 relative">
+                            <div className="absolute -top-2 -left-2 bg-burgundy/10 text-burgundy text-xs px-2 py-0.5 rounded-full">
+                              Section {idx + 1}
+                            </div>
                             <div>
                               <label className="text-xs font-medium text-slate-600 block mb-1">Heading (Arabic)</label>
                               <Input
                                 dir="rtl"
                                 placeholder="العنوان بالعربية"
+                                value={section.arabicHeading}
+                                onChange={(e) => {
+                                  const newSections = [...values.customSections];
+                                  newSections[idx].arabicHeading = e.target.value;
+                                  setFieldValue("customSections", newSections);
+                                }}
+                                className="h-9"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="text-xs font-medium text-slate-600 block mb-1">Subheading (Arabic)</label>
+                              <Input
+                                dir="rtl"
+                                placeholder="العنوان الفرعي بالعربية"
                                 value={section.arabicSubHeading}
                                 onChange={(e) => {
                                   const newSections = [...values.customSections];

@@ -285,16 +285,26 @@ const ViewSubspeciality = () => {
                     </div>
 
                     {subspeciality.customSubspecialities.map((section, idx) => {
-                      const heading =
+                      const rawHeading =
+                        activeLanguage === "english"
+                          ? section.heading
+                          : section.arabicHeading;
+                      const rawSubHeading =
                         activeLanguage === "english"
                           ? section.subHeading
                           : section.arabicSubHeading;
+                      const heading = rawHeading || (!rawHeading && rawSubHeading ? rawSubHeading : "");
+                      const subHeading = rawHeading ? rawSubHeading : "";
                       const explanations =
                         activeLanguage === "english"
                           ? section.explanations
                           : section.arabicExplanations;
 
-                      if (!heading && (!explanations || explanations.length === 0)) {
+                      if (
+                        !heading &&
+                        !subHeading &&
+                        (!explanations || explanations.length === 0)
+                      ) {
                         return null;
                       }
 
@@ -304,9 +314,14 @@ const ViewSubspeciality = () => {
                           className={`rounded-xl border border-slate-200 bg-white p-5 shadow-sm ${activeLanguage === "arabic" ? "rtl-text" : ""}`}
                         >
                           {heading && (
-                            <h4 className="font-semibold text-slate-800 mb-3 text-md">
+                            <h4 className="font-semibold text-slate-800 mb-1 text-md">
                               {heading}
                             </h4>
+                          )}
+                          {subHeading && (
+                            <p className="text-sm font-medium text-slate-700 mb-3">
+                              {subHeading}
+                            </p>
                           )}
                           {explanations && explanations.length > 0 && (
                             <ul className="space-y-2">

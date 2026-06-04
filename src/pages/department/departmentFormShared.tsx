@@ -1,6 +1,7 @@
 import { Plus, Trash2 } from "lucide-react";
 
 export type DepartmentCustomExplanationBlock = {
+    heading: string;
     subHeading: string;
     explaination: string[];
 };
@@ -131,7 +132,7 @@ export function DepartmentRichFields({ values, setFieldValue }: RichFieldsProps)
     };
 
     const addBlock = () => {
-        setFieldValue("customExplainantions", [...blocks, { subHeading: "", explaination: [] }]);
+        setFieldValue("customExplainantions", [...blocks, { heading: "", subHeading: "", explaination: [] }]);
     };
 
     const removeBlock = (index: number) => {
@@ -173,13 +174,20 @@ export function DepartmentRichFields({ values, setFieldValue }: RichFieldsProps)
                     >
                         <Trash2 className="w-4 h-4" />
                     </button>
-                    <div className="pr-10">
+                    <div className="pr-10 space-y-3">
                         <FieldTextInput
                             label="Section heading"
                             optional
+                            value={block.heading}
+                            onChange={(v) => updateBlock(index, { ...block, heading: v })}
+                            placeholder="e.g. Our services"
+                        />
+                        <FieldTextInput
+                            label="Section subheading"
+                            optional
                             value={block.subHeading}
                             onChange={(v) => updateBlock(index, { ...block, subHeading: v })}
-                            placeholder="e.g. Our services"
+                            placeholder="e.g. What we offer"
                         />
                     </div>
                     <AddableLinesField
@@ -201,10 +209,11 @@ export function appendDepartmentRichContentToFormData(
 ) {
     const normalized = content.customExplainantions
         .map((b) => ({
+            heading: (b.heading || "").trim(),
             subHeading: (b.subHeading || "").trim(),
             explaination: (b.explaination || []).map((s) => s.trim()).filter(Boolean),
         }))
-        .filter((b) => b.subHeading.length > 0 || b.explaination.length > 0);
+        .filter((b) => b.heading.length > 0 || b.subHeading.length > 0 || b.explaination.length > 0);
     formPayload.append("customExplainantions", JSON.stringify(normalized));
 }
 
@@ -219,6 +228,7 @@ export function richContentFromApi(dept: Record<string, unknown> | null | undefi
             const o = item && typeof item === "object" ? (item as Record<string, unknown>) : {};
             const ex = o.explaination ?? o.explanations;
             return {
+                heading: typeof o.heading === "string" ? o.heading : "",
                 subHeading: typeof o.subHeading === "string" ? o.subHeading : "",
                 explaination: Array.isArray(ex) ? ex.map((x) => String(x).trim()).filter(Boolean) : [],
             };

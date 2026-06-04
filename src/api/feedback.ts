@@ -20,6 +20,7 @@ export interface CreateFeedbackParams {
 
 export interface UpdateDoctorFeedbackParams {
     feedbackId: string;
+    /** Doctor document MongoDB _id (URL path segment) */
     doctorId: string;
     data: FeedbackPayload;
 }
@@ -87,12 +88,13 @@ export const getAllDoctorFeedbacks =
         return response.data;
     };
 
+/** @param doctorMongoId Doctor document MongoDB _id */
 export const getDoctorFeedbacksByDoctorId =
-    async (doctorId: string) => {
+    async (doctorMongoId: string) => {
 
         const response =
             await api.get(
-                `/api/v1/doctor-feedback/${doctorId}`
+                `/api/v1/doctor-feedback/${doctorMongoId}`
             );
 
         return response.data;
@@ -117,11 +119,11 @@ export const updateDoctorFeedback =
     };
 
 export const deleteDoctorFeedback =
-    async (doctorId: string, feedbackId: string) => {
+    async (doctorMongoId: string, feedbackId: string) => {
 
         const response =
             await api.delete(
-                `/api/v1/doctor-feedback/delete/${doctorId}`,
+                `/api/v1/doctor-feedback/delete/${doctorMongoId}`,
                 { data: { feedbackId } }
             );
 

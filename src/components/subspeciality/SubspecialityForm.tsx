@@ -29,8 +29,10 @@ type DepartmentOption = {
 
 type CustomBlockDraft = {
   key: string;
+  heading: string;
   subHeading: string;
   explanationLines: string[];
+  arabicHeading: string;
   arabicSubHeading: string;
   arabicExplanationLines: string[];
 };
@@ -44,7 +46,9 @@ function newKey() {
 function emptyBlock(): CustomBlockDraft {
     return {
         key: newKey(),
+        heading: "",
         subHeading: "",
+        arabicHeading: "",
         arabicSubHeading: "",
         explanationLines: [""],
         arabicExplanationLines: [""],
@@ -124,17 +128,28 @@ const SubspecialityForm = ({ mode, subspecialityId }: Props) => {
                 setDepartmentId(detail.departmentId);
 
                 setCustomBlocks(
-                    detail.customSubspecialities.map((section) => ({
-                        key: section._id || newKey(),
-                        subHeading: section.subHeading || "",
-                        arabicSubHeading: section.arabicSubHeading || "",
-                        explanationLines:
-                            section.explanations?.length > 0 ? section.explanations : [""],
-                        arabicExplanationLines:
-                            section.arabicExplanations?.length > 0
-                                ? section.arabicExplanations
-                                : [""],
-                    })),
+                    detail.customSubspecialities.map((section) => {
+                        const legacySubHeading = section.subHeading || "";
+                        const heading = section.heading || "";
+                        const hasHeading = heading.length > 0;
+                        const legacyArabicSubHeading = section.arabicSubHeading || "";
+                        const arabicHeading = section.arabicHeading || "";
+                        const hasArabicHeading = arabicHeading.length > 0;
+
+                        return {
+                            key: section._id || newKey(),
+                            heading: hasHeading ? heading : legacySubHeading,
+                            subHeading: hasHeading ? legacySubHeading : "",
+                            arabicHeading: hasArabicHeading ? arabicHeading : legacyArabicSubHeading,
+                            arabicSubHeading: hasArabicHeading ? legacyArabicSubHeading : "",
+                            explanationLines:
+                                section.explanations?.length > 0 ? section.explanations : [""],
+                            arabicExplanationLines:
+                                section.arabicExplanations?.length > 0
+                                    ? section.arabicExplanations
+                                    : [""],
+                        };
+                    }),
                 );
             } catch (error: unknown) {
                 console.error("Error loading subspeciality:", error);
@@ -181,7 +196,9 @@ const SubspecialityForm = ({ mode, subspecialityId }: Props) => {
 
         const customSubspecialities = buildCustomSubspecialityPayload(
             customBlocks.map((block) => ({
+                heading: block.heading,
                 subHeading: block.subHeading,
+                arabicHeading: block.arabicHeading,
                 arabicSubHeading: block.arabicSubHeading,
                 explanations: block.explanationLines,
                 arabicExplanations: block.arabicExplanationLines,
@@ -456,7 +473,23 @@ const SubspecialityForm = ({ mode, subspecialityId }: Props) => {
                                         <div>
                                             <label className="text-xs font-medium text-slate-600 block mb-1">Heading</label>
                                             <Input
-                                                placeholder="Enter English heading"
+                                                placeholder="Enter heading"
+                                                value={block.heading}
+                                                onChange={(e) =>
+                                                    setCustomBlocks((prev) =>
+                                                        prev.map((b) =>
+                                                            b.key === block.key ? { ...b, heading: e.target.value } : b
+                                                        )
+                                                    )
+                                                }
+                                                className="h-9"
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label className="text-xs font-medium text-slate-600 block mb-1">Subheading</label>
+                                            <Input
+                                                placeholder="Enter subheading"
                                                 value={block.subHeading}
                                                 onChange={(e) =>
                                                     setCustomBlocks((prev) =>
@@ -569,6 +602,23 @@ const SubspecialityForm = ({ mode, subspecialityId }: Props) => {
                                             <Input
                                                 dir="rtl"
                                                 placeholder="العنوان بالعربية"
+                                                value={block.arabicHeading}
+                                                onChange={(e) =>
+                                                    setCustomBlocks((prev) =>
+                                                        prev.map((b) =>
+                                                            b.key === block.key ? { ...b, arabicHeading: e.target.value } : b
+                                                        )
+                                                    )
+                                                }
+                                                className="h-9"
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label className="text-xs font-medium text-slate-600 block mb-1">Subheading (Arabic)</label>
+                                            <Input
+                                                dir="rtl"
+                                                placeholder="العنوان الفرعي بالعربية"
                                                 value={block.arabicSubHeading}
                                                 onChange={(e) =>
                                                     setCustomBlocks((prev) =>

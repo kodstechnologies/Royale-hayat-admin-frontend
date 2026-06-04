@@ -930,7 +930,7 @@ export const doctors: DoctorSeed[] = [
     languages: ['English', 'Arabic'], languagesAr: ['الإنجليزية', 'العربية'],
     initials: 'GV', color: 'bg-accent/70',
     symptoms: [],
-    availableOnline: false,
+    availableOnline: true,
   },
   {
     id: 'dr-helen-kamil-alkaabi',
@@ -2213,7 +2213,7 @@ export const doctors: DoctorSeed[] = [
     languages: ['English', 'Arabic'], languagesAr: ['الإنجليزية', 'العربية'],
     initials: 'ZM', color: 'bg-primary/80',
     symptoms: [],
-    availableOnline: false,
+    availableOnline: true,
   },
   {
     id: 'dr-abubakr-elmardi',
@@ -2383,7 +2383,7 @@ export const doctors: DoctorSeed[] = [
     languages: ['English', 'Arabic'], languagesAr: ['الإنجليزية', 'العربية'],
     initials: 'NI', color: 'bg-accent',
     symptoms: [],
-    availableOnline: false,
+    availableOnline: true,
   },
   {
     id: 'dr-nourah-al-ibrahim', //////////////
@@ -2528,7 +2528,7 @@ export const doctors: DoctorSeed[] = [
     languages: ['English', 'Arabic'], languagesAr: ['الإنجليزية', 'العربية'],
     initials: 'KM', color: 'bg-accent/80',
     symptoms: [],
-    availableOnline: false,
+    availableOnline: true,
   },
   {
     id: 'dr-lobna-ibrahim-bassiouni',
@@ -2604,7 +2604,7 @@ export const doctors: DoctorSeed[] = [
     languages: ['English', 'Arabic'], languagesAr: ['الإنجليزية', 'العربية'],
     initials: 'EA', color: 'bg-accent/70',
     symptoms: [],
-    availableOnline: false,
+    availableOnline: true,
   },
   {
     id: 'dr-naser-al-azemi',
@@ -2642,7 +2642,7 @@ export const doctors: DoctorSeed[] = [
     languages: ['English', 'Arabic'], languagesAr: ['الإنجليزية', 'العربية'],
     initials: 'NA', color: 'bg-primary',
     symptoms: [],
-    availableOnline: false,
+    availableOnline: true,
   },
 
   {

@@ -4,7 +4,9 @@ const BASE = "/api/v1/subspecialities";
 
 export type CustomSubspecialityDoc = {
   _id: string;
+  heading?: string;
   subHeading?: string;
+  arabicHeading?: string;
   arabicSubHeading?: string;
   explanations?: string[];
   arabicExplanations?: string[];
@@ -77,7 +79,9 @@ export const mapApiSubspecialityToDetail = (row: Subspeciality): SubspecialityDe
 });
 
 export type CustomSubspecialityInput = {
+  heading?: string;
   subHeading?: string;
+  arabicHeading?: string;
   arabicSubHeading?: string;
   explanations?: string[];
   arabicExplanations?: string[];
@@ -106,7 +110,9 @@ export const buildCustomSubspecialityPayload = (
 ): CustomSubspecialityInput[] =>
   blocks
     .map((block) => ({
+      heading: block.heading?.trim() ?? "",
       subHeading: block.subHeading?.trim() ?? "",
+      arabicHeading: block.arabicHeading?.trim() ?? "",
       arabicSubHeading: block.arabicSubHeading?.trim() ?? "",
       explanations: (block.explanations ?? []).map((line) => line.trim()).filter(Boolean),
       arabicExplanations: (block.arabicExplanations ?? [])
@@ -115,7 +121,9 @@ export const buildCustomSubspecialityPayload = (
     }))
     .filter(
       (block) =>
+        block.heading.length > 0 ||
         block.subHeading.length > 0 ||
+        block.arabicHeading.length > 0 ||
         block.arabicSubHeading.length > 0 ||
         block.explanations.length > 0 ||
         block.arabicExplanations.length > 0,

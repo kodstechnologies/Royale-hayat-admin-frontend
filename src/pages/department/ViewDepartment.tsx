@@ -321,16 +321,26 @@ const ViewDepartment = () => {
                         </label>
                         <div className="space-y-4">
                           {department.customExplainantions.map((section, index) => {
-                            const heading =
+                            const rawHeading =
+                              activeLanguage === "english"
+                                ? section.heading
+                                : section.arabicHeading;
+                            const rawSubHeading =
                               activeLanguage === "english"
                                 ? section.subHeading
                                 : section.arabicSubHeading;
+                            const heading = rawHeading || (!rawHeading && rawSubHeading ? rawSubHeading : "");
+                            const subHeading = rawHeading ? rawSubHeading : "";
                             const explanations =
                               activeLanguage === "english"
                                 ? section.explaination
                                 : section.arabicExplaination;
 
-                            if (!heading && (!explanations || explanations.length === 0)) {
+                            if (
+                              !heading &&
+                              !subHeading &&
+                              (!explanations || explanations.length === 0)
+                            ) {
                               return null;
                             }
 
@@ -339,12 +349,32 @@ const ViewDepartment = () => {
                                 key={section._id || section.id || index}
                                 className="rounded-lg border border-slate-100 bg-slate-50/50 p-4"
                               >
+                                <p className="text-xs font-semibold text-burgundy/80 uppercase tracking-wider mb-3">
+                                  Section {index + 1}
+                                </p>
                                 {heading && (
-                                  <h3
-                                    className={`font-semibold text-slate-800 mb-3 ${activeLanguage === "arabic" ? "text-right" : ""}`}
-                                  >
-                                    {heading}
-                                  </h3>
+                                  <div className={`mb-2 ${activeLanguage === "arabic" ? "text-right" : ""}`}>
+                                    <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                                      Heading
+                                    </span>
+                                    <h3
+                                      className={`font-semibold text-slate-800 mt-1 ${activeLanguage === "arabic" ? "rtl-text" : ""}`}
+                                    >
+                                      {heading}
+                                    </h3>
+                                  </div>
+                                )}
+                                {subHeading && (
+                                  <div className={`mb-3 ${activeLanguage === "arabic" ? "text-right" : ""}`}>
+                                    <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                                      Subheading
+                                    </span>
+                                    <p
+                                      className={`text-sm font-medium text-slate-700 mt-1 ${activeLanguage === "arabic" ? "rtl-text" : ""}`}
+                                    >
+                                      {subHeading}
+                                    </p>
+                                  </div>
                                 )}
                                 {explanations && explanations.length > 0 && (
                                   <ul className="space-y-2">

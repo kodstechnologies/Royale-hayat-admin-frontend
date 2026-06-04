@@ -1476,7 +1476,7 @@ export const adminDoctors: AdminDoctor[] = [
     ],
     department: "La Cosmetique",
     departmentAr: "التجميل",
-    availableOnline: false,
+    availableOnline: true,
     image: "https://royal-hayat.s3.eu-central-1.amazonaws.com/doctors/Gie34.png",
     createdAt: "2024-02-07T10:30:00Z",
     updatedAt: "2024-02-07T10:30:00Z",

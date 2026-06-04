@@ -77,6 +77,7 @@ const EditDoctorPage = () => {
     qualifications: "",
     arabicName: "",
     arabicTitle: "",
+    arabicInitials: "د.",
     arabicLanguages: "",
     arabicExpertise: "",
     arabicQualifications: "",
@@ -586,6 +587,18 @@ const EditDoctorPage = () => {
                               value={values.arabicTitle}
                               onChange={(e) => setFieldValue("arabicTitle", e.target.value)}
                               placeholder="اللقب"
+                              className="h-11"
+                              dir="rtl"
+                            />
+                          </div>
+
+                          <div className="space-y-2 md:col-span-2 lg:col-span-1">
+                            <label className="text-sm font-semibold text-slate-700">Initials (Arabic)</label>
+                            <Input
+                              name="arabicInitials"
+                              value={values.arabicInitials}
+                              onChange={(e) => setFieldValue("arabicInitials", e.target.value)}
+                              placeholder="د."
                               className="h-11"
                               dir="rtl"
                             />

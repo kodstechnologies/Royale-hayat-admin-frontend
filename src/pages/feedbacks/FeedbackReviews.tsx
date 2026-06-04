@@ -151,9 +151,9 @@ const FeedbackReviews = () => {
         return {
           id: fb._id || fb.id,
           _id: fb._id || fb.id,
-          doctorId: typeof fb.doctor === 'object'
-            ? (fb.doctor.doctorId || fb.doctor._id || "")
-            : (fb.doctor || ""),
+          doctorId: typeof fb.doctor === "object"
+            ? String(fb.doctor._id || fb.doctor.id || "")
+            : String(fb.doctor || ""),
           patientName: fb.userName || "",
           patientNameAr: fb.arabicUserName || "",
           doctorName: doctorData.name,
@@ -380,7 +380,7 @@ const FeedbackReviews = () => {
           arabicFeedback: editFormData.commentAr,
           stars: editFormData.rating,
           shownOnWebsite: editFormData.showOnWebsite,
-          doctorId: editFormData.doctorId,
+          doctor: editFormData.doctorId,
         };
         
         await updateDoctorFeedback({

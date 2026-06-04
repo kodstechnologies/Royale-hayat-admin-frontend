@@ -170,6 +170,7 @@ export const mapApiDoctorToFormValues = (
     qualifications: (row.qualifications ?? []).join("|||"),
     arabicName: String(row.nameAr ?? ""),
     arabicTitle: String(row.titleAr ?? ""),
+    arabicInitials: String(row.initialsAr ?? "د."),
     arabicLanguages: (row.languagesAr ?? []).join("|||"),
     arabicExpertise: (row.expertiseAr ?? []).join("|||"),
     arabicQualifications: (row.qualificationsAr ?? []).join("|||"),

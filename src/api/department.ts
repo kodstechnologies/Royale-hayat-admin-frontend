@@ -46,8 +46,10 @@ export type CreateDepartmentFormPayload = {
   order: number;
   imageFile: File | null;
   customExplainantions: {
+    heading: string;
     subHeading: string;
     explaination: string[];
+    arabicHeading: string;
     arabicSubHeading: string;
     arabicExplaination: string[];
   }[];
@@ -71,15 +73,19 @@ export const buildDepartmentFormData = (values: CreateDepartmentFormPayload): Fo
 
   const normalizedCustomExplainantions = values.customExplainantions
     .map((section) => ({
+      heading: section.heading.trim(),
       subHeading: section.subHeading.trim(),
       explaination: section.explaination.map((line) => line.trim()).filter(Boolean),
+      arabicHeading: section.arabicHeading.trim(),
       arabicSubHeading: section.arabicSubHeading.trim(),
       arabicExplaination: section.arabicExplaination.map((line) => line.trim()).filter(Boolean),
     }))
     .filter(
       (section) =>
+        section.heading.length > 0 ||
         section.subHeading.length > 0 ||
         section.explaination.length > 0 ||
+        section.arabicHeading.length > 0 ||
         section.arabicSubHeading.length > 0 ||
         section.arabicExplaination.length > 0,
     );
@@ -108,7 +114,9 @@ export type DepartmentDetail = DepartmentListItem & {
   customExplainantions?: {
     _id?: string;
     id?: string;
+    heading?: string;
     subHeading?: string;
+    arabicHeading?: string;
     arabicSubHeading?: string;
     explaination?: string[];
     arabicExplaination?: string[];
@@ -182,8 +190,10 @@ export type EditDepartmentFormValues = {
   order: number;
   customSections: {
     id: string;
+    heading: string;
     subHeading: string;
     explaination: string[];
+    arabicHeading: string;
     arabicSubHeading: string;
     arabicExplaination: string[];
   }[];
@@ -218,20 +228,31 @@ export const mapApiDepartmentToEditForm = (
   imageUrl: string;
 } => {
   const customSections = Array.isArray(row.customExplainantions)
-    ? row.customExplainantions.map((section, idx) => ({
+    ? row.customExplainantions.map((section, idx) => {
+        const legacySubHeading = String(section.subHeading ?? "");
+        const heading = String(section.heading ?? "");
+        const hasHeading = heading.length > 0;
+        const legacyArabicSubHeading = String(section.arabicSubHeading ?? "");
+        const arabicHeading = String(section.arabicHeading ?? "");
+        const hasArabicHeading = arabicHeading.length > 0;
+
+        return {
         id: String(section._id ?? section.id ?? `${Date.now()}-${idx}`),
-        subHeading: String(section.subHeading ?? ""),
+        heading: hasHeading ? heading : legacySubHeading,
+        subHeading: hasHeading ? legacySubHeading : "",
         explaination:
           Array.isArray(section.explaination) && section.explaination.length > 0
             ? section.explaination.map(String)
             : [""],
-        arabicSubHeading: String(section.arabicSubHeading ?? ""),
+        arabicHeading: hasArabicHeading ? arabicHeading : legacyArabicSubHeading,
+        arabicSubHeading: hasArabicHeading ? legacyArabicSubHeading : "",
         arabicExplaination:
           Array.isArray(section.arabicExplaination) &&
           section.arabicExplaination.length > 0
             ? section.arabicExplaination.map(String)
             : [""],
-      }))
+      };
+      })
     : [];
 
   return {

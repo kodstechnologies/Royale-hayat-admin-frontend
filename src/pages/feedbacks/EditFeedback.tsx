@@ -140,7 +140,7 @@ const EditFeedback = ({
           );
           const departmentObj = doc.department && typeof doc.department === "object" ? doc.department : null;
           return {
-            doctorId: doc.doctorId || "",
+            doctorId: String(doc._id || doc.id || ""),
             name: doc.name || "",
             arabicName: doc.arabicName || doc.nameAr || adminMatch?.arabicName || "",
             department:
@@ -245,7 +245,7 @@ const EditFeedback = ({
           arabicFeedback: formData.commentAr,
           stars: formData.rating,
           shownOnWebsite: formData.showOnWebsite,
-          doctorId: formData.doctorId,
+          doctor: formData.doctorId,
         };
 
         await updateDoctorFeedback({

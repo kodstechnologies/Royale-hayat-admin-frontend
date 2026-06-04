@@ -17,7 +17,9 @@ import { getDoctors } from "@/api/doctors";
 import { adminDoctors } from "@/data/adminDoctors";
 
 type FeedbackDoctorOption = {
+  /** Doctor MongoDB _id (used in feedback API routes) */
   doctorId: string;
+  providerCode?: string;
   name: string;
   arabicName: string;
   department: string;
@@ -68,7 +70,8 @@ const AddFeedback = ({ onSave }: AddFeedbackProps) => {
           );
           const departmentObj = doc.department && typeof doc.department === "object" ? doc.department : null;
           return {
-            doctorId: doc.doctorId || "",
+            doctorId: String(doc._id || doc.id || ""),
+            providerCode: doc.doctorId || "",
             name: doc.name || "",
             arabicName: doc.arabicName || doc.nameAr || adminMatch?.arabicName || "",
             department: departmentObj?.name || (typeof doc.department === "string" ? doc.department : doc.specialty || adminMatch?.department || ""),
@@ -144,7 +147,7 @@ const AddFeedback = ({ onSave }: AddFeedbackProps) => {
           arabicFeedback: formData.commentAr,
           stars: formData.rating,
           shownOnWebsite: true,
-          doctorId: selectedDoctorId,
+          doctor: selectedDoctorId,
         };
 
         await createDoctorFeedback({

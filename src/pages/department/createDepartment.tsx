@@ -25,8 +25,10 @@ export type CreateDepartmentFormData = {
   order: number;
   customExplainantions: {
     id?: string;
+    heading: string;
     subHeading: string;
     explaination: string[];
+    arabicHeading: string;
     arabicSubHeading: string;
     arabicExplaination: string[];
   }[];
@@ -101,8 +103,10 @@ const CreateDepartmentPage = () => {
       ...current,
       {
         id: Date.now().toString(),
+        heading: "",
         subHeading: "",
         explaination: [""],
+        arabicHeading: "",
         arabicSubHeading: "",
         arabicExplaination: [""],
       },
@@ -330,7 +334,7 @@ const CreateDepartmentPage = () => {
                         <div className="flex items-center justify-between pb-2 border-b border-slate-100">
                           <div>
                             <h3 className="text-md font-semibold text-slate-800">Custom Sections</h3>
-                            <p className="text-xs text-slate-500">Add headings and explanations</p>
+                            <p className="text-xs text-slate-500">Add headings, subheadings, and explanations</p>
                           </div>
                           <Button
                             type="button"
@@ -368,13 +372,26 @@ const CreateDepartmentPage = () => {
                               <div>
                                 <label className="text-xs font-medium text-slate-600 block mb-1">Heading</label>
                                 <Input
+                                  value={section.heading}
+                                  onChange={(e) => {
+                                    const newSections = [...values.customExplainantions];
+                                    newSections[idx].heading = e.target.value;
+                                    setFieldValue("customExplainantions", newSections);
+                                  }}
+                                  placeholder="Enter heading"
+                                  className="h-9"
+                                />
+                              </div>
+                              <div>
+                                <label className="text-xs font-medium text-slate-600 block mb-1">Subheading</label>
+                                <Input
                                   value={section.subHeading}
                                   onChange={(e) => {
                                     const newSections = [...values.customExplainantions];
                                     newSections[idx].subHeading = e.target.value;
                                     setFieldValue("customExplainantions", newSections);
                                   }}
-                                  placeholder="Enter heading"
+                                  placeholder="Enter subheading"
                                   className="h-9"
                                 />
                               </div>
@@ -467,7 +484,7 @@ const CreateDepartmentPage = () => {
                         <div className="flex items-center justify-between pb-2 border-b border-slate-100">
                           <div>
                             <h3 className="text-md font-semibold text-slate-800">Custom Sections (Arabic)</h3>
-                            <p className="text-xs text-slate-500">Add headings and explanations in Arabic</p>
+                            <p className="text-xs text-slate-500">Add headings, subheadings, and explanations in Arabic</p>
                           </div>
                           <Button
                             type="button"
@@ -505,13 +522,27 @@ const CreateDepartmentPage = () => {
                               <div>
                                 <label className="text-xs font-medium text-slate-600 block mb-1">Heading (Arabic)</label>
                                 <Input
+                                  value={section.arabicHeading}
+                                  onChange={(e) => {
+                                    const newSections = [...values.customExplainantions];
+                                    newSections[idx].arabicHeading = e.target.value;
+                                    setFieldValue("customExplainantions", newSections);
+                                  }}
+                                  placeholder="Enter heading in Arabic"
+                                  className="h-9"
+                                  dir="rtl"
+                                />
+                              </div>
+                              <div>
+                                <label className="text-xs font-medium text-slate-600 block mb-1">Subheading (Arabic)</label>
+                                <Input
                                   value={section.arabicSubHeading}
                                   onChange={(e) => {
                                     const newSections = [...values.customExplainantions];
                                     newSections[idx].arabicSubHeading = e.target.value;
                                     setFieldValue("customExplainantions", newSections);
                                   }}
-                                  placeholder="Enter heading in Arabic"
+                                  placeholder="Enter subheading in Arabic"
                                   className="h-9"
                                   dir="rtl"
                                 />
