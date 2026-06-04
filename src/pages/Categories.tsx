@@ -7,65 +7,62 @@ import { Pencil, Plus, Trash2, Search, X, Check, ArrowLeft, ChevronLeft, Chevron
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import AlertBox from "@/components/AlertBox";
-
-type Category = {
-  _id: string;
-  name: string;
-  arabicName: string;
-  createdAt: string;
-  updatedAt: string;
-};
-
-const initialCategories: Category[] = [
-  {
-    _id: "1",
-    name: "Clinical speciality",
-    arabicName: "التخصصات السريرية",
-    createdAt: "2024-01-15T10:30:00Z",
-    updatedAt: "2024-01-15T10:30:00Z",
-  },
-  {
-    _id: "2",
-    name: "Clinical Support Service",
-    arabicName: "خدمات الدعم السريري",
-    createdAt: "2024-01-16T11:30:00Z",
-    updatedAt: "2024-01-16T11:30:00Z",
-  },
-  {
-    _id: "3",
-    name: "Home Care Service",
-    arabicName: "خدمات الرعاية المنزلية",
-    createdAt: "2024-01-17T12:30:00Z",
-    updatedAt: "2024-01-17T12:30:00Z",
-  },
-];
+import Loader from "@/components/SkeletonLoader";
+import {
+  createCatagory,
+  deleteCatagory,
+  fetchAllCatagories,
+  updateCatagory,
+  type Catagory,
+} from "@/api/catagory";
+import { PERMISSIONS } from "@/constants/permissions";
+import PermissionGate from "@/utils/PermissionGate";
 
 const Categories = () => {
   const { t } = useLanguage();
 
-  const [items, setItems] = useState<Category[]>(initialCategories);
-  const [loading, setLoading] = useState(false);
+  const [items, setItems] = useState<Catagory[]>([]);
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
   const [currentPage, setCurrentPage] = useState(1);
   const [limit] = useState(10);
-  const [totalPages, setTotalPages] = useState(Math.ceil(initialCategories.length / 10));
+  const [totalPages, setTotalPages] = useState(1);
 
   const [search, setSearch] = useState("");
   const [searchInput, setSearchInput] = useState("");
 
   const [isFormVisible, setIsFormVisible] = useState(false);
-  const [editingItem, setEditingItem] = useState<Category | null>(null);
+  const [editingItem, setEditingItem] = useState<Catagory | null>(null);
   const [activeTab, setActiveTab] = useState<"english" | "arabic">("english");
 
   const [nameDraft, setNameDraft] = useState("");
   const [arabicNameDraft, setArabicNameDraft] = useState("");
 
   const [deleteOpen, setDeleteOpen] = useState(false);
-  const [toDelete, setToDelete] = useState<Category | null>(null);
+  const [toDelete, setToDelete] = useState<Catagory | null>(null);
   const [deleting, setDeleting] = useState(false);
 
-  const filteredItems = items.filter(item => 
+  const loadCategories = useCallback(async () => {
+    setLoading(true);
+    try {
+      const list = await fetchAllCatagories();
+      setItems(list);
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } } };
+      console.error("Error loading categories:", error);
+      toast.error(err?.response?.data?.message || "Failed to load categories");
+      setItems([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadCategories();
+  }, [loadCategories]);
+
+  const filteredItems = items.filter(item =>
     item.name.toLowerCase().includes(search.toLowerCase()) ||
     item.arabicName.toLowerCase().includes(search.toLowerCase())
   );
@@ -88,7 +85,7 @@ const Categories = () => {
     setIsFormVisible(true);
   };
 
-  const openEditForm = (row: Category) => {
+  const openEditForm = (row: Catagory) => {
     setEditingItem(row);
     setNameDraft(row.name);
     setArabicNameDraft(row.arabicName);
@@ -104,7 +101,7 @@ const Categories = () => {
     setActiveTab("english");
   };
 
-  const submitForm = () => {
+  const submitForm = async () => {
     const name = nameDraft.trim();
     const arabicName = arabicNameDraft.trim();
 
@@ -120,62 +117,61 @@ const Categories = () => {
 
     setSaving(true);
 
-    setTimeout(() => {
+    try {
       if (editingItem) {
-        const updatedItems = items.map(item =>
-          item._id === editingItem._id
-            ? { ...item, name, arabicName, updatedAt: new Date().toISOString() }
-            : item
-        );
-        setItems(updatedItems);
+        await updateCatagory(editingItem._id, { name, arabicName });
         toast.success("Category updated successfully");
       } else {
-        const newCategory: Category = {
-          _id: Date.now().toString(),
-          name,
-          arabicName,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        };
-        setItems([newCategory, ...items]);
+        await createCatagory({ name, arabicName });
         toast.success("Category created successfully");
-        
         setCurrentPage(1);
         setSearch("");
         setSearchInput("");
       }
 
+      await loadCategories();
       setIsFormVisible(false);
       setEditingItem(null);
       setNameDraft("");
       setArabicNameDraft("");
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } } };
+      console.error("Error saving category:", error);
+      toast.error(err?.response?.data?.message || "Failed to save category");
+    } finally {
       setSaving(false);
-    }, 500);
+    }
   };
 
-  const confirmDelete = (row: Category) => {
+  const confirmDelete = (row: Catagory) => {
     setToDelete(row);
     setDeleteOpen(true);
   };
 
-  const runDelete = () => {
+  const runDelete = async () => {
     if (!toDelete) return;
 
     setDeleting(true);
 
-    setTimeout(() => {
-      const updatedItems = items.filter(item => item._id !== toDelete._id);
-      setItems(updatedItems);
+    try {
+      await deleteCatagory(toDelete._id);
+      await loadCategories();
       toast.success("Category deleted successfully");
       setDeleteOpen(false);
       setToDelete(null);
-      setDeleting(false);
 
-      const newTotalPages = Math.ceil(updatedItems.length / limit);
+      const remainingCount = items.filter((item) => item._id !== toDelete._id).length;
+      const newTotalPages = Math.ceil(remainingCount / limit);
       if (currentPage > newTotalPages && newTotalPages > 0) {
         setCurrentPage(newTotalPages);
       }
-    }, 500);
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } } };
+      console.error("Error deleting category:", error);
+      toast.error(err?.response?.data?.message || "Failed to delete category");
+    } finally {
+      setDeleting(false);
+    }
   };
 
   const applySearch = () => {
@@ -189,7 +185,8 @@ const Categories = () => {
     setCurrentPage(1);
   };
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return "—";
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', { 
       year: 'numeric', 
@@ -332,7 +329,6 @@ const Categories = () => {
                 </div>
                 
                 <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-                  
                   <div className="flex flex-col min-[400px]:flex-row gap-2 w-full sm:w-auto">
                     <div className="relative flex-1 min-w-0">
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -366,27 +362,40 @@ const Categories = () => {
                     </div>
                   </div>
 
-                  
-                  
+                  {/* <PermissionGate permission={PERMISSIONS.CATAGORY_CREATE}>
+                    <Button
+                      onClick={openCreateForm}
+                      className="gap-2 w-full sm:w-auto bg-burgundy hover:bg-burgundy/90"
+                    >
+                      <Plus className="h-4 w-4" />
+                      Add Category
+                    </Button>
+                  </PermissionGate> */}
                 </div>
               </div>
 
               
-              {paginatedItems.length === 0 ? (
+              {loading ? (
+                <div className="py-12">
+                  <Loader />
+                </div>
+              ) : paginatedItems.length === 0 ? (
                 <div className="text-center py-16">
                   <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-slate-100 flex items-center justify-center">
                     <FolderOpen className="h-10 w-10 text-slate-400" />
                   </div>
                   <p className="text-slate-500 font-medium">No categories found</p>
                   <p className="text-sm text-slate-400 mt-1">Try adjusting your search or create a new category</p>
-                  <Button
-                    variant="outline"
-                    onClick={openCreateForm}
-                    className="mt-4 gap-2"
-                  >
-                    <Plus className="h-4 w-4" />
-                    Add your first category
-                  </Button>
+                  <PermissionGate permission={PERMISSIONS.CATAGORY_CREATE}>
+                    <Button
+                      variant="outline"
+                      onClick={openCreateForm}
+                      className="mt-4 gap-2"
+                    >
+                      <Plus className="h-4 w-4" />
+                      Add your first category
+                    </Button>
+                  </PermissionGate>
                 </div>
               ) : (
                 <>

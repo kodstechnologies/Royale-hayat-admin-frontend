@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import AdminLayout from "@/components/layout/AdminLayout";
 import BreadCrumb from "@/components/layout/BreadCrumb";
 import { toast } from "sonner";
@@ -13,9 +13,15 @@ import {
   X,
   Loader2,
   Eye,
+  Pencil,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  getDepartments,
+  mapApiDepartmentToListItem,
+  type Department,
+} from "@/api/department";
 import {
   getSubspecialities,
   mapApiSubspecialityToListItem,
@@ -36,16 +42,39 @@ const Subspecialities = () => {
   const [search, setSearch] = useState("");
   const [searchInput, setSearchInput] = useState("");
   const [selectedDepartment, setSelectedDepartment] = useState<string>("all");
+  const [departments, setDepartments] = useState<{ id: string; name: string }[]>([]);
+  const [loadingDepartments, setLoadingDepartments] = useState(true);
 
-  const departmentOptions = useMemo(() => {
-    const map = new Map<string, string>();
-    items.forEach((item) => {
-      if (item.departmentId) {
-        map.set(item.departmentId, item.departmentName || item.departmentId);
+  useEffect(() => {
+    const loadDepartments = async () => {
+      setLoadingDepartments(true);
+      try {
+        const response = await getDepartments({
+          page: 1,
+          limit: 100,
+          sortBy: "name",
+          sortOrder: "asc",
+        });
+        const list = Array.isArray(response.data?.data)
+          ? (response.data.data as Department[])
+          : [];
+        setDepartments(
+          list.map((row) => {
+            const item = mapApiDepartmentToListItem(row);
+            return { id: item._id, name: item.name };
+          }),
+        );
+      } catch (error) {
+        console.error("Error loading departments:", error);
+        toast.error("Failed to load departments");
+        setDepartments([]);
+      } finally {
+        setLoadingDepartments(false);
       }
-    });
-    return Array.from(map.entries()).map(([id, name]) => ({ id, name }));
-  }, [items]);
+    };
+
+    void loadDepartments();
+  }, []);
 
   const fetchSubspecialities = useCallback(async () => {
     setLoading(true);
@@ -53,8 +82,8 @@ const Subspecialities = () => {
       const params: Record<string, string | number> = {
         page: 1,
         limit: 100,
-        sortBy: "name",
-        sortOrder: "asc",
+        sortBy: "createdAt",
+        sortOrder: "desc",
       };
       if (search.trim()) {
         params.search = search.trim();
@@ -133,6 +162,17 @@ const Subspecialities = () => {
                   Manage medical subspecialities and organize your services
                 </p>
               </div>
+              {/* <PermissionGate permission={PERMISSIONS.SUBSPECIALITY}>
+                <Button
+                  asChild
+                  className="gap-2 w-full sm:w-auto bg-burgundy hover:bg-burgundy/90 shadow-md hover:shadow-lg transition-all duration-200"
+                >
+                  <Link to="/subspecialities/create">
+                    <Plus className="h-4 w-4" />
+                    Add Subspeciality
+                  </Link>
+                </Button>
+              </PermissionGate> */}
             </div>
 
             <div className="flex flex-col gap-3 mb-4 sm:mb-6">
@@ -168,21 +208,29 @@ const Subspecialities = () => {
                 </div>
               </div>
 
-              <select
+              {/* <select
                 value={selectedDepartment}
                 onChange={(e) => {
                   setSelectedDepartment(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="w-full sm:w-auto px-4 py-2 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-burgundy/20 focus:border-burgundy transition-all"
+                disabled={loadingDepartments}
+                dir="ltr"
+                className="w-full sm:w-auto px-4 py-2 rounded-xl border border-slate-200 bg-white text-sm text-left focus:outline-none focus:ring-2 focus:ring-burgundy/20 focus:border-burgundy transition-all disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 <option value="all">All Departments</option>
-                {departmentOptions.map((dept) => (
-                  <option key={dept.id} value={dept.id}>
-                    {dept.name}
+                {loadingDepartments ? (
+                  <option value="" disabled>
+                    Loading departments...
                   </option>
-                ))}
-              </select>
+                ) : (
+                  departments.map((dept) => (
+                    <option key={dept.id} value={dept.id}>
+                      {dept.name}
+                    </option>
+                  ))
+                )}
+              </select> */}
             </div>
 
             {loading ? (
@@ -245,18 +293,31 @@ const Subspecialities = () => {
                             <Calendar className="h-3 w-3 shrink-0" />
                             {formatDate(row.updatedAt)}
                           </p>
-                          <div className="flex justify-end pt-3 mt-3 border-t border-slate-100">
+                          <div className="flex items-center gap-2 justify-end pt-3 mt-3 border-t border-slate-100">
                             <Button
                               asChild
                               variant="ghost"
                               size="sm"
-                              className="text-burgundy hover:bg-burgundy/10"
+                              className="flex-1 text-slate-600 hover:bg-slate-50"
                             >
                               <Link to={`/subspecialities/view/${row.id}`}>
                                 <Eye className="h-4 w-4 mr-1.5" />
                                 View
                               </Link>
                             </Button>
+                            {/* <PermissionGate permission={PERMISSIONS.SUBSPECIALITY_UPDATE}>
+                              <Button
+                                asChild
+                                variant="ghost"
+                                size="sm"
+                                className="flex-1 text-burgundy hover:bg-burgundy/10"
+                              >
+                                <Link to={`/subspecialities/edit/${row.id}`}>
+                                  <Pencil className="h-4 w-4 mr-1.5" />
+                                  Edit
+                                </Link>
+                              </Button>
+                            </PermissionGate> */}
                           </div>
                         </article>
                       ))}
@@ -278,7 +339,7 @@ const Subspecialities = () => {
                             <th className="text-left py-3 px-4 font-semibold text-slate-600 text-xs uppercase tracking-wider hidden lg:table-cell">
                               Last Updated
                             </th>
-                            <th className="text-right py-3 px-4 font-semibold text-slate-600 text-xs uppercase tracking-wider w-[100px]">
+                            <th className="text-right py-3 px-4 font-semibold text-slate-600 text-xs uppercase tracking-wider w-[120px]">
                               Actions
                             </th>
                           </tr>
@@ -318,17 +379,31 @@ const Subspecialities = () => {
                                 </div>
                               </td>
                               <td className="py-3 px-4 text-right">
-                                <div className="flex items-center justify-end gap-2">
+                                <div className="flex items-center justify-end gap-1">
                                   <Button
                                     asChild
                                     variant="ghost"
                                     size="icon"
                                     className="h-8 w-8 text-slate-500 hover:text-burgundy hover:bg-burgundy/10 transition-all duration-200"
+                                    title="View"
                                   >
                                     <Link to={`/subspecialities/view/${row.id}`}>
                                       <Eye className="h-4 w-4" />
                                     </Link>
                                   </Button>
+                                  {/* <PermissionGate permission={PERMISSIONS.SUBSPECIALITY_UPDATE}>
+                                    <Button
+                                      asChild
+                                      variant="ghost"
+                                      size="icon"
+                                      className="h-8 w-8 text-slate-500 hover:text-burgundy hover:bg-burgundy/10 transition-all duration-200"
+                                      title="Edit"
+                                    >
+                                      <Link to={`/subspecialities/edit/${row.id}`}>
+                                        <Pencil className="h-4 w-4" />
+                                      </Link>
+                                    </Button>
+                                  </PermissionGate> */}
                                 </div>
                               </td>
                             </tr>

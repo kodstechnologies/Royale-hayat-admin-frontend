@@ -52,8 +52,8 @@ export const fetchAllCatagories = async (): Promise<Catagory[]> => {
     const res = await getCatagories({
       page,
       limit,
-      sortBy: "name",
-      sortOrder: "asc",
+      sortBy: "createdAt",
+      sortOrder: "desc",
     });
     const rows: Catagory[] = res?.data?.data ?? [];
     const meta = res?.data?.meta as CatagoryListMeta | undefined;

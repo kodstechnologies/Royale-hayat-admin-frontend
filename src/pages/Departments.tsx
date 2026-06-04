@@ -3,15 +3,17 @@ import { useNavigate } from "react-router-dom";
 import AdminLayout from "@/components/layout/AdminLayout";
 import BreadCrumb from "@/components/layout/BreadCrumb";
 import { toast } from "sonner";
-import { Eye, Image as ImageIcon, Plus, Search } from "lucide-react";
+import { Eye, Image as ImageIcon, Pencil, Plus, Search } from "lucide-react";
 import Loader from "@/components/SkeletonLoader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   getDepartments,
   mapApiDepartmentToListItem,
+  normalizeDepartmentCategory,
   type DepartmentListItem,
 } from "@/api/department";
+import { fetchAllCatagories, type Catagory } from "@/api/catagory";
 import { PERMISSIONS } from "@/constants/permissions";
 import PermissionGate from "@/utils/PermissionGate";
 
@@ -25,8 +27,26 @@ const Departments = () => {
   const [search, setSearch] = useState("");
   const [searchInput, setSearchInput] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [categories, setCategories] = useState<Catagory[]>([]);
+  const [loadingCategories, setLoadingCategories] = useState(true);
 
-  const categories = Array.from(new Set(departments.map((dept) => dept.category)));
+  useEffect(() => {
+    const loadCategories = async () => {
+      setLoadingCategories(true);
+      try {
+        const list = await fetchAllCatagories();
+        setCategories(list);
+      } catch (error) {
+        console.error("Error loading categories:", error);
+        toast.error("Failed to load categories");
+        setCategories([]);
+      } finally {
+        setLoadingCategories(false);
+      }
+    };
+
+    void loadCategories();
+  }, []);
 
   const fetchDepartments = useCallback(async () => {
     setLoading(true);
@@ -34,8 +54,8 @@ const Departments = () => {
       const params: Record<string, string | number> = {
         page: 1,
         limit: 100,
-        sortBy: "order",
-        sortOrder: "asc",
+        sortBy: "createdAt",
+        sortOrder: "desc",
       };
       if (search.trim()) {
         params.search = search.trim();
@@ -62,7 +82,9 @@ const Departments = () => {
 
   const filteredDepartments = departments.filter((dept) => {
     const matchesCategory =
-      selectedCategory === "all" || dept.category === selectedCategory;
+      selectedCategory === "all" ||
+      normalizeDepartmentCategory(dept.category).toLowerCase() ===
+        normalizeDepartmentCategory(selectedCategory).toLowerCase();
     return matchesCategory;
   });
 
@@ -93,13 +115,26 @@ const Departments = () => {
     setCurrentPage(1);
   };
 
+  const getCategoryBadgeLabel = (category: string) => {
+    const normalized = normalizeDepartmentCategory(category);
+    switch (normalized) {
+      case "CLINICAL SPECIALITY":
+        return "Clinical";
+      case "CLINICAL SUPPORT SERVICE":
+        return "Support";
+      case "HOME CARE SERVICE":
+        return "Home Care";
+      default:
+        return normalized.length > 14 ? `${normalized.slice(0, 14)}…` : normalized;
+    }
+  };
   const getCategoryColor = (category: string) => {
-    switch (category) {
-      case "Clinical Speciality":
+    switch (normalizeDepartmentCategory(category)) {
+      case "CLINICAL SPECIALITY":
         return "bg-blue-100 text-blue-700";
-      case "Clinical Support Service":
+      case "CLINICAL SUPPORT SERVICE":
         return "bg-green-100 text-green-700";
-      case "Home Care Service":
+      case "HOME CARE SERVICE":
         return "bg-purple-100 text-purple-700";
       default:
         return "bg-gray-100 text-gray-700";
@@ -124,6 +159,16 @@ const Departments = () => {
                   Manage hospital departments and their details
                 </p>
               </div>
+              {/* <PermissionGate permission={PERMISSIONS.DEPARTMENT}>
+                <Button
+                  type="button"
+                  onClick={() => navigate("/departments/create")}
+                  className="gap-2 w-full sm:w-auto bg-burgundy hover:bg-burgundy/90 shadow-md hover:shadow-lg transition-all duration-200"
+                >
+                  <Plus className="h-4 w-4" />
+                  Create Department
+                </Button>
+              </PermissionGate> */}
             </div>
 
             <div className="flex flex-col gap-3 mb-4 sm:mb-6">
@@ -166,14 +211,22 @@ const Departments = () => {
                   setSelectedCategory(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="w-full sm:w-auto px-4 py-2 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-burgundy/20 focus:border-burgundy transition-all"
+                disabled={loadingCategories}
+                dir="ltr"
+                className="w-full sm:w-auto px-4 py-2 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-burgundy/20 focus:border-burgundy transition-all disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 <option value="all">All Categories</option>
-                {categories.map((cat) => (
-                  <option key={cat} value={cat}>
-                    {cat}
+                {loadingCategories ? (
+                  <option value="" disabled>
+                    Loading categories...
                   </option>
-                ))}
+                ) : (
+                  categories.map((cat) => (
+                    <option key={cat._id} value={cat.name}>
+                      {cat.name}
+                    </option>
+                  ))
+                )}
               </select>
             </div>
 
@@ -239,11 +292,7 @@ const Departments = () => {
                               <span
                                 className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${getCategoryColor(dept.category)}`}
                               >
-                                {dept.category === "Clinical Speciality"
-                                  ? "Clinical"
-                                  : dept.category === "Clinical Support Service"
-                                    ? "Support"
-                                    : "Home Care"}
+                                {getCategoryBadgeLabel(dept.category)}
                               </span>
                             </div>
                             {dept.isActive === false && (
@@ -265,6 +314,16 @@ const Departments = () => {
                                 <Eye size={12} />
                                 View
                               </button>
+                              {/* <PermissionGate permission={PERMISSIONS.DEPARTMENT_UPDATE}>
+                                <button
+                                  type="button"
+                                  onClick={() => navigate(`/departments/edit/${dept._id}`)}
+                                  className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-burgundy/30 text-burgundy text-xs font-medium hover:bg-burgundy/5 transition-colors"
+                                >
+                                  <Pencil size={12} />
+                                  Edit
+                                </button>
+                              </PermissionGate> */}
                             </div>
                           </div>
                         </div>

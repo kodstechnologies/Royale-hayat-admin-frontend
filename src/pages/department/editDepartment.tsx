@@ -2,140 +2,101 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import AdminLayout from "@/components/layout/AdminLayout";
 import BreadCrumb from "@/components/layout/BreadCrumb";
-import { Formik, Form, ErrorMessage } from "formik";
+import { Formik, Form } from "formik";
 import { toast } from "sonner";
-import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft, Upload, X, Globe, Languages, Plus, Trash2 } from "lucide-react";
-import { adminDepartments } from "@/data/departments";
-
-type DepartmentFormData = {
-  departmentId: string;
-  name: string;
-  description: string;
-  arabicName: string;
-  arabicDescription: string;
-  catagoryId: string;
-  imageFile: File | null;
-  isActive: boolean;
-  order: number;
-  customSections: {
-    id: string;
-    subHeading: string;
-    explaination: string[];
-    arabicSubHeading: string;
-    arabicExplaination: string[];
-  }[];
-};
-
-const dummyCategories = [
-  { _id: "cat1", name: "Cardiology", arabicName: "أمراض القلب" },
-  { _id: "cat2", name: "Neurology", arabicName: "الأعصاب" },
-  { _id: "cat3", name: "Pediatrics", arabicName: "طب الأطفال" },
-  { _id: "cat4", name: "Orthopedics", arabicName: "جراحة العظام" },
-  { _id: "cat5", name: "Dermatology", arabicName: "الأمراض الجلدية" },
-];
-
-const getStoredDepartments = () => {
-  const stored = localStorage.getItem('rhh_departments');
-  if (stored) {
-    return JSON.parse(stored);
-  }
-  return [];
-};
-
-const saveDepartmentsToStorage = (departments: any[]) => {
-  localStorage.setItem('rhh_departments', JSON.stringify(departments));
-};
-
-const getCategoryNameFromId = (categoryId: string): string => {
-  const categoryMap: Record<string, string> = {
-    cat1: "Cardiology",
-    cat2: "Neurology",
-    cat3: "Pediatrics",
-    cat4: "Orthopedics",
-    cat5: "Dermatology",
-  };
-  return categoryMap[categoryId] || "Clinical Speciality";
-};
+import { fetchAllCatagories, type Catagory } from "@/api/catagory";
+import {
+  buildDepartmentFormData,
+  getDepartmentById,
+  mapApiDepartmentToEditForm,
+  updateDepartment,
+  type EditDepartmentFormValues,
+} from "@/api/department";
+import { showApiErrorToast } from "@/lib/apiError";
 
 const EditDepartmentPage = () => {
   const navigate = useNavigate();
   const { id } = useParams();
-  const { t } = useLanguage();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState<"english" | "arabic">("english");
   const [previewUrl, setPreviewUrl] = useState("");
   const [dragActive, setDragActive] = useState(false);
-  const [categories] = useState(dummyCategories);
-  const [initialValues, setInitialValues] = useState<DepartmentFormData | null>(null);
-  const [isUserDepartment, setIsUserDepartment] = useState(false);
-  const [originalImage, setOriginalImage] = useState("");
+  const [categories, setCategories] = useState<Catagory[]>([]);
+  const [loadingCategories, setLoadingCategories] = useState(true);
+  const [initialValues, setInitialValues] = useState<EditDepartmentFormValues | null>(null);
+  const [categoryNameForMatch, setCategoryNameForMatch] = useState<string | null>(null);
 
   useEffect(() => {
-    setTimeout(() => {
-      let foundDepartment = null;
-      let isUserCreated = false;
-      let imageUrl = "";
+    const loadCategories = async () => {
+      setLoadingCategories(true);
+      try {
+        const list = await fetchAllCatagories();
+        setCategories(list);
+      } catch (error) {
+        console.error("Error loading categories:", error);
+        toast.error("Failed to load categories");
+        setCategories([]);
+      } finally {
+        setLoadingCategories(false);
+      }
+    };
 
-      const userDepartments = getStoredDepartments();
-      foundDepartment = userDepartments.find((dept: any) => dept._id === id);
-      
-      if (foundDepartment) {
-        isUserCreated = true;
-        imageUrl = foundDepartment.image || "";
-        
-        setInitialValues({
-          departmentId: foundDepartment.departmentId,
-          name: foundDepartment.name,
-          description: foundDepartment.description,
-          arabicName: foundDepartment.arabicName || foundDepartment.name,
-          arabicDescription: foundDepartment.arabicDescription || foundDepartment.description,
-          catagoryId: foundDepartment.catagoryId || "cat1",
-          imageFile: null,
-          isActive: foundDepartment.isActive !== undefined ? foundDepartment.isActive : true,
-          order: foundDepartment.order || 0,
-          customSections: foundDepartment.customExplainantions?.map((section: any, idx: number) => ({
-            id: section.id || Date.now().toString() + idx,
-            subHeading: section.subHeading || "",
-            explaination: section.explaination || [""],
-            arabicSubHeading: section.arabicSubHeading || "",
-            arabicExplaination: section.arabicExplaination || [""],
-          })) || [],
-        });
-      } else {
-        const staticDepartment = adminDepartments.find((dept: any) => dept.id === id);
-        if (staticDepartment) {
-          isUserCreated = false;
-          imageUrl = staticDepartment.image || "";
-          
-          setInitialValues({
-            departmentId: staticDepartment.clinicalCode || staticDepartment.id,
-            name: staticDepartment.name,
-            description: staticDepartment.description,
-            arabicName: staticDepartment.nameAr,
-            arabicDescription: staticDepartment.descriptionAr,
-            catagoryId: "cat1",
-            imageFile: null,
-            isActive: true,
-            order: 0,
-            customSections: [],
-          });
-        }
-      }
-      
-      if (foundDepartment || (adminDepartments.find((dept: any) => dept.id === id))) {
-        setIsUserDepartment(isUserCreated);
-        setOriginalImage(imageUrl);
-        setPreviewUrl(imageUrl);
-      }
-      
+    void loadCategories();
+  }, []);
+
+  useEffect(() => {
+    if (categories.length === 0 || !initialValues) return;
+
+    const hasValidCategory = categories.some((c) => c._id === initialValues.catagoryId);
+    if (hasValidCategory || !categoryNameForMatch) return;
+
+    const matched = categories.find(
+      (c) => c.name.trim().toLowerCase() === categoryNameForMatch.trim().toLowerCase(),
+    );
+    if (matched) {
+      setInitialValues((prev) => (prev ? { ...prev, catagoryId: matched._id } : prev));
+    }
+  }, [categories, initialValues, categoryNameForMatch]);
+
+  useEffect(() => {
+    if (!id) {
       setLoading(false);
-    }, 500);
-  }, [id]);
+      return;
+    }
+
+    const loadDepartment = async () => {
+      setLoading(true);
+
+      try {
+        const response = await getDepartmentById(id);
+        const body = response.data;
+        const raw = body?.data ?? body;
+
+        if (raw && raw._id) {
+          const mapped = mapApiDepartmentToEditForm(raw);
+          setInitialValues(mapped.values);
+          setCategoryNameForMatch(mapped.categoryNameForMatch);
+          setPreviewUrl(mapped.imageUrl);
+        } else {
+          toast.error("Department not found.");
+          navigate("/departments");
+        }
+      } catch (error: unknown) {
+        console.error("Error loading department:", error);
+        showApiErrorToast(error, "Failed to load department", toast.error);
+        navigate("/departments");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    void loadDepartment();
+  }, [id, navigate]);
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
@@ -213,7 +174,9 @@ const EditDepartmentPage = () => {
     setFieldValue("customSections", newSections);
   };
 
-  const handleSubmit = async (values: DepartmentFormData) => {
+  const handleSubmit = async (values: EditDepartmentFormValues) => {
+    if (!id) return;
+
     const departmentId = values.departmentId.trim();
     const name = values.name.trim();
     const description = values.description.trim();
@@ -235,60 +198,50 @@ const EditDepartmentPage = () => {
       return;
     }
 
-    setSaving(true);
-    
-    setTimeout(() => {
-      const selectedCategory = dummyCategories.find(c => c._id === values.catagoryId);
-      const categoryName = selectedCategory ? selectedCategory.name : "General";
+    if (description.length < 10) {
+      toast.error("Description must be at least 10 characters");
+      setActiveTab("english");
+      return;
+    }
 
-      const updatedDepartment = {
-        _id: id,
-        departmentId: departmentId,
-        name: name,
-        description: description,
-        arabicName: arabicName,
-        arabicDescription: arabicDescription,
+    if (arabicDescription.length < 10) {
+      toast.error("Arabic description must be at least 10 characters");
+      setActiveTab("arabic");
+      return;
+    }
+
+    setSaving(true);
+
+    try {
+      const formData = buildDepartmentFormData({
+        departmentId,
+        name,
+        description,
+        arabicName,
+        arabicDescription,
         catagoryId: values.catagoryId,
-        category: categoryName,
-        image: previewUrl || originalImage,
         isActive: values.isActive,
         order: values.order,
-        customExplainantions: values.customSections.map(section => ({
-          id: section.id,
-          subHeading: section.subHeading,
-          explaination: section.explaination.filter(line => line.trim()),
-          arabicSubHeading: section.arabicSubHeading,
-          arabicExplaination: section.arabicExplaination.filter(line => line.trim()),
-        })),
-        updatedAt: new Date().toISOString(),
-      };
+        imageFile: values.imageFile,
+        customExplainantions: values.customSections.map(
+          ({ subHeading, explaination, arabicSubHeading, arabicExplaination }) => ({
+            subHeading,
+            explaination,
+            arabicSubHeading,
+            arabicExplaination,
+          }),
+        ),
+      });
 
-      if (isUserDepartment) {
-        const userDepartments = getStoredDepartments();
-        const updatedDepartments = userDepartments.map((dept: any) =>
-          dept._id === id ? updatedDepartment : dept
-        );
-        saveDepartmentsToStorage(updatedDepartments);
-      } else {
-        const userDepartments = getStoredDepartments();
-        
-        const existingIndex = userDepartments.findIndex((dept: any) => dept.departmentId === departmentId);
-        
-        if (existingIndex !== -1) {
-          userDepartments[existingIndex] = { ...updatedDepartment, createdAt: userDepartments[existingIndex].createdAt };
-          saveDepartmentsToStorage(userDepartments);
-        } else {
-          updatedDepartment.createdAt = new Date().toISOString();
-          saveDepartmentsToStorage([updatedDepartment, ...userDepartments]);
-        }
-      }
-      
-      window.dispatchEvent(new Event("departmentsUpdated"));
-      
+      await updateDepartment(id, formData);
       toast.success("Department updated successfully.");
-      setSaving(false);
       navigate("/departments");
-    }, 1000);
+    } catch (error: unknown) {
+      console.error("Error updating department:", error);
+      showApiErrorToast(error, "Failed to update department", toast.error);
+    } finally {
+      setSaving(false);
+    }
   };
 
   if (loading) {
@@ -302,10 +255,6 @@ const EditDepartmentPage = () => {
   }
 
   if (!initialValues) return null;
-
-  const getCategoryDisplayName = (category: typeof dummyCategories[0]) => {
-    return activeTab === "arabic" ? category.arabicName : category.name;
-  };
 
   return (
     <AdminLayout title="Edit Department">
@@ -642,12 +591,16 @@ const EditDepartmentPage = () => {
                         <select
                           value={values.catagoryId}
                           onChange={(e) => setFieldValue("catagoryId", e.target.value)}
-                          className="w-full h-11 px-3 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:border-burgundy focus:ring-2 focus:ring-burgundy/20 transition-all"
+                          disabled={loadingCategories}
+                          dir="ltr"
+                          className="w-full h-11 px-3 rounded-xl border border-slate-200 bg-white text-sm text-left focus:outline-none focus:border-burgundy focus:ring-2 focus:ring-burgundy/20 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
                         >
-                          <option value="">Select a category</option>
+                          <option value="">
+                            {loadingCategories ? "Loading categories..." : "Select a category"}
+                          </option>
                           {categories.map((c) => (
                             <option key={c._id} value={c._id}>
-                              {getCategoryDisplayName(c)}
+                              {c.name}
                             </option>
                           ))}
                         </select>

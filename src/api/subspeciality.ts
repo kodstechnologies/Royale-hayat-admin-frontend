@@ -85,17 +85,41 @@ export type CustomSubspecialityInput = {
 
 export type CreateSubspecialityPayload = {
   name: string;
-  arabicName: String;
+  arabicName: string;
   description: string;
-  arabicDescription: String
-  customSubspecialities?: (string | CustomSubspecialityInput)[];
+  arabicDescription: string;
+  department: string;
+  customSubspecialities?: CustomSubspecialityInput[];
 };
 
 export type UpdateSubspecialityPayload = {
   name?: string;
+  arabicName?: string;
   description?: string;
-  customSubspecialities?: (string | CustomSubspecialityInput)[] | null;
+  arabicDescription?: string;
+  department?: string;
+  customSubspecialities?: CustomSubspecialityInput[] | null;
 };
+
+export const buildCustomSubspecialityPayload = (
+  blocks: CustomSubspecialityInput[],
+): CustomSubspecialityInput[] =>
+  blocks
+    .map((block) => ({
+      subHeading: block.subHeading?.trim() ?? "",
+      arabicSubHeading: block.arabicSubHeading?.trim() ?? "",
+      explanations: (block.explanations ?? []).map((line) => line.trim()).filter(Boolean),
+      arabicExplanations: (block.arabicExplanations ?? [])
+        .map((line) => line.trim())
+        .filter(Boolean),
+    }))
+    .filter(
+      (block) =>
+        block.subHeading.length > 0 ||
+        block.arabicSubHeading.length > 0 ||
+        block.explanations.length > 0 ||
+        block.arabicExplanations.length > 0,
+    );
 
 export type SubspecialityListMeta = {
   page: number;

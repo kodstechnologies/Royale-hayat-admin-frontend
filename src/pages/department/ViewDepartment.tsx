@@ -90,7 +90,7 @@ const ViewDepartment = () => {
   };
 
   const getCategoryDisplayName = (category: string) => {
-    return getCategoryDisplayNameForDept(category, activeLanguage === "arabic");
+    return getCategoryDisplayNameForDept(category, false);
   };
 
   const getCategoryColor = (category: string) => {
@@ -216,7 +216,7 @@ const ViewDepartment = () => {
                   <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
                     <div>
                       <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                        {activeLanguage === "english" ? "Department ID" : "معرف القسم"}
+                        Department ID
                       </label>
                       <p className="text-sm font-mono text-slate-800 mt-1">
                         {department.departmentId || "-"}
@@ -225,18 +225,18 @@ const ViewDepartment = () => {
 
                     <div>
                       <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                        {activeLanguage === "english" ? "Status" : "الحالة"}
+                        Status
                       </label>
                       <div className="mt-1">
                         {department.isActive !== false ? (
                           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
                             <CheckCircle className="h-3 w-3" />
-                            {activeLanguage === "english" ? "Active" : "نشط"}
+                            Active
                           </span>
                         ) : (
                           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
                             <XCircle className="h-3 w-3" />
-                            {activeLanguage === "english" ? "Inactive" : "غير نشط"}
+                            Inactive
                           </span>
                         )}
                       </div>
@@ -245,7 +245,7 @@ const ViewDepartment = () => {
                     {department.createdAt && (
                       <div>
                         <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                          {activeLanguage === "english" ? "Created At" : "تاريخ الإنشاء"}
+                          Created At
                         </label>
                         <div className="flex items-center gap-1 mt-1">
                           <Calendar className="h-3 w-3 text-slate-400" />
@@ -259,7 +259,7 @@ const ViewDepartment = () => {
                     {department.updatedAt && (
                       <div>
                         <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                          {activeLanguage === "english" ? "Last Updated" : "آخر تحديث"}
+                          Last Updated
                         </label>
                         <div className="flex items-center gap-1 mt-1">
                           <Calendar className="h-3 w-3 text-slate-400" />
@@ -277,7 +277,7 @@ const ViewDepartment = () => {
                     className={`rounded-xl border border-slate-200 bg-white p-5 shadow-sm ${activeLanguage === "arabic" ? "text-right" : ""}`}
                   >
                     <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                      {activeLanguage === "english" ? "Department Name" : "اسم القسم"}
+                      Department Name
                     </label>
                     <h1
                       className={`text-xl sm:text-2xl font-bold text-slate-800 mt-1 ${activeLanguage === "arabic" ? "rtl-text" : ""}`}
@@ -288,7 +288,7 @@ const ViewDepartment = () => {
 
                   <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
                     <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                      {activeLanguage === "english" ? "Category" : "التصنيف"}
+                      Category
                     </label>
                     <div className="mt-2">
                       <span
@@ -304,7 +304,7 @@ const ViewDepartment = () => {
                     className={`rounded-xl border border-slate-200 bg-white p-5 shadow-sm ${activeLanguage === "arabic" ? "rtl-text" : ""}`}
                   >
                     <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                      {activeLanguage === "english" ? "Description" : "الوصف"}
+                      Description
                     </label>
                     <p className="text-sm text-slate-700 mt-2 whitespace-pre-wrap leading-relaxed">
                       {activeLanguage === "english"
@@ -317,7 +317,7 @@ const ViewDepartment = () => {
                     department.customExplainantions.length > 0 && (
                       <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
                         <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3 block">
-                          {activeLanguage === "english" ? "Custom Sections" : "أقسام مخصصة"}
+                          Custom Sections
                         </label>
                         <div className="space-y-4">
                           {department.customExplainantions.map((section, index) => {

@@ -9,6 +9,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft, Upload, X, Plus, Trash2, Globe, Languages } from "lucide-react";
+import { fetchAllCatagories, type Catagory } from "@/api/catagory";
+import { buildDepartmentFormData, createDepartment } from "@/api/department";
+import { showApiErrorToast } from "@/lib/apiError";
 
 export type CreateDepartmentFormData = {
   departmentId: string;
@@ -42,14 +45,6 @@ const initialValues: CreateDepartmentFormData = {
   customExplainantions: [],
 };
 
-const dummyCategories = [
-  { _id: "cat1", name: "Cardiology", arabicName: "أمراض القلب" },
-  { _id: "cat2", name: "Neurology", arabicName: "الأعصاب" },
-  { _id: "cat3", name: "Pediatrics", arabicName: "طب الأطفال" },
-  { _id: "cat4", name: "Orthopedics", arabicName: "جراحة العظام" },
-  { _id: "cat5", name: "Dermatology", arabicName: "الأمراض الجلدية" },
-];
-
 const CreateDepartmentPage = () => {
   const navigate = useNavigate();
   const { t, isRTL } = useLanguage();
@@ -57,7 +52,26 @@ const CreateDepartmentPage = () => {
   const [previewUrl, setPreviewUrl] = useState("");
   const [dragActive, setDragActive] = useState(false);
   const [activeTab, setActiveTab] = useState<"english" | "arabic">("english");
-  const [categories] = useState(dummyCategories);
+  const [categories, setCategories] = useState<Catagory[]>([]);
+  const [loadingCategories, setLoadingCategories] = useState(true);
+
+  useEffect(() => {
+    const loadCategories = async () => {
+      setLoadingCategories(true);
+      try {
+        const list = await fetchAllCatagories();
+        setCategories(list);
+      } catch (error) {
+        console.error("Error loading categories:", error);
+        toast.error("Failed to load categories");
+        setCategories([]);
+      } finally {
+        setLoadingCategories(false);
+      }
+    };
+
+    void loadCategories();
+  }, []);
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
@@ -157,45 +171,43 @@ const CreateDepartmentPage = () => {
       return;
     }
 
+    if (description.length < 10) {
+      toast.error("Description must be at least 10 characters");
+      setActiveTab("english");
+      return;
+    }
+
+    if (arabicDescription.length < 10) {
+      toast.error("Arabic description must be at least 10 characters");
+      setActiveTab("arabic");
+      return;
+    }
+
     setSaving(true);
 
-    const selectedCategory = categories.find(c => c._id === values.catagoryId);
-    const categoryName = selectedCategory ? selectedCategory.name : "General";
+    try {
+      const formData = buildDepartmentFormData({
+        departmentId,
+        name,
+        description,
+        arabicName,
+        arabicDescription,
+        catagoryId: values.catagoryId,
+        isActive: values.isActive,
+        order: values.order,
+        imageFile: values.imageFile,
+        customExplainantions: values.customExplainantions,
+      });
 
-    const newDepartment = {
-      _id: Date.now().toString(),
-      departmentId,
-      name,
-      description,
-      arabicName,
-      arabicDescription,
-      catagoryId: values.catagoryId,
-      category: categoryName,
-      image: previewUrl || null,
-      isActive: values.isActive,
-      order: values.order || 0,
-      customExplainantions: values.customExplainantions,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-
-    const existingDepts = localStorage.getItem("rhh_departments");
-    let departments = existingDepts ? JSON.parse(existingDepts) : [];
-    departments = [newDepartment, ...departments];
-    localStorage.setItem("rhh_departments", JSON.stringify(departments));
-
-    window.dispatchEvent(new Event("departmentsUpdated"));
-
-    setTimeout(() => {
-      console.log("Department created:", newDepartment);
+      await createDepartment(formData);
       toast.success("Department created successfully.");
-      setSaving(false);
       navigate("/departments");
-    }, 500);
-  };
-
-  const getCategoryDisplayName = (category: typeof dummyCategories[0]) => {
-    return activeTab === "arabic" ? category.arabicName : category.name;
+    } catch (error: unknown) {
+      console.error("Error creating department:", error);
+      showApiErrorToast(error, "Failed to create department", toast.error);
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -558,12 +570,16 @@ const CreateDepartmentPage = () => {
                         <select
                           value={values.catagoryId}
                           onChange={(e) => setFieldValue("catagoryId", e.target.value)}
-                          className="w-full h-11 px-3 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:border-burgundy focus:ring-2 focus:ring-burgundy/20 transition-all"
+                          disabled={loadingCategories}
+                          dir="ltr"
+                          className="w-full h-11 px-3 rounded-xl border border-slate-200 bg-white text-sm text-left focus:outline-none focus:border-burgundy focus:ring-2 focus:ring-burgundy/20 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
                         >
-                          <option value="">Select a category</option>
+                          <option value="">
+                            {loadingCategories ? "Loading categories..." : "Select a category"}
+                          </option>
                           {categories.map((c) => (
                             <option key={c._id} value={c._id}>
-                              {getCategoryDisplayName(c)}
+                              {c.name}
                             </option>
                           ))}
                         </select>

@@ -1,111 +1,39 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
-import { useLanguage } from "@/contexts/LanguageContext";
 import BreadCrumb from "@/components/layout/BreadCrumb";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus, Trash2, Save, X, ArrowLeft, Globe, Languages, Building2 } from "lucide-react";
+import { getDepartments } from "@/api/department";
+import {
+  buildCustomSubspecialityPayload,
+  createSubspeciality,
+  getSubspecialityById,
+  mapApiSubspecialityToDetail,
+  updateSubspeciality,
+} from "@/api/subspeciality";
+import { showApiErrorToast } from "@/lib/apiError";
 
 type Props = {
-    mode: "create" | "edit";
-    subspecialityId?: string;
+  mode: "create" | "edit";
+  subspecialityId?: string;
+};
+
+type DepartmentOption = {
+  _id: string;
+  name: string;
+  arabicName: string;
 };
 
 type CustomBlockDraft = {
-    key: string;
-    serverId?: string;
-
-    subHeading: string;
-    explanationLines: string[];
-
-    arabicSubHeading: string;
-    arabicExplanationLines: string[];
+  key: string;
+  subHeading: string;
+  explanationLines: string[];
+  arabicSubHeading: string;
+  arabicExplanationLines: string[];
 };
-
-const dummyDepartments = [
-    { _id: "dept1", name: "Cardiology", arabicName: "أمراض القلب" },
-    { _id: "dept2", name: "Neurology", arabicName: "الأعصاب" },
-    { _id: "dept3", name: "Pediatrics", arabicName: "طب الأطفال" },
-    { _id: "dept4", name: "Orthopedics", arabicName: "جراحة العظام" },
-    { _id: "dept5", name: "Dermatology", arabicName: "الأمراض الجلدية" },
-    { _id: "dept6", name: "Ophthalmology", arabicName: "طب العيون" },
-    { _id: "dept7", name: "ENT", arabicName: "أنف وأذن وحنجرة" },
-    { _id: "dept8", name: "Urology", arabicName: "جراحة المسالك البولية" },
-    { _id: "dept9", name: "Internal Medicine", arabicName: "الطب الباطني" },
-    { _id: "dept10", name: "Radiology", arabicName: "الأشعة" },
-];
-
-const departmentNameMap: Record<string, string> = {
-    "dept1": "Cardiology",
-    "dept2": "Neurology",
-    "dept3": "Pediatrics",
-    "dept4": "Orthopedics",
-    "dept5": "Dermatology",
-    "dept6": "Ophthalmology",
-    "dept7": "ENT",
-    "dept8": "Urology",
-    "dept9": "Internal Medicine",
-    "dept10": "Radiology",
-};
-
-const dummySubspecialities: Record<string, any> = {
-    "1": {
-        _id: "1",
-        name: "Interventional Cardiology",
-        arabicName: "أمراض القلب التداخلية",
-        description: "Specialized in catheter-based treatment of heart diseases",
-        arabicDescription: "متخصص في العلاج بالقثطرة لأمراض القلب",
-        departmentId: "dept1",
-        customSubspecialities: [
-            {
-                _id: "cs1",
-                subHeading: "Diagnostic Procedures",
-                arabicSubHeading: "الإجراءات التشخيصية",
-                explanations: ["Angiography", "Echocardiography", "Stress Test"],
-                arabicExplanations: ["تصوير الأوعية", "تخطيط صدى القلب", "اختبار الإجهاد"],
-            },
-            {
-                _id: "cs2",
-                subHeading: "Treatment Options",
-                arabicSubHeading: "خيارات العلاج",
-                explanations: ["Angioplasty", "Stent Placement", "Rotablation"],
-                arabicExplanations: ["رأب الأوعية", "تركيب الدعامات", "الاستئصال الدوراني"],
-            },
-        ],
-    },
-    "2": {
-        _id: "2",
-        name: "Pediatric Cardiology",
-        arabicName: "أمراض قلب الأطفال",
-        description: "Heart care for infants and children",
-        arabicDescription: "رعاية القلب للرضع والأطفال",
-        departmentId: "dept1",
-        customSubspecialities: [
-            {
-                _id: "cs3",
-                subHeading: "Congenital Heart Defects",
-                arabicSubHeading: "عيوب القلب الخلقية",
-                explanations: ["ASD Closure", "VSD Repair", "Patent Ductus Arteriosus"],
-                arabicExplanations: ["إغلاق عيب الحاجز الأذيني", "إصلاح عيب الحاجز البطيني", "القناة الشريانية المفتوحة"],
-            },
-        ],
-    },
-};
-
-const loadUserSubspecialities = () => {
-    const stored = localStorage.getItem("rhh_subspecialities");
-    if (stored) {
-        return JSON.parse(stored);
-    }
-    return [];
-};
-
-const saveUserSubspecialities = (subs: any[]) => {
-    localStorage.setItem("rhh_subspecialities", JSON.stringify(subs));
-};
-
 function newKey() {
     return typeof crypto !== "undefined" &&
         crypto.randomUUID
@@ -124,11 +52,12 @@ function emptyBlock(): CustomBlockDraft {
 }
 
 const SubspecialityForm = ({ mode, subspecialityId }: Props) => {
-    const { t } = useLanguage();
     const navigate = useNavigate();
 
     const [saving, setSaving] = useState(false);
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(mode === "edit");
+    const [loadingDepartments, setLoadingDepartments] = useState(true);
+    const [departments, setDepartments] = useState<DepartmentOption[]>([]);
 
     const [nameDraft, setNameDraft] = useState("");
     const [arabicNameDraft, setArabicNameDraft] = useState("");
@@ -140,45 +69,86 @@ const SubspecialityForm = ({ mode, subspecialityId }: Props) => {
     const [customBlocks, setCustomBlocks] = useState<CustomBlockDraft[]>([]);
 
     useEffect(() => {
-        if (mode !== "edit" || !subspecialityId) {
-            if (mode === "create") {
-                setCustomBlocks([]);
+        const loadDepartments = async () => {
+            setLoadingDepartments(true);
+            try {
+                const response = await getDepartments({
+                    page: 1,
+                    limit: 100,
+                    sortBy: "name",
+                    sortOrder: "asc",
+                });
+                const list = Array.isArray(response.data?.data) ? response.data.data : [];
+                setDepartments(
+                    list.map((dept: { _id?: string; name?: string; arabicName?: string }) => ({
+                        _id: String(dept._id ?? ""),
+                        name: String(dept.name ?? ""),
+                        arabicName: String(dept.arabicName ?? dept.name ?? ""),
+                    })),
+                );
+            } catch (error) {
+                console.error("Error loading departments:", error);
+                toast.error("Failed to load departments");
+                setDepartments([]);
+            } finally {
+                setLoadingDepartments(false);
             }
+        };
+
+        void loadDepartments();
+    }, []);
+
+    useEffect(() => {
+        if (mode !== "edit" || !subspecialityId) {
             return;
         }
 
-        setLoading(true);
-        setTimeout(() => {
-            const userSubs = loadUserSubspecialities();
-            let dummyData = userSubs.find((sub: any) => sub.id === subspecialityId);
-            
-            if (!dummyData) {
-                dummyData = dummySubspecialities[subspecialityId];
+        const loadSubspeciality = async () => {
+            setLoading(true);
+
+            try {
+                const response = await getSubspecialityById(subspecialityId);
+                const raw = response.data?.data ?? response.data;
+
+                if (!raw?._id) {
+                    toast.error("Subspeciality not found");
+                    navigate("/subspecialities");
+                    return;
+                }
+
+                const detail = mapApiSubspecialityToDetail(raw);
+                setNameDraft(detail.name);
+                setArabicNameDraft(detail.arabicName);
+                setDescriptionDraft(detail.description);
+                setArabicDescriptionDraft(detail.arabicDescription);
+                setDepartmentId(detail.departmentId);
+
+                setCustomBlocks(
+                    detail.customSubspecialities.map((section) => ({
+                        key: section._id || newKey(),
+                        subHeading: section.subHeading || "",
+                        arabicSubHeading: section.arabicSubHeading || "",
+                        explanationLines:
+                            section.explanations?.length > 0 ? section.explanations : [""],
+                        arabicExplanationLines:
+                            section.arabicExplanations?.length > 0
+                                ? section.arabicExplanations
+                                : [""],
+                    })),
+                );
+            } catch (error: unknown) {
+                console.error("Error loading subspeciality:", error);
+                showApiErrorToast(error, "Failed to load subspeciality", toast.error);
+                navigate("/subspecialities");
+            } finally {
+                setLoading(false);
             }
-            
-            if (dummyData) {
-                setNameDraft(dummyData.name || "");
-                setArabicNameDraft(dummyData.arabicName || "");
-                setDescriptionDraft(dummyData.description || "");
-                setArabicDescriptionDraft(dummyData.arabicDescription || "");
-                setDepartmentId(dummyData.departmentId || "");
+        };
 
-                const blocks = dummyData.customSubspecialities?.map((c: any) => ({
-                    key: c._id || newKey(),
-                    serverId: c._id,
-                    subHeading: c.subHeading || "",
-                    arabicSubHeading: c.arabicSubHeading || "",
-                    explanationLines: c.explanations || [""],
-                    arabicExplanationLines: c.arabicExplanations || [""],
-                })) || [];
+        void loadSubspeciality();
+    }, [mode, subspecialityId, navigate]);
 
-                setCustomBlocks(blocks);
-            }
-            setLoading(false);
-        }, 500);
-    }, [mode, subspecialityId]);
-
-    const submit = () => {
+    const submit = async () => {
         const name = nameDraft.trim();
         const arabicName = arabicNameDraft.trim();
         const description = descriptionDraft.trim();
@@ -209,61 +179,54 @@ const SubspecialityForm = ({ mode, subspecialityId }: Props) => {
             return;
         }
 
-        setSaving(true);
-
-        const customSubspecialities = customBlocks
-            .filter(block => block.subHeading.trim() || block.arabicSubHeading.trim())
-            .map(block => ({
-                _id: block.serverId || newKey(),
+        const customSubspecialities = buildCustomSubspecialityPayload(
+            customBlocks.map((block) => ({
                 subHeading: block.subHeading,
                 arabicSubHeading: block.arabicSubHeading,
-                explanations: block.explanationLines.filter(line => line.trim()),
-                arabicExplanations: block.arabicExplanationLines.filter(line => line.trim()),
-            }))
-            .filter(block => block.explanations.length > 0 || block.arabicExplanations.length > 0);
+                explanations: block.explanationLines,
+                arabicExplanations: block.arabicExplanationLines,
+            })),
+        );
 
-        const payload = {
-            id: mode === "create" ? Date.now().toString() : subspecialityId,
-            name,
-            arabicName,
-            description,
-            arabicDescription,
-            departmentId,
-            departmentName: departmentNameMap[departmentId] || departmentId,
-            customSubspecialities,
-            createdAt: mode === "create" ? new Date().toISOString() : undefined,
-            updatedAt: new Date().toISOString(),
-        };
+        setSaving(true);
 
-        console.log("Subspeciality data:", payload);
-
-        const existingSubs = loadUserSubspecialities();
-        let updatedSubs;
-        
-        if (mode === "create") {
-            updatedSubs = [payload, ...existingSubs];
-        } else {
-            updatedSubs = existingSubs.map((sub: any) => 
-                sub.id === subspecialityId ? payload : sub
-            );
-        }
-        
-        saveUserSubspecialities(updatedSubs);
-        
-        window.dispatchEvent(new Event("subspecialitiesUpdated"));
-
-        setTimeout(() => {
+        try {
             if (mode === "create") {
+                await createSubspeciality({
+                    name,
+                    arabicName,
+                    description,
+                    arabicDescription,
+                    department: departmentId,
+                    customSubspecialities,
+                });
                 toast.success("Subspeciality created successfully");
             } else {
+                if (!subspecialityId) return;
+
+                await updateSubspeciality(subspecialityId, {
+                    name,
+                    arabicName,
+                    description,
+                    arabicDescription,
+                    department: departmentId,
+                    customSubspecialities,
+                });
                 toast.success("Subspeciality updated successfully");
             }
 
-            setSaving(false);
             navigate("/subspecialities");
-        }, 500);
+        } catch (error: unknown) {
+            console.error("Error saving subspeciality:", error);
+            showApiErrorToast(
+                error,
+                mode === "create" ? "Failed to create subspeciality" : "Failed to update subspeciality",
+                toast.error,
+            );
+        } finally {
+            setSaving(false);
+        }
     };
-
     const addExplanationLine = (blockKey: string, isArabic: boolean) => {
         setCustomBlocks((prev) =>
             prev.map((block) =>
@@ -302,10 +265,7 @@ const SubspecialityForm = ({ mode, subspecialityId }: Props) => {
         setCustomBlocks((prev) => prev.filter((x) => x.key !== key));
     };
 
-    const getDepartmentDisplayName = (dept: typeof dummyDepartments[0]) => {
-        return activeTab === "arabic" ? dept.arabicName : dept.name;
-    };
-
+    const getDepartmentDisplayName = (dept: DepartmentOption) => dept.name;
     if (loading) {
         return (
             <div className="flex items-center justify-center min-h-[400px]">
@@ -391,16 +351,19 @@ const SubspecialityForm = ({ mode, subspecialityId }: Props) => {
                                 <select
                                     value={departmentId}
                                     onChange={(e) => setDepartmentId(e.target.value)}
-                                    className="w-full h-11 px-3 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:border-burgundy focus:ring-2 focus:ring-burgundy/20 transition-all"
+                                    disabled={loadingDepartments}
+                                    dir="ltr"
+                                    className="w-full h-11 px-3 rounded-xl border border-slate-200 bg-white text-sm text-left focus:outline-none focus:border-burgundy focus:ring-2 focus:ring-burgundy/20 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
                                 >
-                                    <option value="">Select a department</option>
-                                    {dummyDepartments.map((dept) => (
+                                    <option value="">
+                                        {loadingDepartments ? "Loading departments..." : "Select a department"}
+                                    </option>
+                                    {departments.map((dept) => (
                                         <option key={dept._id} value={dept._id}>
                                             {getDepartmentDisplayName(dept)}
                                         </option>
                                     ))}
-                                </select>
-                            </div>
+                                </select>                            </div>
                         </div>
                     </div>
 
