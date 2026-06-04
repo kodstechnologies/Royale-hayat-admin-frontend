@@ -447,7 +447,7 @@ const ViewRequest = () => {
               >
                 Back to Requests
               </Button>
-              <PermissionGate permission={PERMISSIONS.MRR_SHARE_VIA_EMAIL}>
+              {/* <PermissionGate permission={PERMISSIONS.MRR_SHARE_VIA_EMAIL}>
                 <Button
                   onClick={() => {
                     setShareEmail(DEFAULT_SHARE_EMAILS);
@@ -460,7 +460,7 @@ const ViewRequest = () => {
                   <Mail className="h-4 w-4" />
                   Share via Mail
                 </Button>
-              </PermissionGate>
+              </PermissionGate> */}
             </div>
 
             {isShareModalOpen && hasPermission(PERMISSIONS.MRR_SHARE_VIA_EMAIL) && (
