@@ -80,6 +80,23 @@ const isArabicOnlyFeedback = (comment: string, commentAr: string) =>
 const isEnglishOnlyFeedback = (comment: string, commentAr: string) =>
   hasEnglishFeedbackComment(comment) && !hasArabicFeedbackComment(commentAr);
 
+const normalizeDoctorFeedbackList = (res: unknown): any[] => {
+  if (Array.isArray(res)) return res;
+  if (res && typeof res === "object") {
+    const wrapped = res as { data?: unknown };
+    if (Array.isArray(wrapped.data)) return wrapped.data;
+  }
+  return [];
+};
+
+const getPopulatedDoctorMongoId = (doctor: unknown): string => {
+  if (!doctor || typeof doctor !== "object") {
+    return typeof doctor === "string" ? doctor : "";
+  }
+  const doc = doctor as { _id?: unknown; id?: unknown };
+  return String(doc._id ?? doc.id ?? "");
+};
+
 const FeedbackReviews = () => {
   const navigate = useNavigate();
   const { t, isRTL } = useLanguage();
@@ -125,8 +142,8 @@ const FeedbackReviews = () => {
   const fetchDoctorFeedbacks = useCallback(async () => {
     try {
       const response = await getAllDoctorFeedbacks();
-      const feedbacks = response?.data || response || [];
-      
+      const feedbacks = normalizeDoctorFeedbackList(response);
+
       const mappedFeedbacks: DoctorFeedback[] = feedbacks.map((fb: any) => {
         let doctorData = {
           name: "",
@@ -135,25 +152,38 @@ const FeedbackReviews = () => {
           department: "",
           arabicDepartment: ""
         };
-        
-        if (fb.doctor) {
-          if (typeof fb.doctor === 'object') {
-            doctorData = {
-              name: fb.doctor.name || "",
-              arabicName: fb.doctor.arabicName || "",
-              initials: fb.doctor.initials || "",
-              department: fb.doctor.department?.name || fb.doctor.department || "",
-              arabicDepartment: fb.doctor.department?.arabicName || fb.doctor.arabicDepartment || "",
-            };
-          }
+
+        if (fb.doctor && typeof fb.doctor === "object") {
+          const populatedDoctor = fb.doctor as {
+            name?: string;
+            nameAr?: string;
+            arabicName?: string;
+            initials?: string;
+            department?: { name?: string; arabicName?: string } | string;
+            arabicDepartment?: string;
+          };
+          const department = populatedDoctor.department;
+          doctorData = {
+            name: populatedDoctor.name || "",
+            arabicName: populatedDoctor.nameAr || populatedDoctor.arabicName || "",
+            initials: populatedDoctor.initials || "",
+            department:
+              typeof department === "object" && department
+                ? department.name || ""
+                : typeof department === "string"
+                  ? department
+                  : "",
+            arabicDepartment:
+              typeof department === "object" && department
+                ? department.arabicName || populatedDoctor.arabicDepartment || ""
+                : populatedDoctor.arabicDepartment || "",
+          };
         }
-        
+
         return {
           id: fb._id || fb.id,
           _id: fb._id || fb.id,
-          doctorId: typeof fb.doctor === "object"
-            ? String(fb.doctor._id || fb.doctor.id || "")
-            : String(fb.doctor || ""),
+          doctorId: getPopulatedDoctorMongoId(fb.doctor),
           patientName: fb.userName || "",
           patientNameAr: fb.arabicUserName || "",
           doctorName: doctorData.name,
