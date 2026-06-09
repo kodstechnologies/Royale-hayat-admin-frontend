@@ -3,13 +3,14 @@ import { useNavigate } from "react-router-dom";
 import AdminLayout from "@/components/layout/AdminLayout";
 import BreadCrumb from "@/components/layout/BreadCrumb";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Star, ExternalLink, XCircle, CheckCircle } from "lucide-react";
+import { ArrowLeft, Star, ExternalLink, XCircle, CheckCircle, Globe, Languages } from "lucide-react";
 import { toast } from "sonner";
 import {
   getFeaturedDoctors,
   mapFeaturedToListItem,
   type DoctorListItem,
 } from "@/api/doctors";
+import { formatDoctorDisplayNameAr } from "@/utils/doctorDisplayName";
 
 const FeaturedDoctors = () => {
   const navigate = useNavigate();
@@ -38,8 +39,14 @@ const FeaturedDoctors = () => {
     void loadFeaturedDoctors();
   }, [loadFeaturedDoctors]);
 
+  const getDoctorDisplayName = (doctor: DoctorListItem) =>
+    activeLanguage === "arabic" ? formatDoctorDisplayNameAr(doctor) : doctor.name;
+
   const getDepartmentName = (department: DoctorListItem["department"]) => {
     if (typeof department === "string") return department;
+    if (activeLanguage === "arabic") {
+      return department?.arabicName || department?.name || "-";
+    }
     return department?.name || "-";
   };
 
@@ -89,10 +96,35 @@ const FeaturedDoctors = () => {
             </div>
           </div>
 
-          <Button onClick={() => navigate("/doctors")} className="gap-2 w-full sm:w-auto">
-            <Star className="h-4 w-4" />
-            {getUIText.featureDoctors}
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
+            <Button onClick={() => navigate("/doctors")} className="gap-2 w-full sm:w-auto">
+              <Star className="h-4 w-4" />
+              {getUIText.featureDoctors}
+            </Button>
+
+            <div className="flex gap-2 p-1 bg-slate-100/80 rounded-lg w-full sm:w-auto">
+              <button
+                type="button"
+                onClick={() => setActiveLanguage("english")}
+                className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium ${
+                  activeLanguage === "english" ? "bg-white text-burgundy shadow-sm" : ""
+                }`}
+              >
+                <Globe className="h-3.5 w-3.5" />
+                English
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveLanguage("arabic")}
+                className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium ${
+                  activeLanguage === "arabic" ? "bg-white text-burgundy shadow-sm" : ""
+                }`}
+              >
+                <Languages className="h-3.5 w-3.5" />
+                العربية
+              </button>
+            </div>
+          </div>
         </div>
 
         <div className="rounded-xl border-2 border-burgundy/30 bg-gradient-to-br from-white via-slate-50/90 to-white shadow-xl overflow-hidden">
@@ -129,7 +161,7 @@ const FeaturedDoctors = () => {
                             {doctor.image ? (
                               <img
                                 src={doctor.image}
-                                alt={doctor.name}
+                                alt={getDoctorDisplayName(doctor)}
                                 className="w-full h-full object-cover"
                               />
                             ) : (
@@ -141,9 +173,15 @@ const FeaturedDoctors = () => {
                               <Star className="h-3 w-3 text-white fill-white" />
                             </div>
                           </div>
-                          <div>
-                            <p className="text-base font-semibold text-slate-800">{doctor.name}</p>
-                            <p className="text-xs text-slate-500">{doctor.specialty}</p>
+                          <div className={activeLanguage === "arabic" ? "rtl-text" : ""}>
+                            <p className="text-base font-semibold text-slate-800">
+                              {getDoctorDisplayName(doctor)}
+                            </p>
+                            <p className="text-xs text-slate-500">
+                              {activeLanguage === "arabic"
+                                ? doctor.specialtyAr || doctor.specialty
+                                : doctor.specialty}
+                            </p>
                           </div>
                         </div>
                         <span

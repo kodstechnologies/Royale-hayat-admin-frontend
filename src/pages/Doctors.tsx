@@ -31,7 +31,6 @@ const Doctors = () => {
   const [selectedDepartmentId, setSelectedDepartmentId] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [limit] = useState(6);
-  const [totalPages, setTotalPages] = useState(1);
   const [departmentOptions, setDepartmentOptions] = useState<Array<{ _id: string; name: string }>>([]);
 
   const [isFeatureMode, setIsFeatureMode] = useState(false);
@@ -98,15 +97,14 @@ const Doctors = () => {
     fetchDoctors();
   }, [fetchDoctors]);
 
+  const totalPages = Math.max(1, Math.ceil(doctors.length / limit));
   const paginatedDoctors = doctors.slice((currentPage - 1) * limit, currentPage * limit);
-  const totalFilteredPages = Math.max(1, Math.ceil(doctors.length / limit));
 
   useEffect(() => {
-    setTotalPages(totalFilteredPages);
-    if (currentPage > totalFilteredPages) {
-      setCurrentPage(totalFilteredPages);
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
     }
-  }, [doctors.length, totalFilteredPages, currentPage]);
+  }, [currentPage, totalPages]);
 
   const getDepartmentName = (department: DoctorListItem["department"]) => {
     if (typeof department !== "string") {

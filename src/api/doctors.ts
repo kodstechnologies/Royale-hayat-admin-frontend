@@ -29,7 +29,9 @@ export type DoctorListItem = {
   _id: string;
   doctorId: string;
   name: string;
+  arabicName: string;
   specialty: string;
+  specialtyAr: string;
   department: string | { _id?: string; name?: string; arabicName?: string };
   title: string;
   qualifications: string[];
@@ -104,7 +106,12 @@ export const mapApiDoctorToListItem = (
     _id: String(row._id ?? ""),
     doctorId: String(row.doctorId ?? ""),
     name: String(row.name ?? ""),
+    arabicName: String(row.nameAr ?? ""),
     specialty,
+    specialtyAr:
+      row.subspecialitiesAr?.[0] ||
+      row.titleAr?.split(",")[0]?.trim() ||
+      specialty,
     department:
       row.department && typeof row.department === "object"
         ? row.department

@@ -1723,13 +1723,13 @@ export const doctors: DoctorSeed[] = [
     id: 'dr-mohamad-hassoun',
     image: '/images/doctors/mohamad-hassoun.png',
 
-    name: 'Dr. Mohamad Hassoun', nameAr: 'Dr. Mohamad Hassoun',
+    name: 'Dr. Mohamad Hassoun', nameAr: 'د. محمد حسون',
     specialty: 'Neonatal', specialtyAr: 'حديثي الولادة',
     department: 'Neonatal', departmentAr: 'حديثي الولادة',
     title: 'Consultant in Neonatology and Pediatrics',
-    titleAr: '',
+    titleAr: 'استشاري طب الأطفال وحديثي الولادة',
     bio: 'Dr. Mohamad Hassoun is a specialist in the Neonatal department at Royale Hayat Hospital.',
-    bioAr: 'Dr. Mohamad Hassoun متخصص في قسم حديثي الولادة في مستشفى رويال حياة.',
+    bioAr: 'د. محمد حسون متخصص في قسم حديثي الولادة في مستشفى رويال حياة.',
     qualifications: [
       'Former Chief Department of Neonatology Unit in New Mazloum Hospital (Tripoli – Lebanon)',
       'Former Program Director of Neonatal – Perinatal Medicine, Beirut Arab University',
@@ -2063,8 +2063,8 @@ export const doctors: DoctorSeed[] = [
     name: 'Dr. Eman Alsayegh', nameAr: 'د. إيمــان الصـائـغ',
     specialty: 'Obstetrics & Gynecology', specialtyAr: 'أمراض النساء والولادة',
     department: 'Obstetrics & Gynecology', departmentAr: 'أمراض النساء والولادة',
-    title: '- Consultant Obstetrician & Gynecology - Sub-Speciality in Maternal Fetal Medicine',
-    titleAr: 'إستشاري أمراض النساء والولادة - تخصص فرعي في طب الأم والجنين',
+    title: 'Consultant Obstetrician & Gynecology Sub-Speciality in Maternal Fetal Medicine',
+    titleAr: 'إستشاري أمراض النساء والولادة تخصص دقيق في طب الأم والجنين',
     bio: 'Dr. Eman Alsayegh is a specialist in the Obstetrics & Gynecology department at Royale Hayat Hospital.',
     bioAr: 'د. إيمــان الصـائـغ متخصص في قسم أمراض النساء والولادة في مستشفى رويال حياة.',
     qualifications: [
