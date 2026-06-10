@@ -253,6 +253,7 @@ const ViewRequest = () => {
   const isCivilId = request.validIdentification === "civilId";
   const isPassportId = request.validIdentification === "passportORGovtId";
   const isSpecificDocuments = request.specificAuthorization === "specific documents";
+  const isDischargeSummary = request.specificAuthorization === "Discharge Summary";
   const isPatientRequestor = request.requestedBy === "Patient";
   const isLegalRep = request.requestedBy === "Legal Representative";
 
@@ -293,7 +294,7 @@ const ViewRequest = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
               <SummaryChip label="Patient" value={request.patientFullName} />
               <SummaryChip label="Authorization" value={request.authorizationLabel} />
-              <SummaryChip label="Service Period" value={request.servicePeriod} />
+              {/* <SummaryChip label="Service Period" value={request.servicePeriod} /> */}
               <SummaryChip label="Requested By" value={request.requestedBy} />
             </div>
 
@@ -339,15 +340,24 @@ const ViewRequest = () => {
                   label="Authorization Type"
                   value={request.authorizationLabel}
                 />
-                <DetailField label="Service Period (From → To)" value={request.servicePeriod} />
-                <DetailField
-                  label="Service From Date"
-                  value={formatDateOnly(request.specificFromDate)}
-                />
-                <DetailField
-                  label="Service To Date"
-                  value={formatDateOnly(request.specificToDate)}
-                />
+                {/* <DetailField label="Service Period" value={request.servicePeriod} /> */}
+                {isDischargeSummary ? (
+                  <DetailField
+                    label="Date of Service"
+                    value={formatDateOnly(request.specificAuthorizationDate)}
+                  />
+                ) : (
+                  <>
+                    <DetailField
+                      label="Service From Date"
+                      value={formatDateOnly(request.specificFromDate)}
+                    />
+                    <DetailField
+                      label="Service To Date"
+                      value={formatDateOnly(request.specificToDate)}
+                    />
+                  </>
+                )}
                 {isSpecificDocuments ? (
                   <DetailField
                     label="Document Types"

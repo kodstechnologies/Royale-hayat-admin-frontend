@@ -34,6 +34,7 @@ export type MedicalRecordRequestDetail = {
   passportOrGovernmentIdAttachment?: string;
   specificAuthorization: string;
   authorizationLabel: string;
+  specificAuthorizationDate: string;
   specificFromDate: string;
   specificToDate: string;
   servicePeriod: string;
@@ -111,6 +112,18 @@ export const formatServicePeriod = (from?: string, to?: string) => {
   return `${fromLabel} → ${toLabel}`;
 };
 
+export const resolveServicePeriod = (
+  authorization?: string,
+  authorizationDate?: string,
+  from?: string,
+  to?: string,
+) => {
+  if (authorization === "Discharge Summary") {
+    return formatDateShort(authorizationDate);
+  }
+  return formatServicePeriod(from, to);
+};
+
 const normalizeDocumentTypes = (value: unknown): string[] => {
   if (Array.isArray(value)) {
     return value.map((item) => String(item).trim()).filter(Boolean);
@@ -159,7 +172,9 @@ export const mapListItem = (row: Record<string, unknown>): MedicalRecordRequestL
     dateOfBirth: formatDateShort(row.dateOfBirth as string | undefined),
     identificationLabel: formatIdentification(String(row.validIdentification ?? "")),
     authorizationLabel: formatAuthorization(String(row.specificAuthorization ?? "")),
-    servicePeriod: formatServicePeriod(
+    servicePeriod: resolveServicePeriod(
+      String(row.specificAuthorization ?? ""),
+      row.specificAuthorizationDate as string | undefined,
       row.specificFromDate as string | undefined,
       row.specificToDate as string | undefined,
     ),
@@ -213,9 +228,12 @@ export const mapDetail = (
         : undefined,
     specificAuthorization: authorization || "—",
     authorizationLabel: formatAuthorization(authorization),
+    specificAuthorizationDate: String(row.specificAuthorizationDate ?? ""),
     specificFromDate: String(row.specificFromDate ?? ""),
     specificToDate: String(row.specificToDate ?? ""),
-    servicePeriod: formatServicePeriod(
+    servicePeriod: resolveServicePeriod(
+      authorization,
+      row.specificAuthorizationDate as string | undefined,
       row.specificFromDate as string | undefined,
       row.specificToDate as string | undefined,
     ),

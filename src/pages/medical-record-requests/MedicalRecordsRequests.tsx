@@ -637,12 +637,12 @@ const MedicalRecordsRequests = () => {
                           Authorization
 
                         </th>
-
+{/* 
                         <th className="text-left py-3 px-3 font-semibold text-slate-600 text-[11px] uppercase tracking-wider">
 
                           Service Period
 
-                        </th>
+                        </th> */}
 
                         <th className="text-left py-3 px-3 font-semibold text-slate-600 text-[11px] uppercase tracking-wider">
 
@@ -740,11 +740,11 @@ const MedicalRecordsRequests = () => {
 
                           </td>
 
-                          <td className="py-3 px-3 text-sm text-slate-600 whitespace-nowrap">
+                          {/* <td className="py-3 px-3 text-sm text-slate-600 whitespace-nowrap">
 
                             {request.servicePeriod}
 
-                          </td>
+                          </td> */}
 
                           <td className="py-3 px-3">
 
