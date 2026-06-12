@@ -106,6 +106,11 @@ const PERMISSION_GROUP_DEFS: {
     ],
   },
   {
+    id: "user-chats",
+    title: "User Chats",
+    permissionKeys: ["CHAT_LOG_VIEW"],
+  },
+  {
     id: "al-safwa",
     title: "Al Safwa Enrollments",
     permissionKeys: ["AL_SAFWA_VIEW"],

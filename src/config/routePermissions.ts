@@ -53,6 +53,11 @@ export const ROUTE_PERMISSION_RULES: RoutePermissionRule[] = [
     permissions: [PERMISSIONS.ENQUIRY_VIEW],
   },
   { pattern: "/enquiries", permissions: [PERMISSIONS.ENQUIRY_VIEW] },
+  {
+    pattern: "/user-chats/view/:id",
+    permissions: [PERMISSIONS.CHAT_LOG_VIEW],
+  },
+  { pattern: "/user-chats", permissions: [PERMISSIONS.CHAT_LOG_VIEW] },
   { pattern: "/al-safwa-enrollments", permissions: [PERMISSIONS.AL_SAFWA_VIEW] },
   {
     pattern: "/event-bookings/view/:id",
@@ -203,6 +208,7 @@ export const NAV_LANDING_ROUTES: RoutePermissionRule[] = [
   },
   { pattern: "/job-posts", permissions: [PERMISSIONS.JOB_VIEW] },
   { pattern: "/enquiries", permissions: [PERMISSIONS.ENQUIRY_VIEW] },
+  { pattern: "/user-chats", permissions: [PERMISSIONS.CHAT_LOG_VIEW] },
   { pattern: "/al-safwa-enrollments", permissions: [PERMISSIONS.AL_SAFWA_VIEW] },
   { pattern: "/event-bookings", permissions: [PERMISSIONS.EVENT_VIEW] },
   {

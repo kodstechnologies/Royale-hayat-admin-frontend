@@ -485,6 +485,12 @@ const Sidebar = ({
       permissions: [PERMISSIONS.ENQUIRY_VIEW],
     },
     {
+      to: "/user-chats",
+      icon: MessageSquare,
+      label: "User Chats",
+      permissions: [PERMISSIONS.CHAT_LOG_VIEW],
+    },
+    {
       to: "/al-safwa-enrollments",
       icon: Shield,
       label: "Al Safwa Enrollments",

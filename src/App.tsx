@@ -25,6 +25,8 @@ const AlSafwaEnrollments = lazy(() => import("./pages/AlSafwaEnrollments"));
 const EventBookings = lazy(() => import("./pages/event-bookings/EventBookings"));
 const ViewEventBooking = lazy(() => import("./pages/event-bookings/ViewEventBooking"));
 const Enquiries = lazy(() => import("./pages/Enquiries"));
+const UserChats = lazy(() => import("./pages/UserChats"));
+const ViewUserChat = lazy(() => import("./pages/user-chats/ViewUserChat"));
 const CreateJobPage = lazy(() => import("./pages/job/createJob"));
 const EditJobPage = lazy(() => import("./pages/job/EditJob"));
 const FeedbackReviews = lazy(() => import("./pages/feedbacks/FeedbackReviews"));
@@ -113,6 +115,8 @@ const App = () => (
                   <Route path="/event-bookings/view/:id" element={<ViewEventBooking />} />
                   <Route path="/enquiries" element={<Enquiries />} />
                   <Route path="/enquiries/view/:id" element={<ViewEnquiry />} />
+                  <Route path="/user-chats" element={<UserChats />} />
+                  <Route path="/user-chats/view/:id" element={<ViewUserChat />} />
                   <Route path="/job-posts" element={<JobPosts />} />
                   <Route path="/jobs/create" element={<CreateJobPage />} />
                   <Route path="/jobs/edit/:id" element={<EditJobPage />} />

@@ -25,12 +25,18 @@ export type AppointmentRequestItem = {
   isViewed?: boolean;
 };
 
-export const getRequestTypeLabel = (requestType?: AppointmentRequestType) => {
+export const getRequestTypeLabel = (requestType?: AppointmentRequestType | string) => {
   if (requestType === APPOINTMENT_REQUEST_TYPE.FIRST_TIME_VISITOR) {
     return "First Time Visitor";
   }
   if (requestType === APPOINTMENT_REQUEST_TYPE.DOCTOR_UNAVAILABILITY) {
     return "Doctor Unavailability";
+  }
+  if (requestType === "appointment request") {
+    return "Appointment Request";
+  }
+  if (requestType === "registered patient booking fallback") {
+    return "Registered Patient Booking Fallback";
   }
   return "Appointment Request";
 };
