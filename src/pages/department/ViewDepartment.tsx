@@ -77,6 +77,8 @@ const ViewDepartment = () => {
     void loadDepartment();
   }, [id]);
 
+  const isArabic = activeLanguage === "arabic";
+
   const formatDate = (dateString?: string) => {
     if (!dateString) return "—";
     const date = new Date(dateString);
@@ -86,6 +88,7 @@ const ViewDepartment = () => {
       day: "numeric",
       hour: "2-digit",
       minute: "2-digit",
+      hour12: true,
     });
   };
 
@@ -197,11 +200,7 @@ const ViewDepartment = () => {
                       {department.image ? (
                         <img
                           src={department.image}
-                          alt={
-                            activeLanguage === "english"
-                              ? department.name
-                              : department.nameAr
-                          }
+                          alt={isArabic ? department.nameAr : department.name}
                           className="h-full w-full object-cover"
                         />
                       ) : (
@@ -213,9 +212,9 @@ const ViewDepartment = () => {
                     </div>
                   </div>
 
-                  <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm space-y-4">
+                  <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm space-y-4" dir="ltr">
                     <div>
-                      <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                      <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider block text-left">
                         Department ID
                       </label>
                       <p className="text-sm font-mono text-slate-800 mt-1">
@@ -224,7 +223,7 @@ const ViewDepartment = () => {
                     </div>
 
                     <div>
-                      <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                      <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider block text-left">
                         Status
                       </label>
                       <div className="mt-1">
@@ -243,8 +242,8 @@ const ViewDepartment = () => {
                     </div>
 
                     {department.createdAt && (
-                      <div>
-                        <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                      <div dir="ltr">
+                        <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider block text-left">
                           Created At
                         </label>
                         <div className="flex items-center gap-1 mt-1">
@@ -257,8 +256,8 @@ const ViewDepartment = () => {
                     )}
 
                     {department.updatedAt && (
-                      <div>
-                        <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                      <div dir="ltr">
+                        <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider block text-left">
                           Last Updated
                         </label>
                         <div className="flex items-center gap-1 mt-1">
@@ -273,21 +272,20 @@ const ViewDepartment = () => {
                 </div>
 
                 <div className="lg:col-span-2 space-y-4">
-                  <div
-                    className={`rounded-xl border border-slate-200 bg-white p-5 shadow-sm ${activeLanguage === "arabic" ? "text-right" : ""}`}
-                  >
-                    <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                  <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                    <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider block text-left">
                       Department Name
                     </label>
                     <h1
-                      className={`text-xl sm:text-2xl font-bold text-slate-800 mt-1 ${activeLanguage === "arabic" ? "rtl-text" : ""}`}
+                      dir={isArabic ? "rtl" : "ltr"}
+                      className={`text-xl sm:text-2xl font-bold text-slate-800 mt-1 ${isArabic ? "text-right" : ""}`}
                     >
-                      {activeLanguage === "english" ? department.name : department.nameAr}
+                      {isArabic ? department.nameAr : department.name}
                     </h1>
                   </div>
 
                   <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-                    <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                    <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider block text-left">
                       Category
                     </label>
                     <div className="mt-2">
@@ -300,54 +298,52 @@ const ViewDepartment = () => {
                     </div>
                   </div>
 
-                  <div
-                    className={`rounded-xl border border-slate-200 bg-white p-5 shadow-sm ${activeLanguage === "arabic" ? "rtl-text" : ""}`}
-                  >
-                    <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                  <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                    <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider block text-left">
                       Description
                     </label>
-                    <p className="text-sm text-slate-700 mt-2 whitespace-pre-wrap leading-relaxed">
-                      {activeLanguage === "english"
-                        ? department.description
-                        : department.descriptionAr}
+                    <p
+                      dir={isArabic ? "rtl" : "ltr"}
+                      className={`text-sm text-slate-700 mt-2 whitespace-pre-wrap leading-relaxed ${isArabic ? "text-right" : ""}`}
+                    >
+                      {isArabic ? department.descriptionAr : department.description}
                     </p>
                   </div>
 
-                  <div
-                    className={`rounded-xl border border-slate-200 bg-white p-5 shadow-sm ${activeLanguage === "arabic" ? "rtl-text" : ""}`}
-                  >
-                    <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                  <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                    <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider block text-left">
                       Medical Field
                     </label>
-                    <p className="text-sm text-slate-700 mt-2 leading-relaxed">
-                      {activeLanguage === "english"
-                        ? department.medicalField || "—"
-                        : department.medicalFieldAr || "—"}
+                    <p
+                      dir={isArabic ? "rtl" : "ltr"}
+                      className={`text-sm text-slate-700 mt-2 leading-relaxed ${isArabic ? "text-right" : ""}`}
+                    >
+                      {isArabic
+                        ? department.medicalFieldAr || "—"
+                        : department.medicalField || "—"}
                     </p>
                   </div>
 
                   {department.customExplainantions &&
                     department.customExplainantions.length > 0 && (
                       <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-                        <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3 block">
+                        <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3 block text-left">
                           Custom Sections
                         </label>
                         <div className="space-y-4">
                           {department.customExplainantions.map((section, index) => {
-                            const rawHeading =
-                              activeLanguage === "english"
-                                ? section.heading
-                                : section.arabicHeading;
-                            const rawSubHeading =
-                              activeLanguage === "english"
-                                ? section.subHeading
-                                : section.arabicSubHeading;
-                            const heading = rawHeading || (!rawHeading && rawSubHeading ? rawSubHeading : "");
+                            const rawHeading = isArabic
+                              ? section.arabicHeading
+                              : section.heading;
+                            const rawSubHeading = isArabic
+                              ? section.arabicSubHeading
+                              : section.subHeading;
+                            const heading =
+                              rawHeading || (!rawHeading && rawSubHeading ? rawSubHeading : "");
                             const subHeading = rawHeading ? rawSubHeading : "";
-                            const explanations =
-                              activeLanguage === "english"
-                                ? section.explaination
-                                : section.arabicExplaination;
+                            const explanations = isArabic
+                              ? section.arabicExplaination
+                              : section.explaination;
 
                             if (
                               !heading &&
@@ -362,48 +358,45 @@ const ViewDepartment = () => {
                                 key={section._id || section.id || index}
                                 className="rounded-lg border border-slate-100 bg-slate-50/50 p-4"
                               >
-                                <p className="text-xs font-semibold text-burgundy/80 uppercase tracking-wider mb-3">
+                                <p className="text-xs font-semibold text-burgundy/80 uppercase tracking-wider mb-3 text-left">
                                   Section {index + 1}
                                 </p>
                                 {heading && (
-                                  <div className={`mb-2 ${activeLanguage === "arabic" ? "text-right" : ""}`}>
-                                    <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                                  <div className="mb-2">
+                                    <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider block text-left">
                                       Heading
                                     </span>
                                     <h3
-                                      className={`font-semibold text-slate-800 mt-1 ${activeLanguage === "arabic" ? "rtl-text" : ""}`}
+                                      dir={isArabic ? "rtl" : "ltr"}
+                                      className={`font-semibold text-slate-800 mt-1 ${isArabic ? "text-right" : ""}`}
                                     >
                                       {heading}
                                     </h3>
                                   </div>
                                 )}
                                 {subHeading && (
-                                  <div className={`mb-3 ${activeLanguage === "arabic" ? "text-right" : ""}`}>
-                                    <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                                  <div className="mb-3">
+                                    <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider block text-left">
                                       Subheading
                                     </span>
                                     <p
-                                      className={`text-sm font-medium text-slate-700 mt-1 ${activeLanguage === "arabic" ? "rtl-text" : ""}`}
+                                      dir={isArabic ? "rtl" : "ltr"}
+                                      className={`text-sm font-medium text-slate-700 mt-1 ${isArabic ? "text-right" : ""}`}
                                     >
                                       {subHeading}
                                     </p>
                                   </div>
                                 )}
                                 {explanations && explanations.length > 0 && (
-                                  <ul className="space-y-2">
+                                  <ul
+                                    dir={isArabic ? "rtl" : "ltr"}
+                                    className={`list-disc list-outside space-y-2 ps-5 text-sm text-slate-600 marker:text-burgundy ${
+                                      isArabic ? "text-right" : ""
+                                    }`}
+                                  >
                                     {explanations.map((line: string, li: number) => (
-                                      <li
-                                        key={li}
-                                        className="flex items-start gap-2 text-sm text-slate-600"
-                                      >
-                                        <span className="text-burgundy mt-1">•</span>
-                                        <span
-                                          className={
-                                            activeLanguage === "arabic" ? "rtl-text" : ""
-                                          }
-                                        >
-                                          {line}
-                                        </span>
+                                      <li key={li} className="leading-relaxed">
+                                        {line}
                                       </li>
                                     ))}
                                   </ul>
@@ -420,13 +413,6 @@ const ViewDepartment = () => {
           </div>
         </div>
       </div>
-
-      <style>{`
-        .rtl-text {
-          direction: rtl;
-          text-align: right;
-        }
-      `}</style>
     </AdminLayout>
   );
 };
