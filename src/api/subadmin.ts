@@ -1,6 +1,7 @@
 export {
   createSubadmin,
   getAllUsers,
+  getUserById,
   updateUser,
   updateUserStatus,
   deleteUser,

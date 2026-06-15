@@ -6,9 +6,10 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Save, Globe, Languages, User, FileText, Upload, X } from "lucide-react";
+import { ArrowLeft, Save, Globe, Languages, User, FileText, Upload, X, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { createLeadership } from "@/api/leadership";
+import { appendDescriptionsToFormData } from "@/utils/csrDescriptions";
 import { TitlePositionFieldHints } from "./leadershipFormHints";
 
 type FormData = {
@@ -18,8 +19,8 @@ type FormData = {
   nameArabic: string;
   title: string;
   titleArabic: string;
-  description: string;
-  descriptionArabic: string;
+  description: string[];
+  descriptionArabic: string[];
   imageFile: File | null;
 };
 
@@ -39,10 +40,38 @@ const AddLeadership = () => {
     nameArabic: "",
     title: "",
     titleArabic: "",
-    description: "",
-    descriptionArabic: "",
+    description: [""],
+    descriptionArabic: [""],
     imageFile: null,
   });
+
+  const addDescription = (field: "description" | "descriptionArabic") => {
+    setFormData((prev) => ({
+      ...prev,
+      [field]: [...prev[field], ""],
+    }));
+  };
+
+  const removeDescription = (field: "description" | "descriptionArabic", index: number) => {
+    setFormData((prev) => {
+      const next = prev[field].filter((_, i) => i !== index);
+      return {
+        ...prev,
+        [field]: next.length ? next : [""],
+      };
+    });
+  };
+
+  const updateDescription = (
+    field: "description" | "descriptionArabic",
+    index: number,
+    value: string,
+  ) => {
+    setFormData((prev) => ({
+      ...prev,
+      [field]: prev[field].map((item, i) => (i === index ? value : item)),
+    }));
+  };
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
@@ -112,13 +141,15 @@ const AddLeadership = () => {
       setActiveTab("arabic");
       return;
     }
-    if (!formData.description.trim()) {
-      toast.error("Please enter description (English)");
+    const validDescriptions = formData.description.filter((item) => item.trim());
+    if (!validDescriptions.length) {
+      toast.error("Please enter at least one description paragraph (English)");
       setActiveTab("english");
       return;
     }
-    if (!formData.descriptionArabic.trim()) {
-      toast.error("Please enter description (Arabic)");
+    const validDescriptionsArabic = formData.descriptionArabic.filter((item) => item.trim());
+    if (!validDescriptionsArabic.length) {
+      toast.error("Please enter at least one description paragraph (Arabic)");
       setActiveTab("arabic");
       return;
     }
@@ -138,8 +169,11 @@ const AddLeadership = () => {
       formDataToSend.append("nameArabic", formData.nameArabic);
       formDataToSend.append("title", formData.title);
       formDataToSend.append("titleArabic", formData.titleArabic);
-      formDataToSend.append("description", formData.description);
-      formDataToSend.append("descriptionArabic", formData.descriptionArabic);
+      appendDescriptionsToFormData(
+        formDataToSend,
+        formData.description,
+        formData.descriptionArabic,
+      );
       formDataToSend.append("image", formData.imageFile);
 
       const response = await createLeadership(formDataToSend);
@@ -309,30 +343,64 @@ const AddLeadership = () => {
 
               
               <div className="bg-white rounded-xl border border-slate-200 p-4 sm:p-5 space-y-5">
-                <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
-                  <FileText className="h-5 w-5 text-burgundy shrink-0" />
-                  <h3 className="text-md font-semibold text-slate-800">{getUIText.description}</h3>
+                <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+                  <div className="flex items-center gap-2">
+                    <FileText className="h-5 w-5 text-burgundy shrink-0" />
+                    <h3 className="text-md font-semibold text-slate-800">{getUIText.description}</h3>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      addDescription(activeTab === "english" ? "description" : "descriptionArabic")
+                    }
+                    className="gap-1 border-burgundy/30 text-burgundy hover:bg-burgundy/5"
+                  >
+                    <Plus className="h-3 w-3" />
+                    {activeTab === "english" ? "Add Paragraph" : "إضافة فقرة"}
+                  </Button>
                 </div>
 
-                <div className="space-y-2">
-                  <label className="text-sm font-semibold text-slate-700">
-                    {getUIText.description} <span className="text-red-500">*</span>
-                  </label>
-                  <Textarea
-                    value={activeTab === "english" ? formData.description : formData.descriptionArabic}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        ...(activeTab === "english"
-                          ? { description: e.target.value }
-                          : { descriptionArabic: e.target.value }),
-                      })
-                    }
-                    rows={6}
-                    className="resize-none"
-                    dir={activeTab === "arabic" ? "rtl" : "ltr"}
-                    placeholder={activeTab === "english" ? "Enter description" : "أدخل الوصف"}
-                  />
+                <div className="space-y-3">
+                  {(activeTab === "english" ? formData.description : formData.descriptionArabic).map(
+                    (paragraph, idx) => (
+                      <div key={idx} className="flex gap-2 items-start">
+                        <Textarea
+                          value={paragraph}
+                          onChange={(e) =>
+                            updateDescription(
+                              activeTab === "english" ? "description" : "descriptionArabic",
+                              idx,
+                              e.target.value,
+                            )
+                          }
+                          rows={4}
+                          className="resize-none flex-1"
+                          dir={activeTab === "arabic" ? "rtl" : "ltr"}
+                          placeholder={
+                            activeTab === "english"
+                              ? `Paragraph ${idx + 1}`
+                              : `الفقرة ${idx + 1}`
+                          }
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() =>
+                            removeDescription(
+                              activeTab === "english" ? "description" : "descriptionArabic",
+                              idx,
+                            )
+                          }
+                          className="h-10 w-10 shrink-0 text-red-500 hover:text-red-600 hover:bg-red-50"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ),
+                  )}
                 </div>
               </div>
 

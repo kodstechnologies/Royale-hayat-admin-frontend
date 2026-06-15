@@ -21,8 +21,8 @@ type Leadership = {
   nameArabic: string;
   title: string;
   titleArabic: string;
-  description: string;
-  descriptionArabic: string;
+  description: string[] | string;
+  descriptionArabic: string[] | string;
   image: string;
   createdAt: string;
   updatedAt?: string;

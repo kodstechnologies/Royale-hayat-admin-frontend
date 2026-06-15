@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import AdminLayout from "@/components/layout/AdminLayout";
 import BreadCrumb from "@/components/layout/BreadCrumb";
 import { Button } from "@/components/ui/button";
@@ -56,13 +56,22 @@ const displaySubheading = (item: CSR) => item.subheading?.trim() || item.subhead
 
 const AllCSR = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<"celebrating" | "csr">("celebrating");
+  const [searchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState<"celebrating" | "csr">(
+    searchParams.get("tab") === "csr" ? "csr" : "celebrating",
+  );
   const [csrData, setCsrData] = useState<CSR[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(5);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (searchParams.get("tab") === "csr") {
+      setActiveTab("csr");
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     if (activeTab === "csr") {

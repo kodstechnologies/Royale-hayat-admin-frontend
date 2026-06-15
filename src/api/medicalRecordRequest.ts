@@ -2,23 +2,41 @@ import api from "./axiosInstance";
 
 const BASE = "/api/v1/medical-record-requests";
 
-export const getAllMedicalRequests = async () => {
+export type MedicalRecordRequestsListMeta = {
+  page: number;
+  limit: number;
+  totalRecords: number;
+  totalPages: number;
+  counts?: {
+    total: number;
+    pending: number;
+    received: number;
+  };
+};
 
-  const response = await api.get(
-    `${BASE}/all`
-  );
+export type GetMedicalRecordRequestsParams = {
+  page?: number;
+  limit?: number;
+  search?: string;
+  status?: "all" | "pending" | "received";
+};
 
+type MedicalRecordRequestsListResponse = {
+  success: boolean;
+  message?: string;
+  data: unknown[];
+  meta?: MedicalRecordRequestsListMeta;
+};
+
+export const getAllMedicalRequests = async (
+  params: GetMedicalRecordRequestsParams = {},
+): Promise<MedicalRecordRequestsListResponse> => {
+  const response = await api.get(`${BASE}/all`, { params });
   return response.data;
 };
 
-export const GetMedicalRequestById = async (
-  id: string
-) => {
-
-  const response = await api.get(
-    `${BASE}/${id}`
-  );
-
+export const GetMedicalRequestById = async (id: string) => {
+  const response = await api.get(`${BASE}/${id}`);
   return response.data;
 };
 

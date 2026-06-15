@@ -17,6 +17,13 @@ import { fetchAllCatagories, type Catagory } from "@/api/catagory";
 import { PERMISSIONS } from "@/constants/permissions";
 import PermissionGate from "@/utils/PermissionGate";
 
+const matchesMultiWordSearch = (fields: string[], query: string): boolean => {
+  const words = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
+  if (words.length === 0) return true;
+  const haystack = fields.join(" ").toLowerCase();
+  return words.every((word) => haystack.includes(word));
+};
+
 const Departments = () => {
   const navigate = useNavigate();
   const [departments, setDepartments] = useState<DepartmentListItem[]>([]);
@@ -25,7 +32,6 @@ const Departments = () => {
   const [limit] = useState(6);
   const [totalPages, setTotalPages] = useState(1);
   const [search, setSearch] = useState("");
-  const [searchInput, setSearchInput] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [categories, setCategories] = useState<Catagory[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
@@ -57,10 +63,6 @@ const Departments = () => {
         sortBy: "createdAt",
         sortOrder: "desc",
       };
-      if (search.trim()) {
-        params.search = search.trim();
-      }
-
       const response = await getDepartments(params);
       const body = response.data;
       const list = Array.isArray(body?.data) ? body.data : [];
@@ -85,7 +87,18 @@ const Departments = () => {
       selectedCategory === "all" ||
       normalizeDepartmentCategory(dept.category).toLowerCase() ===
         normalizeDepartmentCategory(selectedCategory).toLowerCase();
-    return matchesCategory;
+    const matchesSearch = matchesMultiWordSearch(
+      [
+        dept.name,
+        dept.nameAr,
+        dept.description,
+        dept.descriptionAr,
+        dept.departmentId,
+        dept.category,
+      ],
+      search,
+    );
+    return matchesCategory && matchesSearch;
   });
 
   const paginatedDepartments = filteredDepartments.slice(
@@ -104,13 +117,7 @@ const Departments = () => {
     }
   }, [filteredDepartments.length, totalFilteredPages, currentPage]);
 
-  const applySearch = () => {
-    setSearch(searchInput);
-    setCurrentPage(1);
-  };
-
   const clearSearch = () => {
-    setSearchInput("");
     setSearch("");
     setCurrentPage(1);
   };
@@ -177,22 +184,16 @@ const Departments = () => {
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                   <Input
                     placeholder="Search departments..."
-                    value={searchInput}
-                    onChange={(e) => setSearchInput(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && applySearch()}
+                    value={search}
+                    onChange={(e) => {
+                      setSearch(e.target.value);
+                      setCurrentPage(1);
+                    }}
                     className="pl-9 h-10 w-full"
                   />
                 </div>
-                <div className="flex gap-2">
-                  <Button
-                    variant="secondary"
-                    onClick={applySearch}
-                    size="sm"
-                    className="flex-1 min-[400px]:flex-none"
-                  >
-                    Search
-                  </Button>
-                  {search && (
+                {search && (
+                  <div className="flex gap-2">
                     <Button
                       variant="ghost"
                       onClick={clearSearch}
@@ -201,8 +202,8 @@ const Departments = () => {
                     >
                       Clear
                     </Button>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
 
               <select

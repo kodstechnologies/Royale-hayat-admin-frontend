@@ -5,8 +5,8 @@ export type Leadership = {
   arabicName: string;
   title: string;
   arabicTitle: string;
-  description: string;
-  arabicDescription: string;
+  description: string[];
+  arabicDescription: string[];
   image: string;
   status: "show" | "hide";
   order: number;

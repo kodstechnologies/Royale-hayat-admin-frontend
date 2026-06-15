@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
+  ChevronLeft,
+  ChevronRight,
   Loader2,
   Pencil,
   Plus,
@@ -32,38 +34,50 @@ const UsersList = () => {
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalRecords, setTotalRecords] = useState(0);
   const [statusUpdatingId, setStatusUpdatingId] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<AdminUser | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(search.trim()), 300);
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearch]);
+
   const fetchUsers = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await getAllUsers();
+      const response = await getAllUsers({
+        page: currentPage,
+        limit: itemsPerPage,
+        ...(debouncedSearch ? { search: debouncedSearch } : {}),
+      });
       const list = Array.isArray(response?.data) ? response.data : [];
       setUsers(list);
+      setTotalPages(response.meta?.totalPages || 1);
+      setTotalRecords(response.meta?.totalRecords ?? list.length);
     } catch (error: unknown) {
       const err = error as { response?: { data?: { message?: string } } };
       toast.error(err?.response?.data?.message || "Failed to load users");
       setUsers([]);
+      setTotalPages(1);
+      setTotalRecords(0);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [currentPage, itemsPerPage, debouncedSearch]);
 
   useEffect(() => {
     void fetchUsers();
   }, [fetchUsers]);
-
-  const filteredUsers = users.filter((user) => {
-    const q = search.trim().toLowerCase();
-    if (!q) return true;
-    return (
-      user.name.toLowerCase().includes(q) ||
-      user.email.toLowerCase().includes(q) ||
-      user.role.toLowerCase().includes(q)
-    );
-  });
 
   const handleStatusToggle = async (user: AdminUser) => {
     if (!hasPermission(PERMISSIONS.USER_UPDATE)) return;
@@ -88,7 +102,13 @@ const UsersList = () => {
       const response = await deleteUser(deleteTarget._id);
       toast.success(response?.message || "User deleted successfully");
       setDeleteTarget(null);
-      await fetchUsers();
+
+      const remainingOnPage = users.length - 1;
+      if (remainingOnPage === 0 && currentPage > 1) {
+        setCurrentPage((page) => page - 1);
+      } else {
+        await fetchUsers();
+      }
     } catch (error: unknown) {
       const err = error as { response?: { data?: { message?: string } } };
       toast.error(err?.response?.data?.message || "Failed to delete user");
@@ -108,7 +128,7 @@ const UsersList = () => {
             <div>
               <h4 className="text-lg font-semibold text-slate-800">All Users</h4>
               <p className="text-xs text-slate-500">
-                {users.length} user{users.length === 1 ? "" : "s"} registered
+                {totalRecords} user{totalRecords === 1 ? "" : "s"} registered
               </p>
             </div>
           </div>
@@ -138,7 +158,7 @@ const UsersList = () => {
             <Loader2 className="h-5 w-5 animate-spin text-burgundy" />
             Loading users...
           </div>
-        ) : filteredUsers.length === 0 ? (
+        ) : users.length === 0 ? (
           <div className="text-center py-16 text-slate-500">
             <Users className="h-10 w-10 mx-auto mb-3 text-slate-300" />
             <p className="font-medium">No users found</p>
@@ -147,119 +167,161 @@ const UsersList = () => {
             </p>
           </div>
         ) : (
-          <div className="overflow-x-auto rounded-lg border border-slate-200">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="bg-slate-50 border-b border-slate-200">
-                  <th className="text-left py-3 px-4 font-semibold text-slate-700">Name</th>
-                  <th className="text-left py-3 px-4 font-semibold text-slate-700">Email</th>
-                  <th className="text-left py-3 px-4 font-semibold text-slate-700">Role</th>
-                  <th className="text-left py-3 px-4 font-semibold text-slate-700">Status</th>
-                  <th className="text-left py-3 px-4 font-semibold text-slate-700">Permissions</th>
-                  <th className="text-right py-3 px-4 font-semibold text-slate-700">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredUsers.map((user) => {
-                  const isActive = user.isActive !== false;
-                  const isUpdating = statusUpdatingId === user._id;
+          <>
+            <div className="overflow-x-auto rounded-lg border border-slate-200">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-slate-50 border-b border-slate-200">
+                    <th className="text-left py-3 px-4 font-semibold text-slate-700">#</th>
+                    <th className="text-left py-3 px-4 font-semibold text-slate-700">Name</th>
+                    <th className="text-left py-3 px-4 font-semibold text-slate-700">Email</th>
+                    <th className="text-left py-3 px-4 font-semibold text-slate-700">Role</th>
+                    <th className="text-left py-3 px-4 font-semibold text-slate-700">Status</th>
+                    <th className="text-left py-3 px-4 font-semibold text-slate-700">Permissions</th>
+                    <th className="text-right py-3 px-4 font-semibold text-slate-700">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {users.map((user, index) => {
+                    const isActive = user.isActive !== false;
+                    const isUpdating = statusUpdatingId === user._id;
 
-                  return (
-                    <tr
-                      key={user._id}
-                      className="border-b border-slate-100 last:border-0 hover:bg-slate-50/80"
-                    >
-                      <td className="py-3 px-4 font-medium text-slate-800">{user.name}</td>
-                      <td className="py-3 px-4 text-slate-600">{user.email}</td>
-                      <td className="py-3 px-4">
-                        <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-burgundy/10 text-burgundy">
-                          {formatRoleLabel(user.role)}
-                        </span>
-                      </td>
-                      <td className="py-3 px-4">
-                        <span
-                          className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${
-                            isActive
-                              ? "bg-emerald-100 text-emerald-700"
-                              : "bg-red-100 text-red-700"
-                          }`}
-                        >
-                          {isActive ? "Active" : "Inactive"}
-                        </span>
-                      </td>
-                      <td className="py-3 px-4 text-slate-600">
-                        <span className="font-medium text-slate-800">
-                          {user.permissions?.length ?? 0}
-                        </span>
-                        <span className="text-slate-400 ml-1">assigned</span>
-                        {user.permissions?.length ? (
-                          <details className="mt-1">
-                            <summary className="text-xs text-burgundy cursor-pointer hover:underline">
-                              View list
-                            </summary>
-                            <ul className="mt-2 space-y-0.5 text-xs text-slate-500 max-w-xs">
-                              {user.permissions.map((perm) => (
-                                <li key={perm} title={perm}>
-                                  {formatPermissionLabel(perm)}
-                                </li>
-                              ))}
-                            </ul>
-                          </details>
-                        ) : null}
-                      </td>
-                      <td className="py-3 px-4">
-                        <div className="flex items-center justify-end gap-1">
-                          <PermissionGate permission={PERMISSIONS.USER_UPDATE}>
-                            <button
-                              type="button"
-                              onClick={() =>
-                                navigate(`/user-management/edit/${user._id}`, {
-                                  state: { user },
-                                })
-                              }
-                              className="p-1.5 rounded-lg text-slate-400 hover:text-burgundy hover:bg-burgundy/10"
-                              title="Edit user"
-                            >
-                              <Pencil className="h-4 w-4" />
-                            </button>
-                            <button
-                              type="button"
-                              disabled={isUpdating}
-                              onClick={() => void handleStatusToggle(user)}
-                              className={`p-1.5 rounded-lg disabled:opacity-50 ${
-                                isActive
-                                  ? "text-amber-500 hover:bg-amber-50"
-                                  : "text-emerald-500 hover:bg-emerald-50"
-                              }`}
-                              title={isActive ? "Deactivate user" : "Activate user"}
-                            >
-                              {isUpdating ? (
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                              ) : isActive ? (
-                                <UserX className="h-4 w-4" />
-                              ) : (
-                                <UserCheck className="h-4 w-4" />
-                              )}
-                            </button>
-                          </PermissionGate>
-                          <PermissionGate permission={PERMISSIONS.USER_DELETE}>
-                            <button
-                              type="button"
-                              onClick={() => setDeleteTarget(user)}
-                              className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50"
-                              title="Delete user"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </button>
-                          </PermissionGate>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                    return (
+                      <tr
+                        key={user._id}
+                        className="border-b border-slate-100 last:border-0 hover:bg-slate-50/80"
+                      >
+                        <td className="py-3 px-4 text-slate-500">
+                          {(currentPage - 1) * itemsPerPage + index + 1}
+                        </td>
+                        <td className="py-3 px-4 font-medium text-slate-800">{user.name}</td>
+                        <td className="py-3 px-4 text-slate-600">{user.email}</td>
+                        <td className="py-3 px-4">
+                          <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-burgundy/10 text-burgundy">
+                            {formatRoleLabel(user.role)}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4">
+                          <span
+                            className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${
+                              isActive
+                                ? "bg-emerald-100 text-emerald-700"
+                                : "bg-red-100 text-red-700"
+                            }`}
+                          >
+                            {isActive ? "Active" : "Inactive"}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4 text-slate-600">
+                          <span className="font-medium text-slate-800">
+                            {user.permissions?.length ?? 0}
+                          </span>
+                          <span className="text-slate-400 ml-1">assigned</span>
+                          {user.permissions?.length ? (
+                            <details className="mt-1">
+                              <summary className="text-xs text-burgundy cursor-pointer hover:underline">
+                                View list
+                              </summary>
+                              <ul className="mt-2 space-y-0.5 text-xs text-slate-500 max-w-xs">
+                                {user.permissions.map((perm) => (
+                                  <li key={perm} title={perm}>
+                                    {formatPermissionLabel(perm)}
+                                  </li>
+                                ))}
+                              </ul>
+                            </details>
+                          ) : null}
+                        </td>
+                        <td className="py-3 px-4">
+                          <div className="flex items-center justify-end gap-1">
+                            <PermissionGate permission={PERMISSIONS.USER_UPDATE}>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  navigate(`/user-management/edit/${user._id}`, {
+                                    state: { user },
+                                  })
+                                }
+                                className="p-1.5 rounded-lg text-slate-400 hover:text-burgundy hover:bg-burgundy/10"
+                                title="Edit user"
+                              >
+                                <Pencil className="h-4 w-4" />
+                              </button>
+                              <button
+                                type="button"
+                                disabled={isUpdating}
+                                onClick={() => void handleStatusToggle(user)}
+                                className={`p-1.5 rounded-lg disabled:opacity-50 ${
+                                  isActive
+                                    ? "text-amber-500 hover:bg-amber-50"
+                                    : "text-emerald-500 hover:bg-emerald-50"
+                                }`}
+                                title={isActive ? "Deactivate user" : "Activate user"}
+                              >
+                                {isUpdating ? (
+                                  <Loader2 className="h-4 w-4 animate-spin" />
+                                ) : isActive ? (
+                                  <UserX className="h-4 w-4" />
+                                ) : (
+                                  <UserCheck className="h-4 w-4" />
+                                )}
+                              </button>
+                            </PermissionGate>
+                            <PermissionGate permission={PERMISSIONS.USER_DELETE}>
+                              <button
+                                type="button"
+                                onClick={() => setDeleteTarget(user)}
+                                className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50"
+                                title="Delete user"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            </PermissionGate>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {totalPages > 1 && (
+              <div className="flex justify-center gap-2 py-4 mt-2">
+                <button
+                  type="button"
+                  onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+                  disabled={currentPage === 1 || loading}
+                  className="px-3 py-1.5 rounded-lg border border-slate-200 text-xs disabled:opacity-50"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </button>
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                  <button
+                    key={page}
+                    type="button"
+                    onClick={() => setCurrentPage(page)}
+                    disabled={loading}
+                    className={`min-w-[34px] px-2 py-1.5 rounded-lg border text-xs ${
+                      currentPage === page
+                        ? "bg-burgundy text-white border-burgundy"
+                        : "border-slate-200"
+                    }`}
+                  >
+                    {page}
+                  </button>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
+                  disabled={currentPage === totalPages || loading}
+                  className="px-3 py-1.5 rounded-lg border border-slate-200 text-xs disabled:opacity-50"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+              </div>
+            )}
+          </>
         )}
       </div>
 

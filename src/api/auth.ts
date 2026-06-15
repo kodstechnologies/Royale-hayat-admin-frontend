@@ -59,6 +59,20 @@ type ApiResponse<T> = {
   success: boolean;
   message: string;
   data: T;
+  meta?: UsersListMeta | null;
+};
+
+export type UsersListMeta = {
+  page: number;
+  limit: number;
+  totalRecords: number;
+  totalPages: number;
+};
+
+export type GetUsersParams = {
+  page?: number;
+  limit?: number;
+  search?: string;
 };
 
 export type AdminUser = {
@@ -89,8 +103,15 @@ export type UpdateUserPayload = {
   isActive?: boolean;
 };
 
-export const getAllUsers = async () => {
-  const response = await api.get<ApiResponse<AdminUser[]>>("/api/v1/auth/users");
+export const getAllUsers = async (params: GetUsersParams = {}) => {
+  const response = await api.get<ApiResponse<AdminUser[]>>("/api/v1/auth/users", {
+    params,
+  });
+  return response.data;
+};
+
+export const getUserById = async (id: string) => {
+  const response = await api.get<ApiResponse<AdminUser>>(`/api/v1/auth/users/${id}`);
   return response.data;
 };
 

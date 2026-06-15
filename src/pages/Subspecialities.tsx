@@ -31,6 +31,13 @@ import {
 import { PERMISSIONS } from "@/constants/permissions";
 import PermissionGate from "@/utils/PermissionGate";
 
+const matchesMultiWordSearch = (fields: string[], query: string): boolean => {
+  const words = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
+  if (words.length === 0) return true;
+  const haystack = fields.join(" ").toLowerCase();
+  return words.every((word) => haystack.includes(word));
+};
+
 const Subspecialities = () => {
   const [items, setItems] = useState<SubspecialityListItem[]>([]);
   const [loading, setLoading] = useState(false);
@@ -40,7 +47,6 @@ const Subspecialities = () => {
   const [totalPages, setTotalPages] = useState(1);
 
   const [search, setSearch] = useState("");
-  const [searchInput, setSearchInput] = useState("");
   const [selectedDepartment, setSelectedDepartment] = useState<string>("all");
   const [departments, setDepartments] = useState<{ id: string; name: string }[]>([]);
   const [loadingDepartments, setLoadingDepartments] = useState(true);
@@ -85,9 +91,6 @@ const Subspecialities = () => {
         sortBy: "createdAt",
         sortOrder: "desc",
       };
-      if (search.trim()) {
-        params.search = search.trim();
-      }
       if (selectedDepartment !== "all") {
         params.department = selectedDepartment;
       }
@@ -105,29 +108,33 @@ const Subspecialities = () => {
     } finally {
       setLoading(false);
     }
-  }, [search, selectedDepartment]);
+  }, [selectedDepartment]);
 
   useEffect(() => {
     fetchSubspecialities();
   }, [fetchSubspecialities]);
 
-  const paginatedItems = items.slice((currentPage - 1) * limit, currentPage * limit);
-  const totalFilteredPages = Math.max(1, Math.ceil(items.length / limit));
+  const filteredItems = items.filter((row) =>
+    matchesMultiWordSearch(
+      [row.name, row.arabicName, row.departmentName ?? ""],
+      search,
+    ),
+  );
+
+  const paginatedItems = filteredItems.slice(
+    (currentPage - 1) * limit,
+    currentPage * limit,
+  );
+  const totalFilteredPages = Math.max(1, Math.ceil(filteredItems.length / limit));
 
   useEffect(() => {
     setTotalPages(totalFilteredPages);
     if (currentPage > totalFilteredPages) {
       setCurrentPage(totalFilteredPages);
     }
-  }, [items.length, totalFilteredPages, currentPage]);
-
-  const applySearch = () => {
-    setSearch(searchInput);
-    setCurrentPage(1);
-  };
+  }, [filteredItems.length, totalFilteredPages, currentPage]);
 
   const clearSearch = () => {
-    setSearchInput("");
     setSearch("");
     setCurrentPage(1);
   };
@@ -181,21 +188,16 @@ const Subspecialities = () => {
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                   <Input
                     placeholder="Search subspecialities by name..."
-                    value={searchInput}
-                    onChange={(e) => setSearchInput(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && applySearch()}
+                    value={search}
+                    onChange={(e) => {
+                      setSearch(e.target.value);
+                      setCurrentPage(1);
+                    }}
                     className="pl-9 h-10 w-full"
                   />
                 </div>
-                <div className="flex gap-2">
-                  <Button
-                    variant="secondary"
-                    onClick={applySearch}
-                    className="shadow-sm flex-1 min-[400px]:flex-none"
-                  >
-                    Search
-                  </Button>
-                  {search && (
+                {search && (
+                  <div className="flex gap-2">
                     <Button
                       variant="ghost"
                       onClick={clearSearch}
@@ -204,8 +206,8 @@ const Subspecialities = () => {
                       <X className="h-4 w-4 mr-1" />
                       Clear
                     </Button>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
 
               {/* <select

@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { getCSRById, deleteCSR } from "@/api/csr";
 import { PERMISSIONS } from "@/constants/permissions";
 import PermissionGate, { hasPermission } from "@/utils/PermissionGate";
+import { getDescriptionList } from "@/utils/csrDescriptions";
 
 type CSR = {
   _id: string;
@@ -16,8 +17,8 @@ type CSR = {
   headingArabic: string;
   subheading: string;
   subheadingArabic: string;
-  description: string;
-  descriptionArabic: string;
+  description: string[] | string;
+  descriptionArabic: string[] | string;
   images: string[];
   status?: "show" | "hide";
   order?: number;
@@ -38,7 +39,7 @@ const ViewCSR = () => {
 
   useEffect(() => {
     if (!id) {
-      navigate("/csr");
+      navigate("/csr?tab=csr");
       return;
     }
     
@@ -62,12 +63,12 @@ const ViewCSR = () => {
         });
       } else {
         toast.error("CSR initiative not found");
-        navigate("/csr");
+        navigate("/csr?tab=csr");
       }
     } catch (error: any) {
       console.error("Error loading CSR:", error);
       toast.error(error?.response?.data?.message || "Failed to load CSR data");
-      navigate("/csr");
+      navigate("/csr?tab=csr");
     } finally {
       setLoading(false);
     }
@@ -81,7 +82,7 @@ const ViewCSR = () => {
       await deleteCSR(record._id);
       window.dispatchEvent(new Event("csrUpdated"));
       toast.success("CSR initiative deleted successfully");
-      navigate("/csr");
+      navigate("/csr?tab=csr");
     } catch (error: any) {
       console.error("Error deleting CSR:", error);
       toast.error(error?.response?.data?.message || "Failed to delete CSR initiative");
@@ -126,6 +127,11 @@ const ViewCSR = () => {
 
   if (!record) return null;
 
+  const descriptions =
+    activeLanguage === "english"
+      ? getDescriptionList(record.description)
+      : getDescriptionList(record.descriptionArabic);
+
   return (
     <AdminLayout title="View CSR">
       <div className="space-y-6">
@@ -133,7 +139,7 @@ const ViewCSR = () => {
 
         <div className="flex justify-between items-center flex-wrap gap-4">
           <div className="flex items-center gap-4">
-            <button onClick={() => navigate("/csr")} className="p-2 rounded-xl hover:bg-slate-100 transition-colors">
+            <button onClick={() => navigate("/csr?tab=csr")} className="p-2 rounded-xl hover:bg-slate-100 transition-colors">
               <ArrowLeft className="h-5 w-5 text-slate-500 hover:text-burgundy" />
             </button>
             <div>
@@ -208,12 +214,19 @@ const ViewCSR = () => {
               <div>
                 <label className="text-xs text-slate-500 uppercase tracking-wider font-semibold block mb-2">{uiText.description}</label>
                 <div className="bg-slate-50 rounded-lg p-4">
-                  <p
-                    className="text-slate-600 leading-relaxed"
-                    dir={activeLanguage === "arabic" ? "rtl" : "ltr"}
-                  >
-                    {activeLanguage === "english" ? record.description : record.descriptionArabic}
-                  </p>
+                  {descriptions.length > 0 ? (
+                    descriptions.map((paragraph, idx) => (
+                      <p
+                        key={idx}
+                        className="text-slate-600 leading-relaxed mb-3 last:mb-0"
+                        dir={activeLanguage === "arabic" ? "rtl" : "ltr"}
+                      >
+                        {paragraph}
+                      </p>
+                    ))
+                  ) : (
+                    <p className="text-sm text-slate-500">No description available</p>
+                  )}
                 </div>
               </div>
 

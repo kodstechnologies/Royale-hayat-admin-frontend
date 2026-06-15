@@ -1,4 +1,16 @@
 import api from "./axiosInstance";
+import {
+  createEmptyExpertiseSection,
+  type ExpertiseSectionForm,
+} from "@/lib/doctorForm";
+
+export type ApiExpertise = {
+  _id?: string;
+  subHeading?: string;
+  subHeadingAr?: string;
+  points?: string[];
+  pointsAr?: string[];
+};
 
 export type ApiDoctor = {
   _id: string;
@@ -12,7 +24,7 @@ export type ApiDoctor = {
   titleAr?: string;
   qualifications?: string[];
   qualificationsAr?: string[];
-  expertise?: string[];
+  expertise?: ApiExpertise[] | string[];
   expertiseAr?: string[];
   languages?: string[];
   languagesAr?: string[];
@@ -83,6 +95,67 @@ export type DoctorPayload = {
   isActive: boolean;
 };
 
+const flattenExpertise = (expertise: ApiDoctor["expertise"]) => {
+  if (!Array.isArray(expertise)) return [];
+
+  return expertise.flatMap((item) => {
+    if (typeof item === "string") return item.trim() ? [item.trim()] : [];
+    const points = Array.isArray(item.points) ? item.points : [];
+    const heading = String(item.subHeading || "").trim();
+    return [
+      ...(heading ? [heading.endsWith(":") ? heading : `${heading}:`] : []),
+      ...points.map((point) => String(point).trim()).filter(Boolean),
+    ];
+  });
+};
+
+const flattenExpertiseAr = (row: ApiDoctor) => {
+  if (Array.isArray(row.expertise)) {
+    const structured = row.expertise.every((item) => typeof item === "object" && item !== null);
+    if (structured) {
+      return (row.expertise as ApiExpertise[]).flatMap((item) => {
+        const points = Array.isArray(item.pointsAr) ? item.pointsAr : [];
+        const heading = String(item.subHeadingAr || "").trim();
+        return [
+          ...(heading ? [heading.endsWith(":") ? heading : `${heading}:`] : []),
+          ...points.map((point) => String(point).trim()).filter(Boolean),
+        ];
+      });
+    }
+  }
+
+  return Array.isArray(row.expertiseAr) ? row.expertiseAr : [];
+};
+
+const mapExpertiseToFormSections = (row: ApiDoctor): ExpertiseSectionForm[] => {
+  const expertise = row.expertise;
+
+  if (Array.isArray(expertise) && expertise.length > 0) {
+    const structured = expertise.every((item) => typeof item === "object" && item !== null);
+
+    if (structured) {
+      return (expertise as ApiExpertise[]).map((item) => ({
+        id: item._id ? String(item._id) : undefined,
+        subHeading: String(item.subHeading ?? ""),
+        subHeadingAr: String(item.subHeadingAr ?? ""),
+        points: item.points?.length ? item.points : [""],
+        pointsAr: item.pointsAr?.length ? item.pointsAr : [""],
+      }));
+    }
+
+    return [
+      {
+        subHeading: "",
+        subHeadingAr: "",
+        points: (expertise as string[]).length ? (expertise as string[]) : [""],
+        pointsAr: row.expertiseAr?.length ? row.expertiseAr : [""],
+      },
+    ];
+  }
+
+  return [createEmptyExpertiseSection()];
+};
+
 const resolveDepartment = (department: ApiDoctor["department"]) => {
   if (department && typeof department === "object") {
     return {
@@ -118,7 +191,7 @@ export const mapApiDoctorToListItem = (
         : dept.departmentName || String(row.department ?? ""),
     title: String(row.title ?? ""),
     qualifications: Array.isArray(row.qualifications) ? row.qualifications : [],
-    expertise: Array.isArray(row.expertise) ? row.expertise : [],
+    expertise: flattenExpertise(row.expertise),
     languages: Array.isArray(row.languages) ? row.languages : [],
     initials: String(row.initials ?? "Dr."),
     availableOnline: row.availableOnline === true,
@@ -143,8 +216,8 @@ export const mapApiDoctorToView = (row: ApiDoctor): DoctorViewData => {
     arabicQualifications: Array.isArray(row.qualificationsAr)
       ? row.qualificationsAr
       : [],
-    expertise: Array.isArray(row.expertise) ? row.expertise : [],
-    arabicExpertise: Array.isArray(row.expertiseAr) ? row.expertiseAr : [],
+    expertise: flattenExpertise(row.expertise),
+    arabicExpertise: flattenExpertiseAr(row),
     languages: Array.isArray(row.languages) ? row.languages : [],
     arabicLanguages: Array.isArray(row.languagesAr) ? row.languagesAr : [],
     initials: String(row.initials ?? "Dr."),
@@ -173,13 +246,12 @@ export const mapApiDoctorToFormValues = (
     title: String(row.title ?? ""),
     initials: String(row.initials ?? "Dr."),
     languages: (row.languages ?? []).join("|||"),
-    expertise: (row.expertise ?? []).join("|||"),
+    expertiseSections: mapExpertiseToFormSections(row),
     qualifications: (row.qualifications ?? []).join("|||"),
     arabicName: String(row.nameAr ?? ""),
     arabicTitle: String(row.titleAr ?? ""),
     arabicInitials: String(row.initialsAr ?? "د."),
     arabicLanguages: (row.languagesAr ?? []).join("|||"),
-    arabicExpertise: (row.expertiseAr ?? []).join("|||"),
     arabicQualifications: (row.qualificationsAr ?? []).join("|||"),
     department: dept.departmentId,
     subspecialityIds,
@@ -202,7 +274,9 @@ export const createDoctor = async (payload: FormData) => {
 };
 
 export const editDoctor = async (id: string, payload: FormData) => {
-  return api.put(`/api/v1/doctors/${id}`, payload);
+  return api.put(`/api/v1/doctors/${id}`, payload, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
 };
 
 export const deleteDoctor = async (id: string) => {

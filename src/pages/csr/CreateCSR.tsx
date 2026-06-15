@@ -6,9 +6,10 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Save, Globe, Languages, FileText, Upload, X } from "lucide-react";
+import { ArrowLeft, Save, Globe, Languages, FileText, Upload, X, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import api from "@/api/axiosInstance";
+import { appendDescriptionsToFormData } from "@/utils/csrDescriptions";
 
 const CreateCSR = () => {
   const navigate = useNavigate();
@@ -25,9 +26,38 @@ const CreateCSR = () => {
     headingArabic: "",
     subheading: "",
     subheadingArabic: "",
-    description: "",
-    descriptionArabic: "",
+    description: [""],
+    descriptionArabic: [""],
   });
+
+  const addDescription = (field: "description" | "descriptionArabic") => {
+    setFormData((prev) => ({
+      ...prev,
+      [field]: [...prev[field], ""],
+    }));
+  };
+
+  const removeDescription = (field: "description" | "descriptionArabic", index: number) => {
+    setFormData((prev) => {
+      const updated = prev[field].filter((_, i) => i !== index);
+      return {
+        ...prev,
+        [field]: updated.length ? updated : [""],
+      };
+    });
+  };
+
+  const updateDescription = (
+    field: "description" | "descriptionArabic",
+    index: number,
+    value: string,
+  ) => {
+    setFormData((prev) => {
+      const updated = [...prev[field]];
+      updated[index] = value;
+      return { ...prev, [field]: updated };
+    });
+  };
 
   useEffect(() => {
     return () => {
@@ -133,13 +163,15 @@ const CreateCSR = () => {
       setActiveTab("arabic");
       return;
     }
-    if (!formData.description.trim()) {
-      toast.error("Please enter description (English)");
+    const validDescriptions = formData.description.filter((item) => item.trim());
+    if (!validDescriptions.length) {
+      toast.error("Please enter at least one description paragraph (English)");
       setActiveTab("english");
       return;
     }
-    if (!formData.descriptionArabic.trim()) {
-      toast.error("Please enter description (Arabic)");
+    const validDescriptionsArabic = formData.descriptionArabic.filter((item) => item.trim());
+    if (!validDescriptionsArabic.length) {
+      toast.error("Please enter at least one description paragraph (Arabic)");
       setActiveTab("arabic");
       return;
     }
@@ -157,8 +189,11 @@ const CreateCSR = () => {
       formDataToSend.append("headingArabic", formData.headingArabic);
       formDataToSend.append("subheading", formData.subheading);
       formDataToSend.append("subheadingArabic", formData.subheadingArabic);
-      formDataToSend.append("description", formData.description);
-      formDataToSend.append("descriptionArabic", formData.descriptionArabic);
+      appendDescriptionsToFormData(
+        formDataToSend,
+        formData.description,
+        formData.descriptionArabic,
+      );
       
       imageFiles.forEach((file) => {
         formDataToSend.append("images", file);
@@ -173,7 +208,7 @@ const CreateCSR = () => {
       window.dispatchEvent(new Event("csrUpdated"));
       
       toast.success(response?.data?.message || "CSR initiative added successfully!");
-      navigate("/csr");
+      navigate("/csr?tab=csr");
     } catch (error: any) {
       console.error("Error adding CSR:", error);
       
@@ -279,21 +314,64 @@ const CreateCSR = () => {
 
               
               <div className="bg-slate-50 rounded-xl p-5">
-                <div className="flex items-center gap-2 pb-2 border-b border-slate-200 mb-4">
-                  <FileText className="h-5 w-5 text-burgundy" />
-                  <h3 className="font-semibold text-slate-800">{getUIText.description}</h3>
+                <div className="flex items-center justify-between pb-2 border-b border-slate-200 mb-4">
+                  <div className="flex items-center gap-2">
+                    <FileText className="h-5 w-5 text-burgundy" />
+                    <h3 className="font-semibold text-slate-800">{getUIText.description}</h3>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      addDescription(activeTab === "english" ? "description" : "descriptionArabic")
+                    }
+                    className="gap-1 border-burgundy/30 text-burgundy hover:bg-burgundy/5"
+                  >
+                    <Plus className="h-3 w-3" />
+                    {activeTab === "english" ? "Add Paragraph" : "إضافة فقرة"}
+                  </Button>
                 </div>
-                <Textarea
-                  value={activeTab === "english" ? formData.description : formData.descriptionArabic}
-                  onChange={(e) => setFormData({
-                    ...formData,
-                    ...(activeTab === "english" ? { description: e.target.value } : { descriptionArabic: e.target.value })
-                  })}
-                  rows={6}
-                  placeholder={activeTab === "english" ? "Enter description" : "أدخل الوصف"}
-                  className="resize-none"
-                  dir={activeTab === "arabic" ? "rtl" : "ltr"}
-                />
+                <div className="space-y-3">
+                  {(activeTab === "english" ? formData.description : formData.descriptionArabic).map(
+                    (paragraph, idx) => (
+                      <div key={idx} className="flex gap-2 items-start">
+                        <Textarea
+                          value={paragraph}
+                          onChange={(e) =>
+                            updateDescription(
+                              activeTab === "english" ? "description" : "descriptionArabic",
+                              idx,
+                              e.target.value,
+                            )
+                          }
+                          rows={4}
+                          placeholder={
+                            activeTab === "english"
+                              ? `Paragraph ${idx + 1}`
+                              : `الفقرة ${idx + 1}`
+                          }
+                          className="resize-none flex-1"
+                          dir={activeTab === "arabic" ? "rtl" : "ltr"}
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() =>
+                            removeDescription(
+                              activeTab === "english" ? "description" : "descriptionArabic",
+                              idx,
+                            )
+                          }
+                          className="h-10 w-10 shrink-0 text-red-500 hover:text-red-600 hover:bg-red-50"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ),
+                  )}
+                </div>
               </div>
 
               

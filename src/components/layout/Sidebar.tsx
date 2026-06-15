@@ -431,11 +431,15 @@ const Sidebar = ({
     return () => nav.removeEventListener("scroll", onScroll);
   }, [applySavedNavScroll]);
 
-  const isRouteActive = (path: string) =>
-    path === "/"
+  const getRoutePath = (to: string) => to.split("?")[0];
+
+  const isRouteActive = (path: string) => {
+    const routePath = getRoutePath(path);
+    return routePath === "/"
       ? location.pathname === "/"
-      : location.pathname === path ||
-      location.pathname.startsWith(`${path}/`);
+      : location.pathname === routePath ||
+          location.pathname.startsWith(`${routePath}/`);
+  };
 
   const handleLogout = async () => {
     try {
@@ -533,7 +537,7 @@ const Sidebar = ({
       permissions: [PERMISSIONS.LEADERSHIP_VIEW],
     },
     {
-      to: "/csr",
+      to: "/csr?tab=csr",
       icon: Globe,
       label: "CSR",
       permissions: [PERMISSIONS.CSR_VIEW],

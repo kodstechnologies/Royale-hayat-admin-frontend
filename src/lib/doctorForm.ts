@@ -11,19 +11,33 @@ export type DeptSubspecialityOption = {
   arabicName: string;
 };
 
+export type ExpertiseSectionForm = {
+  id?: string;
+  subHeading: string;
+  subHeadingAr: string;
+  points: string[];
+  pointsAr: string[];
+};
+
+export const createEmptyExpertiseSection = (): ExpertiseSectionForm => ({
+  subHeading: "",
+  subHeadingAr: "",
+  points: [""],
+  pointsAr: [""],
+});
+
 export type DoctorFormValues = {
   doctorId: string;
   name: string;
   title: string;
   initials: string;
   languages: string;
-  expertise: string;
+  expertiseSections: ExpertiseSectionForm[];
   qualifications: string;
   arabicName: string;
   arabicTitle: string;
   arabicInitials: string;
   arabicLanguages: string;
-  arabicExpertise: string;
   arabicQualifications: string;
   department: string;
   subspecialityIds: string[];
@@ -38,7 +52,6 @@ const appendJsonArray = (formData: FormData, key: string, values: string[]) => {
 export const buildDoctorFormData = (
   values: DoctorFormValues,
   deptSubspecialities: DeptSubspecialityOption[],
-  options?: { existingImageUrl?: string },
 ): FormData => {
   const selectedSubs = deptSubspecialities.filter((sub) =>
     values.subspecialityIds.includes(sub._id),
@@ -65,15 +78,30 @@ export const buildDoctorFormData = (
   appendJsonArray(formData, "subspecialitiesAr", selectedSubs.map((s) => s.arabicName));
   appendJsonArray(formData, "qualifications", toItems(values.qualifications));
   appendJsonArray(formData, "qualificationsAr", toItems(values.arabicQualifications));
-  appendJsonArray(formData, "expertise", toItems(values.expertise));
-  appendJsonArray(formData, "expertiseAr", toItems(values.arabicExpertise));
+
+  const expertisePayload = values.expertiseSections
+    .map((section) => ({
+      ...(section.id && /^[0-9a-fA-F]{24}$/i.test(section.id) ? { id: section.id } : {}),
+      subHeading: section.subHeading.trim(),
+      subHeadingAr: section.subHeadingAr.trim(),
+      points: section.points.map((point) => point.trim()).filter(Boolean),
+      pointsAr: section.pointsAr.map((point) => point.trim()).filter(Boolean),
+    }))
+    .filter(
+      (section) =>
+        section.subHeading ||
+        section.subHeadingAr ||
+        section.points.length > 0 ||
+        section.pointsAr.length > 0,
+    );
+
+  formData.append("expertise", JSON.stringify(expertisePayload));
+
   appendJsonArray(formData, "languages", toItems(values.languages));
   appendJsonArray(formData, "languagesAr", toItems(values.arabicLanguages));
 
   if (values.imageFile) {
     formData.append("image", values.imageFile);
-  } else if (options?.existingImageUrl) {
-    formData.append("image", options.existingImageUrl);
   }
 
   return formData;

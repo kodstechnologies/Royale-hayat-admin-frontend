@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, User, FileText, Briefcase, Calendar, Eye, Edit, Trash2, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { getLeadershipById, deleteLeadership } from "@/api/leadership";
+import { getDescriptionList } from "@/utils/csrDescriptions";
 import { PERMISSIONS } from "@/constants/permissions";
 import PermissionGate, { hasPermission } from "@/utils/PermissionGate";
 
@@ -18,8 +19,8 @@ type Leadership = {
   nameArabic: string;
   title: string;
   titleArabic: string;
-  description: string;
-  descriptionArabic: string;
+  description: string[] | string;
+  descriptionArabic: string[] | string;
   image: string;
   createdAt: string;
   updatedAt?: string;
@@ -128,6 +129,11 @@ const ViewLeadership = () => {
   if (!leadership) {
     return null;
   }
+
+  const descriptions =
+    activeLanguage === "english"
+      ? getDescriptionList(leadership.description)
+      : getDescriptionList(leadership.descriptionArabic);
 
   return (
     <AdminLayout title="View Leadership">
@@ -259,12 +265,23 @@ const ViewLeadership = () => {
                     <FileText className="h-5 w-5 text-burgundy shrink-0" />
                     <h3 className="text-base sm:text-lg font-semibold text-slate-800">{uiText.description}</h3>
                   </div>
-                  <p
-                    className="text-sm text-slate-600 leading-relaxed break-words"
+                  <div
+                    className="space-y-3"
                     dir={activeLanguage === "arabic" ? "rtl" : "ltr"}
                   >
-                    {activeLanguage === "english" ? leadership.description : leadership.descriptionArabic}
-                  </p>
+                    {descriptions.length > 0 ? (
+                      descriptions.map((paragraph, idx) => (
+                        <p
+                          key={idx}
+                          className="text-sm text-slate-600 leading-relaxed break-words"
+                        >
+                          {paragraph}
+                        </p>
+                      ))
+                    ) : (
+                      <p className="text-sm text-slate-500">No description available</p>
+                    )}
+                  </div>
                 </div>
 
                 

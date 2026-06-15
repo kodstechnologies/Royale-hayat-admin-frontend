@@ -298,14 +298,7 @@ const ViewAchievement = () => {
                           : achievement.arabicDepartment || achievement.department}
                       </p>
                     </div>
-                    <div>
-                      <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                        Division
-                      </label>
-                      <p className="text-sm text-slate-700 mt-1">
-                        {activeLanguage === "english" ? achievement.division : achievement.arabicDivision}
-                      </p>
-                    </div>
+                    
                     <div>
                       <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
                         Month

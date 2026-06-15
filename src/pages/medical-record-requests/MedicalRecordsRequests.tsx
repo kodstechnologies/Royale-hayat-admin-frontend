@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 import { useNavigate } from "react-router-dom";
 
@@ -6,7 +6,7 @@ import AdminLayout from "@/components/layout/AdminLayout";
 
 import BreadCrumb from "@/components/layout/BreadCrumb";
 
-import { Search, Eye, Trash2, FileText, Clock, CheckCircle } from "lucide-react";
+import { Search, Eye, Trash2, FileText, Clock, CheckCircle, ChevronLeft, ChevronRight } from "lucide-react";
 
 import {
 
@@ -30,8 +30,6 @@ import {
 
   mapListItem,
 
-  matchesSearch,
-
   type MedicalRecordRequestListItem,
 
 } from "./medicalRecordRequestUtils";
@@ -48,7 +46,19 @@ const MedicalRecordsRequests = () => {
 
   const [search, setSearch] = useState("");
 
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const [itemsPerPage] = useState(10);
+
+  const [totalPages, setTotalPages] = useState(1);
+
+  const [totalRecords, setTotalRecords] = useState(0);
+
+  const [counts, setCounts] = useState({ total: 0, pending: 0, received: 0 });
 
   const [requests, setRequests] = useState<MedicalRecordRequestListItem[]>([]);
 
@@ -72,11 +82,19 @@ const MedicalRecordsRequests = () => {
 
     try {
 
-      const res = await getAllMedicalRequests();
+      const res = await getAllMedicalRequests({
 
-      const list = res?.data ?? res ?? [];
+        page: currentPage,
 
+        limit: itemsPerPage,
 
+        status: statusFilter,
+
+        ...(debouncedSearch ? { search: debouncedSearch } : {}),
+
+      });
+
+      const list = res?.data ?? [];
 
       if (Array.isArray(list)) {
 
@@ -92,11 +110,25 @@ const MedicalRecordsRequests = () => {
 
       }
 
+      setTotalPages(res.meta?.totalPages || 1);
+
+      setTotalRecords(res.meta?.totalRecords ?? 0);
+
+      if (res.meta?.counts) {
+
+        setCounts(res.meta.counts);
+
+      }
+
     } catch {
 
       toast.error("Failed to load medical record requests");
 
       setRequests([]);
+
+      setTotalPages(1);
+
+      setTotalRecords(0);
 
     } finally {
 
@@ -104,7 +136,25 @@ const MedicalRecordsRequests = () => {
 
     }
 
-  }, []);
+  }, [currentPage, itemsPerPage, debouncedSearch, statusFilter]);
+
+
+
+  useEffect(() => {
+
+    const timer = setTimeout(() => setDebouncedSearch(search.trim()), 300);
+
+    return () => clearTimeout(timer);
+
+  }, [search]);
+
+
+
+  useEffect(() => {
+
+    setCurrentPage(1);
+
+  }, [debouncedSearch, statusFilter]);
 
 
 
@@ -113,40 +163,6 @@ const MedicalRecordsRequests = () => {
     void fetchRequests();
 
   }, [fetchRequests]);
-
-
-
-  const filtered = useMemo(() => {
-
-    return requests.filter((item) => {
-
-      if (statusFilter === "pending" && item.status !== "pending") return false;
-
-      if (statusFilter === "received" && item.status !== "received") return false;
-
-      return matchesSearch(item, search);
-
-    });
-
-  }, [requests, search, statusFilter]);
-
-
-
-  const counts = useMemo(
-
-    () => ({
-
-      total: requests.length,
-
-      pending: requests.filter((r) => r.status === "pending").length,
-
-      received: requests.filter((r) => r.status === "received").length,
-
-    }),
-
-    [requests],
-
-  );
 
 
 
@@ -184,7 +200,17 @@ const MedicalRecordsRequests = () => {
 
       setRequestToDelete(null);
 
-      await fetchRequests();
+      const remainingOnPage = requests.length - 1;
+
+      if (remainingOnPage === 0 && currentPage > 1) {
+
+        setCurrentPage((page) => page - 1);
+
+      } else {
+
+        await fetchRequests();
+
+      }
 
     } catch (error: unknown) {
 
@@ -448,7 +474,7 @@ const MedicalRecordsRequests = () => {
 
               </div>
 
-            ) : filtered.length === 0 ? (
+            ) : requests.length === 0 ? (
 
               <div className="text-center py-16">
 
@@ -470,7 +496,7 @@ const MedicalRecordsRequests = () => {
 
                 <div className="md:hidden space-y-3">
 
-                  {filtered.map((request) => (
+                  {requests.map((request) => (
 
                     <article
 
@@ -686,7 +712,7 @@ const MedicalRecordsRequests = () => {
 
                     <tbody>
 
-                      {filtered.map((request, index) => (
+                      {requests.map((request, index) => (
 
                         <tr
 
@@ -844,13 +870,91 @@ const MedicalRecordsRequests = () => {
 
 
 
-                {filtered.length > 0 && (
+                {requests.length > 0 && (
 
-                  <p className="text-xs text-slate-400 text-center md:text-right pt-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-3">
 
-                    Showing {filtered.length} of {requests.length} requests
+                    <p className="text-xs text-slate-400 text-center sm:text-left">
 
-                  </p>
+                      Showing {requests.length} of {totalRecords} requests
+
+                    </p>
+
+                    {totalPages > 1 && (
+
+                      <div className="flex justify-center gap-2">
+
+                        <button
+
+                          type="button"
+
+                          onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+
+                          disabled={currentPage === 1 || loading}
+
+                          className="px-3 py-1.5 rounded-lg border border-slate-200 text-xs disabled:opacity-50"
+
+                        >
+
+                          <ChevronLeft className="h-4 w-4" />
+
+                        </button>
+
+                        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+
+                          <button
+
+                            key={page}
+
+                            type="button"
+
+                            onClick={() => setCurrentPage(page)}
+
+                            disabled={loading}
+
+                            className={`min-w-[34px] px-2 py-1.5 rounded-lg border text-xs ${
+
+                              currentPage === page
+
+                                ? "bg-burgundy text-white border-burgundy"
+
+                                : "border-slate-200"
+
+                            }`}
+
+                          >
+
+                            {page}
+
+                          </button>
+
+                        ))}
+
+                        <button
+
+                          type="button"
+
+                          onClick={() =>
+
+                            setCurrentPage((page) => Math.min(totalPages, page + 1))
+
+                          }
+
+                          disabled={currentPage === totalPages || loading}
+
+                          className="px-3 py-1.5 rounded-lg border border-slate-200 text-xs disabled:opacity-50"
+
+                        >
+
+                          <ChevronRight className="h-4 w-4" />
+
+                        </button>
+
+                      </div>
+
+                    )}
+
+                  </div>
 
                 )}
 

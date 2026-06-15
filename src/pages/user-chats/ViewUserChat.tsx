@@ -131,17 +131,7 @@ const ViewUserChat = () => {
                     </div>
                   </div>
                 )}
-                <div className="flex items-start gap-3">
-                  <User className="h-5 w-5 text-slate-500 mt-0.5" />
-                  <div>
-                    <p className="text-xs uppercase tracking-wider text-slate-500">Status</p>
-                    <p
-                      className={`font-medium ${log.success ? "text-emerald-600" : "text-red-600"}`}
-                    >
-                      {log.success ? "Success" : "Failed"}
-                    </p>
-                  </div>
-                </div>
+              
               </div>
             </div>
 

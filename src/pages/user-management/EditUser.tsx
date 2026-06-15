@@ -5,7 +5,7 @@ import AdminLayout from "@/components/layout/AdminLayout";
 import BreadCrumb from "@/components/layout/BreadCrumb";
 import EditUserForm from "@/components/user-management/EditUserForm";
 import { Button } from "@/components/ui/button";
-import { getAllUsers, type AdminUser } from "@/api/auth";
+import { getUserById, type AdminUser } from "@/api/auth";
 import { toast } from "sonner";
 
 const EditUser = () => {
@@ -27,11 +27,9 @@ const EditUser = () => {
     }
     setLoading(true);
     try {
-      const response = await getAllUsers();
-      const list = Array.isArray(response?.data) ? response.data : [];
-      const found = list.find((u) => u._id === id) ?? null;
-      setUser(found);
-      if (!found) {
+      const response = await getUserById(id);
+      setUser(response?.data ?? null);
+      if (!response?.data) {
         toast.error("User not found");
       }
     } catch (error: unknown) {

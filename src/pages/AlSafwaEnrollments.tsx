@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import AdminLayout from "@/components/layout/AdminLayout";
 import BreadCrumb from "@/components/layout/BreadCrumb";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Search, Eye, Shield, X, Loader2 } from "lucide-react";
+import { Search, Eye, Shield, X, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import {
   getAllAlSafwaEnrollments,
   getAlSafwaEnrollmentById,
@@ -273,25 +273,39 @@ const AlSafwaEnrollments = () => {
             )}
 
             {totalPages > 1 && (
-              <div className="flex flex-wrap justify-center gap-2 mt-4">
+              <div className="flex justify-center gap-2 py-4 mt-2">
                 <button
                   type="button"
-                  disabled={currentPage <= 1}
-                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+                  disabled={currentPage === 1 || loading}
                   className="px-3 py-1.5 rounded-lg border border-slate-200 text-xs disabled:opacity-50"
                 >
-                  {t("Previous")}
+                  <ChevronLeft className="h-4 w-4" />
                 </button>
-                <span className="px-3 py-1.5 text-xs text-slate-600">
-                  {t("Page")} {currentPage} / {totalPages}
-                </span>
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                  <button
+                    key={page}
+                    type="button"
+                    onClick={() => setCurrentPage(page)}
+                    disabled={loading}
+                    className={`min-w-[34px] px-2 py-1.5 rounded-lg border text-xs ${
+                      currentPage === page
+                        ? "bg-burgundy text-white border-burgundy"
+                        : "border-slate-200"
+                    }`}
+                  >
+                    {page}
+                  </button>
+                ))}
                 <button
                   type="button"
-                  disabled={currentPage >= totalPages}
-                  onClick={() => setCurrentPage((p) => p + 1)}
+                  onClick={() =>
+                    setCurrentPage((page) => Math.min(totalPages, page + 1))
+                  }
+                  disabled={currentPage === totalPages || loading}
                   className="px-3 py-1.5 rounded-lg border border-slate-200 text-xs disabled:opacity-50"
                 >
-                  {t("Next")}
+                  <ChevronRight className="h-4 w-4" />
                 </button>
               </div>
             )}

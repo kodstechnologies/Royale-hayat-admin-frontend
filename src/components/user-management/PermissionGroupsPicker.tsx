@@ -15,6 +15,24 @@ type PermissionGroupsPickerProps = {
   onClearAll: () => void;
 };
 
+/** Categories, departments, subspecialities: assign view only in user management. */
+const VIEW_ONLY_GROUP_IDS = new Set([
+  "categories",
+  "departments",
+  "subspecialities",
+]);
+
+const isViewPermissionKey = (key: string): boolean =>
+  key.endsWith(".view") || key.endsWith(".view.all");
+
+const getAssignableGroupPermissions = (
+  groupId: string,
+  permissions: { key: string; label: string }[],
+) => {
+  if (!VIEW_ONLY_GROUP_IDS.has(groupId)) return permissions;
+  return permissions.filter((permission) => isViewPermissionKey(permission.key));
+};
+
 const PermissionGroupsPicker = ({
   selectedPermissions,
   onSelectionChange,
@@ -38,9 +56,6 @@ const PermissionGroupsPicker = ({
       );
     }
   };
-
-  const isViewPermissionKey = (key: string): boolean =>
-    key.endsWith(".view") || key.endsWith(".view.all");
 
   const isViewLocked = (permissionKey: string): boolean => {
     if (!isViewPermissionKey(permissionKey)) return false;
@@ -85,13 +100,19 @@ const PermissionGroupsPicker = ({
 
       <div className="space-y-4 max-h-[480px] overflow-y-auto pr-1">
         {permissionGroups.map((group) => {
-          const sectionKeys = group.permissions.map((p) => p.key);
+          const visiblePermissions = getAssignableGroupPermissions(
+            group.id,
+            group.permissions,
+          );
+          const sectionKeys = visiblePermissions.map((p) => p.key);
           const selectedInSection = sectionKeys.filter((key) =>
             selectedPermissions.includes(key),
           ).length;
           const allSectionSelected =
             sectionKeys.length > 0 &&
             selectedInSection === sectionKeys.length;
+
+          if (visiblePermissions.length === 0) return null;
 
           return (
             <section
@@ -119,7 +140,7 @@ const PermissionGroupsPicker = ({
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2 p-3">
-                {group.permissions.map((permission) => {
+                {visiblePermissions.map((permission) => {
                   const viewLocked = isViewLocked(permission.key);
 
                   return (

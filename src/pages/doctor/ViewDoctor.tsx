@@ -18,6 +18,11 @@ import { toast } from "sonner";
 import { getDoctorById, mapApiDoctorToView, type DoctorViewData } from "@/api/doctors";
 import type { ApiDoctor } from "@/api/doctors";
 
+const isExpertiseSubHeading = (value: string) => /[:：]\s*$/.test(value.trim());
+
+const formatExpertiseSubHeading = (value: string) =>
+  value.trim().replace(/[:：]\s*$/, "");
+
 const ViewDoctor = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -171,13 +176,7 @@ const ViewDoctor = () => {
                       doctor.isActive ? "bg-green-500 text-white" : "bg-gray-500 text-white"
                     }`}
                   >
-                    {activeLanguage === "english"
-                      ? doctor.isActive
-                        ? "Active"
-                        : "Inactive"
-                      : doctor.isActive
-                        ? "نشط"
-                        : "غير نشط"}
+                    {doctor.isActive ? "Active" : "Inactive"}
                   </div>
 
                   <div className={`text-center mt-4 ${activeLanguage === "arabic" ? "rtl-text" : ""}`}>
@@ -189,20 +188,22 @@ const ViewDoctor = () => {
                     </p>
                   </div>
 
-                  <div className={`mt-6 space-y-3 text-sm ${activeLanguage === "arabic" ? "rtl-text" : ""}`}>
+                  <div className="mt-6 space-y-3 text-sm">
                     <div className="flex flex-col gap-0.5 py-2 border-b border-slate-100">
-                      <span className="text-slate-500">
-                        {activeLanguage === "english" ? "Doctor ID" : "معرف الطبيب"}
-                      </span>
+                      <span className="text-slate-500">Doctor ID</span>
                       <span className="font-mono text-xs text-slate-700 break-all">
                         {doctor.doctorId || "-"}
                       </span>
                     </div>
                     <div className="flex flex-col gap-0.5 py-2 border-b border-slate-100">
-                      <span className="text-slate-500">
-                        {activeLanguage === "english" ? "Department" : "القسم"}
+                      <span className="text-slate-500">Department</span>
+                      <span
+                        className={`font-medium text-slate-700 ${
+                          activeLanguage === "arabic" ? "rtl-text" : ""
+                        }`}
+                      >
+                        {getDepartmentName()}
                       </span>
-                      <span className="font-medium text-slate-700">{getDepartmentName()}</span>
                     </div>
                   </div>
 
@@ -216,27 +217,21 @@ const ViewDoctor = () => {
                     >
                       <Globe size={12} />
                       {doctor.availableOnline
-                        ? activeLanguage === "english"
-                          ? "Available for Online Booking"
-                          : "متاح للحجز عبر الإنترنت"
-                        : activeLanguage === "english"
-                          ? "Not Available for Online Consultation"
-                          : "غير متاح للاستشارة عبر الإنترنت"}
+                        ? "Available for Online Booking"
+                        : "Not Available for Online Consultation"}
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div className={`space-y-5 ${activeLanguage === "arabic" ? "rtl-text" : ""}`}>
+              <div className="space-y-5">
                 {doctor.qualifications.length > 0 && (
                   <div className="bg-white rounded-xl border border-slate-200 p-4 sm:p-5 shadow-sm">
                     <div className="flex items-center gap-2 mb-4">
                       <GraduationCap size={18} className="text-burgundy shrink-0" />
-                      <h3 className="text-md font-semibold text-slate-800">
-                        {activeLanguage === "english" ? "Qualifications" : "المؤهلات"}
-                      </h3>
+                      <h3 className="text-md font-semibold text-slate-800">Qualifications</h3>
                     </div>
-                    <div className="space-y-2.5">
+                    <div className={`space-y-2.5 ${activeLanguage === "arabic" ? "rtl-text" : ""}`}>
                       {(activeLanguage === "english"
                         ? doctor.qualifications
                         : doctor.arabicQualifications
@@ -254,19 +249,26 @@ const ViewDoctor = () => {
                   <div className="bg-white rounded-xl border border-slate-200 p-4 sm:p-5 shadow-sm">
                     <div className="flex items-center gap-2 mb-4">
                       <Brain size={18} className="text-burgundy shrink-0" />
-                      <h3 className="text-md font-semibold text-slate-800">
-                        {activeLanguage === "english" ? "Expertise" : "الخبرات"}
-                      </h3>
+                      <h3 className="text-md font-semibold text-slate-800">Expertise</h3>
                     </div>
-                    <ul className="list-disc list-outside pl-5 space-y-1.5 marker:text-burgundy">
+                    <div className={`space-y-1.5 ${activeLanguage === "arabic" ? "rtl-text" : ""}`}>
                       {(activeLanguage === "english" ? doctor.expertise : doctor.arabicExpertise).map(
-                        (item, idx) => (
-                          <li key={idx} className="text-sm text-slate-600">
-                            {item}
-                          </li>
-                        ),
+                        (item, idx) =>
+                          isExpertiseSubHeading(item) ? (
+                            <p
+                              key={idx}
+                              className="text-sm font-semibold text-slate-800 mt-4 first:mt-0"
+                            >
+                              {formatExpertiseSubHeading(item)}
+                            </p>
+                          ) : (
+                            <div key={idx} className="flex items-start gap-2 pl-4">
+                              <span className="text-burgundy shrink-0 leading-6">•</span>
+                              <span className="text-sm text-slate-600">{item}</span>
+                            </div>
+                          ),
                       )}
-                    </ul>
+                    </div>
                   </div>
                 )}
 
@@ -274,11 +276,9 @@ const ViewDoctor = () => {
                   <div className="bg-white rounded-xl border border-slate-200 p-4 sm:p-5 shadow-sm">
                     <div className="flex items-center gap-2 mb-4">
                       <Languages size={18} className="text-burgundy shrink-0" />
-                      <h3 className="text-md font-semibold text-slate-800">
-                        {activeLanguage === "english" ? "Languages" : "اللغات"}
-                      </h3>
+                      <h3 className="text-md font-semibold text-slate-800">Languages</h3>
                     </div>
-                    <div className="flex flex-wrap gap-2">
+                    <div className={`flex flex-wrap gap-2 ${activeLanguage === "arabic" ? "rtl-text" : ""}`}>
                       {(activeLanguage === "english" ? doctor.languages : doctor.arabicLanguages).map(
                         (lang) => (
                           <span

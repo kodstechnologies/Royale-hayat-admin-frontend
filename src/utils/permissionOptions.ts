@@ -42,33 +42,30 @@ const PERMISSION_GROUP_DEFS: {
     id: "categories",
     title: "Categories",
     permissionKeys: [
-      "CATAGORY_CREATE",
-      "CATAGORY_UPDATE",
-      "CATAGORY_DELETE",
+      // "CATAGORY_CREATE",
+      // "CATAGORY_UPDATE",
+      // "CATAGORY_DELETE",
       "CATAGORY_VIEW",
-   
     ],
   },
   {
     id: "departments",
     title: "Departments",
     permissionKeys: [
-      "DEPARTMENT",
-      "DEPARTMENT_UPDATE",
-      "DEPARTMENT_DELETE",
+      // "DEPARTMENT",
+      // "DEPARTMENT_UPDATE",
+      // "DEPARTMENT_DELETE",
       "DEPARTMENT_VIEW",
-  
     ],
   },
   {
     id: "subspecialities",
     title: "Subspecialities",
     permissionKeys: [
-      "SUBSPECIALITY",
-      "SUBSPECIALITY_UPDATE",
-      "SUBSPECIALITY_DELETE",
+      // "SUBSPECIALITY",
+      // "SUBSPECIALITY_UPDATE",
+      // "SUBSPECIALITY_DELETE",
       "SUBSPECIALITY_VIEW",
-     
     ],
   },
   {
@@ -133,7 +130,7 @@ const PERMISSION_GROUP_DEFS: {
   {
     id: "medical-records",
     title: "Medical Record Requests",
-    permissionKeys: ["MRR_VIEW", "MRR_SHARE_VIA_EMAIL", "MRR_DELETE"],
+    permissionKeys: ["MRR_VIEW", /* "MRR_SHARE_VIA_EMAIL", */ "MRR_DELETE"],
   },
   {
     id: "event-bookings",
@@ -209,6 +206,17 @@ const UNASSIGNABLE_PERMISSION_KEYS = new Set<string>([
   PERMISSIONS.JOB_APPLICATION_VIEW,
   PERMISSIONS.JOB_APPLICATION_UPDATE,
   PERMISSIONS.JOB_APPLICATION_DELETE,
+  // Category, department, subspeciality: view-only in user management
+  PERMISSIONS.CATAGORY_CREATE,
+  PERMISSIONS.CATAGORY_UPDATE,
+  PERMISSIONS.CATAGORY_DELETE,
+  PERMISSIONS.DEPARTMENT,
+  PERMISSIONS.DEPARTMENT_UPDATE,
+  PERMISSIONS.DEPARTMENT_DELETE,
+  PERMISSIONS.SUBSPECIALITY,
+  PERMISSIONS.SUBSPECIALITY_UPDATE,
+  PERMISSIONS.SUBSPECIALITY_DELETE,
+  PERMISSIONS.MRR_SHARE_VIA_EMAIL,
 ]);
 
 export const filterAssignablePermissions = (permissions: string[]): string[] =>

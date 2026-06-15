@@ -11,8 +11,10 @@ import { Input } from "@/components/ui/input";
 import { getDepartments, mapApiDepartmentToListItem } from "@/api/department";
 import { getSubspecialities, mapApiSubspecialityToListItem } from "@/api/subspeciality";
 import { createDoctor } from "@/api/doctors";
+import ExpertiseSectionsEditor from "@/components/doctor/ExpertiseSectionsEditor";
 import {
   buildDoctorFormData,
+  createEmptyExpertiseSection,
   DOCTOR_LIST_SEPARATOR as SEPARATOR,
   toItems,
   type DeptSubspecialityOption,
@@ -25,13 +27,12 @@ const initialValues: DoctorFormValues = {
   title: "",
   initials: "",
   languages: "",
-  expertise: "",
+  expertiseSections: [createEmptyExpertiseSection()],
   qualifications: "",
   arabicName: "",
   arabicTitle: "",
   arabicInitials: "د.",
   arabicLanguages: "",
-  arabicExpertise: "",
   arabicQualifications: "",
   department: "",
   subspecialityIds: [],
@@ -426,60 +427,11 @@ const CreateDoctorPage = () => {
                         </Button>
                       </div>
 
-                      
-                      <div className="bg-white rounded-xl border border-slate-200 p-5 space-y-4">
-                        <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
-                          <Award className="h-5 w-5 text-burgundy" />
-                          <h3 className="text-md font-semibold text-slate-800">Expertise</h3>
-                        </div>
-
-                        <div className="space-y-3">
-                          {toEditorRows(values.expertise).map((line, index) => (
-                            <div key={`expertise-${index}`} className="flex gap-2">
-                              <Input
-                                value={line}
-                                onChange={(e) => {
-                                  const next = [...toEditorRows(values.expertise)];
-                                  next[index] = e.target.value;
-                                  setFieldValue("expertise", toCommaSeparated(next));
-                                }}
-                                placeholder={`Expertise ${index + 1}`}
-                                className="flex-1 h-11"
-                              />
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => {
-                                  const rows = toEditorRows(values.expertise);
-                                  if (rows.length <= 1) {
-                                    setFieldValue("expertise", "");
-                                    return;
-                                  }
-                                  const next = rows.filter((_, i) => i !== index);
-                                  setFieldValue("expertise", toCommaSeparated(next));
-                                }}
-                                className="text-red-500 hover:text-red-600 hover:bg-red-50 h-11 w-11"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          ))}
-                        </div>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            const rows = [...toEditorRows(values.expertise), ""];
-                            setFieldValue("expertise", toCommaSeparated(rows));
-                          }}
-                          className="mt-2 gap-1 border-burgundy/30 text-burgundy hover:bg-burgundy/5"
-                        >
-                          <Plus className="h-3 w-3" />
-                          Add expertise
-                        </Button>
-                      </div>
+                      <ExpertiseSectionsEditor
+                        lang="english"
+                        sections={values.expertiseSections}
+                        onChange={(sections) => setFieldValue("expertiseSections", sections)}
+                      />
                     </div>
                   )}
 
@@ -643,64 +595,12 @@ const CreateDoctorPage = () => {
                           أضف مؤهلاً
                         </Button>
                       </div>
-                      
 
-                      
-                      <div className="bg-white rounded-xl border border-slate-200 p-5 space-y-4">
-                        <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
-                          <Award className="h-5 w-5 text-burgundy" />
-                          <h3 className="text-md font-semibold text-slate-800">Expertise (Arabic)</h3>
-                        </div>
-
-                        <div className="space-y-3">
-                          {toEditorRows(values.arabicExpertise).map((line, index) => (
-                            <div key={`arabic-expertise-${index}`} className="flex gap-2">
-                              <Input
-                                value={line}
-                                onChange={(e) => {
-                                  const next = [...toEditorRows(values.arabicExpertise)];
-                                  next[index] = e.target.value;
-                                  setFieldValue("arabicExpertise", toCommaSeparated(next));
-                                }}
-                                placeholder={`الخبرة ${index + 1}`}
-                                className="flex-1 h-11"
-                                dir="rtl"
-                              />
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => {
-                                  const rows = toEditorRows(values.arabicExpertise);
-                                  if (rows.length <= 1) {
-                                    setFieldValue("arabicExpertise", "");
-                                    return;
-                                  }
-                                  const next = rows.filter((_, i) => i !== index);
-                                  setFieldValue("arabicExpertise", toCommaSeparated(next));
-                                }}
-                                className="text-red-500 hover:text-red-600 hover:bg-red-50 h-11 w-11"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          ))}
-                        </div>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            const rows = [...toEditorRows(values.arabicExpertise), ""];
-                            setFieldValue("arabicExpertise", toCommaSeparated(rows));
-                          }}
-                          className="mt-2 gap-1 border-burgundy/30 text-burgundy hover:bg-burgundy/5"
-                        >
-                          <Plus className="h-3 w-3" />
-                          أضف خبرة
-                        </Button>
-                      </div>
-
+                      <ExpertiseSectionsEditor
+                        lang="arabic"
+                        sections={values.expertiseSections}
+                        onChange={(sections) => setFieldValue("expertiseSections", sections)}
+                      />
                     </div>
                   )}
 
