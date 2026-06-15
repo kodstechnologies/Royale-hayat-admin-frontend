@@ -59,24 +59,18 @@ const ViewSubspeciality = () => {
     void loadSubspeciality();
   }, [id]);
 
+  const isArabic = activeLanguage === "arabic";
+
   const formatDate = (dateString: string) => {
     if (!dateString) return "—";
     const date = new Date(dateString);
-    if (activeLanguage === "arabic") {
-      return date.toLocaleDateString("ar-SA", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-    }
     return date.toLocaleDateString("en-US", {
       year: "numeric",
       month: "long",
       day: "numeric",
       hour: "2-digit",
       minute: "2-digit",
+      hour12: true,
     });
   };
 
@@ -101,20 +95,15 @@ const ViewSubspeciality = () => {
               <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-slate-100 flex items-center justify-center">
                 <ListTree className="h-10 w-10 text-slate-400" />
               </div>
-              <p className="text-slate-500 font-medium">
-                {activeLanguage === "english" ? "Subspeciality not found" : "لم يتم العثور على التخصص الفرعي"}
-              </p>
+              <p className="text-slate-500 font-medium">Subspeciality not found</p>
               <p className="text-sm text-slate-400 mt-1">
-                {error ||
-                  (activeLanguage === "english"
-                    ? "The subspeciality you're looking for doesn't exist"
-                    : "التخصص الفرعي الذي تبحث عنه غير موجود")}
+                {error || "The subspeciality you're looking for doesn't exist"}
               </p>
               <Button
                 onClick={() => navigate("/subspecialities")}
                 className="mt-4 gap-2 bg-burgundy hover:bg-burgundy/90"
               >
-                {activeLanguage === "english" ? "Back to Subspecialities" : "العودة إلى التخصصات الفرعية"}
+                Back to Subspecialities
               </Button>
             </div>
           </div>
@@ -142,12 +131,10 @@ const ViewSubspeciality = () => {
                 </button>
                 <div className="min-w-0">
                   <h2 className="text-xl sm:text-2xl font-bold text-slate-800">
-                    {activeLanguage === "english" ? "Subspeciality Details" : "تفاصيل التخصص الفرعي"}
+                    Subspeciality Details
                   </h2>
                   <p className="text-xs sm:text-sm text-slate-500 mt-1">
-                    {activeLanguage === "english"
-                      ? "View complete subspeciality information"
-                      : "عرض معلومات التخصص الفرعي الكاملة"}
+                    View complete subspeciality information
                   </p>
                 </div>
               </div>
@@ -198,44 +185,37 @@ const ViewSubspeciality = () => {
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="lg:col-span-1 space-y-4">
-                <div
-                  className={`rounded-xl border border-slate-200 bg-white p-5 shadow-sm ${activeLanguage === "arabic" ? "text-right" : ""}`}
-                >
+                <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
                   <div className="flex items-center gap-2 pb-2 border-b border-slate-100 mb-3">
                     <FileText className="h-4 w-4 text-burgundy" />
-                    <h3 className="text-sm font-semibold text-slate-800">
-                      {activeLanguage === "english" ? "Subspeciality Name" : "اسم التخصص الفرعي"}
+                    <h3 className="text-sm font-semibold text-slate-800 text-left">
+                      Subspeciality Name
                     </h3>
                   </div>
                   <h1
-                    className={`text-xl font-bold text-slate-800 ${activeLanguage === "arabic" ? "rtl-text" : ""}`}
+                    dir={isArabic ? "rtl" : "ltr"}
+                    className={`text-xl font-bold text-slate-800 ${isArabic ? "text-right" : ""}`}
                   >
-                    {activeLanguage === "english" ? subspeciality.name : subspeciality.arabicName}
+                    {isArabic ? subspeciality.arabicName : subspeciality.name}
                   </h1>
                 </div>
 
-                <div
-                  className={`rounded-xl border border-slate-200 bg-white p-5 shadow-sm ${activeLanguage === "arabic" ? "text-right" : ""}`}
-                >
+                <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm" dir="ltr">
                   <div className="flex items-center gap-2 pb-2 border-b border-slate-100 mb-3">
                     <FileText className="h-4 w-4 text-burgundy" />
-                    <h3 className="text-sm font-semibold text-slate-800">
-                      {activeLanguage === "english" ? "Timestamps" : "التواريخ"}
+                    <h3 className="text-sm font-semibold text-slate-800 text-left">
+                      Timestamps
                     </h3>
                   </div>
                   <div className="space-y-3">
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-slate-600">
-                        {activeLanguage === "english" ? "Created At" : "تاريخ الإنشاء"}
-                      </span>
+                      <span className="text-sm text-slate-600 text-left">Created At</span>
                       <span className="text-sm text-slate-700">
                         {formatDate(subspeciality.createdAt)}
                       </span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-slate-600">
-                        {activeLanguage === "english" ? "Last Updated" : "آخر تحديث"}
-                      </span>
+                      <span className="text-sm text-slate-600 text-left">Last Updated</span>
                       <span className="text-sm text-slate-700">
                         {formatDate(subspeciality.updatedAt)}
                       </span>
@@ -243,35 +223,32 @@ const ViewSubspeciality = () => {
                   </div>
                 </div>
 
-                <div
-                  className={`rounded-xl border border-slate-200 bg-white p-5 shadow-sm ${activeLanguage === "arabic" ? "text-right" : ""}`}
-                >
+                <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
                   <div className="flex items-center gap-2 pb-2 border-b border-slate-100 mb-3">
                     <Building2 className="h-4 w-4 text-burgundy" />
-                    <h3 className="text-sm font-semibold text-slate-800">
-                      {activeLanguage === "english" ? "Department" : "القسم"}
+                    <h3 className="text-sm font-semibold text-slate-800 text-left">
+                      Department
                     </h3>
                   </div>
-                  <p className="text-sm text-slate-700">
+                  <p className="text-sm text-slate-700 text-left">
                     {subspeciality.departmentName || "—"}
                   </p>
                 </div>
               </div>
 
               <div className="lg:col-span-2 space-y-4">
-                <div
-                  className={`rounded-xl border border-slate-200 bg-white p-5 shadow-sm ${activeLanguage === "arabic" ? "rtl-text" : ""}`}
-                >
+                <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
                   <div className="flex items-center gap-2 pb-2 border-b border-slate-100 mb-3">
                     <BookOpen className="h-4 w-4 text-burgundy" />
-                    <h3 className="text-sm font-semibold text-slate-800">
-                      {activeLanguage === "english" ? "Description" : "الوصف"}
+                    <h3 className="text-sm font-semibold text-slate-800 text-left">
+                      Description
                     </h3>
                   </div>
-                  <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">
-                    {activeLanguage === "english"
-                      ? subspeciality.description
-                      : subspeciality.arabicDescription}
+                  <p
+                    dir={isArabic ? "rtl" : "ltr"}
+                    className={`text-sm text-slate-700 leading-relaxed whitespace-pre-wrap ${isArabic ? "text-right" : ""}`}
+                  >
+                    {isArabic ? subspeciality.arabicDescription : subspeciality.description}
                   </p>
                 </div>
 
@@ -279,26 +256,23 @@ const ViewSubspeciality = () => {
                   <div className="space-y-4">
                     <div className="flex items-center gap-2">
                       <ListTree className="h-5 w-5 text-burgundy" />
-                      <h3 className="text-md font-semibold text-slate-800">
-                        {activeLanguage === "english" ? "Custom Sections" : "الأقسام المخصصة"}
+                      <h3 className="text-md font-semibold text-slate-800 text-left">
+                        Custom Sections
                       </h3>
                     </div>
 
                     {subspeciality.customSubspecialities.map((section, idx) => {
-                      const rawHeading =
-                        activeLanguage === "english"
-                          ? section.heading
-                          : section.arabicHeading;
-                      const rawSubHeading =
-                        activeLanguage === "english"
-                          ? section.subHeading
-                          : section.arabicSubHeading;
+                      const rawHeading = isArabic
+                        ? section.arabicHeading
+                        : section.heading;
+                      const rawSubHeading = isArabic
+                        ? section.arabicSubHeading
+                        : section.subHeading;
                       const heading = rawHeading || (!rawHeading && rawSubHeading ? rawSubHeading : "");
                       const subHeading = rawHeading ? rawSubHeading : "";
-                      const explanations =
-                        activeLanguage === "english"
-                          ? section.explanations
-                          : section.arabicExplanations;
+                      const explanations = isArabic
+                        ? section.arabicExplanations
+                        : section.explanations;
 
                       if (
                         !heading &&
@@ -311,27 +285,44 @@ const ViewSubspeciality = () => {
                       return (
                         <div
                           key={section._id || idx}
-                          className={`rounded-xl border border-slate-200 bg-white p-5 shadow-sm ${activeLanguage === "arabic" ? "rtl-text" : ""}`}
+                          className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm"
                         >
                           {heading && (
-                            <h4 className="font-semibold text-slate-800 mb-1 text-md">
-                              {heading}
-                            </h4>
+                            <>
+                              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider block text-left mb-1">
+                                Heading
+                              </span>
+                              <h4
+                                dir={isArabic ? "rtl" : "ltr"}
+                                className={`font-semibold text-slate-800 mb-1 text-md ${isArabic ? "text-right" : ""}`}
+                              >
+                                {heading}
+                              </h4>
+                            </>
                           )}
                           {subHeading && (
-                            <p className="text-sm font-medium text-slate-700 mb-3">
-                              {subHeading}
-                            </p>
+                            <>
+                              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider block text-left mb-1">
+                                Subheading
+                              </span>
+                              <p
+                                dir={isArabic ? "rtl" : "ltr"}
+                                className={`text-sm font-medium text-slate-700 mb-3 ${isArabic ? "text-right" : ""}`}
+                              >
+                                {subHeading}
+                              </p>
+                            </>
                           )}
                           {explanations && explanations.length > 0 && (
-                            <ul className="space-y-2">
+                            <ul
+                              dir={isArabic ? "rtl" : "ltr"}
+                              className={`list-disc list-outside space-y-2 ps-5 text-sm text-slate-600 marker:text-burgundy ${
+                                isArabic ? "text-right" : ""
+                              }`}
+                            >
                               {explanations.map((line, li) => (
-                                <li
-                                  key={li}
-                                  className="flex items-start gap-2 text-sm text-slate-600"
-                                >
-                                  <span className="text-burgundy mt-1">•</span>
-                                  <span>{line}</span>
+                                <li key={li} className="leading-relaxed">
+                                  {line}
                                 </li>
                               ))}
                             </ul>
@@ -348,9 +339,7 @@ const ViewSubspeciality = () => {
                     variant="outline"
                     className="flex-1"
                   >
-                    {activeLanguage === "english"
-                      ? "Back to Subspecialities"
-                      : "العودة إلى التخصصات الفرعية"}
+                    Back to Subspecialities
                   </Button>
                   {/* <Button
                     onClick={() => navigate(`/subspecialities/edit/${subspeciality.id}`)}
@@ -365,13 +354,6 @@ const ViewSubspeciality = () => {
           </div>
         </div>
       </div>
-
-      <style>{`
-        .rtl-text {
-          direction: rtl;
-          text-align: right;
-        }
-      `}</style>
     </AdminLayout>
   );
 };
