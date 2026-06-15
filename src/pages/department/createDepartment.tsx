@@ -19,6 +19,8 @@ export type CreateDepartmentFormData = {
   description: string;
   arabicName: string;
   arabicDescription: string;
+  medicalField: string;
+  medicalFieldAr: string;
   catagoryId: string;
   imageFile: File | null;
   isActive: boolean;
@@ -40,6 +42,8 @@ const initialValues: CreateDepartmentFormData = {
   description: "",
   arabicName: "",
   arabicDescription: "",
+  medicalField: "",
+  medicalFieldAr: "",
   catagoryId: "",
   imageFile: null,
   isActive: true,
@@ -196,6 +200,8 @@ const CreateDepartmentPage = () => {
         description,
         arabicName,
         arabicDescription,
+        medicalField: values.medicalField.trim(),
+        medicalFieldAr: values.medicalFieldAr.trim(),
         catagoryId: values.catagoryId,
         isActive: values.isActive,
         order: values.order,
@@ -326,6 +332,19 @@ const CreateDepartmentPage = () => {
                             className="resize-none"
                           />
                           <ErrorMessage name="description" component="p" className="text-xs text-red-500" />
+                        </div>
+
+                        <div className="space-y-2">
+                          <label className="text-sm font-semibold text-slate-700">
+                            Medical Field <span className="text-slate-400 font-normal">(optional)</span>
+                          </label>
+                          <Input
+                            name="medicalField"
+                            value={values.medicalField}
+                            onChange={(e) => setFieldValue("medicalField", e.target.value)}
+                            placeholder="Enter medical field"
+                            className="h-11"
+                          />
                         </div>
                       </div>
 
@@ -476,6 +495,20 @@ const CreateDepartmentPage = () => {
                             dir="rtl"
                           />
                           <ErrorMessage name="arabicDescription" component="p" className="text-xs text-red-500" />
+                        </div>
+
+                        <div className="space-y-2">
+                          <label className="text-sm font-semibold text-slate-700">
+                            Medical Field (Arabic) <span className="text-slate-400 font-normal">(optional)</span>
+                          </label>
+                          <Input
+                            name="medicalFieldAr"
+                            value={values.medicalFieldAr}
+                            onChange={(e) => setFieldValue("medicalFieldAr", e.target.value)}
+                            placeholder="أدخل المجال الطبي"
+                            className="h-11"
+                            dir="rtl"
+                          />
                         </div>
                       </div>
 

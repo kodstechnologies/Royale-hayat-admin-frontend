@@ -313,6 +313,19 @@ const ViewDepartment = () => {
                     </p>
                   </div>
 
+                  <div
+                    className={`rounded-xl border border-slate-200 bg-white p-5 shadow-sm ${activeLanguage === "arabic" ? "rtl-text" : ""}`}
+                  >
+                    <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                      Medical Field
+                    </label>
+                    <p className="text-sm text-slate-700 mt-2 leading-relaxed">
+                      {activeLanguage === "english"
+                        ? department.medicalField || "—"
+                        : department.medicalFieldAr || "—"}
+                    </p>
+                  </div>
+
                   {department.customExplainantions &&
                     department.customExplainantions.length > 0 && (
                       <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">

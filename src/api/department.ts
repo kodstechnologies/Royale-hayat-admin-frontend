@@ -6,6 +6,8 @@ export type Department = {
   arabicName?: string;
   description?: string;
   arabicDescription?: string;
+  medicalField?: string;
+  medicalFieldAr?: string;
   catagory?: string | any;
   subspecialities?: any[];
   image?: string;
@@ -41,6 +43,8 @@ export type CreateDepartmentFormPayload = {
   description: string;
   arabicName: string;
   arabicDescription: string;
+  medicalField?: string;
+  medicalFieldAr?: string;
   catagoryId: string;
   isActive: boolean;
   order: number;
@@ -63,6 +67,8 @@ export const buildDepartmentFormData = (values: CreateDepartmentFormPayload): Fo
   formData.append("description", values.description.trim());
   formData.append("arabicName", values.arabicName.trim());
   formData.append("arabicDescription", values.arabicDescription.trim());
+  formData.append("medicalField", (values.medicalField ?? "").trim());
+  formData.append("medicalFieldAr", (values.medicalFieldAr ?? "").trim());
   formData.append("catagory", values.catagoryId);
   formData.append("isActive", String(values.isActive));
   formData.append("order", String(values.order ?? 0));
@@ -111,6 +117,8 @@ export type DepartmentListItem = {
 };
 
 export type DepartmentDetail = DepartmentListItem & {
+  medicalField?: string;
+  medicalFieldAr?: string;
   customExplainantions?: {
     _id?: string;
     id?: string;
@@ -173,6 +181,8 @@ export const mapApiDepartmentToListItem = (row: Department): DepartmentListItem 
 
 export const mapApiDepartmentToDetail = (row: Department): DepartmentDetail => ({
   ...mapApiDepartmentToListItem(row),
+  medicalField: String(row.medicalField ?? "").trim() || undefined,
+  medicalFieldAr: String(row.medicalFieldAr ?? "").trim() || undefined,
   customExplainantions: Array.isArray(row.customExplainantions)
     ? row.customExplainantions
     : [],
@@ -184,6 +194,8 @@ export type EditDepartmentFormValues = {
   description: string;
   arabicName: string;
   arabicDescription: string;
+  medicalField: string;
+  medicalFieldAr: string;
   catagoryId: string;
   imageFile: File | null;
   isActive: boolean;
@@ -262,6 +274,8 @@ export const mapApiDepartmentToEditForm = (
       description: String(row.description ?? ""),
       arabicName: String(row.arabicName ?? row.name ?? ""),
       arabicDescription: String(row.arabicDescription ?? row.description ?? ""),
+      medicalField: String(row.medicalField ?? ""),
+      medicalFieldAr: String(row.medicalFieldAr ?? ""),
       catagoryId: resolveCategoryId(row.catagory),
       imageFile: null,
       isActive: row.isActive !== false,

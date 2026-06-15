@@ -221,6 +221,8 @@ const EditDepartmentPage = () => {
         description,
         arabicName,
         arabicDescription,
+        medicalField: values.medicalField.trim(),
+        medicalFieldAr: values.medicalFieldAr.trim(),
         catagoryId: values.catagoryId,
         isActive: values.isActive,
         order: values.order,
@@ -366,6 +368,18 @@ const EditDepartmentPage = () => {
                             rows={4}
                             placeholder="Enter department description"
                             className="resize-none"
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <label className="text-sm font-semibold text-slate-700">
+                            Medical Field <span className="text-slate-400 font-normal">(optional)</span>
+                          </label>
+                          <Input
+                            value={values.medicalField}
+                            onChange={(e) => setFieldValue("medicalField", e.target.value)}
+                            placeholder="Enter medical field"
+                            className="h-11"
                           />
                         </div>
                       </div>
@@ -526,6 +540,19 @@ const EditDepartmentPage = () => {
                             onChange={(e) => setFieldValue("arabicDescription", e.target.value)}
                             placeholder="الوصف بالعربية"
                             className="resize-none"
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <label className="text-sm font-semibold text-slate-700">
+                            Medical Field (Arabic) <span className="text-slate-400 font-normal">(optional)</span>
+                          </label>
+                          <Input
+                            dir="rtl"
+                            value={values.medicalFieldAr}
+                            onChange={(e) => setFieldValue("medicalFieldAr", e.target.value)}
+                            placeholder="المجال الطبي بالعربية"
+                            className="h-11"
                           />
                         </div>
                       </div>
