@@ -10,6 +10,7 @@ export type ChatLogListFilters = {
   source?: "ai" | "guided_topic";
   lang?: "en" | "ar";
   success?: "true" | "false";
+  isViewed?: "true" | "false";
   topicId?: string;
   search?: string;
 };
@@ -36,6 +37,7 @@ export type ChatLogRecord = {
   source?: "ai" | "guided_topic";
   topicId?: string;
   modelsAttempted?: string[];
+  isViewed?: boolean;
   createdAt?: string;
   updatedAt?: string;
 };
@@ -45,6 +47,7 @@ export type ChatLogListMeta = {
   limit: number;
   total: number;
   pages: number;
+  unviewedCount?: number;
 };
 
 export const getAllChatLogs = async (params: ChatLogListFilters = {}) => {

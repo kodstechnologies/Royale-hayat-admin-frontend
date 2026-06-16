@@ -22,6 +22,7 @@ type ContactMessage = {
   message: string;
   date: string;
   createdAt?: string;
+  isViewed?: boolean;
 };
 
 const Enquiries = () => {
@@ -84,6 +85,7 @@ const Enquiries = () => {
           createdAt: item?.createdAt
             ? String(item.createdAt)
             : undefined,
+          isViewed: item?.isViewed === true,
         }),
       );
       setMessages(mapped);
@@ -156,6 +158,17 @@ const Enquiries = () => {
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   };
 
+  const viewedBadge = (isViewed?: boolean) =>
+    isViewed === true ? (
+      <span className="inline-flex px-2 py-0.5 rounded-full text-xs bg-slate-100 text-slate-600">
+        {t("Viewed")}
+      </span>
+    ) : (
+      <span className="inline-flex px-2 py-0.5 rounded-full text-xs bg-burgundy/10 text-burgundy font-medium">
+        {t("New")}
+      </span>
+    );
+
   return (
     <AdminLayout title="Enquiries">
       <div className="space-y-6">
@@ -216,7 +229,7 @@ const Enquiries = () => {
 
             
             {loading ? (
-              <TableSkeletonLoader columns={7} rows={6} />
+              <TableSkeletonLoader columns={8} rows={6} />
             ) : (
               <>
                 {messages.length === 0 ? (
@@ -238,6 +251,7 @@ const Enquiries = () => {
                           <th className="text-left py-3 px-4 font-semibold text-slate-600 text-xs uppercase tracking-wider hidden lg:table-cell">Phone</th>
                           <th className="text-left py-3 px-4 font-semibold text-slate-600 text-xs uppercase tracking-wider">Department</th>
                           <th className="text-left py-3 px-4 font-semibold text-slate-600 text-xs uppercase tracking-wider hidden sm:table-cell">Date</th>
+                          <th className="text-left py-3 px-4 font-semibold text-slate-600 text-xs uppercase tracking-wider">Status</th>
                           <th className="text-left py-3 px-4 font-semibold text-slate-600 text-xs uppercase tracking-wider">Action</th>
                         </tr>
                       </thead>
@@ -245,7 +259,7 @@ const Enquiries = () => {
                         {messages.map((m, index) => (
                           <tr
                             key={m.id}
-                            className={`border-b border-slate-100 hover:bg-slate-50/50 transition-colors cursor-pointer group ${index % 2 === 0 ? 'bg-white' : 'bg-slate-50/30'}`}
+                            className={`border-b border-slate-100 hover:bg-slate-50/50 transition-colors cursor-pointer group ${index % 2 === 0 ? 'bg-white' : 'bg-slate-50/30'} ${m.isViewed !== true ? 'bg-burgundy/[0.02]' : ''}`}
                             onClick={() => navigate(`/enquiries/view/${m.id}`)}
                           >
                             <td className="py-3 px-4">
@@ -268,6 +282,7 @@ const Enquiries = () => {
                               </span>
                             </td>
                             <td className="py-3 px-4 hidden sm:table-cell text-xs text-slate-500">{m.date}</td>
+                            <td className="py-3 px-4">{viewedBadge(m.isViewed)}</td>
                             <td className="py-3 px-4">
                               <div
                                 className="inline-flex items-center gap-1"

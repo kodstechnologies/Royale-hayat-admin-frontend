@@ -47,6 +47,7 @@ type SidebarBadgeCounts = {
   alSafwaEnrollments: number;
   internationalPatientEnquiries: number;
   eventBookings: number;
+  userChats: number;
 };
 
 const getBadgeCountForRoute = (to: string, counts: SidebarBadgeCounts | null): number => {
@@ -69,6 +70,8 @@ const getBadgeCountForRoute = (to: string, counts: SidebarBadgeCounts | null): n
       return counts.internationalPatientEnquiries;
     case "/event-bookings":
       return counts.eventBookings;
+    case "/user-chats":
+      return counts.userChats;
     default:
       return 0;
   }
@@ -259,6 +262,7 @@ const Sidebar = ({
           alSafwaEnrollments: prev?.alSafwaEnrollments ?? 0,
           internationalPatientEnquiries: prev?.internationalPatientEnquiries ?? 0,
           eventBookings: prev?.eventBookings ?? 0,
+          userChats: prev?.userChats ?? 0,
         };
 
         if (sidebarResult.status === "fulfilled" && sidebarResult.value.success) {
@@ -269,6 +273,7 @@ const Sidebar = ({
           next.alSafwaEnrollments = data.alSafwaEnrollments ?? 0;
           next.internationalPatientEnquiries = data.internationalPatientEnquiries ?? 0;
           next.eventBookings = data.eventBookings ?? 0;
+          next.userChats = data.userChats ?? 0;
         }
 
         if (appointmentResult.status === "fulfilled" && appointmentResult.value.success) {
@@ -299,6 +304,7 @@ const Sidebar = ({
     window.addEventListener("alSafwaUpdated", handleCountsRefresh);
     window.addEventListener("internationalPatientUpdated", handleCountsRefresh);
     window.addEventListener("eventBookingsUpdated", handleCountsRefresh);
+    window.addEventListener("userChatsUpdated", handleCountsRefresh);
 
     return () => {
       window.clearInterval(interval);
@@ -308,6 +314,7 @@ const Sidebar = ({
       window.removeEventListener("alSafwaUpdated", handleCountsRefresh);
       window.removeEventListener("internationalPatientUpdated", handleCountsRefresh);
       window.removeEventListener("eventBookingsUpdated", handleCountsRefresh);
+      window.removeEventListener("userChatsUpdated", handleCountsRefresh);
     };
   }, [fetchSidebarCounts, location.pathname]);
 

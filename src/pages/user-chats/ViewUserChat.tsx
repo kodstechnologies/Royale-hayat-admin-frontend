@@ -40,8 +40,9 @@ const ViewUserChat = () => {
       setLoading(true);
       try {
         const response = await getChatLogById(id);
-        setLog(response.data);
+        setLog({ ...response.data, isViewed: true });
         setError("");
+        window.dispatchEvent(new Event("userChatsUpdated"));
       } catch (err: unknown) {
         setLog(null);
         const axiosErr = err as { response?: { data?: { message?: string } } };
@@ -131,6 +132,15 @@ const ViewUserChat = () => {
                     </div>
                   </div>
                 )}
+                <div className="flex items-start gap-3">
+                  <User className="h-5 w-5 text-slate-500 mt-0.5" />
+                  <div>
+                    <p className="text-xs uppercase tracking-wider text-slate-500">Status</p>
+                    <p className="font-medium text-slate-800">
+                      {log.isViewed === true ? "Viewed" : "New"}
+                    </p>
+                  </div>
+                </div>
               
               </div>
             </div>

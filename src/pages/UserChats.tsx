@@ -29,10 +29,12 @@ const UserChats = () => {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [sourceFilter, setSourceFilter] = useState<"all" | "ai" | "guided_topic">("all");
   const [langFilter, setLangFilter] = useState<"all" | "en" | "ar">("all");
+  const [viewFilter, setViewFilter] = useState<"all" | "new" | "viewed">("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [limit] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
   const [totalRecords, setTotalRecords] = useState(0);
+  const [unviewedCount, setUnviewedCount] = useState(0);
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(search.trim()), 300);
@@ -49,18 +51,22 @@ const UserChats = () => {
         ...(effectiveSearch ? { search: effectiveSearch } : {}),
         ...(sourceFilter !== "all" ? { source: sourceFilter } : {}),
         ...(langFilter !== "all" ? { lang: langFilter } : {}),
+        ...(viewFilter === "new" ? { isViewed: "false" as const } : {}),
+        ...(viewFilter === "viewed" ? { isViewed: "true" as const } : {}),
       });
       setLogs(Array.isArray(response.data) ? response.data : []);
       setTotalPages(response.meta?.pages || 1);
       setTotalRecords(response.meta?.total || 0);
+      setUnviewedCount(response.meta?.unviewedCount ?? 0);
     } catch {
       setLogs([]);
       setTotalPages(1);
       setTotalRecords(0);
+      setUnviewedCount(0);
     } finally {
       setLoading(false);
     }
-  }, [currentPage, limit, debouncedSearch, sourceFilter, langFilter]);
+  }, [currentPage, limit, debouncedSearch, sourceFilter, langFilter, viewFilter]);
 
   useEffect(() => {
     void fetchLogs();
@@ -87,6 +93,17 @@ const UserChats = () => {
     return "—";
   };
 
+  const viewedBadge = (isViewed?: boolean) =>
+    isViewed === true ? (
+      <span className="inline-flex px-2 py-0.5 rounded-full text-xs bg-slate-100 text-slate-600">
+        Viewed
+      </span>
+    ) : (
+      <span className="inline-flex px-2 py-0.5 rounded-full text-xs bg-burgundy/10 text-burgundy font-medium">
+        New
+      </span>
+    );
+
   return (
     <AdminLayout title="User Chats">
       <div className="space-y-6">
@@ -96,11 +113,18 @@ const UserChats = () => {
           <div className="h-1 bg-gradient-to-r from-burgundy/40 via-burgundy to-burgundy/40" />
 
           <div className="p-6">
-            <div className="mb-6">
-              <h3 className="text-xl font-bold text-slate-800">User Chats</h3>
-              <p className="text-sm text-slate-500 mt-1">
-                Website chatbot conversations from the public site
-              </p>
+            <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div>
+                <h3 className="text-xl font-bold text-slate-800">User Chats</h3>
+                <p className="text-sm text-slate-500 mt-1">
+                  Website chatbot conversations from the public site
+                </p>
+              </div>
+              {unviewedCount > 0 && (
+                <span className="inline-flex self-start items-center px-3 py-1 rounded-full text-xs font-semibold bg-burgundy/10 text-burgundy">
+                  {unviewedCount} new
+                </span>
+              )}
             </div>
 
             <div className="flex flex-col lg:flex-row gap-3 mb-6">
@@ -140,6 +164,18 @@ const UserChats = () => {
                 <option value="en">English</option>
                 <option value="ar">Arabic</option>
               </select>
+              <select
+                value={viewFilter}
+                onChange={(e) => {
+                  setCurrentPage(1);
+                  setViewFilter(e.target.value as typeof viewFilter);
+                }}
+                className="px-4 py-2 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-burgundy/20 focus:border-burgundy"
+              >
+                <option value="all">All status</option>
+                <option value="new">New</option>
+                <option value="viewed">Viewed</option>
+              </select>
               {search && (
                 <Button
                   variant="ghost"
@@ -156,7 +192,7 @@ const UserChats = () => {
             </div>
 
             {loading ? (
-              <TableSkeletonLoader columns={7} rows={8} />
+              <TableSkeletonLoader columns={8} rows={8} />
             ) : logs.length === 0 ? (
               <div className="text-center py-16">
                 <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-slate-100 flex items-center justify-center">
@@ -192,6 +228,9 @@ const UserChats = () => {
                           Date
                         </th>
                         <th className="text-left py-3 px-4 font-semibold text-slate-600 text-xs uppercase tracking-wider">
+                          Status
+                        </th>
+                        <th className="text-left py-3 px-4 font-semibold text-slate-600 text-xs uppercase tracking-wider">
                           Action
                         </th>
                       </tr>
@@ -202,7 +241,7 @@ const UserChats = () => {
                           key={log._id}
                           className={`border-b border-slate-100 hover:bg-slate-50/50 transition-colors cursor-pointer group ${
                             index % 2 === 0 ? "bg-white" : "bg-slate-50/30"
-                          }`}
+                          } ${log.isViewed !== true ? "bg-burgundy/[0.02]" : ""}`}
                           onClick={() => navigate(`/user-chats/view/${log._id}`)}
                         >
                           <td className="py-3 px-4">
@@ -238,6 +277,7 @@ const UserChats = () => {
                           <td className="py-3 px-4 hidden sm:table-cell text-xs text-slate-500">
                             {formatDate(log.createdAt)}
                           </td>
+                          <td className="py-3 px-4">{viewedBadge(log.isViewed)}</td>
                           <td className="py-3 px-4">
                             <button
                               type="button"

@@ -1,7 +1,9 @@
 import { Link, useLocation } from "react-router-dom";
 import { CalendarDays, ListChecks } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 import { PERMISSIONS } from "@/constants/permissions";
 import { hasAnyPermission } from "@/utils/PermissionGate";
+import { getAppointmentCounts } from "@/api/appointmentRequest";
 
 const tabs = [
   {
@@ -10,6 +12,7 @@ const tabs = [
     description: "Review incoming requests",
     icon: ListChecks,
     permissions: [PERMISSIONS.APPOINTMENT_REQUEST_VIEW],
+    countKey: "requests" as const,
     isActive: (pathname: string) =>
       !pathname.startsWith("/appointment/bookings"),
   },
@@ -19,14 +22,48 @@ const tabs = [
     description: "View patient bookings",
     icon: CalendarDays,
     permissions: [PERMISSIONS.APPOINTMENT_BOOKING_VIEW],
+    countKey: "bookings" as const,
     isActive: (pathname: string) =>
       pathname.startsWith("/appointment/bookings"),
   },
 ] as const;
 
+type TabCounts = {
+  requests: number;
+  bookings: number;
+};
+
 const AppointmentSectionNav = () => {
   const { pathname } = useLocation();
   const visibleTabs = tabs.filter((tab) => hasAnyPermission(tab.permissions));
+  const [counts, setCounts] = useState<TabCounts>({ requests: 0, bookings: 0 });
+
+  const fetchCounts = useCallback(async () => {
+    try {
+      const res = await getAppointmentCounts();
+      if (res?.success && res.data) {
+        setCounts({
+          requests: res.data.appointmentRequests ?? 0,
+          bookings: res.data.appointmentBookings ?? 0,
+        });
+      }
+    } catch {
+      setCounts({ requests: 0, bookings: 0 });
+    }
+  }, []);
+
+  useEffect(() => {
+    void fetchCounts();
+
+    const handleAppointmentsUpdated = () => {
+      void fetchCounts();
+    };
+
+    window.addEventListener("appointmentsUpdated", handleAppointmentsUpdated);
+    return () => {
+      window.removeEventListener("appointmentsUpdated", handleAppointmentsUpdated);
+    };
+  }, [fetchCounts]);
 
   if (visibleTabs.length === 0) return null;
 
@@ -39,6 +76,7 @@ const AppointmentSectionNav = () => {
       {visibleTabs.map((tab) => {
         const isActive = tab.isActive(pathname);
         const Icon = tab.icon;
+        const count = counts[tab.countKey];
 
         return (
           <Link
@@ -52,6 +90,18 @@ const AppointmentSectionNav = () => {
           >
             {isActive && (
               <span className="absolute inset-x-4 top-0 h-1 rounded-full bg-white/40" />
+            )}
+
+            {count > 0 && (
+              <span
+                className={`absolute top-2 right-2 min-w-[1.25rem] px-1.5 py-0.5 text-[10px] font-bold rounded-full tabular-nums ${
+                  isActive
+                    ? "bg-white text-burgundy"
+                    : "bg-burgundy text-white"
+                }`}
+              >
+                {count > 99 ? "99+" : count}
+              </span>
             )}
 
             <div
