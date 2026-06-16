@@ -288,24 +288,37 @@ const ApplicationStatusFilterBar = ({
   );
 };
 
+const isMongoObjectId = (value: string) => /^[0-9a-fA-F]{24}$/.test(value);
+
 const resolveJobRef = (jobRef: unknown) => {
   if (!jobRef) {
     return { jobTitle: "", jobId: "" };
   }
   if (typeof jobRef === "string") {
-    return { jobTitle: "", jobId: jobRef };
-  }
-  if (typeof jobRef === "object") {
-    const job = jobRef as { title?: string; jobId?: string; _id?: string };
     return {
-      jobTitle: job.title ?? "",
-      jobId: job.jobId ?? (job._id ? String(job._id) : ""),
+      jobTitle: "",
+      jobId: isMongoObjectId(jobRef) ? "" : jobRef,
     };
   }
-  return { jobTitle: "", jobId: String(jobRef) };
+  if (typeof jobRef === "object") {
+    const job = jobRef as { title?: string; jobId?: string };
+    return {
+      jobTitle: job.title ?? "",
+      jobId: job.jobId ?? "",
+    };
+  }
+  return { jobTitle: "", jobId: "" };
 };
 
-const mapApiApplication = (app: any): JobApplication => {
+type JobRefFallbacks = {
+  jobId?: string;
+  jobTitle?: string;
+};
+
+const mapApiApplication = (
+  app: any,
+  fallbacks?: JobRefFallbacks,
+): JobApplication => {
   const { jobTitle, jobId } = resolveJobRef(app.jobId);
 
   return {
@@ -316,8 +329,8 @@ const mapApiApplication = (app: any): JobApplication => {
     phone: app.phone ?? "",
     cvUrl: app.resume ?? "",
     coverLetter: app.coverLetter ?? app.tellusUrself ?? "",
-    jobTitle,
-    jobId,
+    jobTitle: jobTitle || fallbacks?.jobTitle || "",
+    jobId: jobId || fallbacks?.jobId || "",
     appliedDate: app.appliedDate ?? app.createdAt ?? new Date().toISOString(),
     status: normalizeStatus(app.status),
     isViewed: app.isViewed ?? false,
@@ -354,20 +367,28 @@ const ApplicationList = ({ jobMongoId, onSelect }: ApplicationListProps) => {
       setLoading(true);
 
       let resolvedJobId = jobMongoId; // may be overwritten with jobId string
+      let resolvedJobTitle = "";
       try {
         const jobRes = await getJobByIdApi(jobMongoId);
         const apiJob = jobRes.data?.data;
         if (apiJob) {
-          setJobTitle(apiJob.title);
+          resolvedJobTitle = apiJob.title ?? "";
+          setJobTitle(resolvedJobTitle);
           resolvedJobId = apiJob.jobId ?? jobMongoId;
         }
       } catch {
         const staticJob = adminJobs.find((j) => j.id === jobMongoId);
         if (staticJob) {
-          setJobTitle(staticJob.title);
+          resolvedJobTitle = staticJob.title;
+          setJobTitle(resolvedJobTitle);
           resolvedJobId = staticJob.jobId;
         }
       }
+
+      const jobRefFallbacks: JobRefFallbacks = {
+        jobId: isMongoObjectId(resolvedJobId) ? undefined : resolvedJobId,
+        jobTitle: resolvedJobTitle || undefined,
+      };
 
       try {
         const appRes = await getApplicationsByJobIdApi(
@@ -375,7 +396,7 @@ const ApplicationList = ({ jobMongoId, onSelect }: ApplicationListProps) => {
           statusFilter === "all" ? undefined : { status: statusFilter },
         );
         const apiApps: JobApplication[] = (appRes.data?.data ?? []).map(
-          mapApiApplication,
+          (app) => mapApiApplication(app, jobRefFallbacks),
         );
         const counts = appRes.data?.meta?.counts;
 
@@ -854,7 +875,12 @@ const ApplicationDetail = ({ applicationId, initialData, onBack }: ApplicationDe
 
         const apiApp = res.data?.data;
         if (apiApp) {
-          setApplication(mapApiApplication(apiApp));
+          setApplication(
+            mapApiApplication(apiApp, {
+              jobId: initialData.jobId,
+              jobTitle: initialData.jobTitle,
+            }),
+          );
           if (!hasMarkedViewedRef.current) {
             hasMarkedViewedRef.current = true;
             notifyApplicationsUpdated();
@@ -897,7 +923,10 @@ const ApplicationDetail = ({ applicationId, initialData, onBack }: ApplicationDe
       const updated = res.data?.data;
       setApplication(
         updated
-          ? mapApiApplication(updated)
+          ? mapApiApplication(updated, {
+              jobId: application.jobId,
+              jobTitle: application.jobTitle,
+            })
           : { ...application, status: newStatus },
       );
       toast.success(

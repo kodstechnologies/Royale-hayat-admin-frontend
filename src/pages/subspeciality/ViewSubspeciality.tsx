@@ -341,13 +341,13 @@ const ViewSubspeciality = () => {
                   >
                     Back to Subspecialities
                   </Button>
-                  {/* <Button
+                  <Button
                     onClick={() => navigate(`/subspecialities/edit/${subspeciality.id}`)}
                     className="flex-1 gap-2 bg-burgundy hover:bg-burgundy/90"
                   >
                     <Pencil className="h-4 w-4" />
                     {activeLanguage === "english" ? "Edit Subspeciality" : "تعديل التخصص الفرعي"}
-                  </Button> */}
+                  </Button>
                 </div>
               </div>
             </div>
