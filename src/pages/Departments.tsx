@@ -315,7 +315,7 @@ const Departments = () => {
                                 <Eye size={12} />
                                 View
                               </button>
-                              {/* <PermissionGate permission={PERMISSIONS.DEPARTMENT_UPDATE}>
+                              <PermissionGate permission={PERMISSIONS.DEPARTMENT_UPDATE}>
                                 <button
                                   type="button"
                                   onClick={() => navigate(`/departments/edit/${dept._id}`)}
@@ -324,7 +324,7 @@ const Departments = () => {
                                   <Pencil size={12} />
                                   Edit
                                 </button>
-                              </PermissionGate> */}
+                              </PermissionGate>
                             </div>
                           </div>
                         </div>

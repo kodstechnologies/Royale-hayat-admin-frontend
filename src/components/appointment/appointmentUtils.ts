@@ -85,10 +85,53 @@ export const defaultBookingFilters: BookingListFiltersState = {
   doctor: "",
 };
 
+/** Supports ISO (YYYY-MM-DD), DD/MM/YYYY, and other Date-parseable strings. */
+export const parseFlexibleDate = (value?: string | null): Date | null => {
+  if (!value) return null;
+
+  const trimmed = String(value).trim();
+  if (!trimmed) return null;
+
+  const dmyMatch = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(trimmed);
+  if (dmyMatch) {
+    const day = Number(dmyMatch[1]);
+    const month = Number(dmyMatch[2]);
+    const year = Number(dmyMatch[3]);
+    const date = new Date(year, month - 1, day);
+    if (
+      !Number.isNaN(date.getTime()) &&
+      date.getFullYear() === year &&
+      date.getMonth() === month - 1 &&
+      date.getDate() === day
+    ) {
+      return date;
+    }
+  }
+
+  const isoDateMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(trimmed);
+  if (isoDateMatch) {
+    const year = Number(isoDateMatch[1]);
+    const month = Number(isoDateMatch[2]);
+    const day = Number(isoDateMatch[3]);
+    const date = new Date(year, month - 1, day);
+    if (
+      !Number.isNaN(date.getTime()) &&
+      date.getFullYear() === year &&
+      date.getMonth() === month - 1 &&
+      date.getDate() === day
+    ) {
+      return date;
+    }
+  }
+
+  const fallback = new Date(trimmed);
+  return Number.isNaN(fallback.getTime()) ? null : fallback;
+};
+
 const formatDob = (value?: string) => {
   if (!value) return "";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return String(value);
+  const date = parseFlexibleDate(value);
+  if (!date) return String(value);
   return date.toISOString().split("T")[0];
 };
 
@@ -158,8 +201,8 @@ export const mapBookingFromApi = (row: Record<string, unknown>): BookingItem => 
 
 export const formatTableDate = (dateString?: string) => {
   if (!dateString) return "—";
-  const date = new Date(dateString);
-  if (Number.isNaN(date.getTime())) return dateString;
+  const date = parseFlexibleDate(dateString);
+  if (!date) return dateString;
   return date.toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",
@@ -169,7 +212,8 @@ export const formatTableDate = (dateString?: string) => {
 
 export const formatDisplayDate = (dateString: string) => {
   if (!dateString) return "—";
-  const date = new Date(dateString);
+  const date = parseFlexibleDate(dateString);
+  if (!date) return dateString;
   return date.toLocaleDateString("en-US", {
     year: "numeric",
     month: "long",
@@ -179,7 +223,8 @@ export const formatDisplayDate = (dateString: string) => {
 
 export const getAgeFromDob = (dateOfBirth: string) => {
   if (!dateOfBirth) return "—";
-  const birthDate = new Date(dateOfBirth);
+  const birthDate = parseFlexibleDate(dateOfBirth);
+  if (!birthDate) return "—";
   const today = new Date();
   let age = today.getFullYear() - birthDate.getFullYear();
   const monthDiff = today.getMonth() - birthDate.getMonth();
