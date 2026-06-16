@@ -590,13 +590,54 @@ const SubspecialityForm = ({ mode, subspecialityId }: Props) => {
 
                             
                             <div className="bg-white rounded-xl border border-slate-200 p-5 space-y-4">
-                                <div className="pb-2 border-b border-slate-100">
-                                    <h3 className="text-md font-semibold text-slate-800">Arabic Custom Sections</h3>
-                                    <p className="text-xs text-slate-500">Arabic translations for headings and explanations</p>
+                                <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+                                    <div>
+                                        <h3 className="text-md font-semibold text-slate-800">Arabic Custom Sections</h3>
+                                        <p className="text-xs text-slate-500">Add headings and explanations in Arabic for this subspeciality</p>
+                                    </div>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={addCustomSection}
+                                        className="gap-1 border-burgundy/30 text-burgundy hover:bg-burgundy/5"
+                                    >
+                                        <Plus className="h-3 w-3" />
+                                        Add Section
+                                    </Button>
                                 </div>
 
+                                {customBlocks.length === 0 && (
+                                    <div className="text-center py-8 bg-slate-50 rounded-xl border border-dashed border-slate-200">
+                                        <p className="text-slate-500">No custom sections added yet</p>
+                                        <Button
+                                            type="button"
+                                            variant="ghost"
+                                            onClick={addCustomSection}
+                                            className="mt-2 gap-1"
+                                        >
+                                            <Plus className="h-3 w-3" />
+                                            Add your first section
+                                        </Button>
+                                    </div>
+                                )}
+
                                 {customBlocks.map((block) => (
-                                    <div key={block.key} className="border border-slate-200 rounded-xl p-4 space-y-3 bg-slate-50/30">
+                                    <div key={block.key} className="border border-slate-200 rounded-xl p-4 space-y-3 bg-slate-50/30 relative">
+                                        <div className="absolute -top-2 -left-2 bg-burgundy/10 text-burgundy text-xs px-2 py-0.5 rounded-full">
+                                            Section
+                                        </div>
+                                        <div className="flex justify-end">
+                                            <Button
+                                                type="button"
+                                                variant="ghost"
+                                                size="icon"
+                                                onClick={() => removeCustomSection(block.key)}
+                                                className="h-7 w-7 text-red-500 hover:text-red-600 hover:bg-red-50"
+                                            >
+                                                <Trash2 className="h-3.5 w-3.5" />
+                                            </Button>
+                                        </div>
                                         <div>
                                             <label className="text-xs font-medium text-slate-600 block mb-1">Heading (Arabic)</label>
                                             <Input
