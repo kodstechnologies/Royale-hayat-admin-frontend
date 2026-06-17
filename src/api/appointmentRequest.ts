@@ -13,12 +13,12 @@ export type AppointmentCounts = {
   total: number;
   appointmentBookings: number;
   appointmentRequests: number;
-  doctorUnavailabilityRequests?: number;
+  appointmentRequestTypeRequests?: number;
   firstTimeVisitorRequests?: number;
 };
 
 export const APPOINTMENT_REQUEST_TYPE = {
-  DOCTOR_UNAVAILABILITY: "doctor unavailability request",
+  APPOINTMENT_REQUEST: "appointment request",
   FIRST_TIME_VISITOR: "first time visitor request",
 } as const;
 

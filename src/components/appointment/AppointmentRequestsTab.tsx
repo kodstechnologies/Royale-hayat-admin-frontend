@@ -16,6 +16,7 @@ import {
   getAppointmentRequests,
   acceptRequest,
   cancelRequest,
+  APPOINTMENT_REQUEST_TYPE,
   type AppointmentRequestType,
 } from "@/api/appointmentRequest";
 import {
@@ -281,13 +282,26 @@ const AppointmentRequestsTab = ({
     }
   };
 
+  const dateColumnLabel = useMemo(
+    () =>
+      requestType === APPOINTMENT_REQUEST_TYPE.FIRST_TIME_VISITOR
+        ? "Preferred Date"
+        : "Appointment Requested Date",
+    [requestType],
+  );
+
+  const tableColumns = useMemo(
+    () => ["Name", dateColumnLabel, "Department", "Doctor", "Status", "Actions"],
+    [dateColumnLabel],
+  );
+
   if (loading) {
     return (
       <div className="overflow-x-auto rounded-xl border border-slate-200">
         <table className="w-full">
           <thead>
             <tr className="border-b border-slate-200 bg-slate-50/50">
-              {["Name", "Date", "Department", "Doctor", "Status", "Actions"].map(
+              {tableColumns.map(
                 (col) => (
                   <th
                     key={col}
@@ -346,7 +360,7 @@ const AppointmentRequestsTab = ({
                   Name
                 </th>
                 <th className="text-left py-3 px-4 font-semibold text-slate-600 text-xs uppercase tracking-wider">
-                  Date
+                  {dateColumnLabel}
                 </th>
                 <th className="text-left py-3 px-4 font-semibold text-slate-600 text-xs uppercase tracking-wider">
                   Department
@@ -392,7 +406,11 @@ const AppointmentRequestsTab = ({
                       </div>
                     </td>
                     <td className="py-3 px-4 text-sm text-slate-600">
-                      {formatTableDate(req.preferredDate)}
+                      {formatTableDate(
+                        requestType === APPOINTMENT_REQUEST_TYPE.FIRST_TIME_VISITOR
+                          ? req.preferredDate
+                          : req.createdAt,
+                      )}
                     </td>
                     <td className="py-3 px-4 text-sm text-slate-600">
                       {req.department || "—"}

@@ -20,7 +20,7 @@ const defaultStats: AppointmentRequestStats = {
   cancelled: 0,
 };
 
-type RequestSubTab = "doctor_unavailability" | "first_time_visitor";
+type RequestSubTab = "appointment_request" | "first_time_visitor";
 
 const REQUEST_CATEGORIES: {
   id: RequestSubTab;
@@ -33,12 +33,12 @@ const REQUEST_CATEGORIES: {
   iconBg: string;
 }[] = [
   {
-    id: "doctor_unavailability",
-    label: "Doctor Unavailability",
+    id: "appointment_request",
+    label: "Appointment Request",
     description:
-      "Requests when a doctor is unavailable — review, confirm, or cancel",
-    emptyMessage: "No doctor unavailability requests found matching filters",
-    requestType: APPOINTMENT_REQUEST_TYPE.DOCTOR_UNAVAILABILITY,
+      "Appointment requests — review, confirm, or cancel",
+    emptyMessage: "No appointment requests found matching filters",
+    requestType: APPOINTMENT_REQUEST_TYPE.APPOINTMENT_REQUEST,
     icon: Stethoscope,
     accent: "text-violet-600",
     iconBg: "bg-violet-100",
@@ -58,18 +58,18 @@ const REQUEST_CATEGORIES: {
 
 const AppointmentRequests = () => {
   const [requestSubTab, setRequestSubTab] =
-    useState<RequestSubTab>("doctor_unavailability");
+    useState<RequestSubTab>("appointment_request");
   const [countsBySubTab, setCountsBySubTab] = useState<
     Record<RequestSubTab, number>
   >({
-    doctor_unavailability: 0,
+    appointment_request: 0,
     first_time_visitor: 0,
   });
   const [totalUnviewedRequests, setTotalUnviewedRequests] = useState(0);
   const [statsBySubTab, setStatsBySubTab] = useState<
     Record<RequestSubTab, AppointmentRequestStats>
   >({
-    doctor_unavailability: defaultStats,
+    appointment_request: defaultStats,
     first_time_visitor: defaultStats,
   });
 
@@ -96,7 +96,7 @@ const AppointmentRequests = () => {
       if (res?.success && res.data) {
         setTotalUnviewedRequests(res.data.appointmentRequests ?? 0);
         setCountsBySubTab({
-          doctor_unavailability: res.data.doctorUnavailabilityRequests ?? 0,
+          appointment_request: res.data.appointmentRequestTypeRequests ?? 0,
           first_time_visitor: res.data.firstTimeVisitorRequests ?? 0,
         });
       }

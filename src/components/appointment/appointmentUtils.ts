@@ -19,6 +19,7 @@ export type AppointmentRequestItem = {
   status: "pending" | "confirmed" | "cancelled";
   requestType?: AppointmentRequestType;
   preferredDate?: string;
+  createdAt?: string;
   additionalNotes?: string;
   comments?: string;
   timeSlot?: { period: string; slot_from_time: string; slot_to_time?: string };
@@ -29,10 +30,7 @@ export const getRequestTypeLabel = (requestType?: AppointmentRequestType | strin
   if (requestType === APPOINTMENT_REQUEST_TYPE.FIRST_TIME_VISITOR) {
     return "First Time Visitor";
   }
-  if (requestType === APPOINTMENT_REQUEST_TYPE.DOCTOR_UNAVAILABILITY) {
-    return "Doctor Unavailability";
-  }
-  if (requestType === "appointment request") {
+  if (requestType === APPOINTMENT_REQUEST_TYPE.APPOINTMENT_REQUEST) {
     return "Appointment Request";
   }
   if (requestType === "registered patient booking fallback") {
@@ -191,6 +189,7 @@ export const mapRequestFromApi = (
   symptoms: formatSymptoms(row.symptoms as string[] | string | undefined),
   status: mapApiStatusToUi(row.status ? String(row.status) : undefined),
   preferredDate: row.date ? String(row.date) : undefined,
+  createdAt: row.createdAt ? String(row.createdAt) : undefined,
   timeSlot: row.slot_from_time
     ? {
         period: "",

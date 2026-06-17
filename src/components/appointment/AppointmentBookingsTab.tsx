@@ -115,7 +115,7 @@ const AppointmentBookingsTab = ({
         <table className="w-full">
           <thead>
             <tr className="border-b border-slate-200 bg-slate-50/50">
-              {["Name", "Date", "Department", "Doctor", "Status", "Actions"].map(
+              {["Name", "Appointment Date", "Department", "Doctor", "Status", "Actions"].map(
                 (col) => (
                   <th
                     key={col}
@@ -175,7 +175,7 @@ const AppointmentBookingsTab = ({
                   Name
                 </th>
                 <th className="text-left py-3 px-4 font-semibold text-slate-600 text-xs uppercase tracking-wider">
-                  Date
+                  Appointment Date
                 </th>
                 <th className="text-left py-3 px-4 font-semibold text-slate-600 text-xs uppercase tracking-wider">
                   Department
