@@ -12,6 +12,8 @@ export type ApiExpertise = {
   pointsAr?: string[];
 };
 
+export type ApiQualifications = ApiExpertise;
+
 export type ApiDoctor = {
   _id: string;
   doctorId: string;
@@ -22,8 +24,7 @@ export type ApiDoctor = {
   subspecialitiesAr?: string[];
   title?: string;
   titleAr?: string;
-  qualifications?: string[];
-  qualificationsAr?: string[];
+  qualifications?: ApiQualifications[] | string[];
   expertise?: ApiExpertise[] | string[];
   expertiseAr?: string[];
   languages?: string[];
@@ -93,6 +94,40 @@ export type DoctorPayload = {
   symptoms: string[];
   availableOnline: boolean;
   isActive: boolean;
+};
+
+const flattenQualifications = (qualifications: ApiDoctor["qualifications"]) => {
+  if (!Array.isArray(qualifications)) return [];
+
+  return qualifications.flatMap((item) => {
+    if (typeof item === "string") return item.trim() ? [item.trim()] : [];
+    const points = Array.isArray(item.points) ? item.points : [];
+    const heading = String(item.subHeading || "").trim();
+    return [
+      ...(heading ? [heading.endsWith(":") ? heading : `${heading}:`] : []),
+      ...points.map((point) => String(point).trim()).filter(Boolean),
+    ];
+  });
+};
+
+const flattenQualificationsAr = (row: ApiDoctor) => {
+  if (Array.isArray(row.qualifications)) {
+    const structured = row.qualifications.every(
+      (item) => typeof item === "object" && item !== null,
+    );
+    if (structured) {
+      return (row.qualifications as ApiQualifications[]).flatMap((item) => {
+        const points = Array.isArray(item.pointsAr) ? item.pointsAr : [];
+        const heading = String(item.subHeadingAr || "").trim();
+        return [
+          ...(heading ? [heading.endsWith(":") ? heading : `${heading}:`] : []),
+          ...points.map((point) => String(point).trim()).filter(Boolean),
+        ];
+      });
+    }
+  }
+
+  return flattenQualifications(row.qualifications);
 };
 
 const flattenExpertise = (expertise: ApiDoctor["expertise"]) => {
@@ -190,7 +225,7 @@ export const mapApiDoctorToListItem = (
         ? row.department
         : dept.departmentName || String(row.department ?? ""),
     title: String(row.title ?? ""),
-    qualifications: Array.isArray(row.qualifications) ? row.qualifications : [],
+    qualifications: flattenQualifications(row.qualifications),
     expertise: flattenExpertise(row.expertise),
     languages: Array.isArray(row.languages) ? row.languages : [],
     initials: String(row.initials ?? "Dr."),
@@ -212,10 +247,8 @@ export const mapApiDoctorToView = (row: ApiDoctor): DoctorViewData => {
     departmentAr: dept.departmentNameAr,
     title: String(row.title ?? ""),
     arabicTitle: String(row.titleAr ?? row.title ?? ""),
-    qualifications: Array.isArray(row.qualifications) ? row.qualifications : [],
-    arabicQualifications: Array.isArray(row.qualificationsAr)
-      ? row.qualificationsAr
-      : [],
+    qualifications: flattenQualifications(row.qualifications),
+    arabicQualifications: flattenQualificationsAr(row),
     expertise: flattenExpertise(row.expertise),
     arabicExpertise: flattenExpertiseAr(row),
     languages: Array.isArray(row.languages) ? row.languages : [],
@@ -247,12 +280,12 @@ export const mapApiDoctorToFormValues = (
     initials: String(row.initials ?? "Dr."),
     languages: (row.languages ?? []).join("|||"),
     expertiseSections: mapExpertiseToFormSections(row),
-    qualifications: (row.qualifications ?? []).join("|||"),
+    qualifications: flattenQualifications(row.qualifications).join("|||"),
     arabicName: String(row.nameAr ?? ""),
     arabicTitle: String(row.titleAr ?? ""),
     arabicInitials: String(row.initialsAr ?? "د."),
     arabicLanguages: (row.languagesAr ?? []).join("|||"),
-    arabicQualifications: (row.qualificationsAr ?? []).join("|||"),
+    arabicQualifications: flattenQualificationsAr(row).join("|||"),
     department: dept.departmentId,
     subspecialityIds,
     availableOnline: row.availableOnline === true,
