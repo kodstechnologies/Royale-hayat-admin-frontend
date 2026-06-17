@@ -21,7 +21,7 @@ export type AppointmentRequestItem = {
   preferredDate?: string;
   additionalNotes?: string;
   comments?: string;
-  timeSlot?: { period: string; time: string };
+  timeSlot?: { period: string; slot_from_time: string; slot_to_time?: string };
   isViewed?: boolean;
 };
 
@@ -157,6 +157,27 @@ export const mapUiStatusToApi = (
   return "pending";
 };
 
+const formatApiSlotTimes = (row: Record<string, unknown>) => {
+  const from = row.slot_from_time
+    ? String(row.slot_from_time)
+    : row.time
+      ? String(row.time)
+      : "";
+  const to = row.slot_to_time ? String(row.slot_to_time) : "";
+  if (!from) return undefined;
+  return to ? `${from} - ${to}` : from;
+};
+
+export const formatRequestTimeSlotLabel = (
+  timeSlot?: AppointmentRequestItem["timeSlot"],
+) => {
+  if (!timeSlot?.slot_from_time) return undefined;
+  const range = timeSlot.slot_to_time
+    ? `${timeSlot.slot_from_time} - ${timeSlot.slot_to_time}`
+    : timeSlot.slot_from_time;
+  return timeSlot.period ? `${timeSlot.period} — ${range}` : range;
+};
+
 export const mapRequestFromApi = (
   row: Record<string, unknown>,
 ): AppointmentRequestItem => ({
@@ -170,9 +191,15 @@ export const mapRequestFromApi = (
   symptoms: formatSymptoms(row.symptoms as string[] | string | undefined),
   status: mapApiStatusToUi(row.status ? String(row.status) : undefined),
   preferredDate: row.date ? String(row.date) : undefined,
-  timeSlot: row.time
-    ? { period: "", time: String(row.time) }
-    : undefined,
+  timeSlot: row.slot_from_time
+    ? {
+        period: "",
+        slot_from_time: String(row.slot_from_time),
+        slot_to_time: row.slot_to_time ? String(row.slot_to_time) : undefined,
+      }
+    : row.time
+      ? { period: "", slot_from_time: String(row.time) }
+      : undefined,
   additionalNotes: row.additionalNotes
     ? String(row.additionalNotes)
     : undefined,
@@ -195,7 +222,7 @@ export const mapBookingFromApi = (row: Record<string, unknown>): BookingItem => 
   department: row.department ? String(row.department) : undefined,
   doctorName: row.doctor ? String(row.doctor) : undefined,
   appointmentDate: row.date ? String(row.date) : undefined,
-  timeSlot: row.time ? String(row.time) : undefined,
+  timeSlot: formatApiSlotTimes(row),
   isViewed: row.isViewed === true,
 });
 

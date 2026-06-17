@@ -23,6 +23,7 @@ import {
   formatDisplayDate,
   getAgeFromDob,
   getRequestTypeLabel,
+  formatRequestTimeSlotLabel,
 } from "@/components/appointment/appointmentUtils";
 import {
   DetailSection,
@@ -115,9 +116,7 @@ const ViewAppointmentRequest = () => {
 
   const status = statusConfig[request.status];
   const StatusIcon = status.icon;
-  const timeSlotLabel = request.timeSlot
-    ? `${request.timeSlot.period ? `${request.timeSlot.period} — ` : ""}${request.timeSlot.time}`
-    : undefined;
+  const timeSlotLabel = formatRequestTimeSlotLabel(request.timeSlot);
 
   return (
     <AdminLayout title="View Appointment Request">
