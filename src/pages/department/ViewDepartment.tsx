@@ -4,11 +4,10 @@ import {
   ArrowLeft,
   Calendar,
   FolderOpen,
-  CheckCircle,
-  XCircle,
   Image as ImageIcon,
   Globe,
   Languages,
+  XCircle,
 } from "lucide-react";
 import AdminLayout from "@/components/layout/AdminLayout";
 import BreadCrumb from "@/components/layout/BreadCrumb";
@@ -220,25 +219,6 @@ const ViewDepartment = () => {
                       <p className="text-sm font-mono text-slate-800 mt-1">
                         {department.departmentId || "-"}
                       </p>
-                    </div>
-
-                    <div>
-                      <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider block text-left">
-                        Status
-                      </label>
-                      <div className="mt-1">
-                        {department.isActive !== false ? (
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
-                            <CheckCircle className="h-3 w-3" />
-                            Active
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
-                            <XCircle className="h-3 w-3" />
-                            Inactive
-                          </span>
-                        )}
-                      </div>
                     </div>
 
                     {department.createdAt && (

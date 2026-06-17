@@ -46,7 +46,6 @@ export type CreateDepartmentFormPayload = {
   medicalField?: string;
   medicalFieldAr?: string;
   catagoryId: string;
-  isActive: boolean;
   order: number;
   imageFile: File | null;
   customExplainantions: {
@@ -70,7 +69,6 @@ export const buildDepartmentFormData = (values: CreateDepartmentFormPayload): Fo
   formData.append("medicalField", (values.medicalField ?? "").trim());
   formData.append("medicalFieldAr", (values.medicalFieldAr ?? "").trim());
   formData.append("catagory", values.catagoryId);
-  formData.append("isActive", String(values.isActive));
   formData.append("order", String(values.order ?? 0));
 
   if (values.imageFile) {
@@ -198,7 +196,6 @@ export type EditDepartmentFormValues = {
   medicalFieldAr: string;
   catagoryId: string;
   imageFile: File | null;
-  isActive: boolean;
   order: number;
   customSections: {
     id: string;
@@ -278,7 +275,6 @@ export const mapApiDepartmentToEditForm = (
       medicalFieldAr: String(row.medicalFieldAr ?? ""),
       catagoryId: resolveCategoryId(row.catagory),
       imageFile: null,
-      isActive: row.isActive !== false,
       order: typeof row.order === "number" ? row.order : 0,
       customSections,
     },

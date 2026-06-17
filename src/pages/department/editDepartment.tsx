@@ -224,7 +224,6 @@ const EditDepartmentPage = () => {
         medicalField: values.medicalField.trim(),
         medicalFieldAr: values.medicalFieldAr.trim(),
         catagoryId: values.catagoryId,
-        isActive: values.isActive,
         order: values.order,
         imageFile: values.imageFile,
         customExplainantions: values.customSections.map(
@@ -673,19 +672,6 @@ const EditDepartmentPage = () => {
                             </option>
                           ))}
                         </select>
-                      </div>
-
-                      <div className="space-y-2">
-                        <label className="text-sm font-semibold text-slate-700">Status</label>
-                        <label className="flex items-center gap-2 pt-2">
-                          <input
-                            type="checkbox"
-                            checked={values.isActive}
-                            onChange={(e) => setFieldValue("isActive", e.target.checked)}
-                            className="w-4 h-4 rounded border-slate-300 text-burgundy focus:ring-burgundy"
-                          />
-                          <span className="text-sm text-slate-600">Active</span>
-                        </label>
                       </div>
                     </div>
 
