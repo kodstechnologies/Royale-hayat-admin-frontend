@@ -36,22 +36,6 @@ const validationSchema = Yup.object({
   closingDate: Yup.string().required("Closing date is required"),
 });
 
-const classificationOptions = [
-  "Clinical Speciality",
-  "Clinical Support Service",
-  "Home Care Service",
-  "Administration",
-  "Nursing",
-  "Allied Health",
-  "La Cosmetique Royale",
-  "Hospitality/Guest Services",
-  "Quality and Patient Safety",
-  "Royale Home Health",
-  "Specialist Doctors",
-  "Marketing and Communication",
-  "Surgical Services",
-];
-
 const isArabicContentComplete = (values: JobForm) => {
   const arabicResponsibilities = values.arabicResponsibilities.filter((r) => r.trim());
   const arabicRequirements = values.arabicRequirements.filter((r) => r.trim());
@@ -603,18 +587,12 @@ const CreateJobPage = () => {
                         <label className="text-sm font-semibold text-slate-700">
                           Classification <span className="text-red-500">*</span>
                         </label>
-                        <select
+                        <Input
                           value={values.classification}
                           onChange={(e) => setFieldValue("classification", e.target.value)}
-                          className="w-full h-11 px-3 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:border-burgundy focus:ring-2 focus:ring-burgundy/20 transition-all"
-                        >
-                          <option value="">Select classification</option>
-                          {classificationOptions.map((item) => (
-                            <option key={item} value={item}>
-                              {item}
-                            </option>
-                          ))}
-                        </select>
+                          placeholder="Enter classification"
+                          className="h-11"
+                        />
                         <ErrorMessage
                           name="classification"
                           component="p"
