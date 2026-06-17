@@ -166,7 +166,7 @@ const Departments = () => {
                   Manage hospital departments and their details
                 </p>
               </div>
-              {/* <PermissionGate permission={PERMISSIONS.DEPARTMENT}>
+              <PermissionGate permission={PERMISSIONS.DEPARTMENT}>
                 <Button
                   type="button"
                   onClick={() => navigate("/departments/create")}
@@ -175,7 +175,7 @@ const Departments = () => {
                   <Plus className="h-4 w-4" />
                   Create Department
                 </Button>
-              </PermissionGate> */}
+              </PermissionGate>
             </div>
 
             <div className="flex flex-col gap-3 mb-4 sm:mb-6">

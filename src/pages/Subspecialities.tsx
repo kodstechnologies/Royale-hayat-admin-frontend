@@ -169,7 +169,7 @@ const Subspecialities = () => {
                   Manage medical subspecialities and organize your services
                 </p>
               </div>
-              {/* <PermissionGate permission={PERMISSIONS.SUBSPECIALITY}>
+              <PermissionGate permission={PERMISSIONS.SUBSPECIALITY}>
                 <Button
                   asChild
                   className="gap-2 w-full sm:w-auto bg-burgundy hover:bg-burgundy/90 shadow-md hover:shadow-lg transition-all duration-200"
@@ -179,7 +179,7 @@ const Subspecialities = () => {
                     Add Subspeciality
                   </Link>
                 </Button>
-              </PermissionGate> */}
+              </PermissionGate>
             </div>
 
             <div className="flex flex-col gap-3 mb-4 sm:mb-6">
@@ -307,7 +307,7 @@ const Subspecialities = () => {
                                 View
                               </Link>
                             </Button>
-                            {/* <PermissionGate permission={PERMISSIONS.SUBSPECIALITY_UPDATE}>
+                            <PermissionGate permission={PERMISSIONS.SUBSPECIALITY_UPDATE}>
                               <Button
                                 asChild
                                 variant="ghost"
@@ -319,7 +319,7 @@ const Subspecialities = () => {
                                   Edit
                                 </Link>
                               </Button>
-                            </PermissionGate> */}
+                            </PermissionGate>
                           </div>
                         </article>
                       ))}

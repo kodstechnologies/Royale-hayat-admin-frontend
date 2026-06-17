@@ -362,7 +362,7 @@ const Categories = () => {
                     </div>
                   </div>
 
-                  {/* <PermissionGate permission={PERMISSIONS.CATAGORY_CREATE}>
+                  <PermissionGate permission={PERMISSIONS.CATAGORY_CREATE}>
                     <Button
                       onClick={openCreateForm}
                       className="gap-2 w-full sm:w-auto bg-burgundy hover:bg-burgundy/90"
@@ -370,7 +370,7 @@ const Categories = () => {
                       <Plus className="h-4 w-4" />
                       Add Category
                     </Button>
-                  </PermissionGate> */}
+                  </PermissionGate>
                 </div>
               </div>
 
