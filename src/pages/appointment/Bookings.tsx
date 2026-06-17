@@ -7,6 +7,7 @@ import { getAppointmentCounts } from "@/api/appointmentRequest";
 
 const Bookings = () => {
   const [unviewedCount, setUnviewedCount] = useState(0);
+  const [totalBookings, setTotalBookings] = useState(0);
 
   const fetchUnviewedCount = useCallback(async () => {
     try {
@@ -41,12 +42,15 @@ const Bookings = () => {
         <BreadCrumb />
 
         <div className="space-y-5">
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <h2 className="text-2xl font-bold text-slate-800 tracking-tight">
               Patient Bookings
             </h2>
+            <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700 tabular-nums">
+              {totalBookings} total
+            </span>
             {unviewedCount > 0 && (
-              <span className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-700">
+              <span className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-700 tabular-nums">
                 {unviewedCount} new
               </span>
             )}
@@ -61,6 +65,11 @@ const Bookings = () => {
           <div className="px-6 py-5 border-b border-slate-100 bg-gradient-to-r from-slate-50/80 to-white">
             <h3 className="text-lg font-semibold text-slate-800">
               All Bookings
+              {totalBookings > 0 && (
+                <span className="ml-2 text-sm font-medium text-slate-500 tabular-nums">
+                  ({totalBookings})
+                </span>
+              )}
             </h3>
             <p className="text-sm text-slate-500 mt-0.5">
               Filter by date range, department, or doctor
@@ -68,7 +77,7 @@ const Bookings = () => {
           </div>
 
           <div className="p-6">
-            <AppointmentBookingsTab />
+            <AppointmentBookingsTab onCountChange={setTotalBookings} />
           </div>
         </div>
       </div>

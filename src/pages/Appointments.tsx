@@ -1,8 +1,8 @@
 import { useState } from "react";
 import AdminLayout from "@/components/layout/AdminLayout";
 import MessageModal from "@/components/MessageModal";
-import { appointments as mockAppointments, doctors, exportToExcel, Appointment } from "@/data/mockDatabase";
-import { Check, X, RefreshCw, Filter, Download, Phone, MessageSquare, MoreVertical, ChevronLeft, Calendar, Clock, FileText, Pill } from "lucide-react";
+import { exportToExcel, type Appointment } from "@/data/mockDatabase";
+import { Check, X, RefreshCw, Filter, Download, Phone, MessageSquare, MoreVertical, ChevronLeft, Clock, FileText } from "lucide-react";
 
 const statusStyles: Record<string, string> = {
   confirmed: "bg-success/10 text-success", pending: "bg-warning/10 text-warning",
@@ -13,7 +13,7 @@ const statusStyles: Record<string, string> = {
 const timeSlots = ["8:00", "8:30", "9:00", "9:30", "10:00", "10:30", "11:00", "11:30", "12:00", "12:30", "13:00", "13:30", "14:00", "14:30", "15:00", "15:30", "16:00"];
 
 const Appointments = () => {
-  const [data, setData] = useState(mockAppointments);
+  const [data, setData] = useState<Appointment[]>([]);
   const [statusFilter, setStatusFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [msgModal, setMsgModal] = useState<{ open: boolean; name: string; phone: string; type: "SMS" | "WhatsApp" }>({ open: false, name: "", phone: "", type: "SMS" });
@@ -69,32 +69,19 @@ const Appointments = () => {
           <div className="bg-card rounded-lg shadow-sm border border-border p-5">
             <h3 className="text-sm font-serif font-semibold text-foreground mb-3 flex items-center gap-2"><FileText size={14} /> Treatment Details</h3>
             <div className="space-y-2 text-sm font-sans">
-              <div><p className="text-xs text-muted-foreground">Treatment Done</p><p className="text-foreground">General consultation and examination completed. Vitals recorded. Blood work ordered.</p></div>
-              <div><p className="text-xs text-muted-foreground">Diagnosis</p><p className="text-foreground">Routine check-up - no concerns identified</p></div>
-              <div><p className="text-xs text-muted-foreground">Notes</p><p className="text-foreground">{selectedPatient.notes || "Patient in good condition. Continue current medication."}</p></div>
-            </div>
-          </div>
-          <div className="bg-card rounded-lg shadow-sm border border-border p-5">
-            <h3 className="text-sm font-serif font-semibold text-foreground mb-3 flex items-center gap-2"><Calendar size={14} /> Follow-up</h3>
-            <div className="space-y-2 text-sm font-sans">
-              <div><p className="text-xs text-muted-foreground">Next Follow-up</p><p className="text-foreground">2026-04-24 at 10:00 AM</p></div>
-              <div><p className="text-xs text-muted-foreground">Follow-up Type</p><p className="text-foreground">Review lab results</p></div>
-            </div>
-          </div>
-          <div className="bg-card rounded-lg shadow-sm border border-border p-5">
-            <h3 className="text-sm font-serif font-semibold text-foreground mb-3 flex items-center gap-2"><Pill size={14} /> Prescribed Medications</h3>
-            <div className="space-y-1.5">
-              {["Paracetamol 500mg - Twice daily", "Vitamin D3 1000IU - Once daily", "Omeprazole 20mg - Before breakfast"].map(med => (
-                <p key={med} className="text-sm font-sans text-foreground">• {med}</p>
-              ))}
+              <div>
+                <p className="text-xs text-muted-foreground">Notes</p>
+                <p className="text-foreground">{selectedPatient.notes || "No notes available."}</p>
+              </div>
             </div>
           </div>
           <div className="bg-card rounded-lg shadow-sm border border-border p-5">
             <h3 className="text-sm font-serif font-semibold text-foreground mb-3 flex items-center gap-2"><Clock size={14} /> Completion Details</h3>
             <div className="space-y-2 text-sm font-sans">
-              <div><p className="text-xs text-muted-foreground">Duration</p><p className="text-foreground">35 minutes</p></div>
-              <div><p className="text-xs text-muted-foreground">Completed By</p><p className="text-foreground">{selectedPatient.doctor}</p></div>
-              <div><p className="text-xs text-muted-foreground">Billing</p><p className="text-foreground">45 KWD - Insurance covered</p></div>
+              <div>
+                <p className="text-xs text-muted-foreground">Completed By</p>
+                <p className="text-foreground">{selectedPatient.doctor}</p>
+              </div>
             </div>
           </div>
         </div>
@@ -135,7 +122,14 @@ const Appointments = () => {
               </tr>
             </thead>
             <tbody>
-              {filtered.slice(0, 20).map((apt) => (
+              {filtered.length === 0 ? (
+                <tr>
+                  <td colSpan={9} className="px-4 py-12 text-center text-sm font-sans text-muted-foreground">
+                    No appointments found.
+                  </td>
+                </tr>
+              ) : (
+                filtered.slice(0, 20).map((apt) => (
                 <tr key={apt.id} className="border-b border-border hover:bg-section-bg/50 transition-colors">
                   <td className="px-4 py-3 text-sm font-sans font-medium text-foreground cursor-pointer hover:text-burgundy"
                     onClick={() => apt.status === "completed" && setSelectedPatient(apt)}>{apt.patient}</td>
@@ -161,9 +155,9 @@ const Appointments = () => {
                           <button onClick={() => setConfirmModal({ apt, action: "confirm" })} className="w-full text-left px-3 py-2 text-xs font-sans hover:bg-section-bg flex items-center gap-2 text-foreground"><Check size={12} /> Confirm</button>
                           <button onClick={() => setRescheduleModal(apt)} className="w-full text-left px-3 py-2 text-xs font-sans hover:bg-section-bg flex items-center gap-2 text-foreground"><RefreshCw size={12} /> Reschedule</button>
                           <button onClick={() => setConfirmModal({ apt, action: "cancel" })} className="w-full text-left px-3 py-2 text-xs font-sans hover:bg-section-bg flex items-center gap-2 text-error"><X size={12} /> Cancel</button>
-                          <button onClick={() => { setMsgModal({ open: true, name: apt.patient, phone: "+965 5500 1234", type: "SMS" }); setMenuOpen(null); }}
+                          <button onClick={() => { setMsgModal({ open: true, name: apt.patient, phone: "", type: "SMS" }); setMenuOpen(null); }}
                             className="w-full text-left px-3 py-2 text-xs font-sans hover:bg-section-bg flex items-center gap-2 text-foreground"><Phone size={12} /> Send SMS</button>
-                          <button onClick={() => { setMsgModal({ open: true, name: apt.patient, phone: "+965 5500 1234", type: "WhatsApp" }); setMenuOpen(null); }}
+                          <button onClick={() => { setMsgModal({ open: true, name: apt.patient, phone: "", type: "WhatsApp" }); setMenuOpen(null); }}
                             className="w-full text-left px-3 py-2 text-xs font-sans hover:bg-section-bg flex items-center gap-2 text-foreground"><MessageSquare size={12} /> WhatsApp</button>
                           {apt.status === "completed" && (
                             <button onClick={() => { setSelectedPatient(apt); setMenuOpen(null); }}
@@ -174,7 +168,8 @@ const Appointments = () => {
                     </div>
                   </td>
                 </tr>
-              ))}
+                ))
+              )}
             </tbody>
           </table>
         </div>

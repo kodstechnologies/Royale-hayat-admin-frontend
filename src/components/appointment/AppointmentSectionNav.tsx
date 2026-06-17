@@ -92,18 +92,6 @@ const AppointmentSectionNav = () => {
               <span className="absolute inset-x-4 top-0 h-1 rounded-full bg-white/40" />
             )}
 
-            {count > 0 && (
-              <span
-                className={`absolute top-2 right-2 min-w-[1.25rem] px-1.5 py-0.5 text-[10px] font-bold rounded-full tabular-nums ${
-                  isActive
-                    ? "bg-white text-burgundy"
-                    : "bg-burgundy text-white"
-                }`}
-              >
-                {count > 99 ? "99+" : count}
-              </span>
-            )}
-
             <div
               className={`w-11 h-11 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center transition-colors ${
                 isActive
@@ -119,13 +107,26 @@ const AppointmentSectionNav = () => {
             </div>
 
             <div>
-              <span
-                className={`block text-base sm:text-lg font-bold tracking-tight ${
-                  isActive ? "text-white" : "text-slate-800"
-                }`}
-              >
-                {tab.label}
-              </span>
+              <div className="flex items-center justify-center gap-2">
+                <span
+                  className={`text-base sm:text-lg font-bold tracking-tight ${
+                    isActive ? "text-white" : "text-slate-800"
+                  }`}
+                >
+                  {tab.label}
+                </span>
+                {count > 0 && (
+                  <span
+                    className={`min-w-[1.5rem] px-2 py-0.5 text-xs font-bold rounded-full tabular-nums ${
+                      isActive
+                        ? "bg-white text-burgundy"
+                        : "bg-burgundy/10 text-burgundy group-hover:bg-burgundy/15"
+                    }`}
+                  >
+                    {count > 99 ? "99+" : count}
+                  </span>
+                )}
+              </div>
               <span
                 className={`block text-[11px] sm:text-xs mt-0.5 font-medium ${
                   isActive ? "text-white/80" : "text-slate-500"

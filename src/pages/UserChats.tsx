@@ -218,9 +218,7 @@ const UserChats = () => {
                         <th className="text-left py-3 px-4 font-semibold text-slate-600 text-xs uppercase tracking-wider hidden lg:table-cell">
                           Reply
                         </th>
-                        <th className="text-left py-3 px-4 font-semibold text-slate-600 text-xs uppercase tracking-wider hidden md:table-cell">
-                          Source
-                        </th>
+                   
                         <th className="text-left py-3 px-4 font-semibold text-slate-600 text-xs uppercase tracking-wider hidden sm:table-cell">
                           Lang
                         </th>
@@ -255,22 +253,7 @@ const UserChats = () => {
                           <td className="py-3 px-4 hidden lg:table-cell text-sm text-slate-600 max-w-[260px]">
                             {truncate(log.assistantReply || "—")}
                           </td>
-                          <td className="py-3 px-4 hidden md:table-cell">
-                            <span
-                              className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs ${
-                                log.source === "guided_topic"
-                                  ? "bg-amber-50 text-amber-700"
-                                  : "bg-violet-50 text-violet-700"
-                              }`}
-                            >
-                              {log.source === "guided_topic" ? (
-                                <Sparkles className="h-3 w-3" />
-                              ) : (
-                                <Bot className="h-3 w-3" />
-                              )}
-                              {sourceLabel(log.source)}
-                            </span>
-                          </td>
+                      
                           <td className="py-3 px-4 hidden sm:table-cell text-xs uppercase text-slate-500">
                             {log.lang || "—"}
                           </td>

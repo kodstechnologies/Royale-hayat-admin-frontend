@@ -98,17 +98,7 @@ const ViewUserChat = () => {
                     </p>
                   </div>
                 </div>
-                <div className="flex items-start gap-3">
-                  {log.source === "guided_topic" ? (
-                    <Sparkles className="h-5 w-5 text-amber-600 mt-0.5" />
-                  ) : (
-                    <Bot className="h-5 w-5 text-violet-600 mt-0.5" />
-                  )}
-                  <div>
-                    <p className="text-xs uppercase tracking-wider text-slate-500">Source</p>
-                    <p className="font-medium text-slate-800">{sourceLabel}</p>
-                  </div>
-                </div>
+             
                 <div className="flex items-start gap-3">
                   <Globe className="h-5 w-5 text-slate-500 mt-0.5" />
                   <div>

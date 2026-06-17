@@ -65,6 +65,7 @@ const AppointmentRequests = () => {
     doctor_unavailability: 0,
     first_time_visitor: 0,
   });
+  const [totalUnviewedRequests, setTotalUnviewedRequests] = useState(0);
   const [statsBySubTab, setStatsBySubTab] = useState<
     Record<RequestSubTab, AppointmentRequestStats>
   >({
@@ -93,6 +94,7 @@ const AppointmentRequests = () => {
     try {
       const res = await getAppointmentCounts();
       if (res?.success && res.data) {
+        setTotalUnviewedRequests(res.data.appointmentRequests ?? 0);
         setCountsBySubTab({
           doctor_unavailability: res.data.doctorUnavailabilityRequests ?? 0,
           first_time_visitor: res.data.firstTimeVisitorRequests ?? 0,
@@ -133,9 +135,14 @@ const AppointmentRequests = () => {
 
         <div className="space-y-5">
           <div>
-            <h2 className="text-2xl font-bold text-slate-800 tracking-tight">
-              Appointment Requests
-            </h2>
+            <div className="flex flex-wrap items-center gap-3">
+              <h2 className="text-2xl font-bold text-slate-800 tracking-tight">
+                Appointment Requests
+              </h2>
+              <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700 tabular-nums">
+                {totalUnviewedRequests} new
+              </span>
+            </div>
             <p className="text-sm text-slate-500 mt-1">
               Review and manage incoming appointment requests
             </p>
