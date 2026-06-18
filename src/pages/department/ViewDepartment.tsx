@@ -264,6 +264,34 @@ const ViewDepartment = () => {
                     </h1>
                   </div>
 
+                  {(isArabic ? department.deptTaglineArabic : department.deptTagline) && (
+                    <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                      <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider block text-left">
+                        Department Tagline
+                      </label>
+                      <p
+                        dir={isArabic ? "rtl" : "ltr"}
+                        className={`text-sm text-slate-700 mt-2 leading-relaxed ${isArabic ? "text-right" : ""}`}
+                      >
+                        {isArabic ? department.deptTaglineArabic : department.deptTagline}
+                      </p>
+                    </div>
+                  )}
+
+                  {(isArabic ? department.doctorTaglineArabic : department.doctorTagline) && (
+                    <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                      <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider block text-left">
+                        Doctor Tagline
+                      </label>
+                      <p
+                        dir={isArabic ? "rtl" : "ltr"}
+                        className={`text-sm text-slate-700 mt-2 leading-relaxed ${isArabic ? "text-right" : ""}`}
+                      >
+                        {isArabic ? department.doctorTaglineArabic : department.doctorTagline}
+                      </p>
+                    </div>
+                  )}
+
                   <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
                     <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider block text-left">
                       Category

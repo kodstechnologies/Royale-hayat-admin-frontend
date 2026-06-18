@@ -2,6 +2,10 @@ import api from "./axiosInstance";
 export type Department = {
   _id: string;
   departmentId?: string;
+  deptTagline?: string;
+  deptTaglineArabic?: string;
+  doctorTagline?: string;
+  doctorTaglineArabic?: string;
   name?: string;
   arabicName?: string;
   description?: string;
@@ -39,6 +43,10 @@ export const createDepartment = async (payload: DepartmentPayload | FormData) =>
 
 export type CreateDepartmentFormPayload = {
   departmentId: string;
+  deptTagline?: string;
+  deptTaglineArabic?: string;
+  doctorTagline?: string;
+  doctorTaglineArabic?: string;
   name: string;
   description: string;
   arabicName: string;
@@ -62,6 +70,10 @@ export const buildDepartmentFormData = (values: CreateDepartmentFormPayload): Fo
   const formData = new FormData();
 
   formData.append("departmentId", values.departmentId.trim());
+  formData.append("deptTagline", (values.deptTagline ?? "").trim());
+  formData.append("deptTaglineArabic", (values.deptTaglineArabic ?? "").trim());
+  formData.append("doctorTagline", (values.doctorTagline ?? "").trim());
+  formData.append("doctorTaglineArabic", (values.doctorTaglineArabic ?? "").trim());
   formData.append("name", values.name.trim());
   formData.append("description", values.description.trim());
   formData.append("arabicName", values.arabicName.trim());
@@ -115,6 +127,10 @@ export type DepartmentListItem = {
 };
 
 export type DepartmentDetail = DepartmentListItem & {
+  deptTagline?: string;
+  deptTaglineArabic?: string;
+  doctorTagline?: string;
+  doctorTaglineArabic?: string;
   medicalField?: string;
   medicalFieldAr?: string;
   customExplainantions?: {
@@ -179,6 +195,10 @@ export const mapApiDepartmentToListItem = (row: Department): DepartmentListItem 
 
 export const mapApiDepartmentToDetail = (row: Department): DepartmentDetail => ({
   ...mapApiDepartmentToListItem(row),
+  deptTagline: String(row.deptTagline ?? "").trim() || undefined,
+  deptTaglineArabic: String(row.deptTaglineArabic ?? "").trim() || undefined,
+  doctorTagline: String(row.doctorTagline ?? "").trim() || undefined,
+  doctorTaglineArabic: String(row.doctorTaglineArabic ?? "").trim() || undefined,
   medicalField: String(row.medicalField ?? "").trim() || undefined,
   medicalFieldAr: String(row.medicalFieldAr ?? "").trim() || undefined,
   customExplainantions: Array.isArray(row.customExplainantions)
@@ -188,6 +208,10 @@ export const mapApiDepartmentToDetail = (row: Department): DepartmentDetail => (
 
 export type EditDepartmentFormValues = {
   departmentId: string;
+  deptTagline: string;
+  deptTaglineArabic: string;
+  doctorTagline: string;
+  doctorTaglineArabic: string;
   name: string;
   description: string;
   arabicName: string;
@@ -267,6 +291,10 @@ export const mapApiDepartmentToEditForm = (
   return {
     values: {
       departmentId: String(row.departmentId ?? ""),
+      deptTagline: String(row.deptTagline ?? ""),
+      deptTaglineArabic: String(row.deptTaglineArabic ?? ""),
+      doctorTagline: String(row.doctorTagline ?? ""),
+      doctorTaglineArabic: String(row.doctorTaglineArabic ?? ""),
       name: String(row.name ?? ""),
       description: String(row.description ?? ""),
       arabicName: String(row.arabicName ?? row.name ?? ""),

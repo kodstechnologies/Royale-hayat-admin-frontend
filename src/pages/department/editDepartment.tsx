@@ -217,6 +217,10 @@ const EditDepartmentPage = () => {
     try {
       const formData = buildDepartmentFormData({
         departmentId,
+        deptTagline: values.deptTagline.trim(),
+        deptTaglineArabic: values.deptTaglineArabic.trim(),
+        doctorTagline: values.doctorTagline.trim(),
+        doctorTaglineArabic: values.doctorTaglineArabic.trim(),
         name,
         description,
         arabicName,
@@ -354,6 +358,32 @@ const EditDepartmentPage = () => {
                             onChange={(e) => setFieldValue("name", e.target.value)}
                             placeholder="Enter department name"
                             className="h-11"
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <label className="text-sm font-semibold text-slate-700">
+                            Department Tagline <span className="text-slate-400 font-normal">(optional)</span>
+                          </label>
+                          <Textarea
+                            value={values.deptTagline}
+                            onChange={(e) => setFieldValue("deptTagline", e.target.value)}
+                            rows={3}
+                            placeholder="Enter department tagline"
+                            className="resize-none"
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <label className="text-sm font-semibold text-slate-700">
+                            Doctor Tagline <span className="text-slate-400 font-normal">(optional)</span>
+                          </label>
+                          <Textarea
+                            value={values.doctorTagline}
+                            onChange={(e) => setFieldValue("doctorTagline", e.target.value)}
+                            rows={3}
+                            placeholder="Enter doctor page tagline"
+                            className="resize-none"
                           />
                         </div>
 
@@ -525,6 +555,34 @@ const EditDepartmentPage = () => {
                             onChange={(e) => setFieldValue("arabicName", e.target.value)}
                             placeholder="الاسم بالعربية"
                             className="h-11"
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <label className="text-sm font-semibold text-slate-700">
+                            Department Tagline (Arabic) <span className="text-slate-400 font-normal">(optional)</span>
+                          </label>
+                          <Textarea
+                            dir="rtl"
+                            value={values.deptTaglineArabic}
+                            onChange={(e) => setFieldValue("deptTaglineArabic", e.target.value)}
+                            rows={3}
+                            placeholder="شعار القسم بالعربية"
+                            className="resize-none"
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <label className="text-sm font-semibold text-slate-700">
+                            Doctor Tagline (Arabic) <span className="text-slate-400 font-normal">(optional)</span>
+                          </label>
+                          <Textarea
+                            dir="rtl"
+                            value={values.doctorTaglineArabic}
+                            onChange={(e) => setFieldValue("doctorTaglineArabic", e.target.value)}
+                            rows={3}
+                            placeholder="شعار صفحة الأطباء بالعربية"
+                            className="resize-none"
                           />
                         </div>
 

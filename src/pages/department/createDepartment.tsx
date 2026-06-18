@@ -15,6 +15,10 @@ import { showApiErrorToast } from "@/lib/apiError";
 
 export type CreateDepartmentFormData = {
   departmentId: string;
+  deptTagline: string;
+  deptTaglineArabic: string;
+  doctorTagline: string;
+  doctorTaglineArabic: string;
   name: string;
   description: string;
   arabicName: string;
@@ -37,6 +41,10 @@ export type CreateDepartmentFormData = {
 
 const initialValues: CreateDepartmentFormData = {
   departmentId: "",
+  deptTagline: "",
+  deptTaglineArabic: "",
+  doctorTagline: "",
+  doctorTaglineArabic: "",
   name: "",
   description: "",
   arabicName: "",
@@ -194,6 +202,10 @@ const CreateDepartmentPage = () => {
     try {
       const formData = buildDepartmentFormData({
         departmentId,
+        deptTagline: values.deptTagline.trim(),
+        deptTaglineArabic: values.deptTaglineArabic.trim(),
+        doctorTagline: values.doctorTagline.trim(),
+        doctorTaglineArabic: values.doctorTaglineArabic.trim(),
         name,
         description,
         arabicName,
@@ -314,6 +326,34 @@ const CreateDepartmentPage = () => {
                             className="h-11"
                           />
                           <ErrorMessage name="name" component="p" className="text-xs text-red-500" />
+                        </div>
+
+                        <div className="space-y-2">
+                          <label className="text-sm font-semibold text-slate-700">
+                            Department Tagline <span className="text-slate-400 font-normal">(optional)</span>
+                          </label>
+                          <Textarea
+                            name="deptTagline"
+                            value={values.deptTagline}
+                            onChange={(e) => setFieldValue("deptTagline", e.target.value)}
+                            rows={3}
+                            placeholder="Enter department tagline"
+                            className="resize-none"
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <label className="text-sm font-semibold text-slate-700">
+                            Doctor Tagline <span className="text-slate-400 font-normal">(optional)</span>
+                          </label>
+                          <Textarea
+                            name="doctorTagline"
+                            value={values.doctorTagline}
+                            onChange={(e) => setFieldValue("doctorTagline", e.target.value)}
+                            rows={3}
+                            placeholder="Enter doctor page tagline"
+                            className="resize-none"
+                          />
                         </div>
 
                         <div className="space-y-2">
@@ -476,6 +516,36 @@ const CreateDepartmentPage = () => {
                             dir="rtl"
                           />
                           <ErrorMessage name="arabicName" component="p" className="text-xs text-red-500" />
+                        </div>
+
+                        <div className="space-y-2">
+                          <label className="text-sm font-semibold text-slate-700">
+                            Department Tagline (Arabic) <span className="text-slate-400 font-normal">(optional)</span>
+                          </label>
+                          <Textarea
+                            name="deptTaglineArabic"
+                            value={values.deptTaglineArabic}
+                            onChange={(e) => setFieldValue("deptTaglineArabic", e.target.value)}
+                            rows={3}
+                            placeholder="أدخل شعار القسم"
+                            className="resize-none"
+                            dir="rtl"
+                          />
+                        </div>
+
+                        <div className="space-y-2">
+                          <label className="text-sm font-semibold text-slate-700">
+                            Doctor Tagline (Arabic) <span className="text-slate-400 font-normal">(optional)</span>
+                          </label>
+                          <Textarea
+                            name="doctorTaglineArabic"
+                            value={values.doctorTaglineArabic}
+                            onChange={(e) => setFieldValue("doctorTaglineArabic", e.target.value)}
+                            rows={3}
+                            placeholder="أدخل شعار صفحة الأطباء"
+                            className="resize-none"
+                            dir="rtl"
+                          />
                         </div>
 
                         <div className="space-y-2">

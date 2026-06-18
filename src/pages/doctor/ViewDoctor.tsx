@@ -11,16 +11,15 @@ import {
   GraduationCap,
   Pencil,
   ArrowLeft,
-  BadgeCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { getDoctorById, mapApiDoctorToView, type DoctorViewData } from "@/api/doctors";
 import type { ApiDoctor } from "@/api/doctors";
 
-const isExpertiseSubHeading = (value: string) => /[:：]\s*$/.test(value.trim());
+const isSectionSubHeading = (value: string) => /[:：]\s*$/.test(value.trim());
 
-const formatExpertiseSubHeading = (value: string) =>
+const formatSectionSubHeading = (value: string) =>
   value.trim().replace(/[:：]\s*$/, "");
 
 const ViewDoctor = () => {
@@ -231,16 +230,24 @@ const ViewDoctor = () => {
                       <GraduationCap size={18} className="text-burgundy shrink-0" />
                       <h3 className="text-md font-semibold text-slate-800">Qualifications</h3>
                     </div>
-                    <div className={`space-y-2.5 ${activeLanguage === "arabic" ? "rtl-text" : ""}`}>
+                    <div className={`space-y-1.5 ${activeLanguage === "arabic" ? "rtl-text" : ""}`}>
                       {(activeLanguage === "english"
                         ? doctor.qualifications
                         : doctor.arabicQualifications
-                      ).map((item, idx) => (
-                        <div key={idx} className="flex items-start gap-2">
-                          <BadgeCheck size={16} className="text-burgundy mt-0.5 flex-shrink-0" />
-                          <span className="text-sm text-slate-600">{item}</span>
-                        </div>
-                      ))}
+                      ).map((item, idx) =>
+                        isSectionSubHeading(item) ? (
+                          <p
+                            key={idx}
+                            className="text-sm font-semibold text-slate-800 mt-4 first:mt-0"
+                          >
+                            {formatSectionSubHeading(item)}
+                          </p>
+                        ) : (
+                          <p key={idx} className="text-sm text-slate-600 pl-4">
+                            {item}
+                          </p>
+                        ),
+                      )}
                     </div>
                   </div>
                 )}
@@ -254,18 +261,17 @@ const ViewDoctor = () => {
                     <div className={`space-y-1.5 ${activeLanguage === "arabic" ? "rtl-text" : ""}`}>
                       {(activeLanguage === "english" ? doctor.expertise : doctor.arabicExpertise).map(
                         (item, idx) =>
-                          isExpertiseSubHeading(item) ? (
+                          isSectionSubHeading(item) ? (
                             <p
                               key={idx}
                               className="text-sm font-semibold text-slate-800 mt-4 first:mt-0"
                             >
-                              {formatExpertiseSubHeading(item)}
+                              {formatSectionSubHeading(item)}
                             </p>
                           ) : (
-                            <div key={idx} className="flex items-start gap-2 pl-4">
-                              <span className="text-burgundy shrink-0 leading-6">•</span>
-                              <span className="text-sm text-slate-600">{item}</span>
-                            </div>
+                            <p key={idx} className="text-sm text-slate-600 pl-4">
+                              {item}
+                            </p>
                           ),
                       )}
                     </div>
