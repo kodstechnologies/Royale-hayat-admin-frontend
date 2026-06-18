@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft, Plus, X, Globe, Languages, Trash2 } from "lucide-react";
 import { getJobById, updateJob } from "@/api/job";
+import { JobFormListField, filterListField, mapApiListField } from "./JobFormListField";
 
 type JobForm = {
   jobId: string;
@@ -17,12 +18,20 @@ type JobForm = {
   description: string;
   responsibilities: string[];
   requirements: string[];
+  educationAndLicensure: string[];
+  professionalExperience: string[];
+  specializedKnowledge: string[];
   arabicTitle: string;
   arabicDescription: string;
   arabicResponsibilities: string[];
   arabicRequirements: string[];
+  arabicEducationAndLicensure: string[];
+  arabicProfessionalExperience: string[];
+  arabicSpecializedKnowledge: string[];
   classification: string;
+  arabicClassification: string;
   location: string;
+  arabicLocation: string;
   type: "Full-time" | "Part-time" | "Contract";
   closingDate: string;
 };
@@ -56,6 +65,9 @@ const mapApiJobToFormValues = (job: Record<string, unknown>): JobForm => ({
   requirements: Array.isArray(job.requirements) && job.requirements.length
     ? (job.requirements as string[])
     : [""],
+  educationAndLicensure: mapApiListField(job, "educationAndLicensure"),
+  professionalExperience: mapApiListField(job, "professionalExperience"),
+  specializedKnowledge: mapApiListField(job, "specializedKnowledge"),
   arabicTitle: String(job.arabicTitle ?? ""),
   arabicDescription: String(job.arabicDescription ?? ""),
   arabicResponsibilities:
@@ -66,8 +78,13 @@ const mapApiJobToFormValues = (job: Record<string, unknown>): JobForm => ({
     Array.isArray(job.arabicRequirements) && job.arabicRequirements.length
       ? (job.arabicRequirements as string[])
       : [""],
+  arabicEducationAndLicensure: mapApiListField(job, "arabicEducationAndLicensure"),
+  arabicProfessionalExperience: mapApiListField(job, "arabicProfessionalExperience"),
+  arabicSpecializedKnowledge: mapApiListField(job, "arabicSpecializedKnowledge"),
   classification: String(job.classification ?? ""),
+  arabicClassification: String(job.arabicClassification ?? ""),
   location: String(job.location ?? ""),
+  arabicLocation: String(job.arabicLocation ?? ""),
   type: (job.type as JobForm["type"]) ?? "Full-time",
   closingDate: formatClosingDate(job.closingDate as string | Date | undefined),
 });
@@ -84,12 +101,20 @@ const EditJobPage = () => {
     description: "",
     responsibilities: [""],
     requirements: [""],
+    educationAndLicensure: [""],
+    professionalExperience: [""],
+    specializedKnowledge: [""],
     arabicTitle: "",
     arabicDescription: "",
     arabicResponsibilities: [""],
     arabicRequirements: [""],
+    arabicEducationAndLicensure: [""],
+    arabicProfessionalExperience: [""],
+    arabicSpecializedKnowledge: [""],
     classification: "",
+    arabicClassification: "",
     location: "",
+    arabicLocation: "",
     type: "Full-time",
     closingDate: "",
   });
@@ -144,15 +169,21 @@ const EditJobPage = () => {
     
     const responsibilitiesList = values.responsibilities.filter(r => r.trim());
     const requirementsList = values.requirements.filter(r => r.trim());
+    const educationAndLicensure = filterListField(values.educationAndLicensure);
+    const professionalExperience = filterListField(values.professionalExperience);
+    const specializedKnowledge = filterListField(values.specializedKnowledge);
     const arabicResponsibilitiesList = values.arabicResponsibilities.filter(r => r.trim());
     const arabicRequirementsList = values.arabicRequirements.filter(r => r.trim());
+    const arabicEducationAndLicensure = filterListField(values.arabicEducationAndLicensure);
+    const arabicProfessionalExperience = filterListField(values.arabicProfessionalExperience);
+    const arabicSpecializedKnowledge = filterListField(values.arabicSpecializedKnowledge);
     
-    if (!responsibilitiesList.length || !requirementsList.length) {
-      toast.error("Add at least one responsibility and one requirement in English.", { position: "top-right" });
+    if (!responsibilitiesList.length) {
+      toast.error("Add at least one responsibility in English.", { position: "top-right" });
       return;
     }
-    if (!arabicResponsibilitiesList.length || !arabicRequirementsList.length) {
-      toast.error("Add at least one responsibility and one requirement in Arabic.", { position: "top-right" });
+    if (!arabicResponsibilitiesList.length) {
+      toast.error("Add at least one responsibility in Arabic.", { position: "top-right" });
       return;
     }
     
@@ -162,7 +193,9 @@ const EditJobPage = () => {
         title: values.title.trim(),
         description: values.description.trim(),
         classification: values.classification.trim(),
+        arabicClassification: values.arabicClassification.trim(),
         location: values.location.trim(),
+        arabicLocation: values.arabicLocation.trim(),
         type: values.type,
         responsibilities: responsibilitiesList,
         requirements: requirementsList,
@@ -170,6 +203,12 @@ const EditJobPage = () => {
         arabicDescription: values.arabicDescription.trim(),
         arabicResponsibilities: arabicResponsibilitiesList,
         arabicRequirements: arabicRequirementsList,
+        educationAndLicensure,
+        professionalExperience,
+        specializedKnowledge,
+        arabicEducationAndLicensure,
+        arabicProfessionalExperience,
+        arabicSpecializedKnowledge,
         closingDate: values.closingDate,
       });
 
@@ -359,7 +398,7 @@ const EditJobPage = () => {
                         <div className="space-y-3">
                           <div className="flex items-center justify-between">
                             <label className="text-sm font-semibold text-slate-700">
-                              Requirements <span className="text-red-500">*</span>
+                              Requirements
                             </label>
                             <Button
                               type="button"
@@ -394,6 +433,28 @@ const EditJobPage = () => {
                             ))}
                           </div>
                         </div>
+
+                        <JobFormListField
+                          label="Education & Licensure"
+                          fieldName="educationAndLicensure"
+                          values={values.educationAndLicensure}
+                          setFieldValue={setFieldValue}
+                          placeholderPrefix="Education item"
+                        />
+                        <JobFormListField
+                          label="Professional Experience"
+                          fieldName="professionalExperience"
+                          values={values.professionalExperience}
+                          setFieldValue={setFieldValue}
+                          placeholderPrefix="Experience item"
+                        />
+                        <JobFormListField
+                          label="Specialized Knowledge"
+                          fieldName="specializedKnowledge"
+                          values={values.specializedKnowledge}
+                          setFieldValue={setFieldValue}
+                          placeholderPrefix="Knowledge item"
+                        />
                       </div>
                     </div>
                   )}
@@ -483,7 +544,7 @@ const EditJobPage = () => {
                         <div className="space-y-3">
                           <div className="flex items-center justify-between">
                             <label className="text-sm font-semibold text-slate-700">
-                              Requirements (Arabic) <span className="text-red-500">*</span>
+                              Requirements (Arabic)
                             </label>
                             <Button
                               type="button"
@@ -519,6 +580,31 @@ const EditJobPage = () => {
                             ))}
                           </div>
                         </div>
+
+                        <JobFormListField
+                          label="Education & Licensure (Arabic)"
+                          fieldName="arabicEducationAndLicensure"
+                          values={values.arabicEducationAndLicensure}
+                          setFieldValue={setFieldValue}
+                          placeholderPrefix="بند التعليم"
+                          dir="rtl"
+                        />
+                        <JobFormListField
+                          label="Professional Experience (Arabic)"
+                          fieldName="arabicProfessionalExperience"
+                          values={values.arabicProfessionalExperience}
+                          setFieldValue={setFieldValue}
+                          placeholderPrefix="بند الخبرة"
+                          dir="rtl"
+                        />
+                        <JobFormListField
+                          label="Specialized Knowledge (Arabic)"
+                          fieldName="arabicSpecializedKnowledge"
+                          values={values.arabicSpecializedKnowledge}
+                          setFieldValue={setFieldValue}
+                          placeholderPrefix="بند المعرفة"
+                          dir="rtl"
+                        />
                       </div>
                     </div>
                   )}
@@ -531,12 +617,26 @@ const EditJobPage = () => {
                           Classification <span className="text-red-500">*</span>
                         </label>
                         <Input
-                          value={values.classification}
-                          onChange={(e) => setFieldValue("classification", e.target.value)}
+                          value={
+                            activeTab === "arabic"
+                              ? values.arabicClassification
+                              : values.classification
+                          }
+                          onChange={(e) =>
+                            setFieldValue(
+                              activeTab === "arabic"
+                                ? "arabicClassification"
+                                : "classification",
+                              e.target.value,
+                            )
+                          }
                           placeholder="Enter classification"
                           className="h-11"
+                          dir={activeTab === "arabic" ? "rtl" : "ltr"}
                         />
-                        <ErrorMessage name="classification" component="p" className="text-xs text-red-500" />
+                        {activeTab === "english" ? (
+                          <ErrorMessage name="classification" component="p" className="text-xs text-red-500" />
+                        ) : null}
                       </div>
 
                       <div className="space-y-2">
@@ -544,13 +644,22 @@ const EditJobPage = () => {
                           Location <span className="text-red-500">*</span>
                         </label>
                         <Input
-                          name="location"
-                          value={values.location}
-                          onChange={(e) => setFieldValue("location", e.target.value)}
+                          value={
+                            activeTab === "arabic" ? values.arabicLocation : values.location
+                          }
+                          onChange={(e) =>
+                            setFieldValue(
+                              activeTab === "arabic" ? "arabicLocation" : "location",
+                              e.target.value,
+                            )
+                          }
                           placeholder="Enter location"
                           className="h-11"
+                          dir={activeTab === "arabic" ? "rtl" : "ltr"}
                         />
-                        <ErrorMessage name="location" component="p" className="text-xs text-red-500" />
+                        {activeTab === "english" ? (
+                          <ErrorMessage name="location" component="p" className="text-xs text-red-500" />
+                        ) : null}
                       </div>
 
                       <div className="space-y-2">

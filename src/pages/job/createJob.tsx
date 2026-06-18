@@ -10,17 +10,25 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft, Plus, Globe, Languages, Trash2 } from "lucide-react";
 import { createJob } from "@/api/job";
+import { JobFormListField, filterListField } from "./JobFormListField";
 
 type JobForm = {
   title: string;
   description: string;
   responsibilities: string[];
   requirements: string[];
+  educationAndLicensure: string[];
+  professionalExperience: string[];
+  specializedKnowledge: string[];
   arabicTitle: string;
   arabicDescription: string;
   arabicResponsibilities: string[];
   arabicRequirements: string[];
+  arabicEducationAndLicensure: string[];
+  arabicProfessionalExperience: string[];
+  arabicSpecializedKnowledge: string[];
   classification: string;
+  arabicClassification: string;
   location: string;
   arabicLocation: string;
   type: "Full-time" | "Part-time" | "Contract";
@@ -38,13 +46,12 @@ const validationSchema = Yup.object({
 
 const isArabicContentComplete = (values: JobForm) => {
   const arabicResponsibilities = values.arabicResponsibilities.filter((r) => r.trim());
-  const arabicRequirements = values.arabicRequirements.filter((r) => r.trim());
   return (
     Boolean(values.arabicTitle.trim()) &&
     Boolean(values.arabicDescription.trim()) &&
     Boolean(values.arabicLocation.trim()) &&
-    arabicResponsibilities.length > 0 &&
-    arabicRequirements.length > 0
+    Boolean(values.arabicClassification.trim()) &&
+    arabicResponsibilities.length > 0
   );
 };
 
@@ -53,11 +60,18 @@ const initialValues: JobForm = {
   description: "",
   responsibilities: [""],
   requirements: [""],
+  educationAndLicensure: [""],
+  professionalExperience: [""],
+  specializedKnowledge: [""],
   arabicTitle: "",
   arabicDescription: "",
   arabicResponsibilities: [""],
   arabicRequirements: [""],
+  arabicEducationAndLicensure: [""],
+  arabicProfessionalExperience: [""],
+  arabicSpecializedKnowledge: [""],
   classification: "",
+  arabicClassification: "",
   location: "",
   arabicLocation: "",
   type: "Full-time",
@@ -111,6 +125,7 @@ const CreateJobPage = () => {
         arabicTitle: true,
         arabicDescription: true,
         arabicLocation: true,
+        arabicClassification: true,
       });
       return;
     }
@@ -137,11 +152,17 @@ const CreateJobPage = () => {
   const handleSubmit = async (values: JobForm) => {
     const responsibilities = values.responsibilities.filter((r) => r.trim());
     const requirements = values.requirements.filter((r) => r.trim());
+    const educationAndLicensure = filterListField(values.educationAndLicensure);
+    const professionalExperience = filterListField(values.professionalExperience);
+    const specializedKnowledge = filterListField(values.specializedKnowledge);
     const arabicResponsibilities = values.arabicResponsibilities.filter((r) => r.trim());
     const arabicRequirements = values.arabicRequirements.filter((r) => r.trim());
+    const arabicEducationAndLicensure = filterListField(values.arabicEducationAndLicensure);
+    const arabicProfessionalExperience = filterListField(values.arabicProfessionalExperience);
+    const arabicSpecializedKnowledge = filterListField(values.arabicSpecializedKnowledge);
 
-    if (!responsibilities.length || !requirements.length) {
-      toast.error("Add at least one responsibility and one requirement in English.");
+    if (!responsibilities.length) {
+      toast.error("Add at least one responsibility in English.");
       return;
     }
 
@@ -151,6 +172,7 @@ const CreateJobPage = () => {
         title: values.title.trim(),
         description: values.description.trim(),
         classification: values.classification.trim(),
+        arabicClassification: values.arabicClassification.trim(),
         location: values.location.trim(),
         arabicLocation: values.arabicLocation.trim(),
         type: values.type,
@@ -160,6 +182,12 @@ const CreateJobPage = () => {
         arabicDescription: values.arabicDescription.trim(),
         arabicResponsibilities,
         arabicRequirements,
+        ...(educationAndLicensure.length ? { educationAndLicensure } : {}),
+        ...(professionalExperience.length ? { professionalExperience } : {}),
+        ...(specializedKnowledge.length ? { specializedKnowledge } : {}),
+        ...(arabicEducationAndLicensure.length ? { arabicEducationAndLicensure } : {}),
+        ...(arabicProfessionalExperience.length ? { arabicProfessionalExperience } : {}),
+        ...(arabicSpecializedKnowledge.length ? { arabicSpecializedKnowledge } : {}),
         closingDate: values.closingDate,
       });
 
@@ -350,7 +378,7 @@ const CreateJobPage = () => {
                         <div className="space-y-3">
                           <div className="flex items-center justify-between">
                             <label className="text-sm font-semibold text-slate-700">
-                              Requirements <span className="text-red-500">*</span>
+                              Requirements
                             </label>
                             <Button
                               type="button"
@@ -402,6 +430,28 @@ const CreateJobPage = () => {
                             ))}
                           </div>
                         </div>
+
+                        <JobFormListField
+                          label="Education & Licensure"
+                          fieldName="educationAndLicensure"
+                          values={values.educationAndLicensure}
+                          setFieldValue={setFieldValue}
+                          placeholderPrefix="Education item"
+                        />
+                        <JobFormListField
+                          label="Professional Experience"
+                          fieldName="professionalExperience"
+                          values={values.professionalExperience}
+                          setFieldValue={setFieldValue}
+                          placeholderPrefix="Experience item"
+                        />
+                        <JobFormListField
+                          label="Specialized Knowledge"
+                          fieldName="specializedKnowledge"
+                          values={values.specializedKnowledge}
+                          setFieldValue={setFieldValue}
+                          placeholderPrefix="Knowledge item"
+                        />
                       </div>
                     </div>
                   )}
@@ -519,7 +569,7 @@ const CreateJobPage = () => {
                         <div className="space-y-3">
                           <div className="flex items-center justify-between">
                             <label className="text-sm font-semibold text-slate-700">
-                              Requirements (Arabic) <span className="text-red-500">*</span>
+                              Requirements (Arabic)
                             </label>
                             <Button
                               type="button"
@@ -576,6 +626,31 @@ const CreateJobPage = () => {
                             ))}
                           </div>
                         </div>
+
+                        <JobFormListField
+                          label="Education & Licensure (Arabic)"
+                          fieldName="arabicEducationAndLicensure"
+                          values={values.arabicEducationAndLicensure}
+                          setFieldValue={setFieldValue}
+                          placeholderPrefix="بند التعليم"
+                          dir="rtl"
+                        />
+                        <JobFormListField
+                          label="Professional Experience (Arabic)"
+                          fieldName="arabicProfessionalExperience"
+                          values={values.arabicProfessionalExperience}
+                          setFieldValue={setFieldValue}
+                          placeholderPrefix="بند الخبرة"
+                          dir="rtl"
+                        />
+                        <JobFormListField
+                          label="Specialized Knowledge (Arabic)"
+                          fieldName="arabicSpecializedKnowledge"
+                          values={values.arabicSpecializedKnowledge}
+                          setFieldValue={setFieldValue}
+                          placeholderPrefix="بند المعرفة"
+                          dir="rtl"
+                        />
                       </div>
                     </div>
                   )}
@@ -588,16 +663,30 @@ const CreateJobPage = () => {
                           Classification <span className="text-red-500">*</span>
                         </label>
                         <Input
-                          value={values.classification}
-                          onChange={(e) => setFieldValue("classification", e.target.value)}
+                          value={
+                            activeTab === "arabic"
+                              ? values.arabicClassification
+                              : values.classification
+                          }
+                          onChange={(e) =>
+                            setFieldValue(
+                              activeTab === "arabic"
+                                ? "arabicClassification"
+                                : "classification",
+                              e.target.value,
+                            )
+                          }
                           placeholder="Enter classification"
                           className="h-11"
+                          dir={activeTab === "arabic" ? "rtl" : "ltr"}
                         />
-                        <ErrorMessage
-                          name="classification"
-                          component="p"
-                          className="text-xs text-red-500"
-                        />
+                        {activeTab === "english" ? (
+                          <ErrorMessage
+                            name="classification"
+                            component="p"
+                            className="text-xs text-red-500"
+                          />
+                        ) : null}
                       </div>
 
                       <div className="space-y-2">

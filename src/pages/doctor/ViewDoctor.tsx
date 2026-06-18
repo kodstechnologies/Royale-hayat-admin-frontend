@@ -22,6 +22,17 @@ const isSectionSubHeading = (value: string) => /[:：]\s*$/.test(value.trim());
 const formatSectionSubHeading = (value: string) =>
   value.trim().replace(/[:：]\s*$/, "");
 
+const renderBulletItem = (item: string, idx: number, isArabic: boolean) => (
+  <div
+    key={idx}
+    dir={isArabic ? "rtl" : "ltr"}
+    className={`flex items-start gap-2 text-sm text-slate-600 ${isArabic ? "pr-4" : "pl-4"}`}
+  >
+    <span className="text-burgundy mt-0.5 shrink-0">•</span>
+    <span className="flex-1">{item}</span>
+  </div>
+);
+
 const ViewDoctor = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -230,7 +241,10 @@ const ViewDoctor = () => {
                       <GraduationCap size={18} className="text-burgundy shrink-0" />
                       <h3 className="text-md font-semibold text-slate-800">Qualifications</h3>
                     </div>
-                    <div className={`space-y-1.5 ${activeLanguage === "arabic" ? "rtl-text" : ""}`}>
+                    <div
+                      className={`space-y-1.5 ${activeLanguage === "arabic" ? "rtl-text" : ""}`}
+                      dir={activeLanguage === "arabic" ? "rtl" : "ltr"}
+                    >
                       {(activeLanguage === "english"
                         ? doctor.qualifications
                         : doctor.arabicQualifications
@@ -243,9 +257,7 @@ const ViewDoctor = () => {
                             {formatSectionSubHeading(item)}
                           </p>
                         ) : (
-                          <p key={idx} className="text-sm text-slate-600 pl-4">
-                            {item}
-                          </p>
+                          renderBulletItem(item, idx, activeLanguage === "arabic")
                         ),
                       )}
                     </div>
@@ -258,7 +270,10 @@ const ViewDoctor = () => {
                       <Brain size={18} className="text-burgundy shrink-0" />
                       <h3 className="text-md font-semibold text-slate-800">Expertise</h3>
                     </div>
-                    <div className={`space-y-1.5 ${activeLanguage === "arabic" ? "rtl-text" : ""}`}>
+                    <div
+                      className={`space-y-1.5 ${activeLanguage === "arabic" ? "rtl-text" : ""}`}
+                      dir={activeLanguage === "arabic" ? "rtl" : "ltr"}
+                    >
                       {(activeLanguage === "english" ? doctor.expertise : doctor.arabicExpertise).map(
                         (item, idx) =>
                           isSectionSubHeading(item) ? (
@@ -269,9 +284,7 @@ const ViewDoctor = () => {
                               {formatSectionSubHeading(item)}
                             </p>
                           ) : (
-                            <p key={idx} className="text-sm text-slate-600 pl-4">
-                              {item}
-                            </p>
+                            renderBulletItem(item, idx, activeLanguage === "arabic")
                           ),
                       )}
                     </div>

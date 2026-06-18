@@ -36,6 +36,12 @@ type JobPost = {
   arabicResponsibilities: string[];
   requirements: string[];
   arabicRequirements: string[];
+  educationAndLicensure: string[];
+  arabicEducationAndLicensure: string[];
+  professionalExperience: string[];
+  arabicProfessionalExperience: string[];
+  specializedKnowledge: string[];
+  arabicSpecializedKnowledge: string[];
   closingDate: string;
   isActive: boolean;
   postedDate: string;
@@ -59,6 +65,12 @@ const mapApiJob = (job: any, applicationsCount = 0): JobPost => ({
   arabicResponsibilities: job.arabicResponsibilities ?? [],
   requirements: job.requirements ?? [],
   arabicRequirements: job.arabicRequirements ?? [],
+  educationAndLicensure: job.educationAndLicensure ?? [],
+  arabicEducationAndLicensure: job.arabicEducationAndLicensure ?? [],
+  professionalExperience: job.professionalExperience ?? [],
+  arabicProfessionalExperience: job.arabicProfessionalExperience ?? [],
+  specializedKnowledge: job.specializedKnowledge ?? [],
+  arabicSpecializedKnowledge: job.arabicSpecializedKnowledge ?? [],
   closingDate: job.closingDate
     ? new Date(job.closingDate).toISOString().split("T")[0]
     : "",
@@ -410,6 +422,75 @@ const ViewJobPost = () => {
                     ))}
                   </ul>
                 </div>
+
+                {(isArabic && job.arabicEducationAndLicensure.length
+                  ? job.arabicEducationAndLicensure
+                  : job.educationAndLicensure
+                ).length > 0 && (
+                  <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+                    <h3 className="text-md font-semibold text-slate-800 mb-3 flex items-center gap-2">
+                      <CheckCircle className="h-5 w-5 text-burgundy" />
+                      Education & Licensure
+                    </h3>
+                    <ul className={`space-y-2 ${arabicValueClass}`}>
+                      {(isArabic && job.arabicEducationAndLicensure.length
+                        ? job.arabicEducationAndLicensure
+                        : job.educationAndLicensure
+                      ).map((item, idx) => (
+                        <li key={idx} className="flex items-start gap-2 text-sm text-slate-600">
+                          <span className="text-burgundy mt-1 shrink-0">•</span>
+                          <span>{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {(isArabic && job.arabicProfessionalExperience.length
+                  ? job.arabicProfessionalExperience
+                  : job.professionalExperience
+                ).length > 0 && (
+                  <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+                    <h3 className="text-md font-semibold text-slate-800 mb-3 flex items-center gap-2">
+                      <CheckCircle className="h-5 w-5 text-burgundy" />
+                      Professional Experience
+                    </h3>
+                    <ul className={`space-y-2 ${arabicValueClass}`}>
+                      {(isArabic && job.arabicProfessionalExperience.length
+                        ? job.arabicProfessionalExperience
+                        : job.professionalExperience
+                      ).map((item, idx) => (
+                        <li key={idx} className="flex items-start gap-2 text-sm text-slate-600">
+                          <span className="text-burgundy mt-1 shrink-0">•</span>
+                          <span>{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {(isArabic && job.arabicSpecializedKnowledge.length
+                  ? job.arabicSpecializedKnowledge
+                  : job.specializedKnowledge
+                ).length > 0 && (
+                  <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+                    <h3 className="text-md font-semibold text-slate-800 mb-3 flex items-center gap-2">
+                      <CheckCircle className="h-5 w-5 text-burgundy" />
+                      Specialized Knowledge
+                    </h3>
+                    <ul className={`space-y-2 ${arabicValueClass}`}>
+                      {(isArabic && job.arabicSpecializedKnowledge.length
+                        ? job.arabicSpecializedKnowledge
+                        : job.specializedKnowledge
+                      ).map((item, idx) => (
+                        <li key={idx} className="flex items-start gap-2 text-sm text-slate-600">
+                          <span className="text-burgundy mt-1 shrink-0">•</span>
+                          <span>{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
 
                 
                 <div className="flex flex-col-reverse sm:flex-row gap-2 sm:gap-3 pt-2 sm:pt-4">
