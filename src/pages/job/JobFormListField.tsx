@@ -18,6 +18,12 @@ export const mapApiListField = (job: Record<string, unknown>, key: string): stri
 
 export const filterListField = (items: string[]) => items.filter((item) => item.trim());
 
+export const jobFormAddButtonClass =
+  "gap-1 border border-gold/50 bg-white text-gold [&_svg]:text-gold " +
+  "hover:!bg-gold/10 hover:!border-gold hover:!text-gold hover:[&_svg]:!text-gold " +
+  "active:!bg-gold active:!border-gold active:!text-slate-900 active:[&_svg]:!text-slate-900 " +
+  "focus-visible:ring-2 focus-visible:ring-gold/30 transition-colors duration-150";
+
 export const JobFormListField = ({
   label,
   fieldName,
@@ -46,25 +52,11 @@ export const JobFormListField = ({
 
   return (
     <div className="space-y-3" dir={dir}>
-      <div
-        className={`flex items-center justify-between gap-2 ${isRtl ? "flex-row-reverse" : ""}`}
+      <label
+        className={`block text-sm font-semibold text-slate-700 ${isRtl ? "text-right" : ""}`}
       >
-        <label
-          className={`text-sm font-semibold text-slate-700 ${isRtl ? "text-right" : ""}`}
-        >
-          {label}
-        </label>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={addItem}
-          className="gap-1 border-burgundy/30 text-burgundy hover:bg-burgundy/5 shrink-0"
-        >
-          <Plus className="h-3 w-3" />
-          {isRtl ? "أضف بنداً" : "Add Item"}
-        </Button>
-      </div>
+        {label}
+      </label>
       <div className="space-y-2">
         {items.map((item, idx) => (
           <div
@@ -89,6 +81,18 @@ export const JobFormListField = ({
             </Button>
           </div>
         ))}
+      </div>
+      <div className={`flex ${isRtl ? "justify-end" : "justify-start"}`}>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={addItem}
+          className={jobFormAddButtonClass}
+        >
+          <Plus className="h-3 w-3" />
+          {isRtl ? "أضف بنداً" : "Add Item"}
+        </Button>
       </div>
     </div>
   );

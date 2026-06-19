@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft, Plus, X, Globe, Languages, Trash2 } from "lucide-react";
 import { getJobById, updateJob } from "@/api/job";
-import { JobFormListField, filterListField, mapApiListField } from "./JobFormListField";
+import { JobFormListField, filterListField, mapApiListField, jobFormAddButtonClass } from "./JobFormListField";
 
 type JobForm = {
   jobId: string;
@@ -356,21 +356,9 @@ const EditJobPage = () => {
 
                         
                         <div className="space-y-3">
-                          <div className="flex items-center justify-between">
-                            <label className="text-sm font-semibold text-slate-700">
-                              Responsibilities <span className="text-red-500">*</span>
-                            </label>
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={() => addListItem(setFieldValue, values.responsibilities, "responsibilities")}
-                              className="gap-1 border-burgundy/30 text-burgundy hover:bg-burgundy/5"
-                            >
-                              <Plus className="h-3 w-3" />
-                              Add Responsibility
-                            </Button>
-                          </div>
+                          <label className="text-sm font-semibold text-slate-700">
+                            Responsibilities <span className="text-red-500">*</span>
+                          </label>
                           <div className="space-y-2">
                             {values.responsibilities.map((item, idx) => (
                               <div key={idx} className="flex gap-2">
@@ -392,25 +380,23 @@ const EditJobPage = () => {
                               </div>
                             ))}
                           </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => addListItem(setFieldValue, values.responsibilities, "responsibilities")}
+                            className={jobFormAddButtonClass}
+                          >
+                            <Plus className="h-3 w-3" />
+                            Add Responsibility
+                          </Button>
                         </div>
 
                         
                         <div className="space-y-3">
-                          <div className="flex items-center justify-between">
-                            <label className="text-sm font-semibold text-slate-700">
-                              Requirements
-                            </label>
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={() => addListItem(setFieldValue, values.requirements, "requirements")}
-                              className="gap-1 border-burgundy/30 text-burgundy hover:bg-burgundy/5"
-                            >
-                              <Plus className="h-3 w-3" />
-                              Add Requirement
-                            </Button>
-                          </div>
+                          <label className="text-sm font-semibold text-slate-700">
+                            Requirements
+                          </label>
                           <div className="space-y-2">
                             {values.requirements.map((item, idx) => (
                               <div key={idx} className="flex gap-2">
@@ -432,6 +418,16 @@ const EditJobPage = () => {
                               </div>
                             ))}
                           </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => addListItem(setFieldValue, values.requirements, "requirements")}
+                            className={jobFormAddButtonClass}
+                          >
+                            <Plus className="h-3 w-3" />
+                            Add Requirement
+                          </Button>
                         </div>
 
                         <JobFormListField
@@ -500,30 +496,18 @@ const EditJobPage = () => {
                         </div>
 
                         
-                        <div className="space-y-3">
-                          <div className="flex items-center justify-between">
-                            <label className="text-sm font-semibold text-slate-700">
-                              Responsibilities (Arabic) <span className="text-red-500">*</span>
-                            </label>
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={() => addListItem(setFieldValue, values.arabicResponsibilities, "arabicResponsibilities")}
-                              className="gap-1 border-burgundy/30 text-burgundy hover:bg-burgundy/5"
-                            >
-                              <Plus className="h-3 w-3" />
-                              أضف مسؤولية
-                            </Button>
-                          </div>
+                        <div className="space-y-3" dir="rtl">
+                          <label className="block text-sm font-semibold text-slate-700 text-right">
+                            Responsibilities (Arabic) <span className="text-red-500">*</span>
+                          </label>
                           <div className="space-y-2">
                             {values.arabicResponsibilities.map((item, idx) => (
-                              <div key={idx} className="flex gap-2">
+                              <div key={idx} className="flex gap-2 flex-row-reverse">
                                 <Input
                                   value={item}
                                   onChange={(e) => updateListItem(setFieldValue, values.arabicResponsibilities, idx, e.target.value, "arabicResponsibilities")}
                                   placeholder={`مسؤولية ${idx + 1}`}
-                                  className="flex-1 h-10"
+                                  className="flex-1 h-10 text-right"
                                   dir="rtl"
                                 />
                                 <Button
@@ -538,33 +522,33 @@ const EditJobPage = () => {
                               </div>
                             ))}
                           </div>
+                          <div className="flex justify-end">
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => addListItem(setFieldValue, values.arabicResponsibilities, "arabicResponsibilities")}
+                              className={jobFormAddButtonClass}
+                            >
+                              <Plus className="h-3 w-3" />
+                              أضف مسؤولية
+                            </Button>
+                          </div>
                         </div>
 
                         
-                        <div className="space-y-3">
-                          <div className="flex items-center justify-between">
-                            <label className="text-sm font-semibold text-slate-700">
-                              Requirements (Arabic)
-                            </label>
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={() => addListItem(setFieldValue, values.arabicRequirements, "arabicRequirements")}
-                              className="gap-1 border-burgundy/30 text-burgundy hover:bg-burgundy/5"
-                            >
-                              <Plus className="h-3 w-3" />
-                              أضف متطلباً
-                            </Button>
-                          </div>
+                        <div className="space-y-3" dir="rtl">
+                          <label className="block text-sm font-semibold text-slate-700 text-right">
+                            Requirements (Arabic)
+                          </label>
                           <div className="space-y-2">
                             {values.arabicRequirements.map((item, idx) => (
-                              <div key={idx} className="flex gap-2">
+                              <div key={idx} className="flex gap-2 flex-row-reverse">
                                 <Input
                                   value={item}
                                   onChange={(e) => updateListItem(setFieldValue, values.arabicRequirements, idx, e.target.value, "arabicRequirements")}
                                   placeholder={`متطلب ${idx + 1}`}
-                                  className="flex-1 h-10"
+                                  className="flex-1 h-10 text-right"
                                   dir="rtl"
                                 />
                                 <Button
@@ -578,6 +562,18 @@ const EditJobPage = () => {
                                 </Button>
                               </div>
                             ))}
+                          </div>
+                          <div className="flex justify-end">
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => addListItem(setFieldValue, values.arabicRequirements, "arabicRequirements")}
+                              className={jobFormAddButtonClass}
+                            >
+                              <Plus className="h-3 w-3" />
+                              أضف متطلباً
+                            </Button>
                           </div>
                         </div>
 

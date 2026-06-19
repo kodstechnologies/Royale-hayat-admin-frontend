@@ -23,6 +23,7 @@ import {
   type DoctorListItem,
 } from "@/api/doctors";
 import { getDepartments, mapApiDepartmentToListItem } from "@/api/department";
+import { matchesDoctorSearch } from "@/lib/doctorSearch";
 
 const Doctors = () => {
   const [doctors, setDoctors] = useState<DoctorListItem[]>([]);
@@ -63,9 +64,6 @@ const Doctors = () => {
         sortBy: "name",
         sortOrder: "asc",
       };
-      if (search.trim().length >= 2) {
-        params.search = search.trim();
-      }
       if (selectedDepartmentId !== "all") {
         params.department = selectedDepartmentId;
       }
@@ -79,7 +77,13 @@ const Doctors = () => {
         ? (doctorsRes.data.data as ApiDoctor[])
         : [];
 
-      setDoctors(list.map((row) => mapApiDoctorToListItem(row, featuredIds)));
+      const mapped = list.map((row) => mapApiDoctorToListItem(row, featuredIds));
+      const filtered =
+        search.trim().length >= 2
+          ? mapped.filter((doctor) => matchesDoctorSearch(doctor, search))
+          : mapped;
+
+      setDoctors(filtered);
     } catch (error: unknown) {
       const err = error as { response?: { data?: { message?: string } } };
       toast.error(err?.response?.data?.message || "Failed to load doctors");
@@ -257,7 +261,7 @@ const Doctors = () => {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                 <input
                   type="text"
-                  placeholder="Search doctors by name or specialty..."
+                  placeholder="Search by name, initials (e.g. DAR), or specialty..."
                   value={search}
                   onChange={(e) => {
                     setCurrentPage(1);

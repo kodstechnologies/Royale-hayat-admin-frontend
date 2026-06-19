@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import AdminLayout from "@/components/layout/AdminLayout";
 import BreadCrumb from "@/components/layout/BreadCrumb";
@@ -33,6 +33,28 @@ const AddAchievement = () => {
   const [status, setStatus] = useState<"show" | "hide">("show");
   const [previewUrl, setPreviewUrl] = useState("");
   const [dragActive, setDragActive] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const clearImage = () => {
+    if (previewUrl.startsWith("blob:")) {
+      URL.revokeObjectURL(previewUrl);
+    }
+    setPreviewUrl("");
+    setFormData((prev) => ({ ...prev, imageFile: null }));
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const setImageFile = (file: File) => {
+    setFormData((prev) => ({ ...prev, imageFile: file }));
+    setPreviewUrl((prev) => {
+      if (prev.startsWith("blob:")) {
+        URL.revokeObjectURL(prev);
+      }
+      return URL.createObjectURL(file);
+    });
+  };
 
   const [formData, setFormData] = useState<AchievementFormData>({
     employeeId: "",
@@ -64,8 +86,10 @@ const AddAchievement = () => {
     setDragActive(false);
     const file = e.dataTransfer.files?.[0] || null;
     if (file && file.type.startsWith("image/")) {
-      setFormData({ ...formData, imageFile: file });
-      setPreviewUrl(URL.createObjectURL(file));
+      setImageFile(file);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
     } else {
       toast.error("Please upload an image file");
     }
@@ -74,11 +98,11 @@ const AddAchievement = () => {
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
     if (file && file.type.startsWith("image/")) {
-      setFormData({ ...formData, imageFile: file });
-      setPreviewUrl(URL.createObjectURL(file));
+      setImageFile(file);
     } else if (file) {
       toast.error("Please upload an image file");
     }
+    e.target.value = "";
   };
 
   const handleSubmit = async () => {
@@ -344,6 +368,7 @@ const AddAchievement = () => {
                   onDrop={handleDrop}
                 >
                   <input
+                    ref={fileInputRef}
                     type="file"
                     accept="image/*"
                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
@@ -355,11 +380,11 @@ const AddAchievement = () => {
                         <img src={previewUrl} alt="Preview" className="max-h-40 w-auto mx-auto rounded-lg object-cover" />
                         <button
                           type="button"
-                          onClick={() => {
-                            setPreviewUrl("");
-                            setFormData({ ...formData, imageFile: null });
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            clearImage();
                           }}
-                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
+                          className="absolute -top-2 -right-2 z-10 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
                         >
                           <X className="h-3 w-3" />
                         </button>
