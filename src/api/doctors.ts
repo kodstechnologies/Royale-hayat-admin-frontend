@@ -1,6 +1,7 @@
 import api from "./axiosInstance";
 import {
   createEmptyExpertiseSection,
+  type DeptSubspecialityOption,
   type ExpertiseSectionForm,
 } from "@/lib/doctorForm";
 
@@ -29,8 +30,6 @@ export type ApiDoctor = {
   expertiseAr?: string[];
   languages?: string[];
   languagesAr?: string[];
-  initials?: string;
-  initialsAr?: string;
   availableOnline?: boolean;
   image?: string;
   isActive?: boolean;
@@ -50,6 +49,7 @@ export type DoctorListItem = {
   qualifications: string[];
   expertise: string[];
   languages: string[];
+  /** Derived from name for avatar/fallback display — not stored on doctor records */
   initials: string;
   availableOnline: boolean;
   image?: string;
@@ -72,7 +72,6 @@ export type DoctorViewData = {
   arabicExpertise: string[];
   languages: string[];
   arabicLanguages: string[];
-  initials: string;
   availableOnline: boolean;
   image?: string;
   isActive: boolean;
@@ -88,12 +87,20 @@ export type DoctorPayload = {
   qualifications: string[];
   expertise: string[];
   languages: string[];
-  initials: string;
   image?: string;
   color: string;
   symptoms: string[];
   availableOnline: boolean;
   isActive: boolean;
+};
+
+const deriveInitialsFromName = (name: string): string => {
+  const parts = name.replace(/^Dr\.?\s*/i, "").trim().split(/\s+/).filter(Boolean);
+  if (parts.length >= 2) {
+    return `${parts[0][0] ?? ""}${parts[parts.length - 1][0] ?? ""}`.toUpperCase();
+  }
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return "DR";
 };
 
 const flattenQualifications = (qualifications: ApiDoctor["qualifications"]) => {
@@ -228,7 +235,7 @@ export const mapApiDoctorToListItem = (
     qualifications: flattenQualifications(row.qualifications),
     expertise: flattenExpertise(row.expertise),
     languages: Array.isArray(row.languages) ? row.languages : [],
-    initials: String(row.initials ?? "Dr."),
+    initials: deriveInitialsFromName(String(row.name ?? "")),
     availableOnline: row.availableOnline === true,
     image: row.image,
     isActive: row.isActive !== false,
@@ -253,7 +260,6 @@ export const mapApiDoctorToView = (row: ApiDoctor): DoctorViewData => {
     arabicExpertise: flattenExpertiseAr(row),
     languages: Array.isArray(row.languages) ? row.languages : [],
     arabicLanguages: Array.isArray(row.languagesAr) ? row.languagesAr : [],
-    initials: String(row.initials ?? "Dr."),
     availableOnline: row.availableOnline === true,
     image: row.image,
     isActive: row.isActive !== false,
@@ -262,7 +268,7 @@ export const mapApiDoctorToView = (row: ApiDoctor): DoctorViewData => {
 
 export const mapApiDoctorToFormValues = (
   row: ApiDoctor,
-  deptSubspecialities: Array<{ _id: string; name: string }>,
+  deptSubspecialities: DeptSubspecialityOption[],
 ) => {
   const dept = resolveDepartment(row.department);
   const subspecialityIds = deptSubspecialities
@@ -277,13 +283,11 @@ export const mapApiDoctorToFormValues = (
     doctorId: String(row.doctorId ?? ""),
     name: String(row.name ?? ""),
     title: String(row.title ?? ""),
-    initials: String(row.initials ?? "Dr."),
     languages: (row.languages ?? []).join("|||"),
     expertiseSections: mapExpertiseToFormSections(row),
     qualifications: flattenQualifications(row.qualifications).join("|||"),
     arabicName: String(row.nameAr ?? ""),
     arabicTitle: String(row.titleAr ?? ""),
-    arabicInitials: String(row.initialsAr ?? "د."),
     arabicLanguages: (row.languagesAr ?? []).join("|||"),
     arabicQualifications: flattenQualificationsAr(row).join("|||"),
     department: dept.departmentId,

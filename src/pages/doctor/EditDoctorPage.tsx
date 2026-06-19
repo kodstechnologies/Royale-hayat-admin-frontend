@@ -73,13 +73,11 @@ const EditDoctorPage = () => {
     doctorId: "",
     name: "",
     title: "",
-    initials: "",
     languages: "",
     expertiseSections: [createEmptyExpertiseSection()],
     qualifications: "",
     arabicName: "",
     arabicTitle: "",
-    arabicInitials: "د.",
     arabicLanguages: "",
     arabicQualifications: "",
     department: "",
@@ -164,13 +162,11 @@ const EditDoctorPage = () => {
           doctorId: formValues.doctorId,
           name: formValues.name,
           title: formValues.title,
-          initials: formValues.initials,
           languages: formValues.languages,
           expertiseSections: formValues.expertiseSections,
           qualifications: formValues.qualifications,
           arabicName: formValues.arabicName,
           arabicTitle: formValues.arabicTitle,
-          arabicInitials: formValues.arabicInitials,
           arabicLanguages: formValues.arabicLanguages,
           arabicQualifications: formValues.arabicQualifications,
           department: formValues.department,
@@ -381,17 +377,6 @@ const EditDoctorPage = () => {
                               className="h-11"
                             />
                           </div>
-
-                          <div className="space-y-2">
-                            <label className="text-sm font-semibold text-slate-700">Initials</label>
-                            <Input
-                              name="initials"
-                              value={values.initials}
-                              onChange={(e) => setFieldValue("initials", e.target.value.toUpperCase())}
-                              placeholder="Enter initials (e.g., JD)"
-                              className="h-11"
-                            />
-                          </div>
                         </div>
                       </div>
 
@@ -543,18 +528,6 @@ const EditDoctorPage = () => {
                               value={values.arabicTitle}
                               onChange={(e) => setFieldValue("arabicTitle", e.target.value)}
                               placeholder="اللقب"
-                              className="h-11"
-                              dir="rtl"
-                            />
-                          </div>
-
-                          <div className="space-y-2 md:col-span-2 lg:col-span-1">
-                            <label className="text-sm font-semibold text-slate-700">Initials (Arabic)</label>
-                            <Input
-                              name="arabicInitials"
-                              value={values.arabicInitials}
-                              onChange={(e) => setFieldValue("arabicInitials", e.target.value)}
-                              placeholder="د."
                               className="h-11"
                               dir="rtl"
                             />

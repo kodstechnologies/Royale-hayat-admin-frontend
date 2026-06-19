@@ -25,13 +25,11 @@ const initialValues: DoctorFormValues = {
   doctorId: "",
   name: "",
   title: "",
-  initials: "",
   languages: "",
   expertiseSections: [createEmptyExpertiseSection()],
   qualifications: "",
   arabicName: "",
   arabicTitle: "",
-  arabicInitials: "د.",
   arabicLanguages: "",
   arabicQualifications: "",
   department: "",
@@ -305,17 +303,6 @@ const CreateDoctorPage = () => {
                               className="h-11"
                             />
                           </div>
-
-                          <div className="space-y-2">
-                            <label className="text-sm font-semibold text-slate-700">Initials</label>
-                            <Input
-                              name="initials"
-                              value={values.initials}
-                              onChange={(e) => setFieldValue("initials", e.target.value.toUpperCase())}
-                              placeholder="Enter initials (e.g., Dr)"
-                              className="h-11"
-                            />
-                          </div>
                         </div>
                       </div>
 
@@ -467,18 +454,6 @@ const CreateDoctorPage = () => {
                               value={values.arabicTitle}
                               onChange={(e) => setFieldValue("arabicTitle", e.target.value)}
                               placeholder="اللقب"
-                              className="h-11"
-                              dir="rtl"
-                            />
-                          </div>
-
-                          <div className="space-y-2 md:col-span-2 lg:col-span-1">
-                            <label className="text-sm font-semibold text-slate-700">Initials (Arabic)</label>
-                            <Input
-                              name="arabicInitials"
-                              value={values.arabicInitials}
-                              onChange={(e) => setFieldValue("arabicInitials", e.target.value)}
-                              placeholder="د."
                               className="h-11"
                               dir="rtl"
                             />

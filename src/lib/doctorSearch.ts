@@ -1,7 +1,6 @@
 type DoctorSearchFields = {
   name: string;
   arabicName?: string;
-  initials: string;
   specialty?: string;
   specialtyAr?: string;
   title?: string;
@@ -15,26 +14,12 @@ export const extractCombinedInitials = (text: string): string =>
     .join("")
     .toUpperCase();
 
-export const getDoctorCombinedInitialsVariants = (
-  initials: string,
-  name: string,
-): string[] => {
-  const variants = new Set<string>();
+export const getDoctorCombinedInitialsVariants = (name: string): string[] => {
   const trimmedName = name.trim();
-  const trimmedInitials = initials.trim();
+  if (!trimmedName) return [];
 
-  const add = (text: string) => {
-    const value = extractCombinedInitials(text);
-    if (value) variants.add(value);
-  };
-
-  if (trimmedName) add(trimmedName);
-  if (trimmedInitials) {
-    add(trimmedInitials);
-    if (trimmedName) add(`${trimmedInitials} ${trimmedName}`);
-  }
-
-  return [...variants];
+  const value = extractCombinedInitials(trimmedName);
+  return value ? [value] : [];
 };
 
 export const matchesDoctorSearch = (doctor: DoctorSearchFields, query: string): boolean => {
@@ -47,7 +32,6 @@ export const matchesDoctorSearch = (doctor: DoctorSearchFields, query: string): 
   const textFields = [
     doctor.name,
     doctor.arabicName,
-    doctor.initials,
     doctor.specialty,
     doctor.specialtyAr,
     doctor.title,
@@ -58,13 +42,13 @@ export const matchesDoctorSearch = (doctor: DoctorSearchFields, query: string): 
   }
 
   if (compact.length >= 2) {
-    const englishVariants = getDoctorCombinedInitialsVariants(doctor.initials, doctor.name);
+    const englishVariants = getDoctorCombinedInitialsVariants(doctor.name);
     if (englishVariants.some((variant) => variant.startsWith(compact))) {
       return true;
     }
 
     if (doctor.arabicName) {
-      const arabicVariants = getDoctorCombinedInitialsVariants("", doctor.arabicName);
+      const arabicVariants = getDoctorCombinedInitialsVariants(doctor.arabicName);
       if (arabicVariants.some((variant) => variant.startsWith(compact))) {
         return true;
       }

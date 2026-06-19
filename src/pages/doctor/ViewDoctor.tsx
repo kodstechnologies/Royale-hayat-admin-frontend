@@ -19,8 +19,10 @@ import type { ApiDoctor } from "@/api/doctors";
 
 const isSectionSubHeading = (value: string) => /[:：]\s*$/.test(value.trim());
 
-const formatSectionSubHeading = (value: string) =>
-  value.trim().replace(/[:：]\s*$/, "");
+const formatSectionSubHeading = (value: string) => {
+  const trimmed = value.trim();
+  return /[:：]\s*$/.test(trimmed) ? trimmed : `${trimmed}:`;
+};
 
 const renderBulletItem = (item: string, idx: number, isArabic: boolean) => (
   <div

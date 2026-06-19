@@ -30,13 +30,11 @@ export type DoctorFormValues = {
   doctorId: string;
   name: string;
   title: string;
-  initials: string;
   languages: string;
   expertiseSections: ExpertiseSectionForm[];
   qualifications: string;
   arabicName: string;
   arabicTitle: string;
-  arabicInitials: string;
   arabicLanguages: string;
   arabicQualifications: string;
   department: string;
@@ -67,12 +65,6 @@ export const buildDoctorFormData = (
 
   if (values.title.trim()) formData.append("title", values.title.trim());
   if (values.arabicTitle.trim()) formData.append("titleAr", values.arabicTitle.trim());
-  if (values.initials.trim()) formData.append("initials", values.initials.trim());
-  if (values.arabicInitials.trim()) {
-    formData.append("initialsAr", values.arabicInitials.trim());
-  } else if (values.initials.trim()) {
-    formData.append("initialsAr", "د.");
-  }
 
   appendJsonArray(formData, "subspecialities", selectedSubs.map((s) => s.name));
   appendJsonArray(formData, "subspecialitiesAr", selectedSubs.map((s) => s.arabicName));
