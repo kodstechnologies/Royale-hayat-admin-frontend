@@ -47,6 +47,7 @@ export type BookingItem = {
   nationality: string;
   gender: string;
   passportNumber: string;
+  paciRequestId?: string;
   symptoms?: string;
   department?: string;
   doctorName?: string;
@@ -217,6 +218,7 @@ export const mapBookingFromApi = (row: Record<string, unknown>): BookingItem => 
   nationality: String(row.nationality ?? ""),
   gender: String(row.gender ?? ""),
   passportNumber: String(row.passportNumber ?? ""),
+  paciRequestId: row.paciRequestId ? String(row.paciRequestId) : undefined,
   symptoms: formatSymptoms(row.symptoms as string[] | string | undefined),
   department: row.department ? String(row.department) : undefined,
   doctorName: row.doctor ? String(row.doctor) : undefined,

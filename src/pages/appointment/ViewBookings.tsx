@@ -138,6 +138,12 @@ const ViewBookings = () => {
                   mono
                 />
                 <InfoRow
+                  label="PACI Request ID"
+                  value={booking.paciRequestId}
+                  icon={IdCard}
+                  mono
+                />
+                <InfoRow
                   label="Passport Number"
                   value={booking.passportNumber}
                   icon={IdCard}
