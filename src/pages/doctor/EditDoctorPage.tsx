@@ -143,7 +143,6 @@ const EditDoctorPage = () => {
 
       try {
         const response = await getDoctorById(id);
-        console.log(response.data);
 
         const raw = (response.data?.data ?? response.data) as ApiDoctor | undefined;
 
@@ -171,10 +170,6 @@ const EditDoctorPage = () => {
 
         const formValues = mapApiDoctorToFormValues(raw, subsForDept);
         const departmentId = deptId || formValues.department;
-        const subspecialityIds =
-          departmentId && subsForDept.length > 0
-            ? subsForDept.map((sub) => String(sub._id)).filter(Boolean)
-            : formValues.subspecialityIds.map((subId) => String(subId)).filter(Boolean);
 
         setInitialValues({
           doctorId: formValues.doctorId,
@@ -188,7 +183,7 @@ const EditDoctorPage = () => {
           arabicLanguages: formValues.arabicLanguages,
           arabicQualifications: formValues.arabicQualifications,
           department: departmentId,
-          subspecialityIds,
+          subspecialityIds: formValues.subspecialityIds.map((subId) => String(subId)).filter(Boolean),
           availableOnline: formValues.availableOnline,
           imageFile: null,
         });
@@ -688,11 +683,8 @@ const EditDoctorPage = () => {
                               void loadDepartmentSubspecialities("");
                               return;
                             }
-                            void loadDepartmentSubspecialities(next).then((subs) => {
-                              setFieldValue(
-                                "subspecialityIds",
-                                subs.map((sub) => String(sub._id)).filter(Boolean),
-                              );
+                            void loadDepartmentSubspecialities(next).then(() => {
+                              setFieldValue("subspecialityIds", []);
                             });
                           }}
                           className="w-full h-11 px-3 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:border-burgundy focus:ring-2 focus:ring-burgundy/20 transition-all"

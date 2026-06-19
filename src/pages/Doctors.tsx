@@ -10,9 +10,11 @@ import {
   Star,
   ExternalLink,
   Pencil,
+  Trash2,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Loader from "@/components/SkeletonLoader";
+import AlertBox from "@/components/AlertBox";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import {
@@ -20,12 +22,15 @@ import {
   getFeaturedDoctorIds,
   syncFeaturedDoctors,
   mapApiDoctorToListItem,
+  deleteDoctor,
   type ApiDoctor,
   type DoctorListItem,
 } from "@/api/doctors";
 import { getDepartments, mapApiDepartmentToListItem } from "@/api/department";
 import { matchesDoctorSearch } from "@/lib/doctorSearch";
 import { sortDoctorsAlphabetically } from "@/lib/doctorSort";
+import { PERMISSIONS } from "@/constants/permissions";
+import PermissionGate, { hasPermission } from "@/utils/PermissionGate";
 
 const Doctors = () => {
   const [doctors, setDoctors] = useState<DoctorListItem[]>([]);
@@ -39,6 +44,9 @@ const Doctors = () => {
   const [isFeatureMode, setIsFeatureMode] = useState(false);
   const [selectedDoctors, setSelectedDoctors] = useState<Set<string>>(new Set());
   const [savingFeatured, setSavingFeatured] = useState(false);
+  const [doctorToDelete, setDoctorToDelete] = useState<DoctorListItem | null>(null);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const navigate = useNavigate();
 
@@ -155,6 +163,29 @@ const Doctors = () => {
   const cancelFeatureMode = () => {
     setIsFeatureMode(false);
     setSelectedDoctors(new Set());
+  };
+
+  const handleDeleteClick = (doctor: DoctorListItem) => {
+    if (!hasPermission(PERMISSIONS.DOCTOR_DELETE)) return;
+    setDoctorToDelete(doctor);
+    setDeleteOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!doctorToDelete || !hasPermission(PERMISSIONS.DOCTOR_DELETE)) return;
+    setIsDeleting(true);
+    try {
+      await deleteDoctor(doctorToDelete._id);
+      await fetchDoctors();
+      toast.success(`"${doctorToDelete.name}" deleted successfully`);
+      setDeleteOpen(false);
+      setDoctorToDelete(null);
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } } };
+      toast.error(err?.response?.data?.message || "Failed to delete doctor");
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const getPageNumbers = () => {
@@ -438,6 +469,20 @@ const Doctors = () => {
                               <Pencil size={12} />
                               Edit
                             </button>
+                            <PermissionGate permission={PERMISSIONS.DOCTOR_DELETE}>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteClick(doctor);
+                                }}
+                                className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-red-200 text-red-600 text-xs font-medium hover:bg-red-50 transition-colors"
+                                aria-label={`Delete ${doctor.name}`}
+                              >
+                                <Trash2 size={12} />
+                                Delete
+                              </button>
+                            </PermissionGate>
                           </div>
                         )}
                       </div>
@@ -489,6 +534,19 @@ const Doctors = () => {
           </div>
         </div>
       </div>
+
+      <AlertBox
+        isOpen={deleteOpen}
+        onClose={() => {
+          if (isDeleting) return;
+          setDeleteOpen(false);
+          setDoctorToDelete(null);
+        }}
+        onConfirm={confirmDelete}
+        title="Delete Doctor"
+        message={`Are you sure you want to delete "${doctorToDelete?.name}"? This action cannot be undone.`}
+        isDeleting={isDeleting}
+      />
     </AdminLayout>
   );
 };
