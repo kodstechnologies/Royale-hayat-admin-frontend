@@ -26,6 +26,70 @@ export const createEmptyExpertiseSection = (): ExpertiseSectionForm => ({
   pointsAr: [""],
 });
 
+export const isExpertiseSectionHeading = (value: string) =>
+  /[:：]\s*$/.test(String(value ?? "").trim());
+
+const stripHeadingColon = (value: string) =>
+  String(value ?? "").trim().replace(/[:：]\s*$/, "");
+
+const normalizePointRows = (rows: string[]) => {
+  const trimmed = rows.map((row) => String(row).trim());
+  return trimmed.length ? trimmed : [""];
+};
+
+const promoteLeadingHeading = (heading: string, rows: string[]) => {
+  if (heading.trim()) {
+    return { heading: heading.trim(), rows: normalizePointRows(rows) };
+  }
+
+  const trimmedRows = rows.map((row) => String(row).trim());
+  const firstNonEmptyIndex = trimmedRows.findIndex(Boolean);
+  if (firstNonEmptyIndex === -1) {
+    return { heading: "", rows: [""] };
+  }
+
+  const first = trimmedRows[firstNonEmptyIndex];
+  if (!isExpertiseSectionHeading(first)) {
+    return { heading: "", rows: normalizePointRows(rows) };
+  }
+
+  const remaining = trimmedRows.slice(firstNonEmptyIndex + 1);
+
+  return {
+    heading: first.trim(),
+    rows: remaining.length ? remaining : [""],
+  };
+};
+
+const dedupeHeadingFromPoints = (heading: string, points: string[]) => {
+  const normalizedHeading = stripHeadingColon(heading).toLowerCase();
+  if (!normalizedHeading) {
+    return points.map((point) => point.trim()).filter(Boolean);
+  }
+
+  return points
+    .map((point) => point.trim())
+    .filter((point) => {
+      if (!point) return false;
+      return stripHeadingColon(point).toLowerCase() !== normalizedHeading;
+    });
+};
+
+export const normalizeExpertiseSectionForForm = (
+  section: ExpertiseSectionForm,
+): ExpertiseSectionForm => {
+  const english = promoteLeadingHeading(section.subHeading, section.points);
+  const arabic = promoteLeadingHeading(section.subHeadingAr, section.pointsAr);
+
+  return {
+    ...(section.id ? { id: section.id } : {}),
+    subHeading: english.heading,
+    subHeadingAr: arabic.heading,
+    points: english.rows,
+    pointsAr: arabic.rows,
+  };
+};
+
 export type DoctorFormValues = {
   doctorId: string;
   name: string;
@@ -52,7 +116,7 @@ export const buildDoctorFormData = (
   deptSubspecialities: DeptSubspecialityOption[],
 ): FormData => {
   const selectedSubs = deptSubspecialities.filter((sub) =>
-    values.subspecialityIds.includes(sub._id),
+    values.subspecialityIds.some((id) => String(id) === String(sub._id)),
   );
 
   const formData = new FormData();
@@ -72,13 +136,22 @@ export const buildDoctorFormData = (
   appendJsonArray(formData, "qualificationsAr", toItems(values.arabicQualifications));
 
   const expertisePayload = values.expertiseSections
-    .map((section) => ({
-      ...(section.id && /^[0-9a-fA-F]{24}$/i.test(section.id) ? { id: section.id } : {}),
-      subHeading: section.subHeading.trim(),
-      subHeadingAr: section.subHeadingAr.trim(),
-      points: section.points.map((point) => point.trim()).filter(Boolean),
-      pointsAr: section.pointsAr.map((point) => point.trim()).filter(Boolean),
-    }))
+    .map((section) => {
+      const subHeading = section.subHeading.trim();
+      const subHeadingAr = section.subHeadingAr.trim();
+      const points = dedupeHeadingFromPoints(subHeading, section.points);
+      const pointsAr = dedupeHeadingFromPoints(subHeadingAr, section.pointsAr);
+      const sectionId =
+        section.id && /^[0-9a-fA-F]{24}$/i.test(section.id) ? section.id : undefined;
+
+      return {
+        ...(sectionId ? { id: sectionId, _id: sectionId } : {}),
+        subHeading,
+        subHeadingAr,
+        points,
+        pointsAr,
+      };
+    })
     .filter(
       (section) =>
         section.subHeading ||

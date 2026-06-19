@@ -28,12 +28,11 @@ const ExpertiseSectionsEditor = ({
 }: ExpertiseSectionsEditorProps) => {
   const isArabic = lang === "arabic";
   const safeSections = sections.length ? sections : [emptySection()];
-  const headingField = isArabic ? "subHeadingAr" : "subHeading";
   const pointsField = isArabic ? "pointsAr" : "points";
 
   const updateSection = (index: number, patch: Partial<ExpertiseSectionForm>) => {
     const next = safeSections.map((section, i) =>
-      i === index ? { ...section, ...patch } : section,
+      i === index ? { ...section, ...patch } : { ...section },
     );
     onChange(next);
   };
@@ -99,7 +98,7 @@ const ExpertiseSectionsEditor = ({
       <div className="space-y-6">
         {safeSections.map((section, sectionIndex) => (
           <div
-            key={`expertise-section-${sectionIndex}`}
+            key={section.id ?? `expertise-section-${sectionIndex}`}
             className="rounded-xl border border-slate-200 bg-slate-50/40 p-4 space-y-4"
           >
             <div className="flex items-center justify-between gap-3">
@@ -123,9 +122,14 @@ const ExpertiseSectionsEditor = ({
                 {isArabic ? "العنوان الفرعي" : "Sub-heading"}
               </label>
               <Input
-                value={section[headingField]}
+                value={isArabic ? section.subHeadingAr ?? "" : section.subHeading ?? ""}
                 onChange={(e) =>
-                  updateSection(sectionIndex, { [headingField]: e.target.value })
+                  updateSection(
+                    sectionIndex,
+                    isArabic
+                      ? { subHeadingAr: e.target.value }
+                      : { subHeading: e.target.value },
+                  )
                 }
                 placeholder={isArabic ? "مثال: مجالات الخبرة:" : "e.g. Areas of expertise:"}
                 className="h-11"

@@ -9,6 +9,7 @@ import {
   XCircle,
   Star,
   ExternalLink,
+  Pencil,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Loader from "@/components/SkeletonLoader";
@@ -24,6 +25,7 @@ import {
 } from "@/api/doctors";
 import { getDepartments, mapApiDepartmentToListItem } from "@/api/department";
 import { matchesDoctorSearch } from "@/lib/doctorSearch";
+import { sortDoctorsAlphabetically } from "@/lib/doctorSort";
 
 const Doctors = () => {
   const [doctors, setDoctors] = useState<DoctorListItem[]>([]);
@@ -83,7 +85,7 @@ const Doctors = () => {
           ? mapped.filter((doctor) => matchesDoctorSearch(doctor, search))
           : mapped;
 
-      setDoctors(filtered);
+      setDoctors(sortDoctorsAlphabetically(filtered));
     } catch (error: unknown) {
       const err = error as { response?: { data?: { message?: string } } };
       toast.error(err?.response?.data?.message || "Failed to load doctors");
@@ -424,6 +426,17 @@ const Doctors = () => {
                             >
                               <ExternalLink size={12} />
                               View
+                            </button>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigate(`/doctors/edit/${doctor._id}`, { state: { returnTo: "list" } });
+                              }}
+                              className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 text-xs font-medium hover:bg-slate-50 transition-colors"
+                            >
+                              <Pencil size={12} />
+                              Edit
                             </button>
                           </div>
                         )}

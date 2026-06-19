@@ -41,6 +41,7 @@ const Departments = () => {
       setLoadingCategories(true);
       try {
         const list = await fetchAllCatagories();
+        console.log(list);
         setCategories(list);
       } catch (error) {
         console.error("Error loading categories:", error);

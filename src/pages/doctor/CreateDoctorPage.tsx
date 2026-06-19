@@ -72,6 +72,7 @@ const CreateDoctorPage = () => {
   const [activeTab, setActiveTab] = useState<"english" | "arabic">("english");
   const [departments, setDepartments] = useState<Array<{ _id: string; name: string; arabicName: string }>>([]);
   const [deptSubspecialities, setDeptSubspecialities] = useState<DeptSubspecialityOption[]>([]);
+  const [deptSubsLoading, setDeptSubsLoading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState("");
   const [dragActive, setDragActive] = useState(false);
   const [languageInput, setLanguageInput] = useState("");
@@ -95,22 +96,26 @@ const CreateDoctorPage = () => {
     void loadDepartments();
   }, []);
 
-  const loadDepartmentSubspecialities = useCallback(async (departmentId: string) => {
+  const loadDepartmentSubspecialities = useCallback(async (departmentId: string): Promise<DeptSubspecialityOption[]> => {
     if (!departmentId) {
       setDeptSubspecialities([]);
-      return;
+      return [];
     }
+    setDeptSubsLoading(true);
     try {
       const res = await getSubspecialities({ department: departmentId, page: 1, limit: 100 });
       const list = Array.isArray(res.data?.data) ? res.data.data : [];
-      setDeptSubspecialities(
-        list.map((row) => {
-          const mapped = mapApiSubspecialityToListItem(row);
-          return { _id: mapped.id, name: mapped.name, arabicName: mapped.arabicName };
-        }),
-      );
+      const options = list.map((row) => {
+        const mapped = mapApiSubspecialityToListItem(row);
+        return { _id: mapped.id, name: mapped.name, arabicName: mapped.arabicName };
+      });
+      setDeptSubspecialities(options);
+      return options;
     } catch {
       setDeptSubspecialities([]);
+      return [];
+    } finally {
+      setDeptSubsLoading(false);
     }
   }, []);
 
@@ -591,8 +596,17 @@ const CreateDoctorPage = () => {
                           onChange={(e) => {
                             const next = e.target.value;
                             setFieldValue("department", next);
-                            setFieldValue("subspecialityIds", []);
-                            loadDepartmentSubspecialities(next);
+                            if (!next) {
+                              setFieldValue("subspecialityIds", []);
+                              void loadDepartmentSubspecialities("");
+                              return;
+                            }
+                            void loadDepartmentSubspecialities(next).then((subs) => {
+                              setFieldValue(
+                                "subspecialityIds",
+                                subs.map((sub) => String(sub._id)).filter(Boolean),
+                              );
+                            });
                           }}
                           className="w-full h-11 px-3 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:border-burgundy focus:ring-2 focus:ring-burgundy/20 transition-all"
                         >
@@ -627,7 +641,9 @@ const CreateDoctorPage = () => {
                           Subspecialities <span className="text-slate-400 font-normal">(optional, multi-select)</span>
                         </label>
                         <div className="max-h-48 overflow-y-auto rounded-xl border border-slate-200 bg-slate-50/30 p-3 space-y-2">
-                          {deptSubspecialities.length === 0 ? (
+                          {deptSubsLoading ? (
+                            <p className="text-sm text-slate-500 px-2 py-2">Loading subspecialities…</p>
+                          ) : deptSubspecialities.length === 0 ? (
                             <p className="text-sm text-amber-600 px-2 py-2">
                               This department has no linked subspecialities. Add them on the department edit screen.
                             </p>
@@ -637,7 +653,9 @@ const CreateDoctorPage = () => {
                                 <input
                                   type="checkbox"
                                   className="rounded border-slate-300 text-burgundy focus:ring-burgundy"
-                                  checked={values.subspecialityIds.includes(s._id)}
+                                  checked={values.subspecialityIds.some(
+                                    (selectedId) => String(selectedId) === String(s._id),
+                                  )}
                                   onChange={() => setFieldValue("subspecialityIds", toggleSubId(s._id, values.subspecialityIds))}
                                 />
                                 <span className="text-sm text-slate-700">{getSubspecialityDisplayName(s)}</span>

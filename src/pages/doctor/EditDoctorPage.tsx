@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { Formik, Form, Field, ErrorMessage } from "formik";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { toast } from "sonner";
 import { Plus, Trash2, ArrowLeft, Upload, X, Globe, Languages, Award, GraduationCap } from "lucide-react";
 import AdminLayout from "@/components/layout/AdminLayout";
@@ -24,6 +24,11 @@ import {
   type DeptSubspecialityOption,
   type DoctorFormValues,
 } from "@/lib/doctorForm";
+import {
+  getDoctorEditBackLabel,
+  getDoctorEditBackPath,
+  type DoctorEditLocationState,
+} from "@/lib/doctorNavigation";
 
 
 const toItems = (value: string) => value.split(SEPARATOR).map((v) => v.trim()).filter(Boolean);
@@ -49,15 +54,19 @@ const toCommaSeparated = (rows: string[]) =>
     .join(SEPARATOR);
 
 const toggleSubId = (id: string, current: string[]) => {
-  const next = new Set(current);
-  if (next.has(id)) next.delete(id);
-  else next.add(id);
-  return [...next];
+  const sid = String(id);
+  const has = current.some((x) => String(x) === sid);
+  if (has) return current.filter((x) => String(x) !== sid);
+  return [...current, sid];
 };
 
 const EditDoctorPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const editLocationState = location.state as DoctorEditLocationState | null;
+  const backPath = getDoctorEditBackPath(id, editLocationState);
+  const backLabel = getDoctorEditBackLabel(editLocationState);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState<"english" | "arabic">("english");
@@ -104,23 +113,24 @@ const EditDoctorPage = () => {
     void loadDepartments();
   }, []);
 
-  const loadDepartmentSubspecialities = useCallback(async (departmentId: string) => {
+  const loadDepartmentSubspecialities = useCallback(async (departmentId: string): Promise<DeptSubspecialityOption[]> => {
     if (!departmentId) {
       setDeptSubspecialities([]);
-      return;
+      return [];
     }
     setDeptSubsLoading(true);
     try {
       const res = await getSubspecialities({ department: departmentId, page: 1, limit: 100 });
       const list = Array.isArray(res.data?.data) ? res.data.data : [];
-      setDeptSubspecialities(
-        list.map((row) => {
-          const mapped = mapApiSubspecialityToListItem(row);
-          return { _id: mapped.id, name: mapped.name, arabicName: mapped.arabicName };
-        }),
-      );
+      const options = list.map((row) => {
+        const mapped = mapApiSubspecialityToListItem(row);
+        return { _id: mapped.id, name: mapped.name, arabicName: mapped.arabicName };
+      });
+      setDeptSubspecialities(options);
+      return options;
     } catch {
       setDeptSubspecialities([]);
+      return [];
     } finally {
       setDeptSubsLoading(false);
     }
@@ -133,11 +143,13 @@ const EditDoctorPage = () => {
 
       try {
         const response = await getDoctorById(id);
+        console.log(response.data);
+
         const raw = (response.data?.data ?? response.data) as ApiDoctor | undefined;
 
         if (!raw || !raw._id) {
           toast.error("Doctor not found.");
-          navigate("/doctors");
+          navigate(backPath);
           return;
         }
 
@@ -158,6 +170,12 @@ const EditDoctorPage = () => {
         }
 
         const formValues = mapApiDoctorToFormValues(raw, subsForDept);
+        const departmentId = deptId || formValues.department;
+        const subspecialityIds =
+          departmentId && subsForDept.length > 0
+            ? subsForDept.map((sub) => String(sub._id)).filter(Boolean)
+            : formValues.subspecialityIds.map((subId) => String(subId)).filter(Boolean);
+
         setInitialValues({
           doctorId: formValues.doctorId,
           name: formValues.name,
@@ -169,8 +187,8 @@ const EditDoctorPage = () => {
           arabicTitle: formValues.arabicTitle,
           arabicLanguages: formValues.arabicLanguages,
           arabicQualifications: formValues.arabicQualifications,
-          department: formValues.department,
-          subspecialityIds: formValues.subspecialityIds,
+          department: departmentId,
+          subspecialityIds,
           availableOnline: formValues.availableOnline,
           imageFile: null,
         });
@@ -179,14 +197,14 @@ const EditDoctorPage = () => {
       } catch (error: unknown) {
         const err = error as { response?: { data?: { message?: string } } };
         toast.error(err?.response?.data?.message || "Failed to load doctor");
-        navigate("/doctors");
+        navigate(backPath);
       } finally {
         setLoading(false);
       }
     };
 
     void loadData();
-  }, [id, navigate, loadDepartmentSubspecialities]);
+  }, [id, navigate, loadDepartmentSubspecialities, backPath]);
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
@@ -243,9 +261,9 @@ const EditDoctorPage = () => {
             <div className="flex items-start gap-3 mb-4 sm:mb-6">
               <button
                 type="button"
-                onClick={() => navigate("/doctors")}
+                onClick={() => navigate(backPath)}
                 className="p-2 rounded-xl hover:bg-slate-100 transition-all duration-200 group shrink-0"
-                aria-label="Back to doctors"
+                aria-label={backLabel}
               >
                 <ArrowLeft className="h-5 w-5 text-slate-500 group-hover:text-burgundy" />
               </button>
@@ -290,7 +308,7 @@ const EditDoctorPage = () => {
             </div>
 
             <Formik
-              enableReinitialize
+              key={id}
               initialValues={initialValues}
               validate={(values) => {
                 const errors: Partial<Record<keyof DoctorFormValues, string>> = {};
@@ -308,7 +326,7 @@ const EditDoctorPage = () => {
                   const formData = buildDoctorFormData(values, deptSubspecialities);
                   await editDoctor(id, formData);
                   toast.success("Doctor updated successfully");
-                  navigate("/doctors");
+                  navigate(backPath);
                 } catch (error: unknown) {
                   const err = error as {
                     response?: { data?: { message?: string; meta?: string[] } };
@@ -665,8 +683,17 @@ const EditDoctorPage = () => {
                           onChange={(e) => {
                             const next = e.target.value;
                             setFieldValue("department", next);
-                            setFieldValue("subspecialityIds", []);
-                            loadDepartmentSubspecialities(next);
+                            if (!next) {
+                              setFieldValue("subspecialityIds", []);
+                              void loadDepartmentSubspecialities("");
+                              return;
+                            }
+                            void loadDepartmentSubspecialities(next).then((subs) => {
+                              setFieldValue(
+                                "subspecialityIds",
+                                subs.map((sub) => String(sub._id)).filter(Boolean),
+                              );
+                            });
                           }}
                           className="w-full h-11 px-3 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:border-burgundy focus:ring-2 focus:ring-burgundy/20 transition-all"
                         >
@@ -713,7 +740,9 @@ const EditDoctorPage = () => {
                                 <input
                                   type="checkbox"
                                   className="rounded border-slate-300 text-burgundy focus:ring-burgundy"
-                                  checked={values.subspecialityIds.includes(s._id)}
+                                  checked={values.subspecialityIds.some(
+                                    (selectedId) => String(selectedId) === String(s._id),
+                                  )}
                                   onChange={() => setFieldValue("subspecialityIds", toggleSubId(s._id, values.subspecialityIds))}
                                 />
                                 <span className="text-sm text-slate-700">{getSubspecialityDisplayName(s)}</span>
@@ -780,7 +809,7 @@ const EditDoctorPage = () => {
 
                   
                   <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-4 border-t border-slate-100">
-                    <Button variant="outline" onClick={() => navigate("/doctors")} className="gap-2 w-full sm:w-auto">
+                    <Button variant="outline" onClick={() => navigate(backPath)} className="gap-2 w-full sm:w-auto">
                       Cancel
                     </Button>
                     <Button type="submit" disabled={saving} className="gap-2 w-full sm:w-auto bg-burgundy hover:bg-burgundy/90">

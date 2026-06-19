@@ -1,6 +1,7 @@
 import api from "./axiosInstance";
 import {
   createEmptyExpertiseSection,
+  normalizeExpertiseSectionForForm,
   type DeptSubspecialityOption,
   type ExpertiseSectionForm,
 } from "@/lib/doctorForm";
@@ -176,22 +177,26 @@ const mapExpertiseToFormSections = (row: ApiDoctor): ExpertiseSectionForm[] => {
     const structured = expertise.every((item) => typeof item === "object" && item !== null);
 
     if (structured) {
-      return (expertise as ApiExpertise[]).map((item) => ({
-        id: item._id ? String(item._id) : undefined,
-        subHeading: String(item.subHeading ?? ""),
-        subHeadingAr: String(item.subHeadingAr ?? ""),
-        points: item.points?.length ? item.points : [""],
-        pointsAr: item.pointsAr?.length ? item.pointsAr : [""],
-      }));
+      return (expertise as ApiExpertise[]).map((item) =>
+        normalizeExpertiseSectionForForm({
+          id: item._id ? String(item._id) : undefined,
+          subHeading: String(item.subHeading ?? ""),
+          subHeadingAr: String(item.subHeadingAr ?? ""),
+          points: item.points?.length ? item.points.map((point) => String(point)) : [""],
+          pointsAr: item.pointsAr?.length ? item.pointsAr.map((point) => String(point)) : [""],
+        }),
+      );
     }
 
     return [
-      {
+      normalizeExpertiseSectionForForm({
         subHeading: "",
         subHeadingAr: "",
-        points: (expertise as string[]).length ? (expertise as string[]) : [""],
-        pointsAr: row.expertiseAr?.length ? row.expertiseAr : [""],
-      },
+        points: (expertise as string[]).length
+          ? (expertise as string[]).map((point) => String(point))
+          : [""],
+        pointsAr: row.expertiseAr?.length ? row.expertiseAr.map((point) => String(point)) : [""],
+      }),
     ];
   }
 
@@ -204,6 +209,13 @@ const resolveDepartment = (department: ApiDoctor["department"]) => {
       departmentId: String(department._id ?? ""),
       departmentName: String(department.name ?? ""),
       departmentNameAr: String(department.arabicName ?? department.name ?? ""),
+    };
+  }
+  if (typeof department === "string" && department.trim()) {
+    return {
+      departmentId: department.trim(),
+      departmentName: "",
+      departmentNameAr: "",
     };
   }
   return { departmentId: "", departmentName: "", departmentNameAr: "" };
@@ -277,7 +289,7 @@ export const mapApiDoctorToFormValues = (
         row.subspecialities?.includes(sub.name) ||
         row.subspecialitiesAr?.includes(sub.arabicName),
     )
-    .map((sub) => sub._id);
+    .map((sub) => String(sub._id));
 
   return {
     doctorId: String(row.doctorId ?? ""),

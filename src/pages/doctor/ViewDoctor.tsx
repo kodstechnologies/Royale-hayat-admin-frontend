@@ -34,7 +34,7 @@ const renderBulletItem = (item: string, idx: number, isArabic: boolean) => (
     <span className="flex-1">{item}</span>
   </div>
 );
-
+console.log("ViewDoctor");
 const ViewDoctor = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -319,7 +319,7 @@ const ViewDoctor = () => {
                     {activeLanguage === "english" ? "View All Doctors" : "عرض جميع الأطباء"}
                   </Button>
                   <Button
-                    onClick={() => navigate(`/doctors/edit/${id}`)}
+                    onClick={() => navigate(`/doctors/edit/${id}`, { state: { returnTo: "view" } })}
                     className="w-full sm:flex-1 gap-2 bg-burgundy hover:bg-burgundy/90"
                   >
                     <Pencil className="h-4 w-4" />
