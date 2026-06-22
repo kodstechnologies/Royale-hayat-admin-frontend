@@ -393,7 +393,7 @@ const Subspecialities = () => {
                                       <Eye className="h-4 w-4" />
                                     </Link>
                                   </Button>
-                                  {/* <PermissionGate permission={PERMISSIONS.SUBSPECIALITY_UPDATE}>
+                                  <PermissionGate permission={PERMISSIONS.SUBSPECIALITY_UPDATE}>
                                     <Button
                                       asChild
                                       variant="ghost"
@@ -405,7 +405,7 @@ const Subspecialities = () => {
                                         <Pencil className="h-4 w-4" />
                                       </Link>
                                     </Button>
-                                  </PermissionGate> */}
+                                  </PermissionGate>
                                 </div>
                               </td>
                             </tr>

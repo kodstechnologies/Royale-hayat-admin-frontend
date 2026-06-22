@@ -458,17 +458,15 @@ const SubspecialityForm = ({ mode, subspecialityId }: Props) => {
                                         <div className="absolute -top-2 -left-2 bg-burgundy/10 text-burgundy text-xs px-2 py-0.5 rounded-full">
                                             Section
                                         </div>
-                                        <div className="flex justify-end">
-                                            <Button
-                                                type="button"
-                                                variant="ghost"
-                                                size="icon"
-                                                onClick={() => removeCustomSection(block.key)}
-                                                className="h-7 w-7 text-red-500 hover:text-red-600 hover:bg-red-50"
-                                            >
-                                                <Trash2 className="h-3.5 w-3.5" />
-                                            </Button>
-                                        </div>
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="icon"
+                                            onClick={() => removeCustomSection(block.key)}
+                                            className="absolute -top-3 -right-3 z-10 h-8 w-8 rounded-full border border-slate-200 bg-white text-red-500 shadow-sm hover:text-red-600 hover:bg-red-50 hover:border-red-200"
+                                        >
+                                            <Trash2 className="h-3.5 w-3.5" />
+                                        </Button>
 
                                         <div>
                                             <label className="text-xs font-medium text-slate-600 block mb-1">Heading</label>
@@ -627,17 +625,15 @@ const SubspecialityForm = ({ mode, subspecialityId }: Props) => {
                                         <div className="absolute -top-2 -left-2 bg-burgundy/10 text-burgundy text-xs px-2 py-0.5 rounded-full">
                                             Section
                                         </div>
-                                        <div className="flex justify-end">
-                                            <Button
-                                                type="button"
-                                                variant="ghost"
-                                                size="icon"
-                                                onClick={() => removeCustomSection(block.key)}
-                                                className="h-7 w-7 text-red-500 hover:text-red-600 hover:bg-red-50"
-                                            >
-                                                <Trash2 className="h-3.5 w-3.5" />
-                                            </Button>
-                                        </div>
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="icon"
+                                            onClick={() => removeCustomSection(block.key)}
+                                            className="absolute -top-3 -right-3 z-10 h-8 w-8 rounded-full border border-slate-200 bg-white text-red-500 shadow-sm hover:text-red-600 hover:bg-red-50 hover:border-red-200"
+                                        >
+                                            <Trash2 className="h-3.5 w-3.5" />
+                                        </Button>
                                         <div>
                                             <label className="text-xs font-medium text-slate-600 block mb-1">Heading (Arabic)</label>
                                             <Input
