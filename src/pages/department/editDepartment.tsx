@@ -36,7 +36,11 @@ const EditDepartmentPage = () => {
       setLoadingCategories(true);
       try {
         const list = await fetchAllCatagories();
-        setCategories(list);
+        setCategories(
+          [...list].sort((a, b) =>
+            a.name.localeCompare(b.name, "en", { sensitivity: "base" }),
+          ),
+        );
       } catch (error) {
         console.error("Error loading categories:", error);
         toast.error("Failed to load categories");

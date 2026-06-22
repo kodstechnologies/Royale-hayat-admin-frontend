@@ -84,10 +84,12 @@ const CreateDoctorPage = () => {
         const res = await getDepartments({ page: 1, limit: 100, sortBy: "order", sortOrder: "asc" });
         const list = Array.isArray(res.data?.data) ? res.data.data : [];
         setDepartments(
-          list.map((row) => {
-            const mapped = mapApiDepartmentToListItem(row);
-            return { _id: mapped._id, name: mapped.name, arabicName: mapped.nameAr };
-          }),
+          list
+            .map((row) => {
+              const mapped = mapApiDepartmentToListItem(row);
+              return { _id: mapped._id, name: mapped.name, arabicName: mapped.nameAr };
+            })
+            .sort((a, b) => a.name.localeCompare(b.name, "en", { sensitivity: "base" })),
         );
       } catch {
         setDepartments([]);
