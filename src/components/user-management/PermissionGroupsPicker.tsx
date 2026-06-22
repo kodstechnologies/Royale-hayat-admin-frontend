@@ -15,8 +15,8 @@ type PermissionGroupsPickerProps = {
   onClearAll: () => void;
 };
 
-/** Categories, departments, subspecialities: assign view only in user management. */
-const VIEW_ONLY_GROUP_IDS = new Set([
+/** Categories, departments, subspecialities: assign view and delete in user management. */
+const LIMITED_PERMISSION_GROUP_IDS = new Set([
   "categories",
   "departments",
   "subspecialities",
@@ -25,12 +25,17 @@ const VIEW_ONLY_GROUP_IDS = new Set([
 const isViewPermissionKey = (key: string): boolean =>
   key.endsWith(".view") || key.endsWith(".view.all");
 
+const isViewOrDeletePermissionKey = (key: string): boolean =>
+  isViewPermissionKey(key) || key.endsWith(".delete");
+
 const getAssignableGroupPermissions = (
   groupId: string,
   permissions: { key: string; label: string }[],
 ) => {
-  if (!VIEW_ONLY_GROUP_IDS.has(groupId)) return permissions;
-  return permissions.filter((permission) => isViewPermissionKey(permission.key));
+  if (!LIMITED_PERMISSION_GROUP_IDS.has(groupId)) return permissions;
+  return permissions.filter((permission) =>
+    isViewOrDeletePermissionKey(permission.key),
+  );
 };
 
 const PermissionGroupsPicker = ({

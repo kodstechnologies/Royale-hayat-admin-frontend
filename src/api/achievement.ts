@@ -16,6 +16,7 @@ export type ApiAchievement = {
   visibilityStatus: "show" | "hide";
   createdAt: string;
   updatedAt?: string;
+  date?: string;
 };
 
 export type GetAchievementsParams = {

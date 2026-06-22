@@ -9,7 +9,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft, Save, Globe, Languages, User, Award, FileText, CheckCircle, AlertCircle, Upload, X, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { getAchievementById, updateAchievement } from "@/api/achievement";
-import { buildAchievementFormData, mapApiToAchievement } from "@/data/achievementData";
+import {
+  ACHIEVEMENT_MONTHS,
+  buildAchievementFormData,
+  getAchievementYearOptions,
+  mapApiToAchievement,
+  parseAchievementMonthYear,
+} from "@/data/achievementData";
 
 type AchievementFormData = {
   employeeId: string;
@@ -24,6 +30,8 @@ type AchievementFormData = {
   arabicTitle: string;
   arabicAchievements: string;
   arabicDepartment: string;
+  month: string;
+  year: string;
 };
 
 const EditAchievements = () => {
@@ -59,19 +67,24 @@ const EditAchievements = () => {
     });
   };
 
-  const [formData, setFormData] = useState<AchievementFormData>({
-    employeeId: "",
-    employeeName: "",
-    department: "",
-    title: "",
-    achievements: "",
-    status: "show",
-    imageFile: null,
-    imageUrl: "",
-    arabicEmployeeName: "",
-    arabicTitle: "",
-    arabicAchievements: "",
-    arabicDepartment: "",
+  const [formData, setFormData] = useState<AchievementFormData>(() => {
+    const { month, year } = parseAchievementMonthYear();
+    return {
+      employeeId: "",
+      employeeName: "",
+      department: "",
+      title: "",
+      achievements: "",
+      status: "show",
+      imageFile: null,
+      imageUrl: "",
+      arabicEmployeeName: "",
+      arabicTitle: "",
+      arabicAchievements: "",
+      arabicDepartment: "",
+      month,
+      year,
+    };
   });
 
   useEffect(() => {
@@ -82,6 +95,7 @@ const EditAchievements = () => {
       try {
         const res = await getAchievementById(id);
         const achievement = mapApiToAchievement(res.data);
+        const { month, year } = parseAchievementMonthYear(achievement.date);
         setFormData({
           employeeId: achievement.employeeId,
           employeeName: achievement.employeeName,
@@ -95,6 +109,8 @@ const EditAchievements = () => {
           arabicTitle: achievement.arabicTitle || "",
           arabicAchievements: achievement.arabicDescription || "",
           arabicDepartment: achievement.arabicDepartment || "",
+          month,
+          year,
         });
         setStatus(achievement.status === "published" ? "show" : "hide");
         setPreviewUrl(achievement.image || "");
@@ -187,6 +203,8 @@ const EditAchievements = () => {
         arabicAchievements: formData.arabicAchievements,
         visibilityStatus: status,
         imageFile: formData.imageFile,
+        month: formData.month,
+        year: formData.year,
       });
 
       await updateAchievement(id, formPayload);
@@ -354,7 +372,46 @@ const EditAchievements = () => {
                 </div>
 
                 <div className="space-y-5">
-                  
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    <div className="space-y-2">
+                      <label className="text-sm font-semibold text-slate-700">
+                        Month
+                      </label>
+                      <select
+                        value={formData.month}
+                        onChange={(e) =>
+                          setFormData({ ...formData, month: e.target.value })
+                        }
+                        className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                      >
+                        {ACHIEVEMENT_MONTHS.map((month) => (
+                          <option key={month.value} value={month.value}>
+                            {month.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-semibold text-slate-700">
+                        Year
+                      </label>
+                      <select
+                        value={formData.year}
+                        onChange={(e) =>
+                          setFormData({ ...formData, year: e.target.value })
+                        }
+                        className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                      >
+                        {getAchievementYearOptions().map((year) => (
+                          <option key={year} value={String(year)}>
+                            {year}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
                   <div className="space-y-2">
                     <label className="text-sm font-semibold text-slate-700">
                       Achievement Title <span className="text-red-500">*</span>

@@ -82,6 +82,67 @@ export const linesToAchievementsText = (lines: string[] | string): string => {
   return lines.filter((l) => l.trim()).join("\n");
 };
 
+export const ACHIEVEMENT_MONTHS = [
+  { value: "1", label: "January" },
+  { value: "2", label: "February" },
+  { value: "3", label: "March" },
+  { value: "4", label: "April" },
+  { value: "5", label: "May" },
+  { value: "6", label: "June" },
+  { value: "7", label: "July" },
+  { value: "8", label: "August" },
+  { value: "9", label: "September" },
+  { value: "10", label: "October" },
+  { value: "11", label: "November" },
+  { value: "12", label: "December" },
+] as const;
+
+export const getAchievementYearOptions = (): number[] => {
+  const currentYear = new Date().getFullYear();
+  const years: number[] = [];
+  for (let year = currentYear + 1; year >= currentYear - 15; year -= 1) {
+    years.push(year);
+  }
+  return years;
+};
+
+export const parseAchievementMonthYear = (dateStr?: string) => {
+  if (!dateStr) {
+    const now = new Date();
+    return {
+      month: String(now.getMonth() + 1),
+      year: String(now.getFullYear()),
+    };
+  }
+
+  const date = new Date(dateStr);
+  if (Number.isNaN(date.getTime())) {
+    const now = new Date();
+    return {
+      month: String(now.getMonth() + 1),
+      year: String(now.getFullYear()),
+    };
+  }
+
+  return {
+    month: String(date.getMonth() + 1),
+    year: String(date.getFullYear()),
+  };
+};
+
+export const buildAchievementDateIso = (month: string, year: string): string => {
+  const monthNum = Number(month);
+  const yearNum = Number(year);
+  return new Date(yearNum, monthNum - 1, 1).toISOString();
+};
+
+export const formatAchievementMonthYear = (dateStr?: string): string => {
+  if (!dateStr) return "";
+  const date = new Date(dateStr);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+};
+
 export const mapApiToAchievement = (api: ApiAchievement): Achievement => {
   const description = api.achievements ?? "";
   const arabicDescription = api.arabicAchievements ?? description;
@@ -99,7 +160,10 @@ export const mapApiToAchievement = (api: ApiAchievement): Achievement => {
     arabicDepartment: api.arabicDepartment ?? api.department ?? "",
     division: "",
     arabicDivision: "",
-    date: api.createdAt,
+    date: api.date || api.createdAt,
+    month: api.date
+      ? formatAchievementMonthYear(api.date).split(" ")[0]
+      : undefined,
     status: visibilityToStatus(api.visibilityStatus),
     image: api.image,
     createdAt: api.createdAt,
@@ -120,6 +184,8 @@ export type AchievementFormPayload = {
   arabicAchievements?: string;
   visibilityStatus: "show" | "hide";
   imageFile?: File | null;
+  month: string;
+  year: string;
 };
 
 export const buildAchievementFormData = (payload: AchievementFormPayload): FormData => {
@@ -139,6 +205,7 @@ export const buildAchievementFormData = (payload: AchievementFormPayload): FormD
     formData.append("arabicAchievements", payload.arabicAchievements.trim());
   }
   formData.append("visibilityStatus", payload.visibilityStatus);
+  formData.append("date", buildAchievementDateIso(payload.month, payload.year));
   if (payload.department?.trim()) {
     formData.append("department", payload.department.trim());
   }
