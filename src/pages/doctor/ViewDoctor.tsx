@@ -16,6 +16,8 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { getDoctorById, mapApiDoctorToView, type DoctorViewData } from "@/api/doctors";
 import type { ApiDoctor } from "@/api/doctors";
+import { PERMISSIONS } from "@/constants/permissions";
+import PermissionGate from "@/utils/PermissionGate";
 
 const isSectionSubHeading = (value: string) => /[:：]\s*$/.test(value.trim());
 
@@ -34,7 +36,6 @@ const renderBulletItem = (item: string, idx: number, isArabic: boolean) => (
     <span className="flex-1">{item}</span>
   </div>
 );
-console.log("ViewDoctor");
 const ViewDoctor = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -183,13 +184,7 @@ const ViewDoctor = () => {
                     )}
                   </div>
 
-                  <div
-                    className={`absolute top-6 right-6 px-3 py-1.5 rounded-full text-xs font-medium shadow-lg ${
-                      doctor.isActive ? "bg-green-500 text-white" : "bg-gray-500 text-white"
-                    }`}
-                  >
-                    {doctor.isActive ? "Active" : "Inactive"}
-                  </div>
+             
 
                   <div className={`text-center mt-4 ${activeLanguage === "arabic" ? "rtl-text" : ""}`}>
                     <h2 className="text-xl font-bold text-slate-800 mb-1">
@@ -318,13 +313,15 @@ const ViewDoctor = () => {
                   <Button onClick={() => navigate("/doctors")} variant="outline" className="w-full sm:flex-1">
                     {activeLanguage === "english" ? "View All Doctors" : "عرض جميع الأطباء"}
                   </Button>
-                  <Button
-                    onClick={() => navigate(`/doctors/edit/${id}`, { state: { returnTo: "view" } })}
-                    className="w-full sm:flex-1 gap-2 bg-burgundy hover:bg-burgundy/90"
-                  >
-                    <Pencil className="h-4 w-4" />
-                    {activeLanguage === "english" ? "Edit Doctor" : "تعديل الطبيب"}
-                  </Button>
+                  <PermissionGate permission={PERMISSIONS.DOCTOR_UPDATE}>
+                    <Button
+                      onClick={() => navigate(`/doctors/edit/${id}`, { state: { returnTo: "view" } })}
+                      className="w-full sm:flex-1 gap-2 bg-burgundy hover:bg-burgundy/90"
+                    >
+                      <Pencil className="h-4 w-4" />
+                      {activeLanguage === "english" ? "Edit Doctor" : "تعديل الطبيب"}
+                    </Button>
+                  </PermissionGate>
                 </div>
               </div>
             </div>

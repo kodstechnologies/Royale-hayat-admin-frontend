@@ -3,10 +3,11 @@ import { useNavigate } from "react-router-dom";
 import AdminLayout from "@/components/layout/AdminLayout";
 import BreadCrumb from "@/components/layout/BreadCrumb";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Star, ExternalLink, XCircle, CheckCircle, Globe, Languages } from "lucide-react";
+import { ArrowLeft, Star, StarOff, ExternalLink, XCircle, CheckCircle, Globe, Languages } from "lucide-react";
 import { toast } from "sonner";
 import {
   getFeaturedDoctors,
+  deleteFeaturedDoctor,
   mapFeaturedToListItem,
   type DoctorListItem,
 } from "@/api/doctors";
@@ -17,6 +18,7 @@ const FeaturedDoctors = () => {
   const [loading, setLoading] = useState(true);
   const [featuredDoctors, setFeaturedDoctors] = useState<DoctorListItem[]>([]);
   const [activeLanguage, setActiveLanguage] = useState<"english" | "arabic">("english");
+  const [unfeaturingId, setUnfeaturingId] = useState<string | null>(null);
 
   const loadFeaturedDoctors = useCallback(async () => {
     setLoading(true);
@@ -38,6 +40,30 @@ const FeaturedDoctors = () => {
   useEffect(() => {
     void loadFeaturedDoctors();
   }, [loadFeaturedDoctors]);
+
+  const handleUnfeature = async (doctor: DoctorListItem) => {
+    const featuredRecordId = doctor.featuredRecordId;
+    if (!featuredRecordId) {
+      toast.error("Unable to unfeature this doctor");
+      return;
+    }
+
+    setUnfeaturingId(doctor._id);
+    try {
+      await deleteFeaturedDoctor(featuredRecordId);
+      setFeaturedDoctors((prev) => prev.filter((item) => item._id !== doctor._id));
+      toast.success(
+        activeLanguage === "arabic"
+          ? "تم إلغاء تمييز الطبيب بنجاح"
+          : "Doctor removed from featured list",
+      );
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } } };
+      toast.error(err?.response?.data?.message || "Failed to unfeature doctor");
+    } finally {
+      setUnfeaturingId(null);
+    }
+  };
 
   const getDoctorDisplayName = (doctor: DoctorListItem) =>
     activeLanguage === "arabic" ? formatDoctorDisplayNameAr(doctor) : doctor.name;
@@ -64,6 +90,7 @@ const FeaturedDoctors = () => {
         : "انتقل إلى صفحة الأطباء لتحديد أطباء مميزين",
     featureDoctors: activeLanguage === "english" ? "Feature Doctors" : "تحديد أطباء مميزين",
     viewDetails: activeLanguage === "english" ? "View Details" : "عرض التفاصيل",
+    unfeature: activeLanguage === "english" ? "Unfeature" : "إلغاء التمييز",
     department: activeLanguage === "english" ? "Department" : "القسم",
     title: activeLanguage === "english" ? "Title" : "المسمى",
     onlineBooking: activeLanguage === "english" ? "Online Booking" : "الحجز عبر الإنترنت",
@@ -184,29 +211,11 @@ const FeaturedDoctors = () => {
                             </p>
                           </div>
                         </div>
-                        <span
-                          className={`px-2 py-1 rounded-full text-[10px] font-medium flex items-center gap-1 ${
-                            doctor.isActive
-                              ? "bg-green-100 text-green-700"
-                              : "bg-red-100 text-red-700"
-                          }`}
-                        >
-                          {doctor.isActive ? (
-                            <CheckCircle className="h-3 w-3" />
-                          ) : (
-                            <XCircle className="h-3 w-3" />
-                          )}
-                          {doctor.isActive ? getUIText.active : getUIText.inactive}
-                        </span>
+        
                       </div>
 
                       <div className="space-y-2 mb-4 text-xs">
-                        <div className="flex justify-between">
-                          <span className="text-slate-500">{getUIText.department}</span>
-                          <span className="text-slate-700 font-medium">
-                            {getDepartmentName(doctor.department)}
-                          </span>
-                        </div>
+                       
                         <div className="flex justify-between">
                           <span className="text-slate-500">{getUIText.onlineBooking}</span>
                           <span
@@ -221,14 +230,25 @@ const FeaturedDoctors = () => {
                         </div>
                       </div>
 
-                      <button
-                        type="button"
-                        onClick={() => navigate(`/doctors/view/${doctor._id}`)}
-                        className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 text-xs font-medium hover:bg-slate-50"
-                      >
-                        <ExternalLink size={12} />
-                        {getUIText.viewDetails}
-                      </button>
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => navigate(`/doctors/view/${doctor._id}`)}
+                          className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 text-xs font-medium hover:bg-slate-50"
+                        >
+                          <ExternalLink size={12} />
+                          {getUIText.viewDetails}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => void handleUnfeature(doctor)}
+                          disabled={unfeaturingId === doctor._id}
+                          className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-amber-200 bg-amber-50 text-amber-800 text-xs font-medium hover:bg-amber-100 disabled:opacity-60 disabled:cursor-not-allowed"
+                        >
+                          <StarOff size={12} />
+                          {unfeaturingId === doctor._id ? "..." : getUIText.unfeature}
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ))}

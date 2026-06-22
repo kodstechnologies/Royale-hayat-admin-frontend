@@ -14,9 +14,11 @@ import {
   Loader2,
   Eye,
   Pencil,
+  Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import AlertBox from "@/components/AlertBox";
 import {
   getDepartments,
   mapApiDepartmentToListItem,
@@ -24,6 +26,7 @@ import {
 } from "@/api/department";
 import {
   getSubspecialities,
+  deleteSubspeciality,
   mapApiSubspecialityToListItem,
   type Subspeciality,
   type SubspecialityListItem,
@@ -50,6 +53,10 @@ const Subspecialities = () => {
   const [selectedDepartment, setSelectedDepartment] = useState<string>("all");
   const [departments, setDepartments] = useState<{ id: string; name: string }[]>([]);
   const [loadingDepartments, setLoadingDepartments] = useState(true);
+
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [toDelete, setToDelete] = useState<SubspecialityListItem | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     const loadDepartments = async () => {
@@ -137,6 +144,36 @@ const Subspecialities = () => {
   const clearSearch = () => {
     setSearch("");
     setCurrentPage(1);
+  };
+
+  const confirmDelete = (row: SubspecialityListItem) => {
+    setToDelete(row);
+    setDeleteOpen(true);
+  };
+
+  const runDelete = async () => {
+    if (!toDelete) return;
+
+    setDeleting(true);
+    try {
+      await deleteSubspeciality(toDelete.id);
+      await fetchSubspecialities();
+      toast.success("Subspeciality deleted successfully");
+      setDeleteOpen(false);
+      setToDelete(null);
+
+      const remainingCount = items.filter((item) => item.id !== toDelete.id).length;
+      const newTotalPages = Math.max(1, Math.ceil(remainingCount / limit));
+      if (currentPage > newTotalPages) {
+        setCurrentPage(newTotalPages);
+      }
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } } };
+      console.error("Error deleting subspeciality:", error);
+      toast.error(err?.response?.data?.message || "Failed to delete subspeciality");
+    } finally {
+      setDeleting(false);
+    }
   };
 
   const formatDate = (dateString: string) => {
@@ -320,6 +357,17 @@ const Subspecialities = () => {
                                 </Link>
                               </Button>
                             </PermissionGate>
+                            <PermissionGate permission={PERMISSIONS.SUBSPECIALITY_DELETE}>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => confirmDelete(row)}
+                                className="flex-1 text-red-600 hover:bg-red-50"
+                              >
+                                <Trash2 className="h-4 w-4 mr-1.5" />
+                                Delete
+                              </Button>
+                            </PermissionGate>
                           </div>
                         </article>
                       ))}
@@ -406,6 +454,17 @@ const Subspecialities = () => {
                                       </Link>
                                     </Button>
                                   </PermissionGate>
+                                  <PermissionGate permission={PERMISSIONS.SUBSPECIALITY_DELETE}>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() => confirmDelete(row)}
+                                      className="h-8 w-8 text-slate-500 hover:text-red-600 hover:bg-red-50 transition-all duration-200"
+                                      title="Delete"
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </PermissionGate>
                                 </div>
                               </td>
                             </tr>
@@ -477,6 +536,26 @@ const Subspecialities = () => {
           </div>
         </div>
       </div>
+
+      <AlertBox
+        isOpen={deleteOpen}
+        title="Delete Subspeciality"
+        message={
+          toDelete
+            ? `Are you sure you want to delete "${toDelete.name}"? This action cannot be undone.`
+            : ""
+        }
+        confirmText="Delete"
+        cancelText="Cancel"
+        isDeleting={deleting}
+        onClose={() => {
+          if (!deleting) {
+            setDeleteOpen(false);
+            setToDelete(null);
+          }
+        }}
+        onConfirm={runDelete}
+      />
     </AdminLayout>
   );
 };

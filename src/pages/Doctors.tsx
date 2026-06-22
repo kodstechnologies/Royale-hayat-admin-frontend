@@ -223,49 +223,57 @@ const Doctors = () => {
               <div className="flex flex-col sm:flex-row flex-wrap gap-2 w-full sm:w-auto">
                 {!isFeatureMode ? (
                   <>
-                    <Button
-                      onClick={handleFeatureDoctorMode}
-                      className="gap-2 w-full sm:w-auto bg-amber-600 hover:bg-amber-700 shadow-md hover:shadow-lg transition-all duration-200"
-                    >
-                      <Star className="h-4 w-4" />
-                      Feature Doctors
-                    </Button>
-                    <Button
-                      onClick={() => navigate("/featured-doctors")}
-                      variant="outline"
-                      className="gap-2 w-full sm:w-auto"
-                    >
-                      <Star className="h-4 w-4" />
-                      View Featured
-                    </Button>
-                    <Button
-                      onClick={() => navigate("/doctors/create")}
-                      className="gap-2 w-full sm:w-auto bg-burgundy hover:bg-burgundy/90 shadow-md hover:shadow-lg transition-all duration-200"
-                    >
-                      <Plus className="h-4 w-4" />
-                      Create Doctor
-                    </Button>
+                    <PermissionGate permission={PERMISSIONS.DOCTOR_UPDATE}>
+                      <Button
+                        onClick={handleFeatureDoctorMode}
+                        className="gap-2 w-full sm:w-auto bg-amber-600 hover:bg-amber-700 shadow-md hover:shadow-lg transition-all duration-200"
+                      >
+                        <Star className="h-4 w-4" />
+                        Feature Doctors
+                      </Button>
+                    </PermissionGate>
+                    <PermissionGate permission={PERMISSIONS.DOCTOR_VIEW}>
+                      <Button
+                        onClick={() => navigate("/featured-doctors")}
+                        variant="outline"
+                        className="gap-2 w-full sm:w-auto"
+                      >
+                        <Star className="h-4 w-4" />
+                        View Featured
+                      </Button>
+                    </PermissionGate>
+                    <PermissionGate permission={PERMISSIONS.DOCTOR_CREATE}>
+                      <Button
+                        onClick={() => navigate("/doctors/create")}
+                        className="gap-2 w-full sm:w-auto bg-burgundy hover:bg-burgundy/90 shadow-md hover:shadow-lg transition-all duration-200"
+                      >
+                        <Plus className="h-4 w-4" />
+                        Create Doctor
+                      </Button>
+                    </PermissionGate>
                   </>
                 ) : (
-                  <>
-                    <Button
-                      onClick={handleSaveFeaturedDoctors}
-                      disabled={savingFeatured}
-                      className="gap-2 w-full sm:w-auto bg-green-600 hover:bg-green-700"
-                    >
-                      <CheckCircle className="h-4 w-4" />
-                      Save Featured ({selectedDoctors.size})
-                    </Button>
-                    <Button
-                      onClick={cancelFeatureMode}
-                      variant="outline"
-                      disabled={savingFeatured}
-                      className="gap-2 w-full sm:w-auto"
-                    >
-                      <X className="h-4 w-4" />
-                      Cancel
-                    </Button>
-                  </>
+                  <PermissionGate permission={PERMISSIONS.DOCTOR_UPDATE}>
+                    <>
+                      <Button
+                        onClick={handleSaveFeaturedDoctors}
+                        disabled={savingFeatured}
+                        className="gap-2 w-full sm:w-auto bg-green-600 hover:bg-green-700"
+                      >
+                        <CheckCircle className="h-4 w-4" />
+                        Save Featured ({selectedDoctors.size})
+                      </Button>
+                      <Button
+                        onClick={cancelFeatureMode}
+                        variant="outline"
+                        disabled={savingFeatured}
+                        className="gap-2 w-full sm:w-auto"
+                      >
+                        <X className="h-4 w-4" />
+                        Cancel
+                      </Button>
+                    </>
+                  </PermissionGate>
                 )}
               </div>
             </div>
@@ -340,13 +348,15 @@ const Doctors = () => {
             ) : paginatedDoctors.length === 0 ? (
               <div className="text-center py-16">
                 <p className="text-slate-500 font-medium">No doctors found</p>
-                <Button
-                  onClick={() => navigate("/doctors/create")}
-                  className="mt-4 gap-2 bg-burgundy hover:bg-burgundy/90"
-                >
-                  <Plus className="h-4 w-4" />
-                  Create Doctor
-                </Button>
+                <PermissionGate permission={PERMISSIONS.DOCTOR_CREATE}>
+                  <Button
+                    onClick={() => navigate("/doctors/create")}
+                    className="mt-4 gap-2 bg-burgundy hover:bg-burgundy/90"
+                  >
+                    <Plus className="h-4 w-4" />
+                    Create Doctor
+                  </Button>
+                </PermissionGate>
               </div>
             ) : (
               <>
@@ -458,17 +468,19 @@ const Doctors = () => {
                               <ExternalLink size={12} />
                               View
                             </button>
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                navigate(`/doctors/edit/${doctor._id}`, { state: { returnTo: "list" } });
-                              }}
-                              className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 text-xs font-medium hover:bg-slate-50 transition-colors"
-                            >
-                              <Pencil size={12} />
-                              Edit
-                            </button>
+                            <PermissionGate permission={PERMISSIONS.DOCTOR_UPDATE}>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  navigate(`/doctors/edit/${doctor._id}`, { state: { returnTo: "list" } });
+                                }}
+                                className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 text-xs font-medium hover:bg-slate-50 transition-colors"
+                              >
+                                <Pencil size={12} />
+                                Edit
+                              </button>
+                            </PermissionGate>
                             <PermissionGate permission={PERMISSIONS.DOCTOR_DELETE}>
                               <button
                                 type="button"

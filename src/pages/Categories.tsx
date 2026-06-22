@@ -415,6 +415,30 @@ const Categories = () => {
                         <p className="text-xs text-slate-400 mt-2">
                           Updated {formatDate(item.updatedAt)}
                         </p>
+                        <div className="flex items-center gap-2 justify-end pt-3 mt-3 border-t border-slate-100">
+                          <PermissionGate permission={PERMISSIONS.CATAGORY_UPDATE}>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => openEditForm(item)}
+                              className="flex-1 text-burgundy hover:bg-burgundy/10"
+                            >
+                              <Pencil className="h-4 w-4 mr-1.5" />
+                              Edit
+                            </Button>
+                          </PermissionGate>
+                          <PermissionGate permission={PERMISSIONS.CATAGORY_DELETE}>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => confirmDelete(item)}
+                              className="flex-1 text-red-600 hover:bg-red-50"
+                            >
+                              <Trash2 className="h-4 w-4 mr-1.5" />
+                              Delete
+                            </Button>
+                          </PermissionGate>
+                        </div>
                       </article>
                     ))}
                   </div>
@@ -433,7 +457,9 @@ const Categories = () => {
                           <th className="text-left py-3 px-4 font-semibold text-slate-600 text-xs uppercase tracking-wider hidden md:table-cell">
                             Last Updated
                           </th>
-                          
+                          <th className="text-right py-3 px-4 font-semibold text-slate-600 text-xs uppercase tracking-wider w-[120px]">
+                            Actions
+                          </th>
                         </tr>
                       </thead>
                       <tbody>
@@ -453,7 +479,32 @@ const Categories = () => {
                             <td className="py-3 px-4 text-slate-500 text-sm hidden md:table-cell">
                               {formatDate(item.updatedAt)}
                             </td>
-                            
+                            <td className="py-3 px-4 text-right">
+                              <div className="flex items-center justify-end gap-1">
+                                <PermissionGate permission={PERMISSIONS.CATAGORY_UPDATE}>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => openEditForm(item)}
+                                    className="h-8 w-8 text-slate-500 hover:text-burgundy hover:bg-burgundy/10"
+                                    title="Edit"
+                                  >
+                                    <Pencil className="h-4 w-4" />
+                                  </Button>
+                                </PermissionGate>
+                                <PermissionGate permission={PERMISSIONS.CATAGORY_DELETE}>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => confirmDelete(item)}
+                                    className="h-8 w-8 text-slate-500 hover:text-red-600 hover:bg-red-50"
+                                    title="Delete"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </PermissionGate>
+                              </div>
+                            </td>
                           </tr>
                         ))}
                       </tbody>

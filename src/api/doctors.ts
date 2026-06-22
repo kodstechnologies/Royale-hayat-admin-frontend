@@ -56,6 +56,8 @@ export type DoctorListItem = {
   image?: string;
   isActive: boolean;
   isFeatured: boolean;
+  /** Featured-doctors join record id (for unfeaturing from the featured list). */
+  featuredRecordId?: string;
 };
 
 export type DoctorViewData = {
@@ -411,5 +413,8 @@ export const syncFeaturedDoctors = async (selectedDoctorIds: string[]) => {
 export const mapFeaturedToListItem = (record: ApiFeaturedDoctorRecord): DoctorListItem | null => {
   const doc = record.doctor;
   if (!doc || typeof doc !== "object" || !doc._id) return null;
-  return mapApiDoctorToListItem(doc as ApiDoctor, new Set([String(doc._id)]));
+  return {
+    ...mapApiDoctorToListItem(doc as ApiDoctor, new Set([String(doc._id)])),
+    featuredRecordId: record._id,
+  };
 };
