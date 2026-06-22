@@ -7,7 +7,7 @@ export type ChatLogListFilters = {
   limit?: number;
   sessionId?: string;
   referenceId?: string;
-  source?: "ai" | "guided_topic";
+  source?: "ai" | "guided_topic" | "whatsapp";
   lang?: "en" | "ar";
   success?: "true" | "false";
   isViewed?: "true" | "false";
@@ -34,7 +34,7 @@ export type ChatLogRecord = {
   clientIp?: string;
   sessionId?: string;
   referenceId?: string;
-  source?: "ai" | "guided_topic";
+  source?: "ai" | "guided_topic" | "whatsapp";
   topicId?: string;
   modelsAttempted?: string[];
   isViewed?: boolean;

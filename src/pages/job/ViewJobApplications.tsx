@@ -992,15 +992,7 @@ const ApplicationDetail = ({ applicationId, initialData, onBack }: ApplicationDe
                 </p>
               </div>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-2 w-full sm:w-auto shrink-0"
-              onClick={() => window.print()}
-            >
-              <Printer className="h-4 w-4" />
-              Print
-            </Button>
+          
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">

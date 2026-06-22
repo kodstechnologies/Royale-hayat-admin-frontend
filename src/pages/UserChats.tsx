@@ -27,7 +27,6 @@ const UserChats = () => {
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [sourceFilter, setSourceFilter] = useState<"all" | "ai" | "guided_topic">("all");
   const [langFilter, setLangFilter] = useState<"all" | "en" | "ar">("all");
   const [viewFilter, setViewFilter] = useState<"all" | "new" | "viewed">("all");
   const [currentPage, setCurrentPage] = useState(1);
@@ -49,7 +48,6 @@ const UserChats = () => {
         page: currentPage,
         limit,
         ...(effectiveSearch ? { search: effectiveSearch } : {}),
-        ...(sourceFilter !== "all" ? { source: sourceFilter } : {}),
         ...(langFilter !== "all" ? { lang: langFilter } : {}),
         ...(viewFilter === "new" ? { isViewed: "false" as const } : {}),
         ...(viewFilter === "viewed" ? { isViewed: "true" as const } : {}),
@@ -66,7 +64,7 @@ const UserChats = () => {
     } finally {
       setLoading(false);
     }
-  }, [currentPage, limit, debouncedSearch, sourceFilter, langFilter, viewFilter]);
+  }, [currentPage, limit, debouncedSearch, langFilter, viewFilter]);
 
   useEffect(() => {
     void fetchLogs();
@@ -85,12 +83,6 @@ const UserChats = () => {
       pageNumbers.push(1, "...", currentPage - 1, currentPage, currentPage + 1, "...", totalPages);
     }
     return pageNumbers;
-  };
-
-  const sourceLabel = (source?: string) => {
-    if (source === "guided_topic") return "Guided topic";
-    if (source === "ai") return "AI chat";
-    return "—";
   };
 
   const viewedBadge = (isViewed?: boolean) =>
@@ -117,7 +109,7 @@ const UserChats = () => {
               <div>
                 <h3 className="text-xl font-bold text-slate-800">User Chats</h3>
                 <p className="text-sm text-slate-500 mt-1">
-                  Website chatbot conversations from the public site
+                  WhatsApp handoffs from the website chatbot
                 </p>
               </div>
               {unviewedCount > 0 && (
@@ -140,18 +132,6 @@ const UserChats = () => {
                   className="w-full pl-9 pr-4 py-2 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-burgundy/20 focus:border-burgundy transition-all"
                 />
               </div>
-              <select
-                value={sourceFilter}
-                onChange={(e) => {
-                  setCurrentPage(1);
-                  setSourceFilter(e.target.value as typeof sourceFilter);
-                }}
-                className="px-4 py-2 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-burgundy/20 focus:border-burgundy"
-              >
-                <option value="all">All sources</option>
-                <option value="ai">AI chat</option>
-                <option value="guided_topic">Guided topic</option>
-              </select>
               <select
                 value={langFilter}
                 onChange={(e) => {
@@ -199,9 +179,9 @@ const UserChats = () => {
                   <MessageSquare className="h-10 w-10 text-slate-400" />
                 </div>
                 <p className="text-slate-500 font-medium">No chat logs found</p>
-                <p className="text-sm text-slate-400 mt-1">
-                  Conversations will appear here when users chat on the website
-                </p>
+                    <p className="text-sm text-slate-400 mt-1">
+                      Chats appear here when a visitor continues on WhatsApp
+                    </p>
               </div>
             ) : (
               <>

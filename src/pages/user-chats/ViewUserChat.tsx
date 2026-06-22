@@ -56,11 +56,9 @@ const ViewUserChat = () => {
   }, [id]);
 
   const sourceLabel =
-    log?.source === "guided_topic"
-      ? "Guided topic"
-      : log?.source === "ai"
-        ? "AI chat"
-        : "—";
+    log?.source === "whatsapp" || log?.source === "guided_topic"
+      ? "WhatsApp handoff"
+      : "—";
 
   return (
     <AdminLayout title="View User Chat">
