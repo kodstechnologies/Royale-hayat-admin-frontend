@@ -75,12 +75,12 @@ const ExpertiseSectionsEditor = ({
       <div className="flex items-center justify-between gap-3 pb-2 border-b border-slate-100">
         <div>
           <h3 className="text-md font-semibold text-slate-800">
-            {isArabic ? "الخبرة" : "Expertise"}
+            {isArabic ? "الخبرة" : "Experience"}
           </h3>
           <p className="text-xs text-slate-500 mt-1">
             {isArabic
               ? "أضف عناوين الأقسام ونقاط الخبرة بالعربية."
-              : "Add section headings and expertise bullet points in English."}
+              : "Add section headings and experience bullet points in English."}
           </p>
         </div>
         <Button
@@ -131,7 +131,7 @@ const ExpertiseSectionsEditor = ({
                       : { subHeading: e.target.value },
                   )
                 }
-                placeholder={isArabic ? "مثال: مجالات الخبرة:" : "e.g. Areas of expertise:"}
+                placeholder={isArabic ? "مثال: مجالات الخبرة:" : "e.g. Areas of experience:"}
                 className="h-11"
                 dir={isArabic ? "rtl" : "ltr"}
               />

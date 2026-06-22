@@ -270,7 +270,7 @@ const ViewDoctor = () => {
                   <div className="bg-white rounded-xl border border-slate-200 p-4 sm:p-5 shadow-sm">
                     <div className="flex items-center gap-2 mb-4">
                       <Brain size={18} className="text-burgundy shrink-0" />
-                      <h3 className="text-md font-semibold text-slate-800">Expertise</h3>
+                      <h3 className="text-md font-semibold text-slate-800">Experience</h3>
                     </div>
                     <div
                       className={`space-y-1.5 ${activeLanguage === "arabic" ? "rtl-text" : ""}`}
