@@ -20,6 +20,7 @@ import { toast } from "sonner";
 import {
   getDoctors,
   getFeaturedDoctorIds,
+  getFeaturedDoctorIdsOrdered,
   syncFeaturedDoctors,
   mapApiDoctorToListItem,
   deleteDoctor,
@@ -36,6 +37,7 @@ const Doctors = () => {
   const [doctors, setDoctors] = useState<DoctorListItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [selectedDepartmentId, setSelectedDepartmentId] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
   const [limit] = useState(6);
@@ -43,6 +45,7 @@ const Doctors = () => {
 
   const [isFeatureMode, setIsFeatureMode] = useState(false);
   const [selectedDoctors, setSelectedDoctors] = useState<Set<string>>(new Set());
+  const [selectedDoctorOrder, setSelectedDoctorOrder] = useState<string[]>([]);
   const [savingFeatured, setSavingFeatured] = useState(false);
   const [doctorToDelete, setDoctorToDelete] = useState<DoctorListItem | null>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -65,9 +68,15 @@ const Doctors = () => {
     }
   }, []);
 
+  useEffect(() => {
+    const timer = window.setTimeout(() => setDebouncedSearch(search), 300);
+    return () => window.clearTimeout(timer);
+  }, [search]);
+
   const fetchDoctors = useCallback(async () => {
     setLoading(true);
     try {
+      const trimmedSearch = debouncedSearch.trim();
       const params: Record<string, string | number> = {
         page: 1,
         limit: 100,
@@ -77,20 +86,31 @@ const Doctors = () => {
       if (selectedDepartmentId !== "all") {
         params.department = selectedDepartmentId;
       }
+      if (trimmedSearch.length >= 2) {
+        params.search = trimmedSearch;
+      }
 
       const [doctorsRes, featuredIds] = await Promise.all([
         getDoctors(params),
         getFeaturedDoctorIds(),
       ]);
 
-      const list = Array.isArray(doctorsRes.data?.data)
+      let list = Array.isArray(doctorsRes.data?.data)
         ? (doctorsRes.data.data as ApiDoctor[])
         : [];
 
+      const totalRecords = Number(doctorsRes.data?.meta?.totalRecords ?? list.length);
+      if (totalRecords > list.length) {
+        const fullRes = await getDoctors({ ...params, limit: totalRecords });
+        list = Array.isArray(fullRes.data?.data)
+          ? (fullRes.data.data as ApiDoctor[])
+          : list;
+      }
+
       const mapped = list.map((row) => mapApiDoctorToListItem(row, featuredIds));
       const filtered =
-        search.trim().length >= 2
-          ? mapped.filter((doctor) => matchesDoctorSearch(doctor, search))
+        trimmedSearch.length >= 2
+          ? mapped.filter((doctor) => matchesDoctorSearch(doctor, trimmedSearch))
           : mapped;
 
       setDoctors(sortDoctorsAlphabetically(filtered));
@@ -101,7 +121,7 @@ const Doctors = () => {
     } finally {
       setLoading(false);
     }
-  }, [search, selectedDepartmentId]);
+  }, [debouncedSearch, selectedDepartmentId]);
 
   useEffect(() => {
     fetchDepartments();
@@ -128,30 +148,37 @@ const Doctors = () => {
     return match?.name || department || "-";
   };
 
-  const handleFeatureDoctorMode = () => {
-    const alreadyFeatured = doctors.filter((d) => d.isFeatured).map((d) => d._id);
-    setSelectedDoctors(new Set(alreadyFeatured));
+  const handleFeatureDoctorMode = async () => {
+    const orderedFeaturedIds = await getFeaturedDoctorIdsOrdered();
+    setSelectedDoctorOrder(orderedFeaturedIds);
+    setSelectedDoctors(new Set(orderedFeaturedIds));
     setIsFeatureMode(true);
   };
 
   const toggleDoctorSelection = (doctorId: string) => {
-    const newSelection = new Set(selectedDoctors);
-    if (newSelection.has(doctorId)) {
-      newSelection.delete(doctorId);
-    } else {
-      newSelection.add(doctorId);
+    if (selectedDoctors.has(doctorId)) {
+      setSelectedDoctors((prev) => {
+        const next = new Set(prev);
+        next.delete(doctorId);
+        return next;
+      });
+      setSelectedDoctorOrder((prev) => prev.filter((id) => id !== doctorId));
+      return;
     }
-    setSelectedDoctors(newSelection);
+
+    setSelectedDoctors((prev) => new Set(prev).add(doctorId));
+    setSelectedDoctorOrder((prev) => [...prev, doctorId]);
   };
 
   const handleSaveFeaturedDoctors = async () => {
     setSavingFeatured(true);
     try {
-      await syncFeaturedDoctors(Array.from(selectedDoctors));
+      await syncFeaturedDoctors(selectedDoctorOrder);
       await fetchDoctors();
-      toast.success(`${selectedDoctors.size} doctor(s) marked as featured`);
+      toast.success(`${selectedDoctorOrder.length} doctor(s) marked as featured`);
       setIsFeatureMode(false);
       setSelectedDoctors(new Set());
+      setSelectedDoctorOrder([]);
     } catch (error: unknown) {
       const err = error as { response?: { data?: { message?: string } } };
       toast.error(err?.response?.data?.message || "Failed to update featured doctors");
@@ -163,6 +190,7 @@ const Doctors = () => {
   const cancelFeatureMode = () => {
     setIsFeatureMode(false);
     setSelectedDoctors(new Set());
+    setSelectedDoctorOrder([]);
   };
 
   const handleDeleteClick = (doctor: DoctorListItem) => {
@@ -261,7 +289,7 @@ const Doctors = () => {
                         className="gap-2 w-full sm:w-auto bg-green-600 hover:bg-green-700"
                       >
                         <CheckCircle className="h-4 w-4" />
-                        Save Featured ({selectedDoctors.size})
+                        Save Featured ({selectedDoctorOrder.length})
                       </Button>
                       <Button
                         onClick={cancelFeatureMode}
@@ -284,12 +312,16 @@ const Doctors = () => {
                   <Star className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
                   <span className="text-sm text-amber-800">
                     Select doctors to feature on the homepage. Selected:{" "}
-                    <strong>{selectedDoctors.size}</strong> doctor(s)
+                    <strong>{selectedDoctorOrder.length}</strong> doctor(s)
                   </span>
                 </div>
                 <button
                   type="button"
-                  onClick={() => setSelectedDoctors(new Set(doctors.map((d) => d._id)))}
+                  onClick={() => {
+                    const allIds = doctors.map((d) => d._id);
+                    setSelectedDoctorOrder(allIds);
+                    setSelectedDoctors(new Set(allIds));
+                  }}
                   className="text-xs text-amber-600 hover:text-amber-800 underline shrink-0 self-start sm:self-center"
                 >
                   Select All
@@ -402,20 +434,7 @@ const Doctors = () => {
                             </div>
                           </div>
                           <div className="flex flex-col items-end gap-1">
-                            <span
-                              className={`px-2 py-1 rounded-full text-[10px] font-medium flex items-center gap-1 ${
-                                doctor.isActive
-                                  ? "bg-green-100 text-green-700"
-                                  : "bg-red-100 text-red-700"
-                              }`}
-                            >
-                              {doctor.isActive ? (
-                                <CheckCircle className="h-3 w-3" />
-                              ) : (
-                                <XCircle className="h-3 w-3" />
-                              )}
-                              {doctor.isActive ? "Active" : "Inactive"}
-                            </span>
+                           
                             {isFeatureMode && (
                               <div
                                 className={`w-4 h-4 rounded border ${

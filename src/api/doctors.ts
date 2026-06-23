@@ -56,8 +56,9 @@ export type DoctorListItem = {
   image?: string;
   isActive: boolean;
   isFeatured: boolean;
-  /** Featured-doctors join record id (for unfeaturing from the featured list). */
+  /** Doctor id used when removing from the featured list. */
   featuredRecordId?: string;
+  featuredOrder?: number;
 };
 
 export type DoctorViewData = {
@@ -341,6 +342,7 @@ export type FeaturedDoctorPayload = {
 export type ApiFeaturedDoctorRecord = {
   _id: string;
   doctor: ApiDoctor | string;
+  order?: number;
   createdAt?: string;
   updatedAt?: string;
 };
@@ -367,54 +369,101 @@ export const deleteFeaturedDoctor = async (featuredRecordId: string) => {
 };
 
 export const getFeaturedDoctorIds = async (): Promise<Set<string>> => {
+  const ordered = await getFeaturedDoctorIdsOrdered();
+  return new Set(ordered);
+};
+
+export const getFeaturedDoctorIdsOrdered = async (): Promise<string[]> => {
   const res = await getFeaturedDoctors();
-  const ids = new Set<string>();
+  const ids: string[] = [];
+
   for (const record of res.data ?? []) {
     const doc = record.doctor;
-    if (doc && typeof doc === "object" && doc._id) {
-      ids.add(String(doc._id));
-    } else if (typeof doc === "string") {
-      ids.add(doc);
+    if (doc && typeof doc === 'object' && doc._id) {
+      ids.push(String(doc._id));
+    } else if (typeof doc === 'string') {
+      ids.push(doc);
     }
   }
+
   return ids;
 };
 
-export const syncFeaturedDoctors = async (selectedDoctorIds: string[]) => {
+const FEATURED_SYNC_UNAVAILABLE_MESSAGE =
+  "Featured doctors sync needs the updated backend. Use http://localhost:8000 for local dev, or deploy the latest Royal-hayat-Backend to production.";
+
+const throwFeaturedSyncError = (message: string): never => {
+  const err = new Error(message) as Error & {
+    response?: { data?: { message?: string } };
+  };
+  err.response = { data: { message } };
+  throw err;
+};
+
+const legacySyncFeaturedDoctors = async (selectedDoctorIds: string[]) => {
   const res = await getFeaturedDoctors();
   const records = res.data ?? [];
-  const selectedSet = new Set(selectedDoctorIds);
 
-  const currentByDoctorId = new Map<string, string>();
   for (const record of records) {
-    const doc = record.doctor;
-    const docId =
-      doc && typeof doc === "object" && doc._id ? String(doc._id) : String(doc ?? "");
-    if (docId) currentByDoctorId.set(docId, record._id);
+    try {
+      await deleteFeaturedDoctor(record._id);
+    } catch {
+      const doc = record.doctor;
+      if (doc && typeof doc === "object" && doc._id) {
+        await deleteFeaturedDoctor(String(doc._id));
+      }
+    }
   }
-
-  const tasks: Promise<unknown>[] = [];
 
   for (const doctorId of selectedDoctorIds) {
-    if (!currentByDoctorId.has(doctorId)) {
-      tasks.push(createFeaturedDoctor({ doctor: doctorId }));
+    try {
+      await createFeaturedDoctor({ doctor: doctorId });
+    } catch (error: unknown) {
+      const status = (error as { response?: { status?: number } })?.response?.status;
+      if (status === 500 && selectedDoctorIds.length > 1) {
+        throwFeaturedSyncError(FEATURED_SYNC_UNAVAILABLE_MESSAGE);
+      }
+      throw error;
+    }
+  }
+};
+
+export const syncFeaturedDoctors = async (selectedDoctorIds: string[]) => {
+  const payload = { doctorIds: selectedDoctorIds };
+  const attempts = [
+    () => api.post("/api/v1/featured-doctors/sync", payload),
+    () => api.put("/api/v1/featured-doctors", payload),
+  ];
+
+  let syncUnavailable = false;
+  for (const attempt of attempts) {
+    try {
+      const response = await attempt();
+      return response.data;
+    } catch (error: unknown) {
+      const status = (error as { response?: { status?: number } })?.response?.status;
+      if (status === 404 || status === 405) {
+        syncUnavailable = true;
+        continue;
+      }
+      throw error;
     }
   }
 
-  for (const [docId, featuredId] of currentByDoctorId) {
-    if (!selectedSet.has(docId)) {
-      tasks.push(deleteFeaturedDoctor(featuredId));
-    }
+  if (syncUnavailable && selectedDoctorIds.length > 1) {
+    throwFeaturedSyncError(FEATURED_SYNC_UNAVAILABLE_MESSAGE);
   }
 
-  await Promise.all(tasks);
+  await legacySyncFeaturedDoctors(selectedDoctorIds);
+  return getFeaturedDoctors();
 };
 
 export const mapFeaturedToListItem = (record: ApiFeaturedDoctorRecord): DoctorListItem | null => {
   const doc = record.doctor;
-  if (!doc || typeof doc !== "object" || !doc._id) return null;
+  if (!doc || typeof doc !== 'object' || !doc._id) return null;
   return {
     ...mapApiDoctorToListItem(doc as ApiDoctor, new Set([String(doc._id)])),
-    featuredRecordId: record._id,
+    featuredRecordId: String(doc._id),
+    featuredOrder: record.order,
   };
 };
