@@ -17,6 +17,12 @@ import {
 } from "@/api/document";
 import { PERMISSIONS } from "@/constants/permissions";
 import PermissionGate, { hasPermission } from "@/utils/PermissionGate";
+import {
+  buildDocumentShareUrl,
+  getPublicSiteOrigin,
+  isValidDocumentPublicPath,
+  suggestDocumentPublicPath,
+} from "@/utils/documentUrl";
 
 type AdminDoc = {
   id: string;
@@ -27,6 +33,8 @@ type AdminDoc = {
   fileSize: string;
   fileType: string;
   fileUrl?: string;
+  publicPath?: string;
+  contentVersion?: number;
   uploadedBy: string;
   sharedVia: ("SMS" | "WhatsApp" | "QR Code")[];
   timesShared: number;
@@ -67,9 +75,22 @@ const Documents = () => {
   const [shareSent, setShareSent] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(6);
-  const [uploadForm, setUploadForm] = useState({ title: "", category: "Brochure", description: "", file: null as File | null });
+  const [uploadForm, setUploadForm] = useState({
+    title: "",
+    category: "Brochure",
+    description: "",
+    publicPath: "",
+    file: null as File | null,
+  });
   const [uploadProgress, setUploadProgress] = useState(false);
-  const [editForm, setEditForm] = useState({ title: "", category: "", description: "", file: null as File | null, existingFileUrl: "" });
+  const [editForm, setEditForm] = useState({
+    title: "",
+    category: "",
+    description: "",
+    publicPath: "",
+    file: null as File | null,
+    existingFileUrl: "",
+  });
   const [editProgress, setEditProgress] = useState(false);
   const [editPreviewUrl, setEditPreviewUrl] = useState("");
   const [selectedCard, setSelectedCard] = useState<string | null>(null);
@@ -80,8 +101,12 @@ const Documents = () => {
   const { t } = useLanguage();
 
   const mapApiDoc = (d: Record<string, unknown>): AdminDoc => {
-    const fileUrl = String(d.file ?? d.fileUrl ?? "");
-    const pathPart = fileUrl.split("?")[0];
+    const publicPath = String(d.publicPath ?? "");
+    const contentVersion = d.contentVersion ? Number(d.contentVersion) : undefined;
+    const fileUrl = publicPath
+      ? buildDocumentShareUrl(publicPath, contentVersion)
+      : String(d.file ?? d.fileUrl ?? "");
+    const pathPart = (publicPath || fileUrl).split("?")[0];
     const fileType = pathPart.split(".").pop()?.toLowerCase() ?? "pdf";
 
     return {
@@ -95,6 +120,8 @@ const Documents = () => {
       fileSize: d.fileSize ? String(d.fileSize) : "—",
       fileType,
       fileUrl,
+      publicPath: publicPath || undefined,
+      contentVersion,
       uploadedBy: String(d.uploadedBy ?? "Admin"),
       sharedVia: (d.sharedVia as AdminDoc["sharedVia"]) ?? [],
       timesShared: Number(d.timesShared ?? 0),
@@ -146,7 +173,11 @@ const Documents = () => {
         return;
       }
 
-      setUploadForm({ ...uploadForm, file });
+      setUploadForm({
+        ...uploadForm,
+        file,
+        publicPath: uploadForm.publicPath || suggestDocumentPublicPath(file.name),
+      });
     }
   };
 
@@ -166,7 +197,11 @@ const Documents = () => {
         return;
       }
 
-      setEditForm({ ...editForm, file });
+      setEditForm({
+        ...editForm,
+        file,
+        publicPath: editForm.publicPath || suggestDocumentPublicPath(file.name),
+      });
       setEditPreviewUrl(URL.createObjectURL(file));
     }
   };
@@ -176,16 +211,29 @@ const Documents = () => {
     if (!uploadForm.title) { toast.error("Please enter document title"); return; }
     if (!uploadForm.file) { toast.error("Please select a file to upload"); return; }
 
+    const publicPath = uploadForm.publicPath.trim();
+    if (publicPath && !isValidDocumentPublicPath(publicPath)) {
+      toast.error("Public path must start with / and include a file name with extension (.pdf, .png, .jpg, .jpeg, .webp)");
+      return;
+    }
+
     setUploadProgress(true);
     try {
       await createDocument({
         title: uploadForm.title,
         catagory: uploadForm.category as "Brochure" | "Form" | "Guide" | "Policy",
         description: uploadForm.description || uploadForm.title,
+        publicPath: uploadForm.publicPath.trim() || undefined,
         status: "active",
         file: uploadForm.file,
       });
-      setUploadForm({ title: "", category: "Brochure", description: "", file: null });
+      setUploadForm({
+        title: "",
+        category: "Brochure",
+        description: "",
+        publicPath: "",
+        file: null,
+      });
       setShowUpload(false);
       await fetchDocs();
       toast.success("Document uploaded successfully!");
@@ -202,6 +250,12 @@ const Documents = () => {
     if (!editForm.title) { toast.error("Please enter document title"); return; }
     if (!showEditModal) return;
 
+    const publicPath = editForm.publicPath.trim();
+    if (publicPath && !isValidDocumentPublicPath(publicPath)) {
+      toast.error("Public path must start with / and include a file name with extension (.pdf, .png, .jpg, .jpeg, .webp)");
+      return;
+    }
+
     setEditProgress(true);
     try {
       const payload: any = {
@@ -209,13 +263,32 @@ const Documents = () => {
         catagory: editForm.category as "Brochure" | "Form" | "Guide" | "Policy",
         description: editForm.description,
       };
+      if (editForm.publicPath.trim()) {
+        payload.publicPath = editForm.publicPath.trim();
+      }
       if (editForm.file) payload.file = editForm.file;
 
-      await updateDocument(showEditModal.id, payload);
+      const response = await updateDocument(showEditModal.id, payload);
 
-      toast.success("Document updated successfully!");
+      if (editForm.file && !response?.meta?.fileReplaced) {
+        toast.error("File was not uploaded. Please try again or re-select the PDF.");
+        return;
+      }
+
+      toast.success(
+        editForm.file
+          ? "Document and PDF updated. Open the public link in a new tab to view the new file."
+          : "Document updated successfully!",
+      );
       setShowEditModal(null);
-      setEditForm({ title: "", category: "", description: "", file: null, existingFileUrl: "" });
+      setEditForm({
+        title: "",
+        category: "",
+        description: "",
+        publicPath: "",
+        file: null,
+        existingFileUrl: "",
+      });
       setEditPreviewUrl("");
       await fetchDocs();
     } catch (error) {
@@ -246,7 +319,10 @@ const Documents = () => {
   const generateQRCode = async (doc: AdminDoc) => {
     setGeneratingQr(true);
     try {
-      const documentLink = doc.fileUrl || `${window.location.origin}/documents/${doc.id}`;
+      const documentLink =
+        doc.publicPath
+          ? buildDocumentShareUrl(doc.publicPath)
+          : doc.fileUrl || `${getPublicSiteOrigin()}/documents/${doc.id}`;
       const qrDataUrl = await QRCode.toDataURL(documentLink, {
         width: 300,
         margin: 2,
@@ -267,7 +343,10 @@ const Documents = () => {
 
   const handleShare = async () => {
     if (shareMethod === "link") {
-      const link = showShareModal?.fileUrl || window.location.href;
+      const link =
+        showShareModal?.publicPath
+          ? buildDocumentShareUrl(showShareModal.publicPath)
+          : showShareModal?.fileUrl || window.location.href;
       navigator.clipboard.writeText(link);
       toast.success("Link copied to clipboard!");
       setShowShareModal(null);
@@ -442,6 +521,29 @@ const Documents = () => {
                     />
                   </div>
                   <div className="md:col-span-2">
+                    <label className="text-sm font-semibold text-slate-700 block mb-1.5">
+                      Public URL Path
+                    </label>
+                    <input
+                      type="text"
+                      value={uploadForm.publicPath}
+                      onChange={(e) => setUploadForm({ ...uploadForm, publicPath: e.target.value })}
+                      placeholder="/Runtime/uploads/AlLiwan.pdf or /wp-content/uploads/2026/04/menu.pdf"
+                      className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-burgundy/20 focus:border-burgundy"
+                    />
+                    <p className="text-xs text-slate-500 mt-1.5">
+                      Any site path is allowed. Leave blank to default to /Runtime/uploads/filename.
+                    </p>
+                    <p className="text-xs text-slate-500 mt-1">
+                      Frontend link:{" "}
+                      <span className="font-medium text-slate-700 break-all">
+                        {buildDocumentShareUrl(
+                          uploadForm.publicPath || (uploadForm.file ? suggestDocumentPublicPath(uploadForm.file.name) : "")
+                        ) || `${getPublicSiteOrigin()}/Runtime/uploads/your-file.pdf`}
+                      </span>
+                    </p>
+                  </div>
+                  <div className="md:col-span-2">
                     <label className="text-sm font-semibold text-slate-700 block mb-1.5">Upload File * (PDF, JPG, PNG - Max 5MB)</label>
                     <div className="border-2 border-dashed border-slate-200 rounded-xl p-6 text-center hover:border-burgundy/50 transition-all">
                       <input
@@ -583,6 +685,7 @@ const Documents = () => {
                                     title: doc.title,
                                     category: doc.category,
                                     description: doc.description,
+                                    publicPath: doc.publicPath || "",
                                     file: null,
                                     existingFileUrl: doc.fileUrl || ""
                                   });
@@ -696,6 +799,15 @@ const Documents = () => {
 
             <div className="p-4 sm:p-6">
               <div className="mb-4">
+                <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Public URL</label>
+                <p className="text-sm text-slate-700 mt-1 break-all">
+                  {showViewModal.publicPath
+                    ? buildDocumentShareUrl(showViewModal.publicPath)
+                    : showViewModal.fileUrl || "—"}
+                </p>
+              </div>
+
+              <div className="mb-4">
                 <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Description</label>
                 <p className="text-sm text-slate-700 mt-1">{showViewModal.description}</p>
               </div>
@@ -792,9 +904,22 @@ const Documents = () => {
                   />
                 </div>
                 <div>
+                  <label className="text-sm font-semibold text-slate-700 block mb-1.5">Public URL Path</label>
+                  <Input
+                    value={editForm.publicPath}
+                    onChange={(e) => setEditForm({ ...editForm, publicPath: e.target.value })}
+                    placeholder="/path/to/your-file.pdf"
+                    className="h-11"
+                  />
+                  <p className="text-xs text-slate-500 mt-1.5 break-all">
+                    Frontend link: {buildDocumentShareUrl(editForm.publicPath) || "—"}
+                  </p>
+                </div>
+                <div>
                   <label className="text-sm font-semibold text-slate-700 block mb-1.5">Replace File (Optional)</label>
                   <div className="border-2 border-dashed border-slate-200 rounded-xl p-4 text-center hover:border-burgundy/50 transition-all">
                     <input
+                      key={showEditModal?.id ?? "edit-file"}
                       type="file"
                       accept=".pdf,.jpg,.jpeg,.png"
                       onChange={handleEditFileUpload}
@@ -987,7 +1112,9 @@ const Documents = () => {
                   </div>
                   <div className="bg-slate-50 rounded-xl p-4">
                     <p className="text-xs text-slate-600 break-all">
-                      {showShareModal?.fileUrl || `${window.location.origin}/documents/${showShareModal?.id}`}
+                      {showShareModal?.publicPath
+                        ? buildDocumentShareUrl(showShareModal.publicPath)
+                        : showShareModal?.fileUrl || `${getPublicSiteOrigin()}/documents/${showShareModal?.id}`}
                     </p>
                   </div>
                   <div className="flex flex-col-reverse sm:flex-row gap-3 pt-2">

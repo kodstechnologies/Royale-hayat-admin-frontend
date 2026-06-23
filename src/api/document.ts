@@ -6,6 +6,7 @@ export type CreateDocumentPayload = {
   title: string;
   catagory: "Brochure" | "Form" | "Guide" | "Policy";
   description: string;
+  publicPath?: string;
   status?: "active" | "inactive";
   file: File;
 };
@@ -18,22 +19,23 @@ export const createDocument = async (
 
   formData.append("title", data.title);
   formData.append("catagory", data.catagory);
-  formData.append("description", data.description);
+  if (data.description) {
+    formData.append("description", data.description);
+  }
+
+  if (data.publicPath) {
+    formData.append("publicPath", data.publicPath);
+  }
 
   if (data.status) {
     formData.append("status", data.status);
   }
 
-  formData.append("file", data.file);
+  formData.append("file", data.file, data.file.name);
 
   const response = await api.post(
     `${BASE}/create`,
     formData,
-    {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    }
   );
 
   return response.data;
@@ -63,6 +65,7 @@ export type UpdateDocumentPayload = {
   title?: string;
   catagory?: "Brochure" | "Form" | "Guide" | "Policy";
   description?: string;
+  publicPath?: string;
   status?: "active" | "inactive";
   file?: File;
 };
@@ -89,22 +92,21 @@ export const updateDocument = async (
     );
   }
 
+  if (data.publicPath) {
+    formData.append("publicPath", data.publicPath);
+  }
+
   if (data.status) {
     formData.append("status", data.status);
   }
 
   if (data.file) {
-    formData.append("file", data.file);
+    formData.append("file", data.file, data.file.name);
   }
 
-  const response = await api.put(
+  const response = await api.post(
     `${BASE}/update/${id}`,
     formData,
-    {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    }
   );
 
   return response.data;
