@@ -161,15 +161,9 @@ const Documents = () => {
     const file = e.target.files?.[0];
     if (file) {
       const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "application/pdf"];
-      const maxSize = 5 * 1024 * 1024; // 5MB
 
       if (!allowedTypes.includes(file.type)) {
         toast.error("Only JPG, PNG, JPEG, and PDF files are allowed");
-        return;
-      }
-
-      if (file.size > maxSize) {
-        toast.error("File size must be less than 5MB");
         return;
       }
 
@@ -185,15 +179,9 @@ const Documents = () => {
     const file = e.target.files?.[0];
     if (file) {
       const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "application/pdf"];
-      const maxSize = 5 * 1024 * 1024;
 
       if (!allowedTypes.includes(file.type)) {
         toast.error("Only JPG, PNG, JPEG, and PDF files are allowed");
-        return;
-      }
-
-      if (file.size > maxSize) {
-        toast.error("File size must be less than 5MB");
         return;
       }
 
@@ -219,7 +207,7 @@ const Documents = () => {
 
     setUploadProgress(true);
     try {
-      await createDocument({
+      const response = await createDocument({
         title: uploadForm.title,
         catagory: uploadForm.category as "Brochure" | "Form" | "Guide" | "Policy",
         description: uploadForm.description || uploadForm.title,
@@ -236,10 +224,14 @@ const Documents = () => {
       });
       setShowUpload(false);
       await fetchDocs();
-      toast.success("Document uploaded successfully!");
-    } catch (error) {
+      toast.success(
+        response?.meta?.replacedExisting
+          ? "Existing document at this path was updated with your new file."
+          : "Document uploaded successfully!",
+      );
+    } catch (error: any) {
       console.error("Upload failed:", error);
-      toast.error("Failed to upload document");
+      toast.error(error?.response?.data?.message || "Failed to upload document");
     } finally {
       setUploadProgress(false);
     }
@@ -524,12 +516,12 @@ const Documents = () => {
                     <label className="text-sm font-semibold text-slate-700 block mb-1.5">
                       Public URL Path
                     </label>
-                    <input
-                      type="text"
+                    <Textarea
                       value={uploadForm.publicPath}
                       onChange={(e) => setUploadForm({ ...uploadForm, publicPath: e.target.value })}
                       placeholder="/Runtime/uploads/AlLiwan.pdf or /wp-content/uploads/2026/04/menu.pdf"
-                      className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-burgundy/20 focus:border-burgundy"
+                      rows={2}
+                      className="resize-none"
                     />
                     <p className="text-xs text-slate-500 mt-1.5">
                       Any site path is allowed. Leave blank to default to /Runtime/uploads/filename.
@@ -544,7 +536,7 @@ const Documents = () => {
                     </p>
                   </div>
                   <div className="md:col-span-2">
-                    <label className="text-sm font-semibold text-slate-700 block mb-1.5">Upload File * (PDF, JPG, PNG - Max 5MB)</label>
+                    <label className="text-sm font-semibold text-slate-700 block mb-1.5">Upload File * (PDF, JPG, PNG)</label>
                     <div className="border-2 border-dashed border-slate-200 rounded-xl p-6 text-center hover:border-burgundy/50 transition-all">
                       <input
                         type="file"
@@ -558,7 +550,7 @@ const Documents = () => {
                         <p className="text-sm text-slate-600">
                           {uploadForm.file ? uploadForm.file.name : "Click to upload or drag and drop"}
                         </p>
-                        <p className="text-xs text-slate-400 mt-1">PDF, JPG, PNG up to 5MB</p>
+                        <p className="text-xs text-slate-400 mt-1">PDF, JPG, PNG</p>
                       </label>
                     </div>
                   </div>
@@ -905,11 +897,12 @@ const Documents = () => {
                 </div>
                 <div>
                   <label className="text-sm font-semibold text-slate-700 block mb-1.5">Public URL Path</label>
-                  <Input
+                  <Textarea
                     value={editForm.publicPath}
                     onChange={(e) => setEditForm({ ...editForm, publicPath: e.target.value })}
                     placeholder="/path/to/your-file.pdf"
-                    className="h-11"
+                    rows={2}
+                    className="resize-none"
                   />
                   <p className="text-xs text-slate-500 mt-1.5 break-all">
                     Frontend link: {buildDocumentShareUrl(editForm.publicPath) || "—"}
@@ -931,7 +924,7 @@ const Documents = () => {
                       <p className="text-xs text-slate-600">
                         {editForm.file ? editForm.file.name : "Click to upload new file"}
                       </p>
-                      <p className="text-xs text-slate-400 mt-1">PDF, JPG, PNG up to 5MB</p>
+                      <p className="text-xs text-slate-400 mt-1">PDF, JPG, PNG</p>
                     </label>
                   </div>
                   {editPreviewUrl && !editForm.file && (
