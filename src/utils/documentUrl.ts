@@ -31,8 +31,15 @@ export function suggestDocumentPublicPath(filename: string): string {
 const PUBLIC_PATH_EXTENSION_RE = /\.(pdf|png|jpe?g|webp)$/i;
 
 export function isValidDocumentPublicPath(publicPath: string): boolean {
-  const trimmed = publicPath.trim();
+  let trimmed = publicPath.trim();
   if (!trimmed.startsWith("/")) return false;
+
+  try {
+    trimmed = decodeURIComponent(trimmed);
+  } catch {
+    return false;
+  }
+
   const basename = trimmed.split("/").pop() || "";
   return PUBLIC_PATH_EXTENSION_RE.test(basename);
 }
