@@ -16,10 +16,7 @@ const emptySection = (): ExpertiseSectionForm => ({
   pointsAr: [""],
 });
 
-const normalizePointRows = (rows: string[]) => {
-  const trimmed = rows.map((row) => row.trim());
-  return trimmed.length ? trimmed : [""];
-};
+const ensurePointRows = (rows: string[]) => (rows.length ? rows : [""]);
 
 const ExpertiseSectionsEditor = ({
   sections,
@@ -39,7 +36,7 @@ const ExpertiseSectionsEditor = ({
 
   const updatePoint = (sectionIndex: number, pointIndex: number, value: string) => {
     const section = safeSections[sectionIndex];
-    const nextPoints = [...normalizePointRows(section[pointsField])];
+    const nextPoints = [...ensurePointRows(section[pointsField])];
     nextPoints[pointIndex] = value;
     updateSection(sectionIndex, { [pointsField]: nextPoints });
   };
@@ -47,13 +44,13 @@ const ExpertiseSectionsEditor = ({
   const addPoint = (sectionIndex: number) => {
     const section = safeSections[sectionIndex];
     updateSection(sectionIndex, {
-      [pointsField]: [...normalizePointRows(section[pointsField]), ""],
+      [pointsField]: [...ensurePointRows(section[pointsField]), ""],
     });
   };
 
   const removePoint = (sectionIndex: number, pointIndex: number) => {
     const section = safeSections[sectionIndex];
-    const rows = normalizePointRows(section[pointsField]);
+    const rows = ensurePointRows(section[pointsField]);
     const next = rows.length <= 1 ? [""] : rows.filter((_, i) => i !== pointIndex);
     updateSection(sectionIndex, { [pointsField]: next });
   };
@@ -141,7 +138,7 @@ const ExpertiseSectionsEditor = ({
               <label className="text-sm font-medium text-slate-700">
                 {isArabic ? "النقاط" : "Points"}
               </label>
-              {normalizePointRows(section[pointsField]).map((point, pointIndex) => (
+              {ensurePointRows(section[pointsField]).map((point, pointIndex) => (
                 <div key={`point-${sectionIndex}-${pointIndex}`} className="flex gap-2">
                   <Input
                     value={point}

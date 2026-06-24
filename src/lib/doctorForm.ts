@@ -5,6 +5,16 @@ export const toItems = (value: string) =>
 
 export const itemsToString = (items: string[]) => items.join(DOCTOR_LIST_SEPARATOR);
 
+/** Split stored list value into editor rows without trimming (preserves spaces while typing). */
+export const toEditorRows = (value: string) => {
+  if (!value) return [""];
+  const rows = value.split(DOCTOR_LIST_SEPARATOR);
+  return rows.length ? rows : [""];
+};
+
+/** Join editor rows back into stored list value without trimming. */
+export const joinEditorRows = (rows: string[]) => rows.join(DOCTOR_LIST_SEPARATOR);
+
 export type DeptSubspecialityOption = {
   _id: string;
   name: string;

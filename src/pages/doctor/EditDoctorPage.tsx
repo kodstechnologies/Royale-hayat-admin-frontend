@@ -21,6 +21,8 @@ import {
   buildDoctorFormData,
   createEmptyExpertiseSection,
   DOCTOR_LIST_SEPARATOR as SEPARATOR,
+  joinEditorRows,
+  toEditorRows,
   type DeptSubspecialityOption,
   type DoctorFormValues,
 } from "@/lib/doctorForm";
@@ -43,16 +45,6 @@ const addUniqueItem = (value: string, next: string) => {
   if (existing.some((item) => item.toLowerCase() === normalized.toLowerCase())) return value;
   return [...existing, normalized].join(SEPARATOR);
 };
-const toEditorRows = (value: string) => {
-  if (!value) return [""];
-  const rows = value.split(SEPARATOR).map((row) => row.trim());
-  return rows.length ? rows : [""];
-};
-const toCommaSeparated = (rows: string[]) =>
-  rows
-    .map((row) => row.trim())
-    .join(SEPARATOR);
-
 const toggleSubId = (id: string, current: string[]) => {
   const sid = String(id);
   const has = current.some((x) => String(x) === sid);
@@ -463,7 +455,7 @@ const EditDoctorPage = () => {
                                 onChange={(e) => {
                                   const next = [...toEditorRows(values.qualifications)];
                                   next[index] = e.target.value;
-                                  setFieldValue("qualifications", toCommaSeparated(next));
+                                  setFieldValue("qualifications", joinEditorRows(next));
                                 }}
                                 placeholder={`Qualification ${index + 1}`}
                                 className="flex-1 h-11"
@@ -479,7 +471,7 @@ const EditDoctorPage = () => {
                                     return;
                                   }
                                   const next = rows.filter((_, i) => i !== index);
-                                  setFieldValue("qualifications", toCommaSeparated(next));
+                                  setFieldValue("qualifications", joinEditorRows(next));
                                 }}
                                 className="text-red-500 hover:text-red-600 hover:bg-red-50 h-11 w-11"
                               >
@@ -494,7 +486,7 @@ const EditDoctorPage = () => {
                           size="sm"
                           onClick={() => {
                             const rows = [...toEditorRows(values.qualifications), ""];
-                            setFieldValue("qualifications", toCommaSeparated(rows));
+                            setFieldValue("qualifications", joinEditorRows(rows));
                           }}
                           className="mt-2 gap-1 border-burgundy/30 text-burgundy hover:bg-burgundy/5"
                         >
@@ -619,7 +611,7 @@ const EditDoctorPage = () => {
                                 onChange={(e) => {
                                   const next = [...toEditorRows(values.arabicQualifications)];
                                   next[index] = e.target.value;
-                                  setFieldValue("arabicQualifications", toCommaSeparated(next));
+                                  setFieldValue("arabicQualifications", joinEditorRows(next));
                                 }}
                                 placeholder={`المؤهل ${index + 1}`}
                                 className="flex-1 h-11"
@@ -636,7 +628,7 @@ const EditDoctorPage = () => {
                                     return;
                                   }
                                   const next = rows.filter((_, i) => i !== index);
-                                  setFieldValue("arabicQualifications", toCommaSeparated(next));
+                                  setFieldValue("arabicQualifications", joinEditorRows(next));
                                 }}
                                 className="text-red-500 hover:text-red-600 hover:bg-red-50 h-11 w-11"
                               >
@@ -651,7 +643,7 @@ const EditDoctorPage = () => {
                           size="sm"
                           onClick={() => {
                             const rows = [...toEditorRows(values.arabicQualifications), ""];
-                            setFieldValue("arabicQualifications", toCommaSeparated(rows));
+                            setFieldValue("arabicQualifications", joinEditorRows(rows));
                           }}
                           className="mt-2 gap-1 border-burgundy/30 text-burgundy hover:bg-burgundy/5"
                         >
