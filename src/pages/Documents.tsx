@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import AdminLayout from "@/components/layout/AdminLayout";
 import BreadCrumb from "@/components/layout/BreadCrumb";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Search, FileText, Download, Upload, QrCode, MessageSquare, Phone, Send, Copy, X, Check, Calendar, Image, File, Pencil } from "lucide-react";
+import { Search, FileText, Download, Upload, QrCode, Send, Copy, X, Calendar, Image, File, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -35,10 +35,23 @@ type AdminDoc = {
   fileUrl?: string;
   publicPath?: string;
   contentVersion?: number;
+  qrEnabled?: boolean;
   uploadedBy: string;
-  sharedVia: ("SMS" | "WhatsApp" | "QR Code")[];
+  sharedVia: ("QR Code" | "Link")[];
   timesShared: number;
   status: "Active" | "Draft";
+};
+
+/** Only PDF uploads are allowed in document management. */
+const PDF_MIME_TYPE = "application/pdf";
+
+const isPdfFile = (file: File) =>
+  file.type === PDF_MIME_TYPE || file.name.toLowerCase().endsWith(".pdf");
+
+const isValidPdfDocumentPublicPath = (publicPath: string) => {
+  if (!isValidDocumentPublicPath(publicPath)) return false;
+  const basename = publicPath.trim().split("/").pop()?.toLowerCase() ?? "";
+  return basename.endsWith(".pdf");
 };
 
 const catStyles: Record<string, { bg: string; text: string; border: string; hoverBg: string }> = {
@@ -61,6 +74,9 @@ const getFileIcon = (fileType: string) => {
   }
 };
 
+/** Only documents created after qrEnabled was introduced show QR sharing. */
+const documentSupportsQrCode = (doc: AdminDoc) => doc.qrEnabled === true;
+
 const Documents = () => {
   const [docs, setDocs] = useState<AdminDoc[]>([]);
   const [loading, setLoading] = useState(false);
@@ -70,9 +86,7 @@ const Documents = () => {
   const [showShareModal, setShowShareModal] = useState<AdminDoc | null>(null);
   const [showViewModal, setShowViewModal] = useState<AdminDoc | null>(null);
   const [showEditModal, setShowEditModal] = useState<AdminDoc | null>(null);
-  const [shareMethod, setShareMethod] = useState<"sms" | "whatsapp" | "qr" | "link" | null>(null);
-  const [shareInput, setShareInput] = useState("");
-  const [shareSent, setShareSent] = useState(false);
+  const [shareMethod, setShareMethod] = useState<"qr" | "link" | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(6);
   const [uploadForm, setUploadForm] = useState({
@@ -122,6 +136,7 @@ const Documents = () => {
       fileUrl,
       publicPath: publicPath || undefined,
       contentVersion,
+      qrEnabled: d.qrEnabled === true,
       uploadedBy: String(d.uploadedBy ?? "Admin"),
       sharedVia: (d.sharedVia as AdminDoc["sharedVia"]) ?? [],
       timesShared: Number(d.timesShared ?? 0),
@@ -160,10 +175,9 @@ const Documents = () => {
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "application/pdf"];
-
-      if (!allowedTypes.includes(file.type)) {
-        toast.error("Only JPG, PNG, JPEG, and PDF files are allowed");
+      if (!isPdfFile(file)) {
+        toast.error("Only PDF files are allowed");
+        e.target.value = "";
         return;
       }
 
@@ -178,10 +192,9 @@ const Documents = () => {
   const handleEditFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "application/pdf"];
-
-      if (!allowedTypes.includes(file.type)) {
-        toast.error("Only JPG, PNG, JPEG, and PDF files are allowed");
+      if (!isPdfFile(file)) {
+        toast.error("Only PDF files are allowed");
+        e.target.value = "";
         return;
       }
 
@@ -198,10 +211,14 @@ const Documents = () => {
     if (!hasPermission(PERMISSIONS.DOCUMENT_CREATE)) return;
     if (!uploadForm.title) { toast.error("Please enter document title"); return; }
     if (!uploadForm.file) { toast.error("Please select a file to upload"); return; }
+    if (!isPdfFile(uploadForm.file)) {
+      toast.error("Only PDF files are allowed");
+      return;
+    }
 
     const publicPath = uploadForm.publicPath.trim();
-    if (publicPath && !isValidDocumentPublicPath(publicPath)) {
-      toast.error("Public path must start with / and include a file name with extension (.pdf, .png, .jpg, .jpeg, .webp)");
+    if (publicPath && !isValidPdfDocumentPublicPath(publicPath)) {
+      toast.error("Public path must start with / and end with a .pdf file name");
       return;
     }
 
@@ -243,8 +260,13 @@ const Documents = () => {
     if (!showEditModal) return;
 
     const publicPath = editForm.publicPath.trim();
-    if (publicPath && !isValidDocumentPublicPath(publicPath)) {
-      toast.error("Public path must start with / and include a file name with extension (.pdf, .png, .jpg, .jpeg, .webp)");
+    if (publicPath && !isValidPdfDocumentPublicPath(publicPath)) {
+      toast.error("Public path must start with / and end with a .pdf file name");
+      return;
+    }
+
+    if (editForm.file && !isPdfFile(editForm.file)) {
+      toast.error("Only PDF files are allowed");
       return;
     }
 
@@ -343,32 +365,13 @@ const Documents = () => {
       toast.success("Link copied to clipboard!");
       setShowShareModal(null);
       setShareMethod(null);
-      setShareInput("");
       setQrCodeDataUrl("");
       return;
     }
 
-    if (shareMethod === "qr") {
-      if (showShareModal) {
-        await generateQRCode(showShareModal);
-      }
-      return;
+    if (shareMethod === "qr" && showShareModal) {
+      await generateQRCode(showShareModal);
     }
-
-    if (shareMethod === "sms" || shareMethod === "whatsapp") {
-      toast.info("SMS and WhatsApp sharing are currently disabled");
-      return;
-    }
-
-    setShareSent(true);
-    setTimeout(() => {
-      setShareSent(false);
-      setShareMethod(null);
-      setShareInput("");
-      setShowShareModal(null);
-      setQrCodeDataUrl("");
-      toast.success("Document shared successfully!");
-    }, 2000);
   };
 
   const handleDownload = (doc: AdminDoc) => {
@@ -536,11 +539,11 @@ const Documents = () => {
                     </p>
                   </div>
                   <div className="md:col-span-2">
-                    <label className="text-sm font-semibold text-slate-700 block mb-1.5">Upload File * (PDF, JPG, PNG)</label>
+                    <label className="text-sm font-semibold text-slate-700 block mb-1.5">Upload File * (PDF only)</label>
                     <div className="border-2 border-dashed border-slate-200 rounded-xl p-6 text-center hover:border-burgundy/50 transition-all">
                       <input
                         type="file"
-                        accept=".pdf,.jpg,.jpeg,.png"
+                        accept=".pdf,application/pdf"
                         onChange={handleFileUpload}
                         className="hidden"
                         id="file-upload"
@@ -550,7 +553,7 @@ const Documents = () => {
                         <p className="text-sm text-slate-600">
                           {uploadForm.file ? uploadForm.file.name : "Click to upload or drag and drop"}
                         </p>
-                        <p className="text-xs text-slate-400 mt-1">PDF, JPG, PNG</p>
+                        <p className="text-xs text-slate-400 mt-1">PDF only</p>
                       </label>
                     </div>
                   </div>
@@ -661,6 +664,8 @@ const Documents = () => {
                               type="button"
                               onClick={(e) => {
                                 e.stopPropagation();
+                                setShareMethod(null);
+                                setQrCodeDataUrl("");
                                 setShowShareModal(doc);
                               }}
                               className="flex-1 min-w-[calc(50%-4px)] sm:min-w-0 inline-flex items-center justify-center gap-1.5 px-3 py-2 sm:py-1.5 rounded-lg border border-slate-200 text-slate-600 text-xs font-medium hover:bg-burgundy/5 hover:border-burgundy/30 transition-all"
@@ -914,7 +919,7 @@ const Documents = () => {
                     <input
                       key={showEditModal?.id ?? "edit-file"}
                       type="file"
-                      accept=".pdf,.jpg,.jpeg,.png"
+                      accept=".pdf,application/pdf"
                       onChange={handleEditFileUpload}
                       className="hidden"
                       id="edit-file-upload"
@@ -924,7 +929,7 @@ const Documents = () => {
                       <p className="text-xs text-slate-600">
                         {editForm.file ? editForm.file.name : "Click to upload new file"}
                       </p>
-                      <p className="text-xs text-slate-400 mt-1">PDF, JPG, PNG</p>
+                      <p className="text-xs text-slate-400 mt-1">PDF only</p>
                     </label>
                   </div>
                   {editPreviewUrl && !editForm.file && (
@@ -978,51 +983,8 @@ const Documents = () => {
             </div>
 
             <div className="p-4 sm:p-6">
-              {shareSent ? (
-                <div className="flex flex-col items-center py-8">
-                  <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mb-4">
-                    <Check size={28} className="text-green-600" />
-                  </div>
-                  <p className="text-lg font-semibold text-slate-800">Sent successfully!</p>
-                  <p className="text-sm text-slate-500 mt-1">The document has been shared.</p>
-                </div>
-              ) : shareMethod === null ? (
+              {shareMethod === null ? (
                 <div className="space-y-3">
-                  <button 
-                    onClick={() => setShareMethod("sms")} 
-                    className="w-full flex items-center gap-3 p-3 rounded-xl border border-slate-200 bg-slate-50 cursor-not-allowed opacity-60 transition-all group"
-                    disabled
-                  >
-                    <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
-                      <Phone size={18} className="text-blue-600" />
-                    </div>
-                    <div className="flex-1 text-left">
-                      <p className="text-sm font-semibold text-slate-800">Send via SMS</p>
-                      <p className="text-xs text-slate-500">Currently disabled</p>
-                    </div>
-                  </button>
-                  <button 
-                    onClick={() => setShareMethod("whatsapp")} 
-                    className="w-full flex items-center gap-3 p-3 rounded-xl border border-slate-200 bg-slate-50 cursor-not-allowed opacity-60 transition-all group"
-                    disabled
-                  >
-                    <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
-                      <MessageSquare size={18} className="text-green-600" />
-                    </div>
-                    <div className="flex-1 text-left">
-                      <p className="text-sm font-semibold text-slate-800">Send via WhatsApp</p>
-                      <p className="text-xs text-slate-500">Currently disabled</p>
-                    </div>
-                  </button>
-                  <button onClick={() => setShareMethod("qr")} className="w-full flex items-center gap-3 p-3 rounded-xl border border-slate-200 hover:bg-slate-50 transition-all group">
-                    <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
-                      <QrCode size={18} className="text-purple-600" />
-                    </div>
-                    <div className="flex-1 text-left">
-                      <p className="text-sm font-semibold text-slate-800">Generate QR Code</p>
-                      <p className="text-xs text-slate-500">Generate QR code for document access</p>
-                    </div>
-                  </button>
                   <button onClick={() => setShareMethod("link")} className="w-full flex items-center gap-3 p-3 rounded-xl border border-slate-200 hover:bg-slate-50 transition-all group">
                     <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center">
                       <Copy size={18} className="text-amber-600" />
@@ -1032,6 +994,17 @@ const Documents = () => {
                       <p className="text-xs text-slate-500">Copy document link to clipboard</p>
                     </div>
                   </button>
+                  {documentSupportsQrCode(showShareModal) && (
+                    <button onClick={() => setShareMethod("qr")} className="w-full flex items-center gap-3 p-3 rounded-xl border border-slate-200 hover:bg-slate-50 transition-all group">
+                      <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
+                        <QrCode size={18} className="text-purple-600" />
+                      </div>
+                      <div className="flex-1 text-left">
+                        <p className="text-sm font-semibold text-slate-800">Generate QR Code</p>
+                        <p className="text-xs text-slate-500">Generate QR code for document access</p>
+                      </div>
+                    </button>
+                  )}
                 </div>
               ) : shareMethod === "qr" ? (
                 <div className="space-y-4">
@@ -1126,45 +1099,7 @@ const Documents = () => {
                     </Button>
                   </div>
                 </div>
-              ) : (
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2">
-                    {shareMethod === "sms" && <Phone size={18} className="text-blue-600" />}
-                    {shareMethod === "whatsapp" && <MessageSquare size={18} className="text-green-600" />}
-                    <span className="text-sm font-semibold text-slate-800">
-                      {shareMethod === "sms" && "Send via SMS"}
-                      {shareMethod === "whatsapp" && "Send via WhatsApp"}
-                    </span>
-                  </div>
-                  <div>
-                    <label className="text-sm font-semibold text-slate-700 block mb-1.5">
-                      Patient Phone Number *
-                    </label>
-                    <input
-                      type="tel"
-                      value={shareInput}
-                      onChange={e => setShareInput(e.target.value)}
-                      placeholder="+965 XXXX XXXX"
-                      className="w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-burgundy/20 focus:border-burgundy"
-                    />
-                  </div>
-                  <div className="flex flex-col-reverse sm:flex-row gap-3 pt-2">
-                    <Button 
-                      onClick={() => {
-                        setShareMethod(null);
-                        setQrCodeDataUrl("");
-                      }} 
-                      variant="outline" 
-                      className="w-full sm:flex-1"
-                    >
-                      Back
-                    </Button>
-                    <Button onClick={handleShare} disabled className="w-full sm:flex-1 bg-burgundy/50 cursor-not-allowed">
-                      Send (Disabled)
-                    </Button>
-                  </div>
-                </div>
-              )}
+              ) : null}
             </div>
           </div>
         </div>

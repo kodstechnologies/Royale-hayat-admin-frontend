@@ -124,7 +124,7 @@ const Dashboard = () => {
   const statsCards = useMemo(
     () => [
       {
-        title: t("Appointments"),
+        title: t("Appointment Requests"),
         value: String(stats?.appointmentRequests ?? 0),
         icon: Calendar,
         link: "/appointment",
@@ -284,7 +284,7 @@ const Dashboard = () => {
               <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                 <div className="min-w-0">
                   <h3 className="text-sm sm:text-base font-semibold text-slate-800">
-                    Weekly Requests
+                    Weekly Appointment Requests
                   </h3>
                   <p className="text-xs text-slate-500 mt-0.5 line-clamp-2">
                     Appointment request trends for the current week
@@ -292,14 +292,14 @@ const Dashboard = () => {
                 </div>
                 <div className="flex items-center gap-1.5 shrink-0">
                   <div className="w-2.5 h-2.5 rounded-full bg-burgundy" />
-                  <span className="text-xs text-slate-600">Requests</span>
+                  <span className="text-xs text-slate-600">Appointment Requests</span>
                 </div>
               </div>
             </div>
-            <div className="p-3 sm:p-5 -ml-1 sm:ml-0">
+            <div className="p-3 sm:p-5">
               <div className="h-[220px] sm:h-[260px] w-full min-w-0">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={weeklyRequestsData} margin={{ left: -12, right: 4, bottom: 0 }}>
+                  <BarChart data={weeklyRequestsData} margin={{ left: 0, right: 8, top: 4, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
                     <XAxis
                       dataKey="day"
@@ -311,7 +311,8 @@ const Dashboard = () => {
                     />
                     <YAxis
                       tick={{ fontSize: 10, fill: "#64748b" }}
-                      width={28}
+                      width={36}
+                      tickMargin={4}
                       axisLine={false}
                       tickLine={false}
                       allowDecimals={false}
@@ -322,7 +323,7 @@ const Dashboard = () => {
                       fill={chartColor}
                       radius={[4, 4, 0, 0]}
                       maxBarSize={32}
-                      name="Requests"
+                      name="Appointment Requests"
                     />
                   </BarChart>
                 </ResponsiveContainer>
@@ -333,14 +334,14 @@ const Dashboard = () => {
           <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden min-w-0">
             <div className="px-4 sm:px-5 py-3 sm:py-4 border-b border-slate-100 bg-gradient-to-r from-slate-50/50 to-white">
               <h3 className="text-sm sm:text-base font-semibold text-slate-800">
-                Monthly Trends
+                Monthly Appointment Requests
               </h3>
               <p className="text-xs text-slate-500 mt-0.5">Monthly appointment requests</p>
             </div>
-            <div className="p-3 sm:p-5 -ml-1 sm:ml-0">
+            <div className="p-3 sm:p-5">
               <div className="h-[220px] sm:h-[260px] w-full min-w-0">
                 <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={monthlyRequestsData} margin={{ left: -12, right: 4 }}>
+                  <AreaChart data={monthlyRequestsData} margin={{ left: 0, right: 8, top: 4, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
                     <XAxis
                       dataKey="month"
@@ -351,7 +352,8 @@ const Dashboard = () => {
                     />
                     <YAxis
                       tick={{ fontSize: 10, fill: "#64748b" }}
-                      width={28}
+                      width={36}
+                      tickMargin={4}
                       axisLine={false}
                       tickLine={false}
                       allowDecimals={false}
@@ -364,7 +366,7 @@ const Dashboard = () => {
                       fill={chartColor}
                       fillOpacity={0.1}
                       strokeWidth={2}
-                      name="Requests"
+                      name="Appointment Requests"
                     />
                   </AreaChart>
                 </ResponsiveContainer>

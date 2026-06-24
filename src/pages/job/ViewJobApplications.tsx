@@ -117,12 +117,13 @@ const StatusBadge = ({
 
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-full font-medium ${cfg.badgeClass} ${
+      className={`inline-flex max-w-full items-center gap-1.5 rounded-full font-medium ${cfg.badgeClass} ${
         size === "md" ? "px-3 py-1.5 text-sm" : "px-2.5 py-1 text-xs"
       }`}
     >
-      <Icon size={size === "md" ? 14 : 12} />
-      {cfg.label}
+      <Icon size={size === "md" ? 14 : 12} className="shrink-0" />
+      <span className="truncate sm:hidden">{cfg.shortLabel}</span>
+      <span className="hidden truncate sm:inline">{cfg.label}</span>
     </span>
   );
 };
@@ -148,10 +149,10 @@ const ApplicationStatusToggle = ({
   const isCompact = size === "sm";
 
   return (
-    <div className={`inline-flex flex-col gap-2 ${className}`}>
+    <div className={`flex w-full min-w-0 flex-col gap-2 ${className}`}>
       <div
-        className={`relative inline-flex items-center rounded-xl border border-slate-200 bg-slate-100/90 p-1 ${
-          isCompact ? "gap-0.5" : "gap-1 w-full"
+        className={`relative flex w-full min-w-0 items-stretch rounded-xl border border-slate-200 bg-slate-100/90 p-1 ${
+          isCompact ? "gap-0.5" : "gap-1"
         } ${disabled ? "opacity-70" : ""}`}
         role="group"
         aria-label="Application status"
@@ -172,12 +173,14 @@ const ApplicationStatusToggle = ({
               }}
               disabled={disabled}
               aria-pressed={isActive}
-              className={`relative inline-flex items-center justify-center gap-1.5 rounded-lg font-medium transition-all duration-200 disabled:cursor-not-allowed ${
-                isCompact ? "px-2.5 py-1.5 text-[11px]" : "flex-1 px-3 py-2.5 text-sm"
+              className={`relative flex min-w-0 flex-1 items-center justify-center gap-1 rounded-lg font-medium transition-all duration-200 disabled:cursor-not-allowed sm:gap-1.5 ${
+                isCompact ? "px-2 py-2 text-[11px] sm:px-2.5 sm:py-1.5" : "px-3 py-2.5 text-sm"
               } ${isActive ? cfg.activeClass : cfg.inactiveClass}`}
             >
-              <Icon size={isCompact ? 12 : 14} />
-              <span>{isCompact ? cfg.shortLabel : cfg.label}</span>
+              <Icon size={isCompact ? 12 : 14} className="shrink-0" />
+              <span className="truncate">
+                {isCompact ? cfg.shortLabel : cfg.label}
+              </span>
             </button>
           );
         })}
@@ -781,7 +784,7 @@ const ApplicationList = ({ jobMongoId, onSelect }: ApplicationListProps) => {
                           })}
                         </div>
                       </td>
-                      <td className="py-3 px-4" onClick={(e) => e.stopPropagation()}>
+                      <td className="py-3 px-4 min-w-[9.5rem]" onClick={(e) => e.stopPropagation()}>
                         {canUpdateApplication ? (
                           <ApplicationStatusToggle
                             value={normalizeStatus(app.status)}
@@ -790,6 +793,7 @@ const ApplicationList = ({ jobMongoId, onSelect }: ApplicationListProps) => {
                             }
                             disabled={updatingStatusId === app._id}
                             size="sm"
+                            className="w-full max-w-[11rem]"
                           />
                         ) : (
                           <StatusBadge status={normalizeStatus(app.status)} />
@@ -1095,19 +1099,19 @@ const ApplicationDetail = ({ applicationId, initialData, onBack }: ApplicationDe
                       Application Status
                     </label>
                     <div
-                      className={`mt-3 rounded-xl border p-4 transition-colors ${
+                      className={`mt-3 rounded-xl border p-3 sm:p-4 transition-colors ${
                         normalizeStatus(application.status) === "reviewed"
                           ? "border-blue-100 bg-gradient-to-br from-blue-50/80 to-white"
                           : "border-amber-100 bg-gradient-to-br from-amber-50/80 to-white"
                       }`}
                     >
-                      <div className="mb-3 flex items-center justify-between gap-3">
+                      <div className="mb-3 flex flex-col gap-2 min-[420px]:flex-row min-[420px]:items-center min-[420px]:justify-between">
                         <StatusBadge
                           status={normalizeStatus(application.status)}
                           size="md"
                         />
                         {canUpdateApplication && (
-                          <span className="text-[11px] font-medium text-slate-400">
+                          <span className="text-[11px] font-medium text-slate-400 shrink-0">
                             Tap to update
                           </span>
                         )}

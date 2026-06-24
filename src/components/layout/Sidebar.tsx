@@ -608,7 +608,7 @@ const Sidebar = ({
   const handleNavClick = useCallback(
     (to: string) => {
       persistNavScroll();
-      navigate(to, { preventScrollReset: true });
+      navigate(to);
       if (isMobile) {
         onMobileClose?.();
       }
