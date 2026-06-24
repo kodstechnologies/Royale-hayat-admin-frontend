@@ -2,6 +2,30 @@ const PUBLIC_SITE_URL = (
   import.meta.env.VITE_PUBLIC_SITE_URL || "http://localhost:8080"
 ).replace(/\/$/, "");
 
+function appendCacheVersion(
+  base: string,
+  cacheVersion?: string | number,
+): string {
+  if (cacheVersion === undefined || cacheVersion === null || cacheVersion === "") {
+    return base;
+  }
+  return `${base}?v=${encodeURIComponent(String(cacheVersion))}`;
+}
+
+/** Encode each path segment so spaces and special chars work in links and QR scans. */
+export function encodeDocumentPublicPath(publicPath: string): string {
+  const trimmed = publicPath.trim();
+  if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+    return trimmed;
+  }
+  const rawPath = trimmed.startsWith("/") ? trimmed : `/${trimmed}`;
+  const segments = rawPath
+    .split("/")
+    .filter(Boolean)
+    .map((segment) => encodeURIComponent(decodeURIComponent(segment)));
+  return `/${segments.join("/")}`;
+}
+
 export function buildDocumentShareUrl(
   publicPath?: string,
   cacheVersion?: string | number,
@@ -10,12 +34,29 @@ export function buildDocumentShareUrl(
   if (publicPath.startsWith("http://") || publicPath.startsWith("https://")) {
     return publicPath;
   }
-  const path = publicPath.startsWith("/") ? publicPath : `/${publicPath}`;
-  const base = `${PUBLIC_SITE_URL}${path}`;
-  if (cacheVersion === undefined || cacheVersion === null || cacheVersion === "") {
-    return base;
+  const base = `${PUBLIC_SITE_URL}${encodeDocumentPublicPath(publicPath)}`;
+  return appendCacheVersion(base, cacheVersion);
+}
+
+/**
+ * Direct PDF stream URL for QR codes — opens the file immediately on scan
+ * (bypasses SPA routing and empty nginx static files on legacy paths).
+ */
+export function buildDocumentQrUrl(
+  publicPath?: string,
+  cacheVersion?: string | number,
+): string {
+  if (!publicPath) return "";
+  if (publicPath.startsWith("http://") || publicPath.startsWith("https://")) {
+    return publicPath;
   }
-  return `${base}?v=${encodeURIComponent(String(cacheVersion))}`;
+  const encodedPath = encodeDocumentPublicPath(publicPath)
+    .replace(/^\//, "")
+    .split("/")
+    .map((segment) => encodeURIComponent(decodeURIComponent(segment)))
+    .join("/");
+  const base = `${PUBLIC_SITE_URL}/api/v1/runtime-pdf-viewer/file/${encodedPath}`;
+  return appendCacheVersion(base, cacheVersion);
 }
 
 export function getPublicSiteOrigin(): string {

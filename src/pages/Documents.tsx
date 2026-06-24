@@ -18,6 +18,7 @@ import {
 import { PERMISSIONS } from "@/constants/permissions";
 import PermissionGate, { hasPermission } from "@/utils/PermissionGate";
 import {
+  buildDocumentQrUrl,
   buildDocumentShareUrl,
   getPublicSiteOrigin,
   isValidDocumentPublicPath,
@@ -330,20 +331,24 @@ const Documents = () => {
     }
   };
 
+  const getDocumentQrLink = (doc: AdminDoc) => {
+    if (doc.publicPath) {
+      return buildDocumentQrUrl(doc.publicPath, doc.contentVersion);
+    }
+    return doc.fileUrl || `${getPublicSiteOrigin()}/documents/${doc.id}`;
+  };
+
   const generateQRCode = async (doc: AdminDoc) => {
     setGeneratingQr(true);
     try {
-      const documentLink =
-        doc.publicPath
-          ? buildDocumentShareUrl(doc.publicPath)
-          : doc.fileUrl || `${getPublicSiteOrigin()}/documents/${doc.id}`;
+      const documentLink = getDocumentQrLink(doc);
       const qrDataUrl = await QRCode.toDataURL(documentLink, {
         width: 300,
         margin: 2,
         color: {
-          dark: '#000000',
-          light: '#FFFFFF'
-        }
+          dark: "#000000",
+          light: "#FFFFFF",
+        },
       });
       setQrCodeDataUrl(qrDataUrl);
       toast.success("QR Code generated successfully!");
@@ -354,6 +359,12 @@ const Documents = () => {
       setGeneratingQr(false);
     }
   };
+
+  useEffect(() => {
+    if (shareMethod !== "qr" || !showShareModal) return;
+    setQrCodeDataUrl("");
+    void generateQRCode(showShareModal);
+  }, [shareMethod, showShareModal?.id]);
 
   const handleShare = async () => {
     if (shareMethod === "link") {
@@ -848,16 +859,17 @@ const Documents = () => {
       
       {showEditModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-0 sm:p-4" onClick={() => setShowEditModal(null)}>
-          <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl border border-slate-200 w-full max-w-md max-h-[92vh] sm:max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-            <div className="bg-gradient-to-r from-burgundy/5 to-white border-b border-slate-100 p-4 sm:p-5 sticky top-0 z-10">
+          <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl border border-slate-200 w-full max-w-2xl max-h-[92vh] sm:max-h-[90vh] flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
+            <div className="shrink-0 bg-white border-b border-slate-100 p-4 sm:p-5 rounded-t-2xl sm:rounded-t-2xl">
               <div className="flex items-start justify-between gap-3">
-                <div className="flex items-center gap-3 min-w-0">
+                <div className="flex items-center gap-3 min-w-0 flex-1">
                   <div className="w-10 h-10 rounded-xl bg-burgundy/10 flex items-center justify-center shrink-0">
                     <Pencil className="h-5 w-5 text-burgundy" />
                   </div>
-                  <div className="min-w-0">
+                  <div className="min-w-0 flex-1">
                     <h3 className="text-base sm:text-lg font-bold text-slate-800">Edit Document</h3>
-                    <p className="text-xs text-slate-500">Update document details</p>
+                    <p className="text-xs text-slate-500 line-clamp-2 mt-0.5">{showEditModal.title}</p>
+                    <p className="text-xs text-slate-400 mt-0.5">{showEditModal.category}</p>
                   </div>
                 </div>
                 <button type="button" onClick={() => setShowEditModal(null)} className="p-2 rounded-lg hover:bg-slate-100 transition-colors shrink-0" aria-label="Close">
@@ -866,7 +878,7 @@ const Documents = () => {
               </div>
             </div>
 
-            <div className="p-4 sm:p-6">
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6">
               <div className="space-y-4">
                 <div>
                   <label className="text-sm font-semibold text-slate-700 block mb-1.5">Document Title *</label>
@@ -995,7 +1007,7 @@ const Documents = () => {
                     </div>
                   </button>
                   {documentSupportsQrCode(showShareModal) && (
-                    <button onClick={() => setShareMethod("qr")} className="w-full flex items-center gap-3 p-3 rounded-xl border border-slate-200 hover:bg-slate-50 transition-all group">
+                    <button onClick={() => { setQrCodeDataUrl(""); setShareMethod("qr"); }} className="w-full flex items-center gap-3 p-3 rounded-xl border border-slate-200 hover:bg-slate-50 transition-all group">
                       <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
                         <QrCode size={18} className="text-purple-600" />
                       </div>
@@ -1018,11 +1030,16 @@ const Documents = () => {
                         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
                       </div>
                     ) : qrCodeDataUrl ? (
-                      <div className="flex flex-col items-center gap-4">
+                      <div className="flex flex-col items-center gap-4 w-full">
                         <img src={qrCodeDataUrl} alt="QR Code" className="w-48 h-48" />
                         <p className="text-xs text-slate-500 text-center">
-                          Scan this QR code to access the document
+                          Scan to open the document directly
                         </p>
+                        <div className="w-full bg-slate-50 rounded-xl p-3">
+                          <p className="text-xs text-slate-600 break-all">
+                            {getDocumentQrLink(showShareModal)}
+                          </p>
+                        </div>
                         <Button 
                           onClick={() => {
                             const link = document.createElement('a');
