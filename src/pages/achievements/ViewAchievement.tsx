@@ -251,21 +251,6 @@ const ViewAchievement = () => {
                 
                 <div className={`rounded-xl border border-slate-200 bg-white p-4 sm:p-5 shadow-sm ${activeLanguage === "arabic" ? "text-right" : ""}`}>
                   <div className="flex items-center gap-2 pb-2 border-b border-slate-100 mb-3">
-                    <Award className="h-4 w-4 text-burgundy" />
-                    <h3 className="text-sm font-semibold text-slate-800">
-                      Achievement Title
-                    </h3>
-                  </div>
-                  <h1 className={`text-lg sm:text-xl font-bold text-slate-800 break-words ${activeLanguage === "arabic" ? "rtl-text" : ""}`}>
-                    {activeLanguage === "english"
-                      ? achievement.title
-                      : achievement.arabicTitle || achievement.title}
-                  </h1>
-                </div>
-
-                
-                <div className={`rounded-xl border border-slate-200 bg-white p-4 sm:p-5 shadow-sm ${activeLanguage === "arabic" ? "text-right" : ""}`}>
-                  <div className="flex items-center gap-2 pb-2 border-b border-slate-100 mb-3">
                     <User className="h-4 w-4 text-burgundy" />
                     <h3 className="text-sm font-semibold text-slate-800">
                       Employee Information
@@ -286,6 +271,16 @@ const ViewAchievement = () => {
                         {activeLanguage === "english"
                           ? achievement.employeeName
                           : achievement.arabicEmployeeName || achievement.employeeName}
+                      </p>
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                        Title
+                      </label>
+                      <p className="text-sm font-medium text-slate-800 mt-1 break-words">
+                        {activeLanguage === "english"
+                          ? achievement.title
+                          : achievement.arabicTitle || achievement.title}
                       </p>
                     </div>
                     <div>

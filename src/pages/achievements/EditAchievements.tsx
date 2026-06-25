@@ -344,6 +344,27 @@ const EditAchievements = () => {
                   
                   <div className="space-y-2 md:col-span-2">
                     <label className="text-sm font-semibold text-slate-700">
+                      Title <span className="text-red-500">*</span>
+                    </label>
+                    <Input
+                      value={activeTab === "english" ? formData.title : formData.arabicTitle}
+                      onChange={(e) => setFormData({ 
+                        ...formData, 
+                        ...(activeTab === "english" 
+                          ? { title: e.target.value } 
+                          : { arabicTitle: e.target.value })
+                      })}
+                      placeholder={activeTab === "english" 
+                        ? "e.g., Best Employee of the Year, Excellence in Service, etc." 
+                        : "مثال: أفضل موظف في العام، التميز في الخدمة، إلخ."}
+                      className="h-11"
+                      dir={activeTab === "arabic" ? "rtl" : "ltr"}
+                    />
+                  </div>
+
+                  
+                  <div className="space-y-2 md:col-span-2">
+                    <label className="text-sm font-semibold text-slate-700">
                       Department
                     </label>
                     <Input
@@ -410,26 +431,6 @@ const EditAchievements = () => {
                         ))}
                       </select>
                     </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="text-sm font-semibold text-slate-700">
-                      Achievement Title <span className="text-red-500">*</span>
-                    </label>
-                    <Input
-                      value={activeTab === "english" ? formData.title : formData.arabicTitle}
-                      onChange={(e) => setFormData({ 
-                        ...formData, 
-                        ...(activeTab === "english" 
-                          ? { title: e.target.value } 
-                          : { arabicTitle: e.target.value })
-                      })}
-                      placeholder={activeTab === "english" 
-                        ? "e.g., Best Employee of the Year, Excellence in Service, etc." 
-                        : "مثال: أفضل موظف في العام، التميز في الخدمة، إلخ."}
-                      className="h-11"
-                      dir={activeTab === "arabic" ? "rtl" : "ltr"}
-                    />
                   </div>
 
                   
