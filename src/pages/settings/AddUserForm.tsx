@@ -13,11 +13,11 @@ type Permission = {
 
 const permissions: Permission[] = [
   {
-    key: PERMISSIONS.APPOINTMENT_VIEW_ALL,
+    key: PERMISSIONS.APPOINTMENT_REQUEST_VIEW,
     label: "View All Appointment Requests",
   },
   {
-    key: PERMISSIONS.APPOINTMENT_BOOKING_VIEW_ALL,
+    key: PERMISSIONS.APPOINTMENT_BOOKING_VIEW,
     label: "View All Bookings",
   },
   {
@@ -25,7 +25,7 @@ const permissions: Permission[] = [
     label: "Accept Appointment Request",
   },
   {
-    key: PERMISSIONS.APPOINTMENT_CANCEL,
+    key: PERMISSIONS.APPOINTMENT_REQUEST_REJECT,
     label: "Cancel Appointment Request",
   },
 ];
@@ -49,7 +49,7 @@ const AddUserForm = () => {
     return (
       formData.name.trim().length > 0 &&
       formData.email.trim().length > 0 &&
-      formData.password.trim().length > 0 &&
+      formData.password.trim().length >= 6 &&
       formData.role.trim().length > 0 &&
       selectedPermissions.length > 0
     );
@@ -63,8 +63,8 @@ const AddUserForm = () => {
     try {
       const response = await createSubadmin({
         name: formData.name.trim(),
-        email: formData.email.trim(),
-        password: formData.password,
+        email: formData.email.trim().toLowerCase(),
+        password: formData.password.trim(),
         role: formData.role,
         permissions: selectedPermissions,
       });

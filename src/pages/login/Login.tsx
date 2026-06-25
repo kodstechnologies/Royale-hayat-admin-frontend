@@ -41,7 +41,8 @@ const Login = () => {
     setLoading(true);
 
     try {
-      const response = await login(email, password);
+      const normalizedEmail = email.trim().toLowerCase();
+      const response = await login(normalizedEmail, password);
 
       if (!response?.success) {
         setError(response?.message || "Unable to send OTP.");
@@ -50,7 +51,7 @@ const Login = () => {
 
       navigate("/otp", {
         state: {
-          email,
+          email: response?.data?.email || normalizedEmail,
         },
       });
     } catch (err: any) {
