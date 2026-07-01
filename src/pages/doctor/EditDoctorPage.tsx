@@ -17,11 +17,14 @@ import {
   type ApiDoctor,
 } from "@/api/doctors";
 import ExpertiseSectionsEditor from "@/components/doctor/ExpertiseSectionsEditor";
+import DoctorDepartmentFields from "@/components/doctor/DoctorDepartmentFields";
 import {
   buildDoctorFormData,
   createEmptyExpertiseSection,
   DOCTOR_LIST_SEPARATOR as SEPARATOR,
   joinEditorRows,
+  mergeSubspecialityOptions,
+  pruneSubspecialityIds,
   toEditorRows,
   type DeptSubspecialityOption,
   type DoctorFormValues,
@@ -44,12 +47,6 @@ const addUniqueItem = (value: string, next: string) => {
   const existing = toItems(value);
   if (existing.some((item) => item.toLowerCase() === normalized.toLowerCase())) return value;
   return [...existing, normalized].join(SEPARATOR);
-};
-const toggleSubId = (id: string, current: string[]) => {
-  const sid = String(id);
-  const has = current.some((x) => String(x) === sid);
-  if (has) return current.filter((x) => String(x) !== sid);
-  return [...current, sid];
 };
 
 const EditDoctorPage = () => {
@@ -81,7 +78,7 @@ const EditDoctorPage = () => {
     arabicTitle: "",
     arabicLanguages: "",
     arabicQualifications: "",
-    department: "",
+    departmentIds: [],
     subspecialityIds: [],
     availableOnline: true,
     imageFile: null,
@@ -107,28 +104,46 @@ const EditDoctorPage = () => {
     void loadDepartments();
   }, []);
 
-  const loadDepartmentSubspecialities = useCallback(async (departmentId: string): Promise<DeptSubspecialityOption[]> => {
-    if (!departmentId) {
-      setDeptSubspecialities([]);
-      return [];
-    }
-    setDeptSubsLoading(true);
-    try {
+  const fetchSubspecialitiesForDepartment = useCallback(
+    async (departmentId: string): Promise<DeptSubspecialityOption[]> => {
       const res = await getSubspecialities({ department: departmentId, page: 1, limit: 100 });
       const list = Array.isArray(res.data?.data) ? res.data.data : [];
-      const options = list.map((row) => {
+      return list.map((row) => {
         const mapped = mapApiSubspecialityToListItem(row);
-        return { _id: mapped.id, name: mapped.name, arabicName: mapped.arabicName };
+        return {
+          _id: mapped.id,
+          name: mapped.name,
+          arabicName: mapped.arabicName,
+          departmentId,
+        };
       });
-      setDeptSubspecialities(options);
-      return options;
-    } catch {
-      setDeptSubspecialities([]);
-      return [];
-    } finally {
-      setDeptSubsLoading(false);
-    }
-  }, []);
+    },
+    [],
+  );
+
+  const loadDepartmentsSubspecialities = useCallback(
+    async (departmentIds: string[]): Promise<DeptSubspecialityOption[]> => {
+      const uniqueIds = [...new Set(departmentIds.map((id) => String(id)).filter(Boolean))];
+      if (!uniqueIds.length) {
+        setDeptSubspecialities([]);
+        return [];
+      }
+
+      setDeptSubsLoading(true);
+      try {
+        const lists = await Promise.all(uniqueIds.map((id) => fetchSubspecialitiesForDepartment(id)));
+        const options = mergeSubspecialityOptions(lists);
+        setDeptSubspecialities(options);
+        return options;
+      } catch {
+        setDeptSubspecialities([]);
+        return [];
+      } finally {
+        setDeptSubsLoading(false);
+      }
+    },
+    [fetchSubspecialitiesForDepartment],
+  );
 
   useEffect(() => {
     const loadData = async () => {
@@ -146,24 +161,27 @@ const EditDoctorPage = () => {
           return;
         }
 
-        const deptId =
-          raw.department && typeof raw.department === "object"
-            ? String(raw.department._id ?? "")
-            : String(raw.department ?? "");
+        const departmentIds =
+          raw.department && Array.isArray(raw.department)
+            ? raw.department
+                .map((item) =>
+                  item && typeof item === "object"
+                    ? String(item._id ?? "")
+                    : String(item ?? ""),
+                )
+                .filter(Boolean)
+            : raw.department && typeof raw.department === "object"
+              ? [String(raw.department._id ?? "")]
+              : String(raw.department ?? "").trim()
+                ? [String(raw.department).trim()]
+                : [];
 
-        let subsForDept: Array<{ _id: string; name: string; arabicName: string }> = [];
-        if (deptId) {
-          const subRes = await getSubspecialities({ department: deptId, page: 1, limit: 100 });
-          const subList = Array.isArray(subRes.data?.data) ? subRes.data.data : [];
-          subsForDept = subList.map((row) => {
-            const mapped = mapApiSubspecialityToListItem(row);
-            return { _id: mapped.id, name: mapped.name, arabicName: mapped.arabicName };
-          });
-          setDeptSubspecialities(subsForDept);
+        let subsForDepartments: DeptSubspecialityOption[] = [];
+        if (departmentIds.length > 0) {
+          subsForDepartments = await loadDepartmentsSubspecialities(departmentIds);
         }
 
-        const formValues = mapApiDoctorToFormValues(raw, subsForDept);
-        const departmentId = deptId || formValues.department;
+        const formValues = mapApiDoctorToFormValues(raw, subsForDepartments);
 
         setInitialValues({
           doctorId: formValues.doctorId,
@@ -176,7 +194,7 @@ const EditDoctorPage = () => {
           arabicTitle: formValues.arabicTitle,
           arabicLanguages: formValues.arabicLanguages,
           arabicQualifications: formValues.arabicQualifications,
-          department: departmentId,
+          departmentIds: formValues.departmentIds.map((deptId) => String(deptId)).filter(Boolean),
           subspecialityIds: formValues.subspecialityIds.map((subId) => String(subId)).filter(Boolean),
           availableOnline: formValues.availableOnline,
           imageFile: null,
@@ -193,7 +211,7 @@ const EditDoctorPage = () => {
     };
 
     void loadData();
-  }, [id, navigate, loadDepartmentSubspecialities, backPath]);
+  }, [id, navigate, loadDepartmentsSubspecialities, backPath]);
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
@@ -216,14 +234,6 @@ const EditDoctorPage = () => {
     } else {
       toast.error("Please upload an image file", { position: "top-right" });
     }
-  };
-
-  const getSubspecialityDisplayName = (sub: typeof deptSubspecialities[0]) => {
-    return activeTab === "arabic" ? sub.arabicName || sub.name : sub.name;
-  };
-
-  const getDepartmentDisplayName = (dept: typeof departments[0]) => {
-    return activeTab === "arabic" ? dept.arabicName || dept.name : dept.name;
   };
 
   if (loading) {
@@ -304,7 +314,7 @@ const EditDoctorPage = () => {
                 if (!values.doctorId.trim()) errors.doctorId = "Doctor ID is required";
                 if (!values.name.trim() && activeTab === "english") errors.name = "Name is required";
                 if (!values.arabicName.trim() && activeTab === "arabic") errors.arabicName = "Arabic Name is required";
-                if (!values.department.trim()) errors.department = "Department is required";
+                if (!values.departmentIds.length) errors.departmentIds = "At least one department is required";
                 return errors;
               }}
               onSubmit={async (values) => {
@@ -331,7 +341,26 @@ const EditDoctorPage = () => {
                 }
               }}
             >
-              {({ values, setFieldValue }) => (
+              {({ values, setFieldValue }) => {
+                const departmentFieldProps = {
+                  departments,
+                  departmentIds: values.departmentIds,
+                  subspecialityIds: values.subspecialityIds,
+                  deptSubspecialities,
+                  deptSubsLoading,
+                  activeTab,
+                  onDepartmentIdsChange: (ids: string[]) => setFieldValue("departmentIds", ids),
+                  onSubspecialityIdsChange: (ids: string[]) => setFieldValue("subspecialityIds", ids),
+                  onDepartmentsChange: async (nextDepartmentIds: string[]) => {
+                    const options = await loadDepartmentsSubspecialities(nextDepartmentIds);
+                    setFieldValue(
+                      "subspecialityIds",
+                      pruneSubspecialityIds(values.subspecialityIds, options),
+                    );
+                  },
+                };
+
+                return (
                 <Form className="space-y-6">
                   
                   <div className="bg-slate-50/50 rounded-xl p-5 border border-slate-100">
@@ -662,36 +691,8 @@ const EditDoctorPage = () => {
 
                   
                   <div className="bg-white rounded-xl border border-slate-200 p-5 space-y-5">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                      <div className="space-y-2">
-                        <label className="text-sm font-semibold text-slate-700">
-                          Department <span className="text-red-500">*</span>
-                        </label>
-                        <select
-                          value={values.department}
-                          onChange={(e) => {
-                            const next = e.target.value;
-                            setFieldValue("department", next);
-                            if (!next) {
-                              setFieldValue("subspecialityIds", []);
-                              void loadDepartmentSubspecialities("");
-                              return;
-                            }
-                            void loadDepartmentSubspecialities(next).then(() => {
-                              setFieldValue("subspecialityIds", []);
-                            });
-                          }}
-                          className="w-full h-11 px-3 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:border-burgundy focus:ring-2 focus:ring-burgundy/20 transition-all"
-                        >
-                          <option value="">Select department</option>
-                          {departments.map((d) => (
-                            <option key={d._id} value={d._id}>
-                              {getDepartmentDisplayName(d)}
-                            </option>
-                          ))}
-                        </select>
-                        <ErrorMessage name="department" component="p" className="text-xs text-red-500" />
-                      </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5 items-start">
+                      <DoctorDepartmentFields mode="departments" {...departmentFieldProps} />
 
                       <div className="space-y-2">
                         <label className="text-sm font-semibold text-slate-700">Available online</label>
@@ -708,39 +709,7 @@ const EditDoctorPage = () => {
                       </div>
                     </div>
 
-                    {values.department && (
-                      <div className="space-y-2">
-                        <label className="text-sm font-semibold text-slate-700">
-                          Subspecialities <span className="text-slate-400 font-normal">(optional, multi-select)</span>
-                        </label>
-                        <div className="max-h-48 overflow-y-auto rounded-xl border border-slate-200 bg-slate-50/30 p-3 space-y-2">
-                          {deptSubsLoading ? (
-                            <p className="text-sm text-slate-500 px-2 py-2">Loading subspecialities…</p>
-                          ) : deptSubspecialities.length === 0 ? (
-                            <p className="text-sm text-amber-600 px-2 py-2">
-                              This department has no linked subspecialities. Add them on the department edit screen.
-                            </p>
-                          ) : (
-                            deptSubspecialities.map((s) => (
-                              <label key={s._id} className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-white cursor-pointer transition-colors">
-                                <input
-                                  type="checkbox"
-                                  className="rounded border-slate-300 text-burgundy focus:ring-burgundy"
-                                  checked={values.subspecialityIds.some(
-                                    (selectedId) => String(selectedId) === String(s._id),
-                                  )}
-                                  onChange={() => setFieldValue("subspecialityIds", toggleSubId(s._id, values.subspecialityIds))}
-                                />
-                                <span className="text-sm text-slate-700">{getSubspecialityDisplayName(s)}</span>
-                              </label>
-                            ))
-                          )}
-                        </div>
-                        {values.subspecialityIds.length > 0 && (
-                          <p className="text-xs text-slate-500 mt-1">{values.subspecialityIds.length} selected</p>
-                        )}
-                      </div>
-                    )}
+                    <DoctorDepartmentFields mode="subspecialities" {...departmentFieldProps} />
 
                     
                     <div className="space-y-2">
@@ -803,7 +772,8 @@ const EditDoctorPage = () => {
                     </Button>
                   </div>
                 </Form>
-              )}
+                );
+              }}
             </Formik>
           </div>
         </div>

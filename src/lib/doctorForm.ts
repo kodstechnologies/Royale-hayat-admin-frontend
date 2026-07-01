@@ -19,6 +19,75 @@ export type DeptSubspecialityOption = {
   _id: string;
   name: string;
   arabicName: string;
+  departmentId?: string;
+};
+
+export const toggleSelectionId = (id: string, current: string[]) => {
+  const normalizedId = String(id);
+  const has = current.some((value) => String(value) === normalizedId);
+  if (has) return current.filter((value) => String(value) !== normalizedId);
+  return [...current, normalizedId];
+};
+
+export const mergeSubspecialityOptions = (
+  lists: DeptSubspecialityOption[][],
+): DeptSubspecialityOption[] => {
+  const byId = new Map<string, DeptSubspecialityOption>();
+  for (const list of lists) {
+    for (const sub of list) {
+      byId.set(String(sub._id), sub);
+    }
+  }
+  return [...byId.values()].sort((a, b) =>
+    a.name.localeCompare(b.name, "en", { sensitivity: "base" }),
+  );
+};
+
+export const pruneSubspecialityIds = (
+  subspecialityIds: string[],
+  availableSubs: DeptSubspecialityOption[],
+) => {
+  const availableIds = new Set(availableSubs.map((sub) => String(sub._id)));
+  return subspecialityIds.filter((id) => availableIds.has(String(id)));
+};
+
+export type DepartmentSubspecialityGroup = {
+  departmentId: string;
+  departmentName: string;
+  departmentNameAr?: string;
+  subspecialities: DeptSubspecialityOption[];
+};
+
+export const groupSubspecialitiesByDepartment = (
+  departmentIds: string[],
+  departments: Array<{ _id: string; name: string; arabicName?: string }>,
+  subspecialities: DeptSubspecialityOption[],
+): DepartmentSubspecialityGroup[] => {
+  const subsByDepartment = new Map<string, DeptSubspecialityOption[]>();
+
+  for (const sub of subspecialities) {
+    const departmentId = String(sub.departmentId ?? "");
+    if (!departmentId) continue;
+    const existing = subsByDepartment.get(departmentId) ?? [];
+    existing.push(sub);
+    subsByDepartment.set(departmentId, existing);
+  }
+
+  return departmentIds
+    .map((departmentId) => {
+      const dept = departments.find((item) => String(item._id) === String(departmentId));
+      const departmentSubs = subsByDepartment.get(String(departmentId)) ?? [];
+
+      return {
+        departmentId: String(departmentId),
+        departmentName: dept?.name ?? "Department",
+        departmentNameAr: dept?.arabicName,
+        subspecialities: departmentSubs.sort((a, b) =>
+          a.name.localeCompare(b.name, "en", { sensitivity: "base" }),
+        ),
+      };
+    })
+    .filter((group) => group.departmentId);
 };
 
 export type ExpertiseSectionForm = {
@@ -111,7 +180,7 @@ export type DoctorFormValues = {
   arabicTitle: string;
   arabicLanguages: string;
   arabicQualifications: string;
-  department: string;
+  departmentIds: string[];
   subspecialityIds: string[];
   availableOnline: boolean;
   imageFile: File | null;
@@ -133,7 +202,7 @@ export const buildDoctorFormData = (
   formData.append("doctorId", values.doctorId.trim());
   formData.append("name", values.name.trim());
   formData.append("nameAr", values.arabicName.trim());
-  formData.append("department", values.department.trim());
+  appendJsonArray(formData, "department", values.departmentIds.map((id) => String(id).trim()).filter(Boolean));
   formData.append("availableOnline", String(values.availableOnline));
   formData.append("isActive", "true");
 

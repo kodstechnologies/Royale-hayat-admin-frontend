@@ -4,7 +4,7 @@ type DoctorSearchFields = {
   specialty?: string;
   specialtyAr?: string;
   title?: string;
-  department?: string | { name?: string; arabicName?: string };
+  department?: string | { name?: string; arabicName?: string } | Array<string | { name?: string; arabicName?: string }>;
 };
 
 const TATWEEL = /\u0640/g;
@@ -29,6 +29,15 @@ const resolveDepartmentText = (
   department: DoctorSearchFields["department"],
 ): string => {
   if (!department) return "";
+  if (Array.isArray(department)) {
+    return department
+      .map((item) => {
+        if (typeof item === "string") return item;
+        return [item.name, item.arabicName].filter(Boolean).join(" ");
+      })
+      .filter(Boolean)
+      .join(" ");
+  }
   if (typeof department === "string") return department;
   return [department.name, department.arabicName].filter(Boolean).join(" ");
 };

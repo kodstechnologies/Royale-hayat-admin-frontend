@@ -141,6 +141,20 @@ const Doctors = () => {
   }, [currentPage, totalPages]);
 
   const getDepartmentName = (department: DoctorListItem["department"]) => {
+    if (Array.isArray(department)) {
+      return (
+        department
+          .map((item) => {
+            if (typeof item === "string") {
+              const match = departmentOptions.find((d) => d._id === item);
+              return match?.name || item;
+            }
+            return item?.name || item?.arabicName || "";
+          })
+          .filter(Boolean)
+          .join(", ") || "-"
+      );
+    }
     if (typeof department !== "string") {
       return department?.name || department?.arabicName || "-";
     }

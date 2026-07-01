@@ -69,6 +69,20 @@ const FeaturedDoctors = () => {
     activeLanguage === "arabic" ? formatDoctorDisplayNameAr(doctor) : doctor.name;
 
   const getDepartmentName = (department: DoctorListItem["department"]) => {
+    if (Array.isArray(department)) {
+      return (
+        department
+          .map((item) => {
+            if (typeof item === "string") return item;
+            if (activeLanguage === "arabic") {
+              return item?.arabicName || item?.name || "";
+            }
+            return item?.name || "";
+          })
+          .filter(Boolean)
+          .join(", ") || "-"
+      );
+    }
     if (typeof department === "string") return department;
     if (activeLanguage === "arabic") {
       return department?.arabicName || department?.name || "-";

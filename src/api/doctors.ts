@@ -21,7 +21,10 @@ export type ApiDoctor = {
   doctorId: string;
   name: string;
   nameAr: string;
-  department?: string | { _id?: string; name?: string; arabicName?: string };
+  department?:
+    | string
+    | { _id?: string; name?: string; arabicName?: string }
+    | Array<string | { _id?: string; name?: string; arabicName?: string }>;
   subspecialities?: string[];
   subspecialitiesAr?: string[];
   title?: string;
@@ -45,7 +48,10 @@ export type DoctorListItem = {
   arabicName: string;
   specialty: string;
   specialtyAr: string;
-  department: string | { _id?: string; name?: string; arabicName?: string };
+  department:
+    | string
+    | { _id?: string; name?: string; arabicName?: string }
+    | Array<string | { _id?: string; name?: string; arabicName?: string }>;
   title: string;
   qualifications: string[];
   expertise: string[];
@@ -206,22 +212,60 @@ const mapExpertiseToFormSections = (row: ApiDoctor): ExpertiseSectionForm[] => {
   return [createEmptyExpertiseSection()];
 };
 
+const resolveDepartments = (department: ApiDoctor["department"]) => {
+  if (!department) {
+    return { departmentIds: [] as string[], departmentItems: [] as Array<{ _id?: string; name?: string; arabicName?: string }> };
+  }
+
+  const items = Array.isArray(department) ? department : [department];
+  const departmentIds: string[] = [];
+  const departmentItems: Array<{ _id?: string; name?: string; arabicName?: string }> = [];
+
+  for (const item of items) {
+    if (item && typeof item === "object") {
+      departmentItems.push(item);
+      if (item._id) departmentIds.push(String(item._id));
+      continue;
+    }
+    if (typeof item === "string" && item.trim()) {
+      departmentIds.push(item.trim());
+    }
+  }
+
+  return { departmentIds, departmentItems };
+};
+
 const resolveDepartment = (department: ApiDoctor["department"]) => {
-  if (department && typeof department === "object") {
+  const { departmentIds, departmentItems } = resolveDepartments(department);
+  const firstObject = departmentItems[0];
+
+  if (firstObject) {
     return {
-      departmentId: String(department._id ?? ""),
-      departmentName: String(department.name ?? ""),
-      departmentNameAr: String(department.arabicName ?? department.name ?? ""),
+      departmentId: String(firstObject._id ?? departmentIds[0] ?? ""),
+      departmentName: String(firstObject.name ?? ""),
+      departmentNameAr: String(firstObject.arabicName ?? firstObject.name ?? ""),
+      departmentIds,
+      departmentItems,
     };
   }
-  if (typeof department === "string" && department.trim()) {
+
+  if (departmentIds[0]) {
     return {
-      departmentId: department.trim(),
+      departmentId: departmentIds[0],
       departmentName: "",
       departmentNameAr: "",
+      departmentIds,
+      departmentItems,
     };
   }
-  return { departmentId: "", departmentName: "", departmentNameAr: "" };
+
+  return {
+    departmentId: "",
+    departmentName: "",
+    departmentNameAr: "",
+    departmentIds: [],
+    departmentItems: [],
+  };
 };
 
 export const mapApiDoctorToListItem = (
@@ -243,9 +287,13 @@ export const mapApiDoctorToListItem = (
       row.titleAr?.split(",")[0]?.trim() ||
       specialty,
     department:
-      row.department && typeof row.department === "object"
-        ? row.department
-        : dept.departmentName || String(row.department ?? ""),
+      dept.departmentItems.length > 0
+        ? dept.departmentItems.length === 1
+          ? dept.departmentItems[0]
+          : dept.departmentItems
+        : dept.departmentIds.length > 0
+          ? dept.departmentIds
+          : "",
     title: String(row.title ?? ""),
     qualifications: flattenQualifications(row.qualifications),
     expertise: flattenExpertise(row.expertise),
@@ -260,13 +308,18 @@ export const mapApiDoctorToListItem = (
 
 export const mapApiDoctorToView = (row: ApiDoctor): DoctorViewData => {
   const dept = resolveDepartment(row.department);
+  const departmentNames = dept.departmentItems.map((item) => String(item.name ?? "")).filter(Boolean);
+  const departmentNamesAr = dept.departmentItems
+    .map((item) => String(item.arabicName ?? item.name ?? ""))
+    .filter(Boolean);
+
   return {
     doctorId: String(row.doctorId ?? ""),
     name: String(row.name ?? ""),
     arabicName: String(row.nameAr ?? row.name ?? ""),
     specialty: row.subspecialities?.[0] || row.title || "",
-    department: dept.departmentName,
-    departmentAr: dept.departmentNameAr,
+    department: departmentNames.join(", ") || dept.departmentName,
+    departmentAr: departmentNamesAr.join("، ") || dept.departmentNameAr,
     title: String(row.title ?? ""),
     arabicTitle: String(row.titleAr ?? row.title ?? ""),
     qualifications: flattenQualifications(row.qualifications),
@@ -305,7 +358,7 @@ export const mapApiDoctorToFormValues = (
     arabicTitle: String(row.titleAr ?? ""),
     arabicLanguages: (row.languagesAr ?? []).join("|||"),
     arabicQualifications: flattenQualificationsAr(row).join("|||"),
-    department: dept.departmentId,
+    departmentIds: dept.departmentIds,
     subspecialityIds,
     availableOnline: row.availableOnline === true,
     imageFile: null as File | null,
