@@ -53,6 +53,7 @@ export type BookingItem = {
   doctorName?: string;
   appointmentDate?: string;
   timeSlot?: string;
+  createdAt?: string;
   isViewed?: boolean;
 };
 
@@ -61,6 +62,7 @@ export type AppointmentListFiltersState = {
   toDate: string;
   department: string;
   doctor: string;
+  patientName: string;
   status: string;
 };
 
@@ -74,6 +76,7 @@ export const defaultRequestFilters: AppointmentListFiltersState = {
   toDate: "",
   department: "",
   doctor: "",
+  patientName: "",
   status: "",
 };
 
@@ -82,6 +85,52 @@ export const defaultBookingFilters: BookingListFiltersState = {
   toDate: "",
   department: "",
   doctor: "",
+  patientName: "",
+};
+
+export type AppointmentFilterOption = {
+  value: string;
+  label: string;
+  nameAr?: string;
+};
+
+const findFilterOption = (
+  options: AppointmentFilterOption[],
+  value: string,
+) => options.find((option) => option.value === value);
+
+export const buildAppointmentApiFilters = (
+  filters: {
+    fromDate: string;
+    toDate: string;
+    department: string;
+    doctor: string;
+    patientName: string;
+    status?: string;
+  },
+  options: {
+    departmentOptions: AppointmentFilterOption[];
+    doctorOptions: AppointmentFilterOption[];
+  },
+  extras: Partial<AppointmentListFilters> = {},
+): AppointmentListFilters => {
+  const selectedDepartment = filters.department
+    ? findFilterOption(options.departmentOptions, filters.department)
+    : undefined;
+  const selectedDoctor = filters.doctor
+    ? findFilterOption(options.doctorOptions, filters.doctor)
+    : undefined;
+
+  return {
+    fromDate: filters.fromDate || undefined,
+    toDate: filters.toDate || undefined,
+    department: filters.department || undefined,
+    departmentAr: selectedDepartment?.nameAr,
+    doctor: filters.doctor || undefined,
+    doctorAr: selectedDoctor?.nameAr,
+    patientName: filters.patientName || undefined,
+    ...extras,
+  };
 };
 
 /** Supports ISO (YYYY-MM-DD), DD/MM/YYYY, and other Date-parseable strings. */
@@ -224,6 +273,7 @@ export const mapBookingFromApi = (row: Record<string, unknown>): BookingItem => 
   doctorName: row.doctor ? String(row.doctor) : undefined,
   appointmentDate: row.date ? String(row.date) : undefined,
   timeSlot: formatApiSlotTimes(row),
+  createdAt: row.createdAt ? String(row.createdAt) : undefined,
   isViewed: row.isViewed === true,
 });
 
@@ -235,6 +285,19 @@ export const formatTableDate = (dateString?: string) => {
     month: "short",
     day: "numeric",
     year: "numeric",
+  });
+};
+
+export const formatTableDateTime = (dateString?: string) => {
+  if (!dateString) return "—";
+  const date = new Date(dateString);
+  if (Number.isNaN(date.getTime())) return formatTableDate(dateString);
+  return date.toLocaleString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
   });
 };
 

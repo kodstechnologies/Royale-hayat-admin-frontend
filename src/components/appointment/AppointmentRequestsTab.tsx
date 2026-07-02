@@ -1,7 +1,6 @@
-import { useState, useEffect, useCallback, useMemo, useRef, type SetStateAction } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Calendar,
   CheckCircle,
   XCircle,
   Clock,
@@ -26,7 +25,11 @@ import {
   mapRequestFromApi,
   mapUiStatusToApi,
   formatTableDate,
+  formatTableDateTime,
+  buildAppointmentApiFilters,
 } from "./appointmentUtils";
+import { useAppointmentFilterOptions } from "./useAppointmentFilterOptions";
+import { useDebouncedPatientSearch } from "./useDebouncedPatientSearch";
 import AppointmentFilterSection from "./AppointmentFilterSection";
 import StatusUpdateModal from "./StatusUpdateModal";
 import AppointmentPagination, {
@@ -111,6 +114,9 @@ const AppointmentRequestsTab = ({
   const [filters, setFilters] =
     useState<AppointmentListFiltersState>(defaultRequestFilters);
   const [showFilters, setShowFilters] = useState(false);
+  const { departmentOptions, doctorOptions, loading: optionsLoading } =
+    useAppointmentFilterOptions();
+  const debouncedPatientName = useDebouncedPatientSearch(filters.patientName);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [statusModal, setStatusModal] = useState<{
     isOpen: boolean;
@@ -124,16 +130,6 @@ const AppointmentRequestsTab = ({
     name: "",
   });
 
-  const departments = useMemo(
-    () =>
-      [...new Set(requests.map((r) => r.department).filter(Boolean))] as string[],
-    [requests],
-  );
-  const doctors = useMemo(
-    () =>
-      [...new Set(requests.map((r) => r.doctorName).filter(Boolean))] as string[],
-    [requests],
-  );
   const statuses: AppointmentRequestItem["status"][] = [
     "pending",
     "confirmed",
@@ -145,13 +141,16 @@ const AppointmentRequestsTab = ({
     setFilters({ ...defaultRequestFilters });
   };
 
-  const updateFilters = useCallback(
-    (value: SetStateAction<AppointmentListFiltersState>) => {
-      setCurrentPage(1);
-      setFilters(value);
-    },
-    [],
-  );
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [
+    filters.fromDate,
+    filters.toDate,
+    filters.department,
+    filters.doctor,
+    filters.status,
+    debouncedPatientName,
+  ]);
 
   useEffect(() => {
     setFilters({ ...defaultRequestFilters });
@@ -167,14 +166,14 @@ const AppointmentRequestsTab = ({
       const res = await getAppointmentRequests(
         pageForFetch,
         APPOINTMENT_PAGE_SIZE,
-        {
-        fromDate: filters.fromDate || undefined,
-        toDate: filters.toDate || undefined,
-        department: filters.department || undefined,
-        doctor: filters.doctor || undefined,
-        status: mapUiStatusToApi(filters.status),
-        requestType,
-      },
+        buildAppointmentApiFilters(filters, {
+          departmentOptions,
+          doctorOptions,
+        }, {
+          patientName: debouncedPatientName || undefined,
+          status: mapUiStatusToApi(filters.status),
+          requestType,
+        }),
       );
       const list = res?.data ?? [];
       const mapped = Array.isArray(list)
@@ -215,7 +214,18 @@ const AppointmentRequestsTab = ({
         setLoading(false);
       }
     }
-  }, [filters, requestType, currentPage]);
+  }, [
+    filters.fromDate,
+    filters.toDate,
+    filters.department,
+    filters.doctor,
+    filters.status,
+    debouncedPatientName,
+    requestType,
+    currentPage,
+    departmentOptions,
+    doctorOptions,
+  ]);
 
   useEffect(() => {
     void fetchRequests();
@@ -291,43 +301,143 @@ const AppointmentRequestsTab = ({
   );
 
   const tableColumns = useMemo(
-    () => ["Name", dateColumnLabel, "Department", "Doctor", "Status", "Actions"],
+    () => [
+      "Name",
+      dateColumnLabel,
+      "Created At",
+      "Department",
+      "Doctor",
+      "Status",
+      "Actions",
+    ],
     [dateColumnLabel],
   );
 
-  if (loading) {
-    return (
-      <div className="overflow-x-auto rounded-xl border border-slate-200">
-        <table className="w-full">
-          <thead>
-            <tr className="border-b border-slate-200 bg-slate-50/50">
-              {tableColumns.map(
-                (col) => (
-                  <th
-                    key={col}
-                    className="text-left py-3 px-4 font-semibold text-slate-600 text-xs uppercase tracking-wider"
-                  >
-                    {col}
-                  </th>
-                ),
+  const renderTableBody = () => {
+    if (loading) {
+      return Array.from({ length: 5 }).map((_, i) => (
+        <tr key={i} className="border-b border-slate-100 animate-pulse">
+          {Array.from({ length: 7 }).map((__, j) => (
+            <td key={j} className="py-3 px-4">
+              <div className="h-4 bg-slate-100 rounded w-full max-w-[120px]" />
+            </td>
+          ))}
+        </tr>
+      ));
+    }
+
+    if (requests.length === 0) {
+      return (
+        <tr>
+          <td colSpan={7} className="py-16 text-center text-slate-500 font-medium">
+            {emptyMessage}
+          </td>
+        </tr>
+      );
+    }
+
+    return requests.map((req, index) => {
+      const StatusIcon = statusStyles[req.status].icon;
+      const isActioning = actionLoading === req.id;
+
+      return (
+        <tr
+          key={req.id}
+          className={`border-b border-slate-100 hover:bg-slate-50/50 transition-colors ${
+            index % 2 === 0 ? "bg-white" : "bg-slate-50/30"
+          }`}
+        >
+          <td className="py-3 px-4">
+            <div className="font-medium text-slate-800">{req.fullName}</div>
+            <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+              {req.phone && (
+                <span className="text-xs text-slate-400">{req.phone}</span>
               )}
-            </tr>
-          </thead>
-          <tbody>
-            {Array.from({ length: 5 }).map((_, i) => (
-              <tr key={i} className="border-b border-slate-100 animate-pulse">
-                {Array.from({ length: 6 }).map((__, j) => (
-                  <td key={j} className="py-3 px-4">
-                    <div className="h-4 bg-slate-100 rounded w-full max-w-[120px]" />
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    );
-  }
+              {!req.isViewed && (
+                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-100 text-amber-700">
+                  New
+                </span>
+              )}
+            </div>
+          </td>
+          <td className="py-3 px-4 text-sm text-slate-600">
+            {formatTableDate(req.preferredDate)}
+          </td>
+          <td className="py-3 px-4 text-sm text-slate-600">
+            {formatTableDateTime(req.createdAt)}
+          </td>
+          <td className="py-3 px-4 text-sm text-slate-600">
+            {req.department || "—"}
+          </td>
+          <td className="py-3 px-4 text-sm text-slate-600">
+            {req.doctorName || "—"}
+          </td>
+          <td className="py-3 px-4">
+            <span
+              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${statusStyles[req.status].bg} ${statusStyles[req.status].color}`}
+            >
+              <StatusIcon className="h-3 w-3" />
+              {statusStyles[req.status].label}
+            </span>
+          </td>
+          <td className="py-3 px-4">
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() => navigate(`/appointment/view/${req.id}`)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-burgundy hover:bg-burgundy/10 transition-colors"
+                title="View Details"
+              >
+                <Eye size={16} />
+              </button>
+              <PermissionGate permission={PERMISSIONS.APPOINTMENT_REQUEST_ACCEPT}>
+                {req.status !== "confirmed" && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    disabled={isActioning}
+                    onClick={() =>
+                      setStatusModal({
+                        isOpen: true,
+                        id: req.id,
+                        newStatus: "confirmed",
+                        name: req.fullName,
+                      })
+                    }
+                    className="h-8 w-8 p-0 text-green-600 hover:text-green-700 hover:bg-green-50"
+                    title="Confirm Request"
+                  >
+                    <Check className="h-4 w-4" />
+                  </Button>
+                )}
+              </PermissionGate>
+              <PermissionGate permission={PERMISSIONS.APPOINTMENT_REQUEST_REJECT}>
+                {req.status !== "cancelled" && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    disabled={isActioning}
+                    onClick={() =>
+                      setStatusModal({
+                        isOpen: true,
+                        id: req.id,
+                        newStatus: "cancelled",
+                        name: req.fullName,
+                      })
+                    }
+                    className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                    title="Cancel Request"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                )}
+              </PermissionGate>
+            </div>
+          </td>
+        </tr>
+      );
+    });
+  };
 
   return (
     <>
@@ -335,159 +445,33 @@ const AppointmentRequestsTab = ({
         showFilters={showFilters}
         setShowFilters={setShowFilters}
         filters={filters}
-        setFilters={updateFilters}
-        departments={departments}
-        doctors={doctors}
+        setFilters={setFilters}
+        departments={departmentOptions}
+        doctors={doctorOptions}
+        optionsLoading={optionsLoading}
         statuses={statuses}
         showStatusFilter={true}
-        hasData={listMeta.total > 0}
         clearFilters={clearFilters}
       />
 
-      {requests.length === 0 ? (
-        <div className="text-center py-16 rounded-xl border border-slate-200">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-100 flex items-center justify-center">
-            <Calendar className="h-8 w-8 text-slate-400" />
-          </div>
-          <p className="text-slate-500 font-medium">{emptyMessage}</p>
-        </div>
-      ) : (
-        <div className="overflow-x-auto rounded-xl border border-slate-200">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-slate-200 bg-slate-50/50">
-                <th className="text-left py-3 px-4 font-semibold text-slate-600 text-xs uppercase tracking-wider">
-                  Name
+      <div className="overflow-x-auto rounded-xl border border-slate-200">
+        <table className="w-full">
+          <thead>
+            <tr className="border-b border-slate-200 bg-slate-50/50">
+              {tableColumns.map((col) => (
+                <th
+                  key={col}
+                  className="text-left py-3 px-4 font-semibold text-slate-600 text-xs uppercase tracking-wider"
+                >
+                  {col}
                 </th>
-                <th className="text-left py-3 px-4 font-semibold text-slate-600 text-xs uppercase tracking-wider">
-                  {dateColumnLabel}
-                </th>
-                <th className="text-left py-3 px-4 font-semibold text-slate-600 text-xs uppercase tracking-wider">
-                  Department
-                </th>
-                <th className="text-left py-3 px-4 font-semibold text-slate-600 text-xs uppercase tracking-wider">
-                  Doctor
-                </th>
-                <th className="text-left py-3 px-4 font-semibold text-slate-600 text-xs uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="text-left py-3 px-4 font-semibold text-slate-600 text-xs uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {requests.map((req, index) => {
-                const StatusIcon = statusStyles[req.status].icon;
-                const isActioning = actionLoading === req.id;
+              ))}
+            </tr>
+          </thead>
+          <tbody>{renderTableBody()}</tbody>
+        </table>
 
-                return (
-                  <tr
-                    key={req.id}
-                    className={`border-b border-slate-100 hover:bg-slate-50/50 transition-colors ${
-                      index % 2 === 0 ? "bg-white" : "bg-slate-50/30"
-                    }`}
-                  >
-                    <td className="py-3 px-4">
-                      <div className="font-medium text-slate-800">
-                        {req.fullName}
-                      </div>
-                      <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                        {req.phone && (
-                          <span className="text-xs text-slate-400">
-                            {req.phone}
-                          </span>
-                        )}
-                        {!req.isViewed && (
-                          <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-100 text-amber-700">
-                            New
-                          </span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="py-3 px-4 text-sm text-slate-600">
-                      {formatTableDate(
-                        requestType === APPOINTMENT_REQUEST_TYPE.FIRST_TIME_VISITOR
-                          ? req.preferredDate
-                          : req.createdAt,
-                      )}
-                    </td>
-                    <td className="py-3 px-4 text-sm text-slate-600">
-                      {req.department || "—"}
-                    </td>
-                    <td className="py-3 px-4 text-sm text-slate-600">
-                      {req.doctorName || "—"}
-                    </td>
-                    <td className="py-3 px-4">
-                      <span
-                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${statusStyles[req.status].bg} ${statusStyles[req.status].color}`}
-                      >
-                        <StatusIcon className="h-3 w-3" />
-                        {statusStyles[req.status].label}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4">
-                      <div className="flex items-center gap-1">
-                        <button
-                          type="button"
-                          onClick={() =>
-                            navigate(`/appointment/view/${req.id}`)
-                          }
-                          className="p-1.5 rounded-lg text-slate-400 hover:text-burgundy hover:bg-burgundy/10 transition-colors"
-                          title="View Details"
-                        >
-                          <Eye size={16} />
-                        </button>
-                        <PermissionGate permission={PERMISSIONS.APPOINTMENT_REQUEST_ACCEPT}>
-                          {req.status !== "confirmed" && (
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              disabled={isActioning}
-                              onClick={() =>
-                                setStatusModal({
-                                  isOpen: true,
-                                  id: req.id,
-                                  newStatus: "confirmed",
-                                  name: req.fullName,
-                                })
-                              }
-                              className="h-8 w-8 p-0 text-green-600 hover:text-green-700 hover:bg-green-50"
-                              title="Confirm Request"
-                            >
-                              <Check className="h-4 w-4" />
-                            </Button>
-                          )}
-                        </PermissionGate>
-                        <PermissionGate permission={PERMISSIONS.APPOINTMENT_REQUEST_REJECT}>
-                          {req.status !== "cancelled" && (
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              disabled={isActioning}
-                              onClick={() =>
-                                setStatusModal({
-                                  isOpen: true,
-                                  id: req.id,
-                                  newStatus: "cancelled",
-                                  name: req.fullName,
-                                })
-                              }
-                              className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
-                              title="Cancel Request"
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
-                          )}
-                        </PermissionGate>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-
+        {!loading && requests.length > 0 && (
           <AppointmentPagination
             currentPage={currentPage}
             totalPages={listMeta.pages}
@@ -495,8 +479,8 @@ const AppointmentRequestsTab = ({
             onPageChange={setCurrentPage}
             itemLabel="requests"
           />
-        </div>
-      )}
+        )}
+      </div>
 
       {statusModal.isOpen &&
         ((statusModal.newStatus === "confirmed" && canAcceptRequests) ||

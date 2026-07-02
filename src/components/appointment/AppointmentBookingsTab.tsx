@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback, type SetStateAction } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Calendar, Eye, CheckCircle, Clock } from "lucide-react";
+import { Eye, CheckCircle, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { getAppointmentBookings } from "@/api/appointmentRequest";
 import AppointmentFilterSection from "./AppointmentFilterSection";
@@ -16,7 +16,11 @@ import {
   defaultBookingFilters,
   mapBookingFromApi,
   formatTableDate,
+  formatTableDateTime,
+  buildAppointmentApiFilters,
 } from "./appointmentUtils";
+import { useAppointmentFilterOptions } from "./useAppointmentFilterOptions";
+import { useDebouncedPatientSearch } from "./useDebouncedPatientSearch";
 
 type AppointmentBookingsTabProps = {
   refreshKey?: number;
@@ -50,26 +54,24 @@ const AppointmentBookingsTab = ({
   const [filters, setFilters] =
     useState<BookingListFiltersState>(defaultBookingFilters);
   const [showFilters, setShowFilters] = useState(false);
-
-  const departments = [
-    ...new Set(bookings.map((b) => b.department).filter(Boolean)),
-  ] as string[];
-  const doctors = [
-    ...new Set(bookings.map((b) => b.doctorName).filter(Boolean)),
-  ] as string[];
+  const { departmentOptions, doctorOptions, loading: optionsLoading } =
+    useAppointmentFilterOptions();
+  const debouncedPatientName = useDebouncedPatientSearch(filters.patientName);
 
   const clearFilters = () => {
     setCurrentPage(1);
     setFilters(defaultBookingFilters);
   };
 
-  const updateFilters = useCallback(
-    (value: SetStateAction<BookingListFiltersState>) => {
-      setCurrentPage(1);
-      setFilters(value);
-    },
-    [],
-  );
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [
+    filters.fromDate,
+    filters.toDate,
+    filters.department,
+    filters.doctor,
+    debouncedPatientName,
+  ]);
 
   const fetchBookings = useCallback(async () => {
     setLoading(true);
@@ -77,12 +79,12 @@ const AppointmentBookingsTab = ({
       const res = await getAppointmentBookings(
         currentPage,
         APPOINTMENT_PAGE_SIZE,
-        {
-          fromDate: filters.fromDate || undefined,
-          toDate: filters.toDate || undefined,
-          department: filters.department || undefined,
-          doctor: filters.doctor || undefined,
-        },
+        buildAppointmentApiFilters(filters, {
+          departmentOptions,
+          doctorOptions,
+        }, {
+          patientName: debouncedPatientName || undefined,
+        }),
       );
       const list = res?.data ?? [];
       const mapped = Array.isArray(list)
@@ -103,96 +105,56 @@ const AppointmentBookingsTab = ({
     } finally {
       setLoading(false);
     }
-  }, [filters, currentPage, onCountChange]);
+  }, [
+    filters.fromDate,
+    filters.toDate,
+    filters.department,
+    filters.doctor,
+    debouncedPatientName,
+    currentPage,
+    onCountChange,
+    departmentOptions,
+    doctorOptions,
+  ]);
 
   useEffect(() => {
     void fetchBookings();
   }, [fetchBookings, refreshKey]);
 
-  if (loading) {
-    return (
-      <div className="overflow-x-auto rounded-xl border border-slate-200">
-        <table className="w-full">
-          <thead>
-            <tr className="border-b border-slate-200 bg-slate-50/50">
-              {["Name", "Appointment Date", "Department", "Doctor", "Status", "Actions"].map(
-                (col) => (
-                  <th
-                    key={col}
-                    className="text-left py-3 px-4 font-semibold text-slate-600 text-xs uppercase tracking-wider"
-                  >
-                    {col}
-                  </th>
-                ),
-              )}
-            </tr>
-          </thead>
-          <tbody>
-            {Array.from({ length: 5 }).map((_, i) => (
-              <tr key={i} className="border-b border-slate-100 animate-pulse">
-                {Array.from({ length: 6 }).map((__, j) => (
-                  <td key={j} className="py-3 px-4">
-                    <div className="h-4 bg-slate-100 rounded w-full max-w-[120px]" />
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    );
-  }
+  const tableColumns = [
+    "Name",
+    "Appointment Date",
+    "Created At",
+    "Department",
+    "Doctor",
+    "Status",
+    "Actions",
+  ];
 
-  return (
-    <div className="space-y-4">
-      <AppointmentFilterSection
-        showFilters={showFilters}
-        setShowFilters={setShowFilters}
-        filters={filters}
-        setFilters={updateFilters}
-        departments={departments}
-        doctors={doctors}
-        showStatusFilter={false}
-        hasData={listMeta.total > 0}
-        clearFilters={clearFilters}
-      />
+  const renderTableBody = () => {
+    if (loading) {
+      return Array.from({ length: 5 }).map((_, i) => (
+        <tr key={i} className="border-b border-slate-100 animate-pulse">
+          {Array.from({ length: 7 }).map((__, j) => (
+            <td key={j} className="py-3 px-4">
+              <div className="h-4 bg-slate-100 rounded w-full max-w-[120px]" />
+            </td>
+          ))}
+        </tr>
+      ));
+    }
 
-      {bookings.length === 0 ? (
-        <div className="text-center py-16 rounded-xl border border-slate-200">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-100 flex items-center justify-center">
-            <Calendar className="h-8 w-8 text-slate-400" />
-          </div>
-          <p className="text-slate-500 font-medium">
+    if (bookings.length === 0) {
+      return (
+        <tr>
+          <td colSpan={7} className="py-16 text-center text-slate-500 font-medium">
             No bookings found matching filters
-          </p>
-        </div>
-      ) : (
-        <div className="overflow-x-auto rounded-xl border border-slate-200">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-slate-200 bg-slate-50/50">
-                <th className="text-left py-3 px-4 font-semibold text-slate-600 text-xs uppercase tracking-wider">
-                  Name
-                </th>
-                <th className="text-left py-3 px-4 font-semibold text-slate-600 text-xs uppercase tracking-wider">
-                  Appointment Date
-                </th>
-                <th className="text-left py-3 px-4 font-semibold text-slate-600 text-xs uppercase tracking-wider">
-                  Department
-                </th>
-                <th className="text-left py-3 px-4 font-semibold text-slate-600 text-xs uppercase tracking-wider">
-                  Doctor
-                </th>
-                <th className="text-left py-3 px-4 font-semibold text-slate-600 text-xs uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="text-left py-3 px-4 font-semibold text-slate-600 text-xs uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {bookings.map((booking, index) => {
+          </td>
+        </tr>
+      );
+    }
+
+    return bookings.map((booking, index) => {
                 const statusKey = booking.isViewed ? "viewed" : "new";
                 const status = bookingStatusStyles[statusKey];
                 const StatusIcon = status.icon;
@@ -216,6 +178,9 @@ const AppointmentBookingsTab = ({
                     </td>
                     <td className="py-3 px-4 text-sm text-slate-600">
                       {formatTableDate(booking.appointmentDate)}
+                    </td>
+                    <td className="py-3 px-4 text-sm text-slate-600">
+                      {formatTableDateTime(booking.createdAt)}
                     </td>
                     <td className="py-3 px-4 text-sm text-slate-600">
                       {booking.department || "—"}
@@ -245,10 +210,41 @@ const AppointmentBookingsTab = ({
                     </td>
                   </tr>
                 );
-              })}
-            </tbody>
-          </table>
+              });
+  };
 
+  return (
+    <div className="space-y-4">
+      <AppointmentFilterSection
+        showFilters={showFilters}
+        setShowFilters={setShowFilters}
+        filters={filters}
+        setFilters={setFilters}
+        departments={departmentOptions}
+        doctors={doctorOptions}
+        optionsLoading={optionsLoading}
+        showStatusFilter={false}
+        clearFilters={clearFilters}
+      />
+
+      <div className="overflow-x-auto rounded-xl border border-slate-200">
+        <table className="w-full">
+          <thead>
+            <tr className="border-b border-slate-200 bg-slate-50/50">
+              {tableColumns.map((col) => (
+                <th
+                  key={col}
+                  className="text-left py-3 px-4 font-semibold text-slate-600 text-xs uppercase tracking-wider"
+                >
+                  {col}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>{renderTableBody()}</tbody>
+        </table>
+
+        {!loading && bookings.length > 0 && (
           <AppointmentPagination
             currentPage={currentPage}
             totalPages={listMeta.pages}
@@ -256,8 +252,8 @@ const AppointmentBookingsTab = ({
             onPageChange={setCurrentPage}
             itemLabel="bookings"
           />
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };

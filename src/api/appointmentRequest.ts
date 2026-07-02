@@ -33,7 +33,11 @@ export type AppointmentListFilters = {
   fromTime?: string;
   toTime?: string;
   department?: string;
+  departmentAr?: string;
   doctor?: string;
+  doctorAr?: string;
+  patientName?: string;
+  search?: string;
   status?: "pending" | "received" | "accepted" | "cancelled" | "all";
   requestType?: AppointmentRequestType;
 };
@@ -50,7 +54,11 @@ const buildListParams = (
   if (filters.fromTime) params.fromTime = filters.fromTime;
   if (filters.toTime) params.toTime = filters.toTime;
   if (filters.department) params.department = filters.department;
+  if (filters.departmentAr) params.departmentAr = filters.departmentAr;
   if (filters.doctor) params.doctor = filters.doctor;
+  if (filters.doctorAr) params.doctorAr = filters.doctorAr;
+  const patientSearch = (filters.patientName ?? filters.search)?.trim();
+  if (patientSearch) params.search = patientSearch;
   if (filters.status) params.status = filters.status;
   if (filters.requestType) params.requestType = filters.requestType;
 

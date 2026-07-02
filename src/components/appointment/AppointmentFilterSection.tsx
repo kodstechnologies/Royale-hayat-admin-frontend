@@ -1,11 +1,12 @@
 import { Filter, X as XIcon } from "lucide-react";
-import { formatDisplayDate } from "./appointmentUtils";
+import { formatDisplayDate, type AppointmentFilterOption } from "./appointmentUtils";
 
 type FilterValues = {
   fromDate: string;
   toDate: string;
   department: string;
   doctor: string;
+  patientName: string;
   status?: string;
 };
 
@@ -14,11 +15,12 @@ type AppointmentFilterSectionProps<T extends FilterValues> = {
   setShowFilters: (show: boolean) => void;
   filters: T;
   setFilters: React.Dispatch<React.SetStateAction<T>>;
-  departments: string[];
-  doctors: string[];
+  departments: AppointmentFilterOption[];
+  doctors: AppointmentFilterOption[];
   statuses?: string[];
   showStatusFilter?: boolean;
   hasData?: boolean;
+  optionsLoading?: boolean;
   clearFilters: () => void;
 };
 
@@ -32,9 +34,10 @@ const AppointmentFilterSection = <T extends FilterValues>({
   statuses,
   showStatusFilter = false,
   hasData = false,
+  optionsLoading = false,
   clearFilters,
 }: AppointmentFilterSectionProps<T>) => {
-  const showFacetFilters = hasData;
+  const showFacetFilters = true;
   const dateRangeError =
     filters.fromDate &&
     filters.toDate &&
@@ -61,11 +64,9 @@ const AppointmentFilterSection = <T extends FilterValues>({
     });
   };
 
-  const filterGridClass = showFacetFilters
-    ? showStatusFilter
-      ? "mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4"
-      : "mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
-    : "mt-4 grid grid-cols-1 md:grid-cols-2 gap-4";
+  const filterGridClass = showStatusFilter
+    ? "mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4"
+    : "mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4";
 
   return (
     <div className="bg-slate-50 rounded-xl p-4 border border-slate-200">
@@ -80,6 +81,23 @@ const AppointmentFilterSection = <T extends FilterValues>({
 
       {showFilters && (
         <div className={filterGridClass}>
+          <div>
+            <label className="block text-xs font-medium text-slate-600 mb-1">
+              Patient Name
+            </label>
+            <input
+              type="text"
+              value={filters.patientName}
+              onChange={(e) =>
+                setFilters((prev) => ({
+                  ...prev,
+                  patientName: e.target.value,
+                }))
+              }
+              placeholder="Search by patient name"
+              className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-burgundy focus:border-transparent"
+            />
+          </div>
           <div>
             <label className="block text-xs font-medium text-slate-600 mb-1">
               From Date
@@ -122,12 +140,13 @@ const AppointmentFilterSection = <T extends FilterValues>({
                     department: e.target.value,
                   }))
                 }
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-burgundy focus:border-transparent"
+                disabled={optionsLoading}
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-burgundy focus:border-transparent disabled:opacity-60"
               >
                 <option value="">All Departments</option>
                 {departments.map((dept) => (
-                  <option key={dept} value={dept}>
-                    {dept}
+                  <option key={dept.value} value={dept.value}>
+                    {dept.label}
                   </option>
                 ))}
               </select>
@@ -143,12 +162,13 @@ const AppointmentFilterSection = <T extends FilterValues>({
                 onChange={(e) =>
                   setFilters((prev) => ({ ...prev, doctor: e.target.value }))
                 }
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-burgundy focus:border-transparent"
+                disabled={optionsLoading}
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-burgundy focus:border-transparent disabled:opacity-60"
               >
                 <option value="">All Doctors</option>
                 {doctors.map((doctor) => (
-                  <option key={doctor} value={doctor}>
-                    {doctor}
+                  <option key={doctor.value} value={doctor.value}>
+                    {doctor.label}
                   </option>
                 ))}
               </select>
@@ -183,9 +203,24 @@ const AppointmentFilterSection = <T extends FilterValues>({
 
       {(filters.fromDate ||
         filters.toDate ||
+        filters.patientName ||
         (showFacetFilters &&
           (filters.department || filters.doctor || filters.status))) && (
         <div className="mt-3 flex flex-wrap gap-2">
+          {filters.patientName && (
+            <span className="inline-flex items-center gap-1 px-2 py-1 bg-white rounded-full text-xs border border-slate-200">
+              Patient: {filters.patientName}
+              <button
+                type="button"
+                onClick={() =>
+                  setFilters((prev) => ({ ...prev, patientName: "" }))
+                }
+                className="hover:text-red-500"
+              >
+                <XIcon className="h-3 w-3" />
+              </button>
+            </span>
+          )}
           {filters.fromDate && (
             <span className="inline-flex items-center gap-1 px-2 py-1 bg-white rounded-full text-xs border border-slate-200">
               From: {formatDisplayDate(filters.fromDate)}
