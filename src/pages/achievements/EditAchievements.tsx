@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { getAchievementById, updateAchievement } from "@/api/achievement";
 import {
   ACHIEVEMENT_MONTHS,
+  ACHIEVEMENT_TYPE_OPTIONS,
   buildAchievementFormData,
   getAchievementYearOptions,
   mapApiToAchievement,
@@ -30,6 +31,7 @@ type AchievementFormData = {
   arabicTitle: string;
   arabicAchievements: string;
   arabicDepartment: string;
+  achievementType: "month" | "quarter";
   month: string;
   year: string;
 };
@@ -82,6 +84,7 @@ const EditAchievements = () => {
       arabicTitle: "",
       arabicAchievements: "",
       arabicDepartment: "",
+      achievementType: "month",
       month,
       year,
     };
@@ -109,6 +112,7 @@ const EditAchievements = () => {
           arabicTitle: achievement.arabicTitle || "",
           arabicAchievements: achievement.arabicDescription || "",
           arabicDepartment: achievement.arabicDepartment || "",
+          achievementType: achievement.achievementType || "month",
           month,
           year,
         });
@@ -185,6 +189,10 @@ const EditAchievements = () => {
       toast.error("Please enter Achievement details");
       return;
     }
+    if (!formData.achievementType) {
+      toast.error("Please select Achievement Type");
+      return;
+    }
     if (!id) return;
 
     setSaving(true);
@@ -201,6 +209,7 @@ const EditAchievements = () => {
         arabicTitle: formData.arabicTitle,
         achievements: effectiveAchievements,
         arabicAchievements: formData.arabicAchievements,
+        achievementType: formData.achievementType,
         visibilityStatus: status,
         imageFile: formData.imageFile,
         month: formData.month,
@@ -394,6 +403,28 @@ const EditAchievements = () => {
 
                 <div className="space-y-5">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    <div className="space-y-2">
+                      <label className="text-sm font-semibold text-slate-700">
+                        Achievement Type <span className="text-red-500">*</span>
+                      </label>
+                      <select
+                        value={formData.achievementType}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            achievementType: e.target.value as "month" | "quarter",
+                          })
+                        }
+                        className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                      >
+                        {ACHIEVEMENT_TYPE_OPTIONS.map((type) => (
+                          <option key={type.value} value={type.value}>
+                            {type.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
                     <div className="space-y-2">
                       <label className="text-sm font-semibold text-slate-700">
                         Month

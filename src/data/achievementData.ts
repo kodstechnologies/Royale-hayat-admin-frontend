@@ -57,6 +57,7 @@ export type Achievement = {
   arabicDivision: string;
   date: string;
   month?: string;
+  achievementType: "month" | "quarter";
   status: AchievementStatus;
   image?: string;
   createdAt: string;
@@ -95,6 +96,11 @@ export const ACHIEVEMENT_MONTHS = [
   { value: "10", label: "October" },
   { value: "11", label: "November" },
   { value: "12", label: "December" },
+] as const;
+
+export const ACHIEVEMENT_TYPE_OPTIONS = [
+  { value: "month", label: "Month" },
+  { value: "quarter", label: "Quarter" },
 ] as const;
 
 export const getAchievementYearOptions = (): number[] => {
@@ -164,6 +170,7 @@ export const mapApiToAchievement = (api: ApiAchievement): Achievement => {
     month: api.date
       ? formatAchievementMonthYear(api.date).split(" ")[0]
       : undefined,
+    achievementType: api.achievementType || "month",
     status: visibilityToStatus(api.visibilityStatus),
     image: api.image,
     createdAt: api.createdAt,
@@ -182,10 +189,11 @@ export type AchievementFormPayload = {
   arabicTitle?: string;
   achievements: string;
   arabicAchievements?: string;
+  achievementType?: "month" | "quarter";
   visibilityStatus: "show" | "hide";
   imageFile?: File | null;
-  month: string;
-  year: string;
+  month?: string;
+  year?: string;
 };
 
 export const buildAchievementFormData = (payload: AchievementFormPayload): FormData => {
@@ -204,8 +212,13 @@ export const buildAchievementFormData = (payload: AchievementFormPayload): FormD
   if (payload.arabicAchievements?.trim()) {
     formData.append("arabicAchievements", payload.arabicAchievements.trim());
   }
+  if (payload.achievementType) {
+    formData.append("achievementType", payload.achievementType);
+  }
   formData.append("visibilityStatus", payload.visibilityStatus);
-  formData.append("date", buildAchievementDateIso(payload.month, payload.year));
+  if (payload.month && payload.year) {
+    formData.append("date", buildAchievementDateIso(payload.month, payload.year));
+  }
   if (payload.department?.trim()) {
     formData.append("department", payload.department.trim());
   }

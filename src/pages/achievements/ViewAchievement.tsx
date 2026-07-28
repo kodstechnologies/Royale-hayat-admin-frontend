@@ -58,6 +58,30 @@ const ViewAchievement = () => {
     return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
   };
 
+  const formatAchievementMonthDisplay = (dateString: string, type: Achievement["achievementType"]) => {
+    const baseDate = new Date(dateString);
+    if (Number.isNaN(baseDate.getTime())) return "";
+
+    if (type === "quarter") {
+      const startMonthLabel = baseDate.toLocaleString("en-US", { month: "long" });
+      const endDate = new Date(baseDate.getFullYear(), baseDate.getMonth() + 2, 1);
+      const endMonthLabel = endDate.toLocaleString("en-US", { month: "long" });
+      const yearLabel =
+        endDate.getFullYear() === baseDate.getFullYear()
+          ? `${baseDate.getFullYear()}`
+          : `${baseDate.getFullYear()}-${endDate.getFullYear()}`;
+      return `${startMonthLabel} - ${endMonthLabel} ${yearLabel}`;
+    }
+
+    return baseDate.toLocaleString("en-US", {
+      month: "long",
+      year: "numeric",
+    });
+  };
+
+  const formatAchievementType = (type: Achievement["achievementType"]) =>
+    type === "quarter" ? "Quarter" : "Month";
+
   const getStatusBadge = (status: Achievement["status"]) => {
     switch (status) {
       case "published":
@@ -296,15 +320,24 @@ const ViewAchievement = () => {
                     
                     <div>
                       <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                        Achievement Type
+                      </label>
+                      <p className="text-sm text-slate-700 mt-1">
+                        {formatAchievementType(achievement.achievementType)}
+                      </p>
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
                         Month
                       </label>
                       <div className="flex items-center gap-1 mt-1">
                         <Calendar className="h-3.5 w-3.5 text-slate-400" />
                         <p className="text-sm text-slate-700">
-                          {new Date(achievement.date).toLocaleString("en-US", {
-                            month: "long",
-                            year: "numeric",
-                          })}
+                          {formatAchievementMonthDisplay(
+                            achievement.date,
+                            achievement.achievementType
+                          )}
                         </p>
                       </div>
                     </div>

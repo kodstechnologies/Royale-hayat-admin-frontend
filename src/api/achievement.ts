@@ -12,6 +12,7 @@ export type ApiAchievement = {
   arabicTitle?: string;
   achievements: string;
   arabicAchievements?: string;
+  achievementType?: "month" | "quarter";
   image?: string;
   visibilityStatus: "show" | "hide";
   createdAt: string;
