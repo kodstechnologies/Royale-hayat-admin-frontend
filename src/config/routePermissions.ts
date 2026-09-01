@@ -174,6 +174,10 @@ export const ROUTE_PERMISSION_RULES: RoutePermissionRule[] = [
 
   { pattern: "/documents", permissions: [PERMISSIONS.DOCUMENT_VIEW] },
   {
+    pattern: "/external-api-logs",
+    permissions: [PERMISSIONS.CHAT_LOG_VIEW],
+  },
+  {
     pattern: "/user-management/create",
     permissions: [PERMISSIONS.USER_CREATE],
   },
@@ -222,6 +226,7 @@ export const NAV_LANDING_ROUTES: RoutePermissionRule[] = [
   { pattern: "/csr", permissions: [PERMISSIONS.CSR_VIEW] },
   { pattern: "/work-culture", permissions: [PERMISSIONS.WORK_CULTURE_VIEW] },
   { pattern: "/documents", permissions: [PERMISSIONS.DOCUMENT_VIEW] },
+  { pattern: "/external-api-logs", permissions: [PERMISSIONS.CHAT_LOG_VIEW] },
   { pattern: "/user-management", permissions: [PERMISSIONS.USER_VIEW] },
   { pattern: "/categories", permissions: [PERMISSIONS.CATAGORY_VIEW] },
   { pattern: "/departments", permissions: [PERMISSIONS.DEPARTMENT_VIEW] },

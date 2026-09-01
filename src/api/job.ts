@@ -55,7 +55,9 @@ export const getAllJobs = async (params: GetJobsParams = {}) => {
 };
 
 export const getJobById = async (id: string) => {
-  return api.get(`${BASE}/${id}`);
+  return api.get(`${BASE}/${id}`, {
+    params: { includeInactive: true },
+  });
 };
 
 export const updateJob = async (id: string, payload: UpdateJobPayload) => {

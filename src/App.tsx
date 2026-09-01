@@ -78,6 +78,7 @@ const ViewAllUsers = lazy(() => import("./pages/user-management/ViewAllUsers"));
 const CreateUser = lazy(() => import("./pages/user-management/CreateUser"));
 const EditUser = lazy(() => import("./pages/user-management/EditUser"));
 const FileManager = lazy(() => import("./pages/file-manager/FileManager"));
+const ExternalApiLogs = lazy(() => import("./pages/ExternalApiLogs"));
 
 const queryClient = new QueryClient();
 
@@ -173,6 +174,7 @@ const App = () => (
                   <Route path="/reports" element={<Reports />} />
                   <Route path="/settings" element={<Settings />} />
                   <Route path="/file-manager" element={<FileManager />} />
+                  <Route path="/external-api-logs" element={<ExternalApiLogs />} />
                   <Route path="/user-management" element={<ViewAllUsers />} />
                   <Route path="/user-management/create" element={<CreateUser />} />
                   <Route path="/user-management/edit/:id" element={<EditUser />} />

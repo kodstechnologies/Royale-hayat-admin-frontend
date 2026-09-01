@@ -23,7 +23,8 @@ import {
   ListTree,
   ChevronDown,
   Sparkles,
-  BriefcaseBusiness
+  BriefcaseBusiness,
+  Database
 } from "lucide-react";
 
 import logo from "@/assets/rhh-logo.png";
@@ -558,6 +559,12 @@ const Sidebar = ({
   ];
 
   const managementNavItems: NavItemConfig[] = [
+    {
+      to: "/external-api-logs",
+      icon: Database,
+      label: "Logs",
+      permissions: [PERMISSIONS.CHAT_LOG_VIEW],
+    },
     {
       to: "/documents",
       icon: FileText,
