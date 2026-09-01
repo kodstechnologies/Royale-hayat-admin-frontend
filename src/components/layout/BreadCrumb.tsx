@@ -62,6 +62,7 @@ const pageMap: Record<string, { label: string; icon: any; description?: string }
   "/work-culture":              { label: "Work Culture",             icon: Sparkles, description: "Manage work culture events and Life at RHH content" },
   "/leadership":                { label: "Leadership Team",          icon: Users, description: "Manage leadership team members" },
   "/life-at-rhh":               { label: "Life at RHH",              icon: Sparkles, description: "Manage Life at RHH content" },
+  "/external-api-logs":         { label: "External API Logs",      icon: FileText, description: "View logs from Identity and Royal Hayat API services" },
 };
 
 const nestedDescriptions: Record<string, string> = {

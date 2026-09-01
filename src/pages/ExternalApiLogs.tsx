@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { Eye, Filter, X } from "lucide-react";
+import AdminLayout from "@/components/layout/AdminLayout";
+import BreadCrumb from "@/components/layout/BreadCrumb";
 import { useLanguage } from "@/contexts/LanguageContext";
 import {
   getAllExternalApiLogs,
@@ -112,15 +114,17 @@ const ExternalApiLogs = () => {
   };
 
   return (
-    <div className="p-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-slate-800 mb-2">
-          {t("External API Logs")}
-        </h1>
-        <p className="text-slate-600">
-          {t("View logs from Identity and Royal Hayat API services")}
-        </p>
-      </div>
+    <AdminLayout title={t("External API Logs")}>
+      <BreadCrumb lastCrumbLabel={t("External API Logs")} />
+      <div className="p-6">
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-slate-800 mb-2">
+            {t("External API Logs")}
+          </h1>
+          <p className="text-slate-600">
+            {t("View logs from Identity and Royal Hayat API services")}
+          </p>
+        </div>
 
       {/* Filters */}
       <div className="bg-white rounded-lg shadow-sm border border-slate-200 mb-6">
@@ -433,6 +437,7 @@ const ExternalApiLogs = () => {
         </div>
       )}
     </div>
+    </AdminLayout>
   );
 };
 
