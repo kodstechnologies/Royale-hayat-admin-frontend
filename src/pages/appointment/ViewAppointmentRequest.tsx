@@ -5,6 +5,7 @@ import BreadCrumb from "@/components/layout/BreadCrumb";
 import {
   User,
   Phone,
+  Mail,
   Calendar,
   Users,
   Stethoscope,
@@ -151,6 +152,11 @@ const ViewAppointmentRequest = () => {
                   label="Phone Number"
                   value={request.phone}
                   icon={Phone}
+                />
+                <InfoRow
+                  label="Email"
+                  value={request.email}
+                  icon={Mail}
                 />
                 <InfoRow
                   label="Date of Birth"

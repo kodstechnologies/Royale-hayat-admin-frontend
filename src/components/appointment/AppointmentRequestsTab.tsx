@@ -353,6 +353,9 @@ const AppointmentRequestsTab = ({
               {req.phone && (
                 <span className="text-xs text-slate-400">{req.phone}</span>
               )}
+              {req.email && (
+                <span className="text-xs text-slate-400 break-all">{req.email}</span>
+              )}
               {!req.isViewed && (
                 <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-100 text-amber-700">
                   New

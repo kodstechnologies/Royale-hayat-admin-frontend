@@ -11,6 +11,7 @@ export type AppointmentRequestItem = {
   id: string;
   fullName: string;
   phone: string;
+  email?: string;
   dateOfBirth: string;
   gender: string;
   department?: string;
@@ -232,6 +233,7 @@ export const mapRequestFromApi = (
   id: String(row._id ?? row.id ?? ""),
   fullName: String(row.fullname ?? row.fullName ?? ""),
   phone: String(row.phone ?? row.mobile_number ?? ""),
+  email: row.email ? String(row.email).trim() : undefined,
   dateOfBirth: formatDob(String(row.dob ?? row.dateOfBirth ?? "")),
   gender: String(row.gender ?? ""),
   department: row.department ? String(row.department) : undefined,
