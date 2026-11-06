@@ -42,8 +42,8 @@ const PERMISSION_GROUP_DEFS: {
     id: "categories",
     title: "Categories",
     permissionKeys: [
-      // "CATAGORY_CREATE",
-      // "CATAGORY_UPDATE",
+      "CATAGORY_CREATE",
+      "CATAGORY_UPDATE",
       "CATAGORY_DELETE",
       "CATAGORY_VIEW",
     ],
@@ -52,8 +52,8 @@ const PERMISSION_GROUP_DEFS: {
     id: "departments",
     title: "Departments",
     permissionKeys: [
-      // "DEPARTMENT",
-      // "DEPARTMENT_UPDATE",
+      "DEPARTMENT",
+      "DEPARTMENT_UPDATE",
       "DEPARTMENT_DELETE",
       "DEPARTMENT_VIEW",
     ],
@@ -62,8 +62,8 @@ const PERMISSION_GROUP_DEFS: {
     id: "subspecialities",
     title: "Subspecialities",
     permissionKeys: [
-      // "SUBSPECIALITY",
-      // "SUBSPECIALITY_UPDATE",
+      "SUBSPECIALITY",
+      "SUBSPECIALITY_UPDATE",
       "SUBSPECIALITY_DELETE",
       "SUBSPECIALITY_VIEW",
     ],
@@ -206,13 +206,6 @@ const UNASSIGNABLE_PERMISSION_KEYS = new Set<string>([
   PERMISSIONS.JOB_APPLICATION_VIEW,
   PERMISSIONS.JOB_APPLICATION_UPDATE,
   PERMISSIONS.JOB_APPLICATION_DELETE,
-  // Category, department, subspeciality: view + delete only in user management
-  PERMISSIONS.CATAGORY_CREATE,
-  PERMISSIONS.CATAGORY_UPDATE,
-  PERMISSIONS.DEPARTMENT,
-  PERMISSIONS.DEPARTMENT_UPDATE,
-  PERMISSIONS.SUBSPECIALITY,
-  PERMISSIONS.SUBSPECIALITY_UPDATE,
   PERMISSIONS.MRR_SHARE_VIA_EMAIL,
 ]);
 

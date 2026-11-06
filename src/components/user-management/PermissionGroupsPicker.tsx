@@ -15,11 +15,9 @@ type PermissionGroupsPickerProps = {
   onClearAll: () => void;
 };
 
-/** Categories, departments, subspecialities: assign view and delete in user management. */
+/** Previously limited to view and delete only, now showing all permissions. */
 const LIMITED_PERMISSION_GROUP_IDS = new Set([
-  "categories",
-  "departments",
-  "subspecialities",
+  // Removed: categories, departments, subspecialities now show all permissions
 ]);
 
 const isViewPermissionKey = (key: string): boolean =>
